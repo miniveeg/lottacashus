@@ -1,0 +1,408 @@
+.promos__header {
+  margin-bottom: 1.5rem;
+}
+
+.promos__affiliate {
+  margin-bottom: 2.5rem;
+}
+
+.promos__affiliate-head {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.promos__affiliate-icon {
+  background: linear-gradient(145deg, rgba(120, 200, 140, 0.12), transparent);
+}
+
+.promos__affiliate-intro strong {
+  color: var(--lc-gold);
+  font-weight: 600;
+}
+
+.promos__rate-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.promos__rate-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.promos__rate-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lc-text-muted);
+  font-weight: 600;
+}
+
+.promos__rate-value {
+  font-weight: 600;
+  color: var(--lc-text-primary);
+}
+
+.promos__affiliate-muted {
+  margin: 0;
+  color: var(--lc-text-secondary);
+  font-size: 0.9rem;
+}
+
+.promos__affiliate-error {
+  margin: 0;
+  color: var(--lc-error, #f87171);
+  font-size: 0.9rem;
+}
+
+.promos__affiliate-success {
+  margin: 0 0 1rem;
+  color: var(--lc-gold);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.promos__affiliate-claim {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--lc-radius-lg);
+  border: 1px solid var(--lc-gold-dim);
+  background: linear-gradient(145deg, rgba(245, 185, 66, 0.1), transparent);
+}
+
+.promos__affiliate-claim-amount {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--lc-gold);
+  line-height: 1.2;
+}
+
+.promos__affiliate-claim-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--lc-text-secondary);
+}
+
+.promos__affiliate-claim-btn {
+  min-width: 10rem;
+}
+
+.promos__affiliate-claim-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.promos__affiliate-referral {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.promos__affiliate-referral-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.promos__affiliate-referral-text {
+  margin: 0 0 0.85rem;
+  font-size: 0.875rem;
+  color: var(--lc-text-secondary);
+  line-height: 1.5;
+}
+
+.promos__affiliate-referral-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.promos__affiliate-referral-row .promos__affiliate-link-input {
+  flex: 1 1 10rem;
+}
+
+.promos__affiliate-referrer-set {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: rgba(120, 200, 140, 0.08);
+  font-size: 0.875rem;
+  color: var(--lc-text-secondary);
+}
+
+.promos__affiliate-referrer-set strong {
+  color: var(--lc-gold);
+  font-weight: 600;
+}
+
+.promos__affiliate-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lc-text-muted);
+}
+
+.promos__affiliate-code-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.promos__affiliate-code {
+  margin: 0;
+  font-family: var(--lc-font-mono, ui-monospace, monospace);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lc-gold);
+  text-transform: uppercase;
+}
+
+.promos__affiliate-link-input,
+.promos__affiliate-referral-row input {
+  text-transform: uppercase;
+}
+
+.promos__affiliate-link-row {
+  margin-bottom: 1.5rem;
+}
+
+.promos__affiliate-link-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.promos__affiliate-link-input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: var(--lc-bg-base);
+  color: var(--lc-text-secondary);
+  font-size: 0.8rem;
+}
+
+.promos__affiliate-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.promos__affiliate-stat {
+  padding: 0.9rem 1rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.promos__affiliate-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.promos__affiliate-stat-label {
+  font-size: 0.75rem;
+  color: var(--lc-text-secondary);
+}
+
+.promos__affiliate-recent-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.promos__affiliate-recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.promos__affiliate-recent-item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  font-size: 0.875rem;
+}
+
+.promos__affiliate-recent-meta {
+  color: var(--lc-text-muted);
+  font-weight: 400;
+}
+
+.promos__affiliate-recent-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.promos__affiliate-recent-amount {
+  font-weight: 700;
+  color: var(--lc-gold);
+}
+
+.promos__affiliate-recent-date {
+  font-size: 0.75rem;
+  color: var(--lc-text-muted);
+}
+
+.promos__hero {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+}
+
+.promos__hero-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 4rem;
+  height: 4rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--lc-radius-lg);
+  background: linear-gradient(145deg, rgba(245, 185, 66, 0.15), transparent);
+  border: 1px solid var(--lc-border);
+}
+
+.promos__hero-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--lc-font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.promos__hero-text {
+  margin: 0 0 1rem;
+  color: var(--lc-text-secondary);
+  line-height: 1.55;
+  max-width: 52ch;
+}
+
+.promos__hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.promos__btn {
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--lc-radius-md);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.promos__btn--gold {
+  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
+  color: var(--lc-bg-base);
+}
+
+.promos__btn--ghost {
+  color: var(--lc-text-secondary);
+  border: 1px solid var(--lc-border);
+}
+
+.promos__btn--ghost:hover {
+  color: var(--lc-text-primary);
+  border-color: var(--lc-gold-dim);
+}
+
+.promos__section-title {
+  margin: 0 0 1rem;
+  font-family: var(--lc-font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.promos__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.promos__card {
+  position: relative;
+  padding: 1.25rem 1.2rem;
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
+  transition: border-color var(--lc-transition);
+}
+
+.promos__card:hover {
+  border-color: var(--lc-border-strong);
+}
+
+.promos__card-title {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.promos__card-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--lc-text-secondary);
+  line-height: 1.5;
+  padding-right: 4rem;
+}
+
+.promos__card-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--lc-gold);
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--lc-gold-dim);
+}
+
+@media (max-width: 600px) {
+  .promos__hero {
+    flex-direction: column;
+  }
+}

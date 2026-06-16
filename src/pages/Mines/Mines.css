@@ -1,0 +1,257 @@
+.mines {
+  /* layout via .lc-game-page */
+}
+
+.mines__header {
+  margin-bottom: 1.5rem;
+}
+
+.mines__title {
+  font-family: var(--lc-font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.mines__subtitle {
+  margin: 0;
+  color: var(--lc-text-secondary);
+  font-size: 0.9rem;
+  max-width: 36rem;
+}
+
+.mines__layout {
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 340px);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .mines__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mines__board-panel {
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
+  padding: 1rem;
+}
+
+.mines__board-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.mines__tool-btn {
+  background: var(--lc-bg-hover);
+  border: 1px solid var(--lc-border);
+  color: var(--lc-text-primary);
+  border-radius: var(--lc-radius-sm);
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mines__tool-btn:hover:not(:disabled) {
+  border-color: var(--lc-gold-dim);
+}
+
+.mines__tool-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mines__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+  max-width: 420px;
+  margin: 0 auto 1rem;
+}
+
+.mines__tile {
+  aspect-ratio: 1;
+  border-radius: var(--lc-radius-sm);
+  border: 1px solid var(--lc-border-strong);
+  background: var(--lc-bg-elevated);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  transition:
+    transform 0.12s ease,
+    background-color var(--lc-transition),
+    border-color var(--lc-transition);
+}
+
+.mines__tile:hover:not(:disabled) {
+  border-color: var(--lc-gold-dim);
+  transform: scale(1.03);
+}
+
+.mines__tile:disabled {
+  cursor: default;
+}
+
+.mines__tile--busy {
+  pointer-events: none;
+}
+
+.mines__tile--gem {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.mines__tile--mine {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.mines__tile--peek {
+  opacity: 0.85;
+}
+
+.mines__live-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  justify-content: center;
+  font-size: 0.9rem;
+  color: var(--lc-text-secondary);
+}
+
+.mines__live-stats strong {
+  color: var(--lc-gold);
+}
+
+.mines__controls {
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: sticky;
+  top: calc(var(--lc-topbar-height) + 1rem);
+}
+
+.mines__error {
+  color: #f87171;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.mines__message {
+  color: var(--lc-emerald);
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+.mines__bet-btn,
+.mines__cashout-btn {
+  width: 100%;
+  min-height: 2.75rem;
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: var(--lc-radius-md);
+  cursor: pointer;
+}
+
+.mines__bet-btn {
+  background: var(--lc-gold);
+  color: #0a0a0b;
+}
+
+.mines__bet-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.mines__cashout-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+}
+
+.mines__cashout-btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.mines__bet-btn:disabled,
+.mines__cashout-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mines__hint {
+  font-size: 0.8rem;
+  color: var(--lc-text-muted);
+  margin: 0;
+}
+
+.mines__fairness {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--lc-border);
+}
+
+.mines__fairness-toggle {
+  background: none;
+  border: none;
+  color: var(--lc-gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.mines__fairness-body {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+}
+
+.mines__fairness-k {
+  display: block;
+  color: var(--lc-text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.mines__hash {
+  display: block;
+  word-break: break-all;
+  font-size: 0.72rem;
+  color: var(--lc-text-secondary);
+}
+
+.mines__seed-label {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.mines__seed-input {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.85rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-sm);
+  color: var(--lc-text-primary);
+}
+
+.mines__fairness-note {
+  margin-top: 0.5rem;
+  color: var(--lc-text-muted);
+  font-size: 0.75rem;
+}

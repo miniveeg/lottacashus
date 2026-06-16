@@ -1,0 +1,83 @@
+/* Motion button system */
+.lc-motion-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.72rem 1.35rem;
+  border-radius: var(--lc-radius-md);
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.03em;
+  line-height: 1.2;
+  border: 1px solid transparent;
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+  transition: box-shadow var(--lc-transition), filter var(--lc-transition);
+}
+
+.lc-motion-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.lc-motion-btn__shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+  transform: translateX(-120%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.lc-motion-btn:hover .lc-motion-btn__shine {
+  transform: translateX(120%);
+}
+
+.lc-motion-btn--primary {
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
+  color: #fff;
+  box-shadow: 0 2px 20px var(--lc-crimson-glow), var(--lc-shadow-inset);
+}
+
+.lc-motion-btn--primary:hover {
+  box-shadow: 0 6px 32px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
+}
+
+.lc-motion-btn--secondary {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--lc-border-strong);
+  color: var(--lc-text-primary);
+}
+
+.lc-motion-btn--secondary:hover {
+  border-color: var(--lc-border-accent);
+  background: var(--lc-bg-hover);
+}
+
+.lc-motion-btn--ghost {
+  background: transparent;
+  color: var(--lc-text-secondary);
+}
+
+.lc-motion-btn--ghost:hover {
+  color: var(--lc-crimson-soft);
+}
+
+.lc-motion-btn--glow {
+  animation: lc-btn-glow 3s ease-in-out infinite;
+}
+
+@keyframes lc-btn-glow {
+  0%, 100% { box-shadow: 0 2px 20px var(--lc-crimson-glow); }
+  50% { box-shadow: 0 4px 36px var(--lc-crimson-glow-strong); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-motion-btn--glow { animation: none; }
+  .lc-motion-btn__shine { display: none; }
+}

@@ -1,0 +1,53 @@
+.game-guest-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid var(--lc-gold-dim);
+  border-radius: var(--lc-radius-md);
+}
+
+.game-guest-banner__text {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--lc-text-secondary);
+  flex: 1;
+  min-width: 12rem;
+}
+
+.game-guest-banner__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.game-guest-banner__btn {
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--lc-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background var(--lc-transition), color var(--lc-transition);
+}
+
+.game-guest-banner__btn--primary {
+  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
+  color: var(--lc-bg-base);
+}
+
+.game-guest-banner__btn--primary:hover {
+  filter: brightness(1.06);
+}
+
+.game-guest-banner__btn--ghost {
+  color: var(--lc-text-secondary);
+  border: 1px solid var(--lc-border);
+}
+
+.game-guest-banner__btn--ghost:hover {
+  background: var(--lc-bg-hover);
+  color: var(--lc-text-primary);
+}

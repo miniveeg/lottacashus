@@ -1,0 +1,107 @@
+.case-reel {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.case-reel__viewport {
+  position: relative;
+  height: calc(var(--reel-item-h, 92px) * 3);
+  overflow: hidden;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.45);
+}
+
+.case-reel__center-line {
+  position: absolute;
+  left: 0.35rem;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  height: var(--reel-item-h, 92px);
+  border: 2px solid var(--reel-accent, #38bdf8);
+  border-radius: var(--lc-radius-sm);
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.15),
+    0 0 20px rgba(56, 189, 248, 0.12);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.case-reel__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 35%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.case-reel__fade--top {
+  top: 0;
+  background: linear-gradient(180deg, rgba(8, 10, 16, 0.95), transparent);
+}
+
+.case-reel__fade--bottom {
+  bottom: 0;
+  background: linear-gradient(0deg, rgba(8, 10, 16, 0.95), transparent);
+}
+
+.case-reel__track {
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+.case-reel__tile {
+  flex-shrink: 0;
+  height: var(--reel-item-h, 92px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+
+.case-reel__tile--dim {
+  opacity: 0.55;
+}
+
+.case-reel__tile-gem {
+  font-size: 1.35rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+.case-reel__tile-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lc-text-primary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.case-reel__tile-value {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--lc-text-muted);
+}
+
+/* Highlight the center tile once the reel has settled */
+.case-reel--landed .case-reel__center-line {
+  box-shadow:
+    0 0 0 1px rgba(56, 189, 248, 0.35),
+    0 0 28px rgba(56, 189, 248, 0.22);
+  border-color: var(--reel-accent, #38bdf8);
+}
+
+.case-reel--landed .case-reel__tile:not(.case-reel__tile--dim) .case-reel__tile-gem {
+  filter: drop-shadow(0 0 10px currentColor);
+}

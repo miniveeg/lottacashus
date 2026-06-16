@@ -1,0 +1,133 @@
+/* ── Leaderboard page ── */
+
+.leaderboard-page {
+  max-width: 900px;
+}
+
+.leaderboard-header {
+  margin-bottom: 1.5rem;
+}
+
+.leaderboard-header__title {
+  font-family: var(--lc-font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+.leaderboard-header__subtitle {
+  margin: 0;
+  color: var(--lc-text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ── Table ── */
+.leaderboard-table-wrap {
+  background: var(--lc-glass-bg);
+  backdrop-filter: var(--lc-glass-blur);
+  -webkit-backdrop-filter: var(--lc-glass-blur);
+  border: 1px solid var(--lc-glass-border);
+  border-radius: var(--lc-radius-xl);
+  box-shadow: var(--lc-glass-shadow);
+  overflow: hidden;
+}
+
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leaderboard-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-family: var(--lc-font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--lc-text-muted);
+  border-bottom: 1px solid var(--lc-glass-border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.leaderboard-table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: var(--lc-text-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background var(--lc-transition);
+}
+
+.leaderboard-table tbody tr:hover td {
+  background: var(--lc-bg-hover);
+}
+
+.leaderboard-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.leaderboard-table__rank {
+  width: 3rem;
+  text-align: center;
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  color: var(--lc-text-muted);
+  font-size: 0.85rem;
+}
+
+.leaderboard-table__medal {
+  font-size: 1.25rem;
+}
+
+.leaderboard-table__user {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 600;
+}
+
+.leaderboard-table__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-deep));
+  color: #fff8f6;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.leaderboard-table__amount {
+  text-align: right;
+  font-family: var(--lc-font-display);
+  font-weight: 600;
+  color: var(--lc-emerald);
+  white-space: nowrap;
+}
+
+.leaderboard-table__secondary {
+  text-align: right;
+  color: var(--lc-text-secondary);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding: 0.6rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .leaderboard-table__secondary {
+    display: none;
+  }
+
+  .leaderboard-table th:last-child {
+    display: none;
+  }
+}

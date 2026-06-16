@@ -1,0 +1,28 @@
+# Supabase local dev config (optional). Deploy functions with: supabase functions deploy <name>
+
+[functions.send-signup-code]
+verify_jwt = false
+
+[functions.verify-signup-code]
+verify_jwt = false
+
+[functions.send-password-reset-code]
+verify_jwt = false
+
+[functions.reset-password-with-code]
+verify_jwt = false
+
+[functions.link-discord]
+verify_jwt = true
+
+[functions.get-deposit-address]
+verify_jwt = true
+
+[functions.poll-deposits]
+verify_jwt = false
+
+[functions.sweep-deposits]
+verify_jwt = false
+
+[functions.case-battle]
+verify_jwt = false

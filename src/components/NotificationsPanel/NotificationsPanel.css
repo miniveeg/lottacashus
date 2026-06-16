@@ -1,0 +1,146 @@
+.notifications-panel__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.notifications-panel {
+  position: fixed;
+  top: calc(var(--lc-topbar-height) + 8px);
+  right: 1rem;
+  z-index: 100;
+  width: min(380px, calc(100vw - 2rem));
+  max-height: min(480px, calc(100vh - var(--lc-topbar-height) - 2rem));
+  display: flex;
+  flex-direction: column;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-lg);
+  box-shadow: var(--lc-shadow-md);
+  overflow: hidden;
+}
+
+.notifications-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--lc-border);
+  background: var(--lc-bg-panel);
+}
+
+.notifications-panel__title {
+  margin: 0;
+  font-family: var(--lc-font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--lc-text-primary);
+}
+
+.notifications-panel__close {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--lc-radius-sm);
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--lc-text-muted);
+  transition: background var(--lc-transition), color var(--lc-transition);
+}
+
+.notifications-panel__close:hover {
+  background: var(--lc-bg-hover);
+  color: var(--lc-text-primary);
+}
+
+.notifications-panel__body {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.notifications-panel__empty {
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--lc-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.notifications-panel__empty a {
+  color: var(--lc-gold);
+  font-weight: 600;
+}
+
+.notifications-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.35rem 0;
+}
+
+.notifications-panel__item {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--lc-border);
+  transition: background var(--lc-transition);
+}
+
+.notifications-panel__item:last-child {
+  border-bottom: none;
+}
+
+.notifications-panel__item--unread {
+  background: rgba(245, 185, 66, 0.06);
+}
+
+.notifications-panel__icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--lc-radius-sm);
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: var(--lc-bg-panel);
+  color: var(--lc-gold);
+}
+
+.notifications-panel__icon--deposit_credited,
+.notifications-panel__icon--withdrawal_completed,
+.notifications-panel__icon--discord_linked {
+  color: var(--lc-emerald);
+}
+
+.notifications-panel__icon--withdrawal_failed,
+.notifications-panel__icon--discord_link_failed {
+  color: var(--lc-ruby);
+}
+
+.notifications-panel__content {
+  min-width: 0;
+  flex: 1;
+}
+
+.notifications-panel__item-title {
+  margin: 0 0 0.2rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--lc-text-primary);
+}
+
+.notifications-panel__item-body {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--lc-text-secondary);
+}
+
+.notifications-panel__time {
+  font-size: 0.7rem;
+  color: var(--lc-text-muted);
+}

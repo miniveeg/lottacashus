@@ -1,0 +1,49 @@
+/* LottaCash — Cracked Obsidian Glass Panel */
+
+.glass-panel {
+  background: rgba(6, 4, 8, 0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--lc-glass-border);
+  border-radius: var(--lc-radius-xl);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    var(--lc-shadow-inset);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.glass-panel::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+  pointer-events: none;
+}
+
+.glass-panel--glow {
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 40px var(--lc-crimson-glow),
+    var(--lc-shadow-inset);
+  border-color: var(--lc-border-accent);
+}
+
+.glass-panel--sm { padding: 0.75rem 1rem; }
+.glass-panel--md { padding: 1.25rem 1.5rem; }
+.glass-panel--lg { padding: 1.75rem 2rem; }

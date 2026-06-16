@@ -1,0 +1,90 @@
+/* LottaCash — Cracked Obsidian Game Feedback */
+
+.game-feedback {
+  position: absolute;
+  inset: 0;
+  z-index: var(--lc-z-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.game-feedback__overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(5, 3, 6, 0.75) 0%, rgba(3, 2, 4, 0.92) 100%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.game-feedback--big-win .game-feedback__overlay {
+  background: radial-gradient(ellipse at center, rgba(139, 26, 36, 0.3) 0%, rgba(3, 2, 4, 0.88) 100%);
+  animation: game-feedback--pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes game-feedback--pulse {
+  from { opacity: 0.8; }
+  to   { opacity: 1; }
+}
+
+.game-feedback__content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem 3rem;
+}
+
+.game-feedback__label {
+  font-family: var(--lc-font-display);
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin: 0 0 0.5rem;
+}
+
+.game-feedback--win .game-feedback__label,
+.game-feedback--big-win .game-feedback__label {
+  color: var(--lc-emerald);
+  text-shadow: 0 0 30px rgba(0, 232, 122, 0.4);
+}
+
+.game-feedback--loss .game-feedback__label {
+  color: var(--lc-ruby);
+  text-shadow: 0 0 20px rgba(255, 59, 92, 0.3);
+}
+
+.game-feedback__multiplier {
+  font-family: var(--lc-font-display);
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 800;
+  color: var(--lc-crimson-soft);
+  margin: 0 0 0.25rem;
+  text-shadow: 0 0 40px var(--lc-crimson-glow);
+}
+
+.game-feedback--big-win .game-feedback__multiplier {
+  animation: game-feedback--bounce 0.6s ease-out;
+}
+
+@keyframes game-feedback--bounce {
+  0%   { transform: scale(0.3); opacity: 0; }
+  60%  { transform: scale(1.15); }
+  80%  { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.game-feedback__amount {
+  font-family: var(--lc-font-mono);
+  font-size: 1.1rem;
+  color: var(--lc-text-primary);
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-feedback--big-win .game-feedback__overlay,
+  .game-feedback--big-win .game-feedback__multiplier {
+    animation: none;
+  }
+}

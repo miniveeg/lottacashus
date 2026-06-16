@@ -1,0 +1,625 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
+import {
+  clientHandPayload,
+  dealNewHand,
+  doubleHand,
+  handsToJson,
+  hitCard,
+  insuranceAmount,
+  resolveInsurance,
+  splitHand,
+  standHand,
+  stateFromRow,
+  validateWager,
+} from "../_shared/blackjack.ts";
+import { rtpBiasFloat } from "../_shared/rtpBias.ts";
+
+type HandRow = {
+  id: string;
+  shoe: number[];
+  shoe_index: number;
+  player_cards: number[];
+  dealer_cards: number[];
+  wager: number;
+  total_wager: number;
+  doubled: boolean;
+  dealer_revealed: boolean;
+  phase?: string;
+  insurance_wager?: number;
+  insurance_taken?: boolean;
+  insurance_decided?: boolean;
+  is_split?: boolean;
+  player_hands?: unknown;
+  active_hand_index?: number;
+  nonce: number;
+};
+
+async function handRtpBiasFn(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  handId: string,
+  nonce: number,
+  handCount: number
+): Promise<(handIndex: number) => number | undefined> {
+  const { data: pf } = await admin
+    .from("game_pf_seeds")
+    .select("server_seed, client_seed")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const serverSeed = pf?.server_seed;
+  const clientSeed = String(pf?.client_seed ?? "default");
+  if (typeof serverSeed !== "string" || !serverSeed) {
+    return () => undefined;
+  }
+  const biases = await Promise.all(
+    Array.from({ length: handCount }, (_, i) =>
+      rtpBiasFloat(serverSeed, clientSeed, nonce, `bj-${handId}-${i}`)
+    )
+  );
+  return (i: number) => biases[i];
+}
+
+async function loadHand(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  handId: string
+): Promise<HandRow | null> {
+  const { data, error } = await admin
+    .from("blackjack_hands")
+    .select(
+      "id, shoe, shoe_index, player_cards, dealer_cards, wager, total_wager, doubled, dealer_revealed, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, nonce"
+    )
+    .eq("id", handId)
+    .eq("user_id", userId)
+    .eq("status", "player_turn")
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as HandRow;
+}
+
+async function saveProgress(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  handId: string,
+  state: ReturnType<typeof stateFromRow>
+) {
+  return admin.rpc("blackjack_update_active", {
+    p_user_id: userId,
+    p_hand_id: handId,
+    p_player_cards: state.playerCards,
+    p_shoe_index: state.shoeIndex,
+    p_player_hands: handsToJson(state.playerHands),
+    p_active_hand_index: state.activeHandIndex,
+    p_is_split: state.isSplit,
+    p_phase: state.phase,
+    p_total_wager: state.totalWager,
+    p_doubled: state.doubled,
+    p_insurance_wager: state.insuranceWager,
+    p_insurance_taken: state.insuranceTaken,
+    p_insurance_decided: state.insuranceDecided,
+  });
+}
+
+async function finishHand(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  handId: string,
+  state: ReturnType<typeof stateFromRow>,
+  outcome: string | null,
+  payout: number,
+  extraWager = 0
+) {
+  return admin.rpc("blackjack_finish_hand", {
+    p_user_id: userId,
+    p_hand_id: handId,
+    p_player_cards: state.playerCards,
+    p_dealer_cards: state.dealerCards,
+    p_shoe_index: state.shoeIndex,
+    p_doubled: state.doubled,
+    p_total_wager: state.totalWager,
+    p_dealer_revealed: state.dealerRevealed,
+    p_outcome: outcome,
+    p_payout: payout,
+    p_extra_wager: extraWager,
+    p_phase: "settled",
+    p_player_hands: handsToJson(state.playerHands),
+    p_is_split: state.isSplit,
+    p_active_hand_index: state.activeHandIndex,
+    p_insurance_wager: state.insuranceWager,
+    p_insurance_taken: state.insuranceTaken,
+  });
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
+
+  try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401);
+
+    const body = await req.json();
+    const action = String(body?.action ?? "");
+
+    const supabaseUser = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseUser.auth.getUser();
+
+    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401);
+
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    if (action === "active") {
+      const { data: row, error } = await admin
+        .from("blackjack_hands")
+        .select(
+          "id, wager, total_wager, doubled, player_cards, dealer_cards, dealer_revealed, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index"
+        )
+        .eq("user_id", user.id)
+        .eq("status", "player_turn")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+      if (!row) return jsonResponse({ active: false });
+
+      const state = stateFromRow({
+        shoe: [],
+        shoe_index: 0,
+        player_cards: row.player_cards,
+        dealer_cards: row.dealer_cards,
+        wager: Number(row.wager),
+        total_wager: Number(row.total_wager),
+        doubled: Boolean(row.doubled),
+        dealer_revealed: Boolean(row.dealer_revealed),
+        phase: row.phase,
+        insurance_wager: row.insurance_wager,
+        insurance_taken: row.insurance_taken,
+        insurance_decided: row.insurance_decided,
+        is_split: row.is_split,
+        player_hands: row.player_hands,
+        active_hand_index: row.active_hand_index,
+      });
+
+      return jsonResponse({
+        active: true,
+        handId: row.id,
+        wager: Number(row.wager),
+        status: row.phase === "insurance_offer" ? "insurance_offer" : "player_turn",
+        ...clientHandPayload(state),
+      });
+    }
+
+    if (action === "start") {
+      const wager = Number(body?.wager);
+      const err = validateWager(wager);
+      if (err) return jsonResponse({ error: err }, 400);
+
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("balance")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (Number(profile?.balance ?? 0) < wager) {
+        return jsonResponse({ error: "Insufficient balance" }, 400);
+      }
+
+      const { data: seedData, error: seedError } = await admin.rpc("consume_keno_nonce", {
+        p_user_id: user.id,
+        p_advance: 1,
+      });
+
+      if (seedError) return jsonResponse({ error: seedError.message }, 500);
+
+      const raw = (Array.isArray(seedData) ? seedData[0] : seedData) as
+        | Record<string, unknown>
+        | undefined;
+      const serverSeed = raw?.server_seed ?? raw?.serverSeed;
+      const clientSeed = String(raw?.client_seed ?? raw?.clientSeed ?? "default");
+      const nonce = Number(raw?.nonce ?? 0);
+
+      if (typeof serverSeed !== "string" || !serverSeed) {
+        return jsonResponse({ error: "Could not load game seeds." }, 500);
+      }
+
+      const dealt = await dealNewHand(serverSeed, clientSeed, nonce, wager);
+      const s = dealt.state;
+      const status = dealt.instantSettle ? "settled" : "player_turn";
+
+      const { data: started, error: startError } = await admin.rpc("start_blackjack_hand", {
+        p_user_id: user.id,
+        p_wager: wager,
+        p_total_wager: s.totalWager,
+        p_shoe: s.shoe,
+        p_shoe_index: s.shoeIndex,
+        p_player_cards: s.playerCards,
+        p_dealer_cards: s.dealerCards,
+        p_doubled: s.doubled,
+        p_dealer_revealed: s.dealerRevealed,
+        p_status: status,
+        p_outcome: dealt.outcome,
+        p_payout: dealt.payout,
+        p_nonce: nonce,
+        p_phase: s.phase,
+        p_insurance_wager: s.insuranceWager,
+        p_insurance_taken: s.insuranceTaken,
+        p_insurance_decided: s.insuranceDecided,
+        p_is_split: s.isSplit,
+        p_player_hands: handsToJson(s.playerHands),
+        p_active_hand_index: s.activeHandIndex,
+      });
+
+      if (startError) return jsonResponse({ error: startError.message }, 400);
+
+      const row = (Array.isArray(started) ? started[0] : started) as
+        | Record<string, unknown>
+        | undefined;
+
+      const responseStatus = dealt.instantSettle
+        ? "settled"
+        : s.phase === "insurance_offer"
+          ? "insurance_offer"
+          : "player_turn";
+
+      return jsonResponse({
+        handId: row?.hand_id,
+        balance: Number(row?.out_balance ?? 0),
+        status: responseStatus,
+        outcome: dealt.outcome,
+        payout: dealt.payout,
+        nonce,
+        wager,
+        ...clientHandPayload(s),
+      });
+    }
+
+    const handId = String(body?.handId ?? body?.hand_id ?? "");
+    if (!handId) return jsonResponse({ error: "Hand id required." }, 400);
+
+    const row = await loadHand(admin, user.id, handId);
+    if (!row) return jsonResponse({ error: "Active hand not found." }, 400);
+
+    const state = stateFromRow(row);
+
+    if (action === "insurance") {
+      const take = Boolean(body?.take);
+      const insCost = take ? insuranceAmount(state.wager) : 0;
+
+      if (take) {
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("balance")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (Number(profile?.balance ?? 0) < insCost) {
+          return jsonResponse({ error: "Insufficient balance for insurance." }, 400);
+        }
+      }
+
+      const result = resolveInsurance(state, take);
+
+      if (result.insuranceDebit > 0) {
+        const { error: debitErr } = await admin.rpc("blackjack_debit_extra", {
+          p_user_id: user.id,
+          p_hand_id: handId,
+          p_extra_wager: result.insuranceDebit,
+          p_description: "Blackjack insurance",
+        });
+        if (debitErr) return jsonResponse({ error: debitErr.message }, 400);
+      }
+
+      if (result.instantSettle) {
+        const { data: fin, error: finErr } = await finishHand(
+          admin,
+          user.id,
+          handId,
+          result.state,
+          result.outcome,
+          result.payout,
+          0
+        );
+        if (finErr) return jsonResponse({ error: finErr.message }, 400);
+        const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
+        return jsonResponse({
+          handId,
+          status: "settled",
+          outcome: result.outcome,
+          payout: result.payout,
+          balance: Number(bal?.out_balance ?? 0),
+          wager: state.wager,
+          ...clientHandPayload(result.state),
+        });
+      }
+
+      const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
+      if (upErr) return jsonResponse({ error: upErr.message }, 400);
+
+      const { data: prof } = await admin
+        .from("profiles")
+        .select("balance")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      return jsonResponse({
+        handId,
+        status: "player_turn",
+        balance: Number(prof?.balance ?? 0),
+        wager: state.wager,
+        ...clientHandPayload(result.state),
+      });
+    }
+
+    if (action === "split") {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("balance")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const extra = state.wager;
+      if (Number(profile?.balance ?? 0) < extra) {
+        return jsonResponse({ error: "Insufficient balance to split." }, 400);
+      }
+
+      let result;
+      try {
+        const handBias = await handRtpBiasFn(
+          admin,
+          user.id,
+          handId,
+          Number(row.nonce),
+          2
+        );
+        result = splitHand(state, handBias);
+      } catch {
+        return jsonResponse({ error: "Cannot split this hand." }, 400);
+      }
+
+      const { error: debitErr } = await admin.rpc("blackjack_debit_extra", {
+        p_user_id: user.id,
+        p_hand_id: handId,
+        p_extra_wager: result.extraWager,
+        p_description: "Blackjack split",
+      });
+      if (debitErr) return jsonResponse({ error: debitErr.message }, 400);
+
+      if (result.instantSettle) {
+        const { data: fin, error: finErr } = await finishHand(
+          admin,
+          user.id,
+          handId,
+          result.state,
+          result.outcome,
+          result.payout,
+          0
+        );
+        if (finErr) return jsonResponse({ error: finErr.message }, 400);
+        const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
+        return jsonResponse({
+          handId,
+          status: "settled",
+          outcome: result.outcome,
+          payout: result.payout,
+          balance: Number(bal?.out_balance ?? 0),
+          wager: state.wager,
+          ...clientHandPayload(result.state),
+        });
+      }
+
+      const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
+      if (upErr) return jsonResponse({ error: upErr.message }, 400);
+
+      const { data: prof } = await admin
+        .from("profiles")
+        .select("balance")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      return jsonResponse({
+        handId,
+        status: "player_turn",
+        balance: Number(prof?.balance ?? 0),
+        wager: state.wager,
+        ...clientHandPayload(result.state),
+      });
+    }
+
+    if (action === "hit") {
+      const handBias = await handRtpBiasFn(
+        admin,
+        user.id,
+        handId,
+        Number(row.nonce),
+        state.playerHands.length
+      );
+      const result = hitCard(state, handBias);
+      if (!result.done) {
+        const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
+        if (upErr) return jsonResponse({ error: upErr.message }, 400);
+
+        const { data: prof } = await admin
+          .from("profiles")
+          .select("balance")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        return jsonResponse({
+          handId,
+          status: "player_turn",
+          balance: Number(prof?.balance ?? 0),
+          wager: state.wager,
+          ...clientHandPayload(result.state),
+        });
+      }
+
+      const { data: fin, error: finErr } = await finishHand(
+        admin,
+        user.id,
+        handId,
+        result.state,
+        result.outcome,
+        result.payout,
+        0
+      );
+      if (finErr) return jsonResponse({ error: finErr.message }, 400);
+      const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
+
+      return jsonResponse({
+        handId,
+        status: "settled",
+        outcome: result.outcome,
+        payout: result.payout,
+        balance: Number(bal?.out_balance ?? 0),
+        wager: state.wager,
+        ...clientHandPayload(result.state),
+      });
+    }
+
+    if (action === "stand") {
+      const handBias = await handRtpBiasFn(
+        admin,
+        user.id,
+        handId,
+        Number(row.nonce),
+        state.playerHands.length
+      );
+      const result = standHand(state, handBias);
+      if (!result.done) {
+        const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
+        if (upErr) return jsonResponse({ error: upErr.message }, 400);
+
+        const { data: prof } = await admin
+          .from("profiles")
+          .select("balance")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        return jsonResponse({
+          handId,
+          status: "player_turn",
+          balance: Number(prof?.balance ?? 0),
+          wager: state.wager,
+          ...clientHandPayload(result.state),
+        });
+      }
+
+      const { data: fin, error: finErr } = await finishHand(
+        admin,
+        user.id,
+        handId,
+        result.state,
+        result.outcome,
+        result.payout,
+        0
+      );
+      if (finErr) return jsonResponse({ error: finErr.message }, 400);
+      const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
+
+      return jsonResponse({
+        handId,
+        status: "settled",
+        outcome: result.outcome,
+        payout: result.payout,
+        balance: Number(bal?.out_balance ?? 0),
+        wager: state.wager,
+        ...clientHandPayload(result.state),
+      });
+    }
+
+    if (action === "double") {
+      const hand = state.playerHands[state.activeHandIndex]!;
+      const extra = hand.wager;
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("balance")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (Number(profile?.balance ?? 0) < extra) {
+        return jsonResponse({ error: "Insufficient balance to double." }, 400);
+      }
+
+      const handBias = await handRtpBiasFn(
+        admin,
+        user.id,
+        handId,
+        Number(row.nonce),
+        state.playerHands.length
+      );
+      const result = doubleHand(state, handBias);
+
+      if (!result.done) {
+        const { error: debitErr } = await admin.rpc("blackjack_debit_extra", {
+          p_user_id: user.id,
+          p_hand_id: handId,
+          p_extra_wager: result.extraWager,
+          p_description: "Blackjack double",
+        });
+        if (debitErr) return jsonResponse({ error: debitErr.message }, 400);
+
+        const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
+        if (upErr) return jsonResponse({ error: upErr.message }, 400);
+
+        const { data: prof } = await admin
+          .from("profiles")
+          .select("balance")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        return jsonResponse({
+          handId,
+          status: "player_turn",
+          balance: Number(prof?.balance ?? 0),
+          wager: state.wager,
+          ...clientHandPayload(result.state),
+        });
+      }
+
+      const { data: fin, error: finErr } = await finishHand(
+        admin,
+        user.id,
+        handId,
+        result.state,
+        result.outcome,
+        result.payout,
+        result.extraWager
+      );
+      if (finErr) return jsonResponse({ error: finErr.message }, 400);
+      const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
+
+      return jsonResponse({
+        handId,
+        status: "settled",
+        outcome: result.outcome,
+        payout: result.payout,
+        balance: Number(bal?.out_balance ?? 0),
+        wager: state.wager,
+        ...clientHandPayload(result.state),
+      });
+    }
+
+    return jsonResponse({ error: "Unknown action." }, 400);
+  } catch (err) {
+    console.error("blackjack-game:", err);
+    return jsonResponse({ error: "Server error." }, 500);
+  }
+});

@@ -1,0 +1,109 @@
+/* LottaCash — Obsidian Luxury Design Tokens */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Obsidian surfaces ── */
+  --lc-bg: #040406;
+  --lc-bg-base: #040406;
+  --lc-bg-elevated: #0a0a10;
+  --lc-bg-panel: #0e0e16;
+  --lc-bg-hover: #14141f;
+  --lc-bg-active: #1a1a28;
+  --lc-bg-glass: rgba(14, 14, 22, 0.72);
+
+  /* ── Layout ── */
+  --lc-topbar-height: 64px;
+  --lc-sidebar-width: 252px;
+  --lc-sidebar-collapsed: 72px;
+
+  /* ── Crimson accent (primary) ── */
+  --lc-crimson: #dc143c;
+  --lc-crimson-dim: #a81030;
+  --lc-crimson-soft: #ff2d55;
+  --lc-crimson-glow: rgba(220, 20, 60, 0.22);
+  --lc-crimson-glow-strong: rgba(220, 20, 60, 0.45);
+
+  /* Legacy gold aliases → crimson for backward compat */
+  --lc-gold: var(--lc-crimson);
+  --lc-gold-dim: var(--lc-crimson-dim);
+  --lc-gold-soft: var(--lc-crimson-soft);
+  --lc-gold-glow: var(--lc-crimson-glow);
+  --lc-gold-glow-strong: var(--lc-crimson-glow-strong);
+
+  /* ── Semantic colors ── */
+  --lc-emerald: #00e87a;
+  --lc-emerald-dim: #00b85e;
+  --lc-emerald-glow: rgba(0, 232, 122, 0.18);
+
+  --lc-ruby: #ff3b5c;
+  --lc-ruby-glow: rgba(255, 59, 92, 0.25);
+
+  --lc-fog: rgba(180, 180, 200, 0.06);
+  --lc-fog-strong: rgba(180, 180, 200, 0.12);
+  --lc-violet: #8b5cf6;
+  --lc-violet-glow: rgba(139, 92, 246, 0.15);
+  --lc-cyan: #38bdf8;
+  --lc-cyan-glow: rgba(56, 189, 248, 0.12);
+
+  /* ── Text ── */
+  --lc-text-primary: #f2f2f8;
+  --lc-text-secondary: #9494b0;
+  --lc-text-muted: #5c5c78;
+
+  /* ── Borders ── */
+  --lc-border: rgba(255, 255, 255, 0.05);
+  --lc-border-strong: rgba(255, 255, 255, 0.09);
+  --lc-border-accent: rgba(220, 20, 60, 0.32);
+  --lc-border-gold: var(--lc-border-accent);
+
+  /* ── Glass ── */
+  --lc-glass-blur: 20px;
+  --lc-glass-border: rgba(255, 255, 255, 0.08);
+  --lc-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  /* ── Shadows & glow ── */
+  --lc-shadow-sm: 0 2px 16px rgba(0, 0, 0, 0.55);
+  --lc-shadow-md: 0 8px 40px rgba(0, 0, 0, 0.7);
+  --lc-shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.85);
+  --lc-shadow-crimson: 0 0 40px var(--lc-crimson-glow), 0 0 80px rgba(220, 20, 60, 0.08);
+  --lc-shadow-gold: var(--lc-shadow-crimson);
+  --lc-shadow-emerald: 0 0 30px var(--lc-emerald-glow);
+  --lc-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /* ── Radii ── */
+  --lc-radius-sm: 8px;
+  --lc-radius-md: 12px;
+  --lc-radius-lg: 18px;
+  --lc-radius-xl: 24px;
+  --lc-radius-2xl: 32px;
+
+  /* ── Typography ── */
+  --lc-font-display: 'Syne', system-ui, sans-serif;
+  --lc-font-body: 'Rajdhani', system-ui, sans-serif;
+  --lc-font-mono: 'JetBrains Mono', monospace;
+
+  --lc-text-xs: clamp(0.72rem, 0.68rem + 0.2vw, 0.8rem);
+  --lc-text-sm: clamp(0.85rem, 0.8rem + 0.25vw, 0.95rem);
+  --lc-text-base: clamp(1rem, 0.92rem + 0.35vw, 1.1rem);
+  --lc-text-lg: clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem);
+  --lc-text-xl: clamp(1.6rem, 1.35rem + 1vw, 2.2rem);
+  --lc-text-2xl: clamp(2rem, 1.6rem + 1.8vw, 3.2rem);
+  --lc-text-3xl: clamp(2.5rem, 2rem + 2.5vw, 4.5rem);
+
+  /* ── Motion ── */
+  --lc-transition: 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  --lc-transition-slow: 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  --lc-transition-spring: 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Layout constraints ── */
+  --lc-page-max: 1120px;
+  --lc-focus-ring: 0 0 0 3px var(--lc-crimson-glow);
+
+  /* ── Breakpoints ── */
+  --lc-bp-sm: 640px;
+  --lc-bp-md: 768px;
+  --lc-bp-lg: 900px;
+
+  --lc-drawer-width: min(280px, 85vw);
+  --lc-safe-bottom: env(safe-area-inset-bottom, 0px);
+}

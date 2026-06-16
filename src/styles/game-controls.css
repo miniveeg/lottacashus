@@ -1,0 +1,213 @@
+/* Shared bet panel for Originals games */
+
+.game-controls {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.game-controls__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding-bottom: 1rem;
+  margin-bottom: 0.25rem;
+  border-bottom: 1px solid var(--lc-border);
+}
+
+.game-controls__option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.game-controls__option-label {
+  font-family: var(--lc-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--lc-text-muted);
+}
+
+.game-controls__option-hint {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--lc-text-muted);
+  margin: 0;
+}
+
+.game-controls__option .lc-select-root { width: 100%; }
+
+.game-controls__mines-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.game-controls__mines-slider {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--lc-gold);
+}
+
+.game-controls__mines-value {
+  flex-shrink: 0;
+  font-family: var(--lc-font-mono);
+  font-weight: 500;
+  min-width: 1.75rem;
+  text-align: center;
+  color: var(--lc-gold);
+  font-size: 0.95rem;
+}
+
+.game-controls__wager-block {
+  width: 100%;
+  min-width: 0;
+}
+
+.game-controls__wager-label {
+  display: block;
+  font-family: var(--lc-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--lc-text-muted);
+  margin-bottom: 0.45rem;
+}
+
+.game-controls__wager-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.75rem 2.75rem;
+  gap: 0.4rem;
+  width: 100%;
+  align-items: stretch;
+}
+
+.game-controls__wager-input {
+  min-width: 0;
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--lc-font-mono);
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-md);
+  box-sizing: border-box;
+  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.game-controls__wager-input:focus {
+  outline: none;
+  border-color: var(--lc-border-gold);
+  box-shadow: 0 0 0 3px var(--lc-gold-glow);
+}
+
+.game-controls__wager-half,
+.game-controls__wager-double {
+  min-height: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--lc-radius-md);
+  font-family: var(--lc-font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--lc-text-secondary);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+}
+
+.game-controls__wager-half:hover:not(:disabled),
+.game-controls__wager-double:hover:not(:disabled) {
+  background: var(--lc-bg-hover);
+  color: var(--lc-gold);
+  border-color: var(--lc-border-gold);
+}
+
+.game-controls__wager-half:disabled,
+.game-controls__wager-double:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.game-controls__play {
+  width: 100%;
+  margin-top: 0.85rem;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--lc-radius-lg);
+  font-family: var(--lc-font-display);
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #080602;
+  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
+  box-shadow: 0 2px 20px var(--lc-gold-glow), var(--lc-shadow-inset);
+  transition: transform var(--lc-transition-spring), filter var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.game-controls__play:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 32px var(--lc-gold-glow-strong), var(--lc-shadow-inset);
+}
+
+.game-controls__play:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.game-controls__play--cashout {
+  background: linear-gradient(135deg, var(--lc-emerald) 0%, var(--lc-emerald-dim) 100%);
+  box-shadow: 0 2px 20px var(--lc-emerald-glow);
+  color: #02160a;
+}
+
+.game-controls__play--cashout:hover:not(:disabled) {
+  box-shadow: 0 6px 32px rgba(0,232,122,0.35);
+}
+
+.game-controls__stats {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--lc-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.game-controls__stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.game-controls__stat-label {
+  color: var(--lc-text-muted);
+  font-weight: 600;
+}
+
+.game-controls__stat-value {
+  font-family: var(--lc-font-mono);
+  font-weight: 500;
+  color: var(--lc-text-secondary);
+}
+
+.game-controls__stat-value--win  { color: var(--lc-emerald); }
+.game-controls__stat-value--loss { color: var(--lc-ruby); }
+.game-controls__stat-value--gold { color: var(--lc-gold); }

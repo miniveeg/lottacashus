@@ -1,0 +1,457 @@
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import { useProfile } from "../../contexts/ProfileContext";
+import {
+  getMaxGems,
+  getMinesMultiplier,
+  getNextMultiplier,
+  MINES_MAX_COUNT,
+  MINES_MIN_COUNT,
+} from "../../lib/games/mines";
+import { formatUsd } from "../../lib/format";
+import {
+  cashoutMinesGame,
+  fetchMinesPfState,
+  fetchMyActiveMinesGame,
+  revealMinesTile,
+  setMinesClientSeed,
+  startMinesGame,
+} from "../../lib/mines";
+import "../../styles/game-controls.css";
+import "./Mines.css";
+
+const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+const TILES = Array.from({ length: 25 }, (_, i) => i);
+
+function randomUnrevealedTile(revealed: Set<number>): number | null {
+  const pool = TILES.filter((t) => !revealed.has(t));
+  if (pool.length === 0) return null;
+  return pool[Math.floor(Math.random() * pool.length)]!;
+}
+
+export function Mines() {
+  const { user } = useAuth();
+  const { profile, refreshProfile } = useProfile();
+
+  const [mineCount, setMineCount] = useState(3);
+  const [wager, setWager] = useState(1);
+  const [wagerInput, setWagerInput] = useState("1.00");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [gameId, setGameId] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState<Set<number>>(new Set());
+  const [gemsRevealed, setGemsRevealed] = useState(0);
+  const [multiplier, setMultiplier] = useState(1);
+  const [bustedMines, setBustedMines] = useState<number[] | null>(null);
+  const [lastMessage, setLastMessage] = useState<string | null>(null);
+
+  const [pfHash, setPfHash] = useState<string | null>(null);
+  const [pfNonce, setPfNonce] = useState(0);
+  const [clientSeed, setClientSeed] = useState("default");
+  const [showFairness, setShowFairness] = useState(false);
+
+  const playing = gameId !== null;
+  const maxGems = getMaxGems(mineCount);
+  const nextMult = playing ? getNextMultiplier(mineCount, gemsRevealed) : getMinesMultiplier(mineCount, 1);
+  const potentialPayout = useMemo(
+    () => Math.round(wager * multiplier * 100) / 100,
+    [wager, multiplier]
+  );
+
+  const loadPf = useCallback(async () => {
+    const { data } = await fetchMinesPfState();
+    if (data) {
+      setPfHash(data.serverSeedHash);
+      setPfNonce(data.nextNonce);
+      setClientSeed(data.clientSeed);
+    }
+  }, []);
+
+  const resumeGame = useCallback(async () => {
+    const { data, error: resumeErr } = await fetchMyActiveMinesGame();
+    if (resumeErr || !data) return;
+    setGameId(data.gameId);
+    setWager(Number(data.wager));
+    setWagerInput(Number(data.wager).toFixed(2));
+    setMineCount(data.mineCount);
+    setRevealed(new Set(data.revealedTiles));
+    setGemsRevealed(data.gemsRevealed);
+    setMultiplier(Number(data.multiplier));
+    setBustedMines(null);
+    setLastMessage(null);
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      loadPf();
+      resumeGame();
+    }
+  }, [user, loadPf, resumeGame]);
+
+  const resetRound = () => {
+    setGameId(null);
+    setRevealed(new Set());
+    setGemsRevealed(0);
+    setMultiplier(1);
+    setBustedMines(null);
+    setLastMessage(null);
+  };
+
+  const applyWager = (value: number) => {
+    const v = Math.max(0.01, Math.min(100_000, value));
+    setWager(v);
+    setWagerInput(v.toFixed(2));
+  };
+
+  const handleStart = async () => {
+    if (!user) {
+      setError("Log in to play.");
+      return;
+    }
+    const balance = profile?.balance ?? 0;
+    if (wager > balance) {
+      setError("Insufficient balance.");
+      return;
+    }
+
+    setError(null);
+    setLastMessage(null);
+    setBusy(true);
+    resetRound();
+
+    const { data, error: startErr } = await startMinesGame({ wager, mineCount });
+    setBusy(false);
+
+    if (startErr || !data) {
+      setError(startErr ?? "Could not start game.");
+      return;
+    }
+
+    setGameId(data.gameId);
+    setPfNonce(data.nonce + 1);
+    await refreshProfile();
+  };
+
+  const handleReveal = async (tile: number) => {
+    if (!gameId || busy || revealed.has(tile)) return;
+
+    setBusy(true);
+    setError(null);
+
+    const { data, error: revealErr } = await revealMinesTile({
+      gameId,
+      tile,
+      mineCount,
+    });
+
+    if (revealErr || !data) {
+      setBusy(false);
+      setError(revealErr ?? "Reveal failed.");
+      return;
+    }
+
+    setRevealed((prev) => new Set([...prev, tile]));
+
+    if (data.isMine) {
+      setBusy(false);
+      setBustedMines(data.mineTiles ?? []);
+      setGameId(null);
+      setLastMessage("Mine hit — round lost.");
+      await refreshProfile();
+      await loadPf();
+      return;
+    }
+
+    setGemsRevealed(data.gemsRevealed);
+    setMultiplier(data.multiplier);
+
+    if (data.gemsRevealed >= maxGems) {
+      await handleCashout(true);
+      return;
+    }
+
+    setBusy(false);
+  };
+
+  const handleCashout = async (auto = false) => {
+    if (!gameId || gemsRevealed < 1) return;
+
+    setBusy(true);
+    setError(null);
+
+    const { data, error: cashErr } = await cashoutMinesGame(gameId);
+    setBusy(false);
+
+    if (cashErr || !data) {
+      setError(cashErr ?? "Cashout failed.");
+      return;
+    }
+
+    setLastMessage(
+      auto
+        ? `All gems found! Won ${formatUsd(data.payout)}`
+        : `Cashed out ${formatUsd(data.payout)} at ${data.multiplier}×`
+    );
+    resetRound();
+    await refreshProfile();
+    await loadPf();
+  };
+
+  const pickRandom = () => {
+    const tile = randomUnrevealedTile(revealed);
+    if (tile !== null) void handleReveal(tile);
+  };
+
+  const saveClientSeed = async () => {
+    const { error: seedErr } = await setMinesClientSeed(clientSeed);
+    if (seedErr) setError(seedErr);
+    else {
+      setError(null);
+      await loadPf();
+    }
+  };
+
+  function tileClass(tile: number) {
+    const classes = ["mines__tile"];
+    if (revealed.has(tile)) {
+      if (bustedMines?.includes(tile)) classes.push("mines__tile--mine");
+      else if (bustedMines && !bustedMines.includes(tile)) classes.push("mines__tile--gem");
+      else classes.push("mines__tile--gem");
+    } else if (bustedMines?.includes(tile)) {
+      classes.push("mines__tile--mine", "mines__tile--peek");
+    }
+    if (busy) classes.push("mines__tile--busy");
+    return classes.join(" ");
+  }
+
+  return (
+    <div className="mines lc-game-page">
+      <header className="mines__header">
+        <h1 className="mines__title">Mines</h1>
+        <p className="mines__subtitle">
+          5×5 grid, 1–24 mines. Reveal gems to raise your multiplier — cash out anytime or risk it all.
+          Provably fair — 94.5% RTP.
+        </p>
+      </header>
+
+      <div className="mines__layout">
+        <section className="mines__board-panel">
+          {playing && (
+            <div className="mines__board-toolbar">
+              <button
+                type="button"
+                className="mines__tool-btn"
+                onClick={pickRandom}
+                disabled={busy}
+              >
+                Random tile
+              </button>
+            </div>
+          )}
+
+          <div className="mines__grid" role="grid" aria-label="Mines board">
+            {TILES.map((tile) => (
+              <button
+                key={tile}
+                type="button"
+                role="gridcell"
+                className={tileClass(tile)}
+                disabled={!playing || busy || revealed.has(tile)}
+                onClick={() => handleReveal(tile)}
+                aria-label={
+                  revealed.has(tile)
+                    ? bustedMines?.includes(tile)
+                      ? "Mine"
+                      : "Gem"
+                    : `Tile ${tile + 1}`
+                }
+              >
+                {(revealed.has(tile) || bustedMines?.includes(tile)) && (
+                  <span className="mines__tile-icon" aria-hidden="true">
+                    {bustedMines?.includes(tile) ? "💣" : "💎"}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {playing && (
+            <div className="mines__live-stats">
+              <span>
+                Multiplier: <strong>{multiplier.toFixed(2)}×</strong>
+              </span>
+              <span>
+                Cashout: <strong>{formatUsd(potentialPayout)}</strong>
+              </span>
+              <span>
+                Gems: <strong>{gemsRevealed}</strong> / {maxGems}
+              </span>
+            </div>
+          )}
+        </section>
+
+        <aside className="mines__controls game-controls">
+          <div className="game-controls__options">
+            <div className="game-controls__option">
+              <span className="game-controls__option-label">Mines</span>
+              <div className="game-controls__mines-row">
+                <input
+                  type="range"
+                  className="game-controls__mines-slider"
+                  min={MINES_MIN_COUNT}
+                  max={MINES_MAX_COUNT}
+                  value={mineCount}
+                  onChange={(e) => setMineCount(Number(e.target.value))}
+                  disabled={playing || busy}
+                  aria-valuemin={MINES_MIN_COUNT}
+                  aria-valuemax={MINES_MAX_COUNT}
+                  aria-valuenow={mineCount}
+                />
+                <span className="game-controls__mines-value" aria-hidden="true">
+                  {mineCount}
+                </span>
+              </div>
+              <p className="game-controls__option-hint">
+                {maxGems} gems · next pick {nextMult.toFixed(2)}×
+              </p>
+            </div>
+          </div>
+
+          <div className="game-controls__wager-block">
+            <label className="game-controls__wager-label" htmlFor="mines-wager">
+              Bet amount (USD)
+            </label>
+            <div className="game-controls__wager-row">
+              <input
+                id="mines-wager"
+                type="text"
+                inputMode="decimal"
+                className="game-controls__wager-input"
+                value={wagerInput}
+                onChange={(e) => setWagerInput(e.target.value)}
+                onBlur={() => {
+                  const parsed = parseFloat(wagerInput.replace(/,/g, ""));
+                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                }}
+                disabled={playing || busy}
+              />
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={() => applyWager(wager / 2)}
+                disabled={playing || busy}
+                aria-label="Half bet"
+              >
+                ½
+              </button>
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={() => applyWager(wager * 2)}
+                disabled={playing || busy}
+                aria-label="Double bet"
+              >
+                2×
+              </button>
+            </div>
+            <div className="game-controls__presets">
+              {BET_PRESETS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
+                  onClick={() => applyWager(p)}
+                  disabled={playing || busy}
+                >
+                  ${p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <p className="mines__error" role="alert">
+              {error}
+            </p>
+          )}
+
+          {lastMessage && (
+            <p className="mines__message" role="status">
+              {lastMessage}
+            </p>
+          )}
+
+          {!playing ? (
+            <button
+              type="button"
+              className="mines__bet-btn"
+              onClick={handleStart}
+              disabled={busy || !user}
+            >
+              {busy ? "Starting…" : "Bet"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="mines__cashout-btn"
+              onClick={() => handleCashout(false)}
+              disabled={busy || gemsRevealed < 1}
+            >
+              {busy ? "…" : `Cash out ${formatUsd(potentialPayout)}`}
+            </button>
+          )}
+
+          <p className="mines__hint">
+            Need funds? <Link to="/deposit">Deposit</Link>
+          </p>
+
+          <div className="mines__fairness">
+            <button
+              type="button"
+              className="mines__fairness-toggle"
+              onClick={() => setShowFairness((v) => !v)}
+            >
+              {showFairness ? "Hide" : "Show"} provably fair
+            </button>
+            {showFairness && (
+              <div className="mines__fairness-body">
+                <p>
+                  <span className="mines__fairness-k">Server seed (hash)</span>
+                  <code className="mines__hash">{pfHash ?? "…"}</code>
+                </p>
+                <p>
+                  <span className="mines__fairness-k">Next nonce</span>
+                  <code>{pfNonce}</code>
+                </p>
+                <label className="mines__seed-label">
+                  Client seed
+                  <input
+                    type="text"
+                    className="mines__seed-input"
+                    value={clientSeed}
+                    maxLength={64}
+                    onChange={(e) => setClientSeed(e.target.value)}
+                    disabled={playing}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="mines__tool-btn"
+                  onClick={saveClientSeed}
+                  disabled={playing}
+                >
+                  Save client seed
+                </button>
+                <p className="mines__fairness-note">
+                  Mine positions use 24 HMAC floats + Fisher-Yates (Stake Mines).
+                </p>
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}

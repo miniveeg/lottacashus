@@ -1,0 +1,81 @@
+import { Suspense, useMemo } from "react";
+import { Canvas } from "@react-three/fiber";
+import { Float } from "@react-three/drei";
+import * as THREE from "three";
+
+function Shard({ position, rotation, scale }: { position: [number, number, number]; rotation: [number, number, number]; scale: number }) {
+  const geometry = useMemo(() => {
+    const geo = new THREE.OctahedronGeometry(1, 0);
+    geo.scale(scale, scale * 1.4, scale * 0.6);
+    return geo;
+  }, [scale]);
+
+  return (
+    <Float speed={1.2} rotationIntensity={0.4} floatIntensity={0.6}>
+      <mesh position={position} rotation={rotation} geometry={geometry}>
+        <meshStandardMaterial
+          color="#0a0a12"
+          emissive="#dc143c"
+          emissiveIntensity={0.15}
+          metalness={0.85}
+          roughness={0.35}
+          transparent
+          opacity={0.75}
+        />
+      </mesh>
+    </Float>
+  );
+}
+
+function ObsidianShards() {
+  const shards = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, i) => ({
+        position: [
+          (Math.random() - 0.5) * 14,
+          (Math.random() - 0.5) * 8,
+          (Math.random() - 0.5) * 6 - 2,
+        ] as [number, number, number],
+        rotation: [Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI] as [
+          number,
+          number,
+          number,
+        ],
+        scale: 0.25 + Math.random() * 0.45,
+        key: i,
+      })),
+    []
+  );
+
+  return (
+    <>
+      <ambientLight intensity={0.25} />
+      <pointLight position={[4, 4, 6]} intensity={0.8} color="#dc143c" />
+      <pointLight position={[-6, -2, 4]} intensity={0.4} color="#8b5cf6" />
+      {shards.map((s) => (
+        <Shard key={s.key} position={s.position} rotation={s.rotation} scale={s.scale} />
+      ))}
+    </>
+  );
+}
+
+type ObsidianSceneProps = {
+  className?: string;
+};
+
+export function ObsidianScene({ className }: ObsidianSceneProps) {
+  return (
+    <div className={className} aria-hidden="true">
+      <Canvas
+        camera={{ position: [0, 0, 8], fov: 45 }}
+        dpr={[1, 1.5]}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: "transparent" }}
+      >
+        <Suspense fallback={null}>
+          <ObsidianShards />
+        </Suspense>
+      </Canvas>
+    </div>
+  );
+}

@@ -1,0 +1,58 @@
+/* Atmospheric layers — obsidian, fog, noise */
+
+.lc-atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.lc-atmosphere__canvas {
+  position: absolute;
+  inset: 0;
+  opacity: 0.55;
+}
+
+.lc-atmosphere__fog {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(220, 20, 60, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 90% 70%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 50% at 10% 80%, rgba(56, 189, 248, 0.03) 0%, transparent 45%);
+  animation: lc-fog-drift 24s ease-in-out infinite alternate;
+}
+
+.lc-atmosphere__noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+.lc-atmosphere__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.65) 100%);
+}
+
+@keyframes lc-fog-drift {
+  0% { transform: translateY(0) scale(1); opacity: 0.9; }
+  100% { transform: translateY(-2%) scale(1.02); opacity: 1; }
+}
+
+/* Glass surface utility */
+.lc-glass {
+  background: var(--lc-bg-glass);
+  backdrop-filter: blur(var(--lc-glass-blur));
+  -webkit-backdrop-filter: blur(var(--lc-glass-blur));
+  border: 1px solid var(--lc-glass-border);
+  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
+}
+
+.lc-glass--crimson {
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-shadow-sm), 0 0 24px rgba(220, 20, 60, 0.08), var(--lc-glass-highlight);
+}

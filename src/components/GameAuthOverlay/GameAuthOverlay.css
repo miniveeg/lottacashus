@@ -1,0 +1,124 @@
+/* LottaCash — Cracked Obsidian Game Auth Overlay */
+
+.game-auth-overlay {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 22rem;
+  border-radius: var(--lc-radius-xl);
+  background: rgba(5, 3, 6, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.game-auth-overlay__card {
+  text-align: center;
+  max-width: 360px;
+  padding: 2.5rem 2rem;
+  background: rgba(8, 6, 12, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--lc-glass-border);
+  border-radius: var(--lc-radius-2xl);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.6),
+    0 0 50px var(--lc-crimson-glow),
+    var(--lc-shadow-inset);
+  animation: fade-in-scale 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.game-auth-overlay__icon {
+  margin: 0 auto 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--lc-crimson-glow-faint);
+  border: 1px solid var(--lc-border-crimson);
+  font-size: 1.5rem;
+}
+
+.game-auth-overlay__title {
+  font-family: var(--lc-font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 0.6rem;
+}
+
+.game-auth-overlay__text {
+  color: var(--lc-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0 0 1.25rem;
+}
+
+.game-auth-overlay__perks {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.game-auth-overlay__perks li {
+  position: relative;
+  padding-left: 1.3rem;
+  font-size: 0.82rem;
+  color: var(--lc-text-secondary);
+}
+
+.game-auth-overlay__perks li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  width: 8px;
+  height: 8px;
+  background: var(--lc-crimson-soft);
+  transform: rotate(45deg);
+  box-shadow: 0 0 6px var(--lc-crimson-glow);
+}
+
+.game-auth-overlay__actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.game-auth-overlay__btn {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: var(--lc-radius-md);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.game-auth-overlay__btn--primary {
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson) 100%);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--lc-crimson-glow);
+  transition: filter var(--lc-transition), transform var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.game-auth-overlay__btn--primary:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px var(--lc-crimson-glow-strong);
+}
+
+.game-auth-overlay__btn--outline {
+  border: 1px solid var(--lc-border-strong);
+  color: var(--lc-text-primary);
+  background: rgba(255, 255, 255, 0.02);
+  transition: background var(--lc-transition);
+}
+
+.game-auth-overlay__btn--outline:hover {
+  background: var(--lc-bg-hover);
+  border-color: rgba(255, 255, 255, 0.1);
+}

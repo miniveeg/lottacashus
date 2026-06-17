@@ -697,6 +697,7 @@ $$;
 grant execute on function public.ensure_user_profile() to authenticated;
 
 -- Update admin_search_users to include sweeps_coins
+drop function if exists public.admin_search_users(text) cascade;
 create or replace function public.admin_search_users(p_query text)
 returns table (
   id uuid,

@@ -1,6 +1,6 @@
 -- ===================================================
 -- LottaCash — Complete Database Schema
--- Generated: 2026-06-16 23:30
+-- Generated: 2026-06-16 23:32
 -- Run this ONCE in Supabase Dashboard → SQL Editor
 -- ===================================================
 
@@ -34,7 +34,8 @@ create policy "Users can insert own profile"
   with check (auth.uid() = id);
 
 -- Auto-create profile on signup
-create or replace function public.handle_new_user()
+drop function if exists public.handle_new_user() cascade;
+create function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer set search_path = public
@@ -71,7 +72,8 @@ alter table public.signup_verification_codes disable row level security;
 grant all on table public.signup_verification_codes to service_role;
 grant all on table public.signup_verification_codes to postgres;
 
-create or replace function public.email_exists(check_email text)
+drop function if exists public.email_exists(check_email text) cascade;
+create function public.email_exists(check_email text)
 returns boolean
 language sql
 security definer
@@ -87,7 +89,8 @@ grant execute on function public.email_exists(text) to service_role;
 
 -- ensure_user_profile() + Realtime (see migrations/20250520300000_fix_profiles_balance_live.sql)
 
-create or replace function public.ensure_user_profile()
+drop function if exists public.ensure_user_profile() cascade;
+create function public.ensure_user_profile()
 returns public.profiles
 language plpgsql
 security definer
@@ -119,7 +122,14 @@ grant execute on function public.ensure_user_profile() to authenticated;
 alter table public.profiles replica identity full;
 
 -- Admin: credit a user's balance (for mail-in sweepstakes entry, adjustments, etc.)
--- admin_credit_user + admin_credit_log moved to migration 20250521200000_admin_access.sql
+create table if not exists public.admin_credit_log (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  amount numeric(12, 2) not null,
+  note text,
+  created_by uuid not null references public.profiles(id),
+  created_at timestamptz not null default now()
+);
 
 -- Responsible gaming: add columns to profiles
 alter table public.profiles add column if not exists birth_date date;
@@ -192,7 +202,8 @@ alter table public.signup_verification_codes disable row level security;
 grant all on table public.signup_verification_codes to service_role;
 grant all on table public.signup_verification_codes to postgres;
 
-create or replace function public.email_exists(check_email text)
+drop function if exists public.email_exists(check_email text) cascade;
+create function public.email_exists(check_email text)
 returns boolean
 language sql
 security definer
@@ -227,7 +238,8 @@ alter table public.signup_verification_codes disable row level security;
 grant all on table public.signup_verification_codes to service_role;
 grant all on table public.signup_verification_codes to postgres;
 
-create or replace function public.email_exists(check_email text)
+drop function if exists public.email_exists(check_email text) cascade;
+create function public.email_exists(check_email text)
 returns boolean
 language sql
 security definer
@@ -259,7 +271,8 @@ begin
 end $$;
 
 -- Logged-in users cannot change balance; service role / backend can
-create or replace function public.profiles_prevent_balance_change()
+drop function if exists public.profiles_prevent_balance_change() cascade;
+create function public.profiles_prevent_balance_change()
 returns trigger
 language plpgsql
 security definer
@@ -301,7 +314,8 @@ where p.id is null
 on conflict (id) do nothing;
 
 -- Create profile on demand from the app (logged-in user)
-create or replace function public.ensure_user_profile()
+drop function if exists public.ensure_user_profile() cascade;
+create function public.ensure_user_profile()
 returns public.profiles
 language plpgsql
 security definer
@@ -376,7 +390,8 @@ alter table public.password_reset_codes disable row level security;
 grant all on table public.password_reset_codes to service_role;
 grant all on table public.password_reset_codes to postgres;
 
-create or replace function public.get_user_id_by_email(check_email text)
+drop function if exists public.get_user_id_by_email(check_email text) cascade;
+create function public.get_user_id_by_email(check_email text)
 returns uuid
 language sql
 security definer
@@ -532,7 +547,8 @@ grant all on table public.crypto_withdrawals to service_role;
 grant usage, select on sequence public.deposit_derivation_index_seq to service_role;
 
 -- Credit deposit + update stats (service role / edge functions only)
-create or replace function public.credit_crypto_deposit(
+drop function if exists public.credit_crypto_deposit(p_user_id uuid, p_usd_amount numeric, p_chain text, p_tx_hash text, p_crypto_amount numeric, p_exchange_rate numeric, p_deposit_id uuid) cascade;
+create function public.credit_crypto_deposit(
   p_user_id uuid,
   p_usd_amount numeric,
   p_chain text,
@@ -580,7 +596,8 @@ revoke all on function public.credit_crypto_deposit from public;
 grant execute on function public.credit_crypto_deposit to service_role;
 
 -- Lock balance for withdrawal request
-create or replace function public.request_crypto_withdrawal(
+drop function if exists public.request_crypto_withdrawal(p_chain text, p_destination text, p_usd_amount numeric) cascade;
+create function public.request_crypto_withdrawal(
   p_chain text,
   p_destination text,
   p_usd_amount numeric
@@ -636,7 +653,8 @@ $$;
 grant execute on function public.request_crypto_withdrawal(text, text, numeric) to authenticated;
 
 -- Assign derivation index to profile
-create or replace function public.assign_deposit_derivation_index(p_user_id uuid)
+drop function if exists public.assign_deposit_derivation_index(p_user_id uuid) cascade;
+create function public.assign_deposit_derivation_index(p_user_id uuid)
 returns int
 language plpgsql
 security definer
@@ -688,7 +706,8 @@ alter table public.profiles
 
 grant all on table public.profiles to service_role;
 
-create or replace function public.link_discord_profile(
+drop function if exists public.link_discord_profile(p_user_id uuid, p_discord_id text, p_discord_username text, p_discord_avatar text) cascade;
+create function public.link_discord_profile(
   p_user_id uuid,
   p_discord_id text,
   p_discord_username text,
@@ -767,7 +786,8 @@ create policy "Users update own notifications"
 grant select, update on table public.user_notifications to authenticated;
 grant all on table public.user_notifications to service_role;
 
-create or replace function public.create_user_notification(
+drop function if exists public.create_user_notification(p_user_id uuid, p_type text, p_title text, p_body text, p_metadata jsonb) cascade;
+create function public.create_user_notification(
   p_user_id uuid,
   p_type text,
   p_title text,
@@ -799,7 +819,8 @@ grant execute on function public.create_user_notification(uuid, text, text, text
 grant execute on function public.create_user_notification(uuid, text, text, text, jsonb) to service_role;
 
 -- Credit deposit + notification
-create or replace function public.credit_crypto_deposit(
+drop function if exists public.credit_crypto_deposit(p_user_id uuid, p_usd_amount numeric, p_chain text, p_tx_hash text, p_crypto_amount numeric, p_exchange_rate numeric, p_deposit_id uuid) cascade;
+create function public.credit_crypto_deposit(
   p_user_id uuid,
   p_usd_amount numeric,
   p_chain text,
@@ -852,7 +873,8 @@ end;
 $$;
 
 -- Withdrawal request + notification
-create or replace function public.request_crypto_withdrawal(
+drop function if exists public.request_crypto_withdrawal(p_chain text, p_destination text, p_usd_amount numeric) cascade;
+create function public.request_crypto_withdrawal(
   p_chain text,
   p_destination text,
   p_usd_amount numeric
@@ -914,7 +936,8 @@ end;
 $$;
 
 -- Discord link + notification
-create or replace function public.link_discord_profile(
+drop function if exists public.link_discord_profile(p_user_id uuid, p_discord_id text, p_discord_username text, p_discord_avatar text) cascade;
+create function public.link_discord_profile(
   p_user_id uuid,
   p_discord_id text,
   p_discord_username text,
@@ -954,7 +977,8 @@ end;
 $$;
 
 -- Deposit detected / confirmed (poller inserts & updates)
-create or replace function public.notify_crypto_deposit_change()
+drop function if exists public.notify_crypto_deposit_change() cascade;
+create function public.notify_crypto_deposit_change()
 returns trigger
 language plpgsql
 security definer
@@ -988,7 +1012,8 @@ create trigger crypto_deposits_notify
   for each row execute function public.notify_crypto_deposit_change();
 
 -- Withdrawal status changes (admin / future processor)
-create or replace function public.notify_crypto_withdrawal_change()
+drop function if exists public.notify_crypto_withdrawal_change() cascade;
+create function public.notify_crypto_withdrawal_change()
 returns trigger
 language plpgsql
 security definer
@@ -1156,7 +1181,8 @@ create policy "Users can read own keno bets"
 grant select on public.keno_bets to authenticated;
 
 -- Ensure PF seed row exists; rotate server seed (new hash, nonce reset)
-create or replace function public.ensure_game_pf_seeds(p_user_id uuid)
+drop function if exists public.ensure_game_pf_seeds(p_user_id uuid) cascade;
+create function public.ensure_game_pf_seeds(p_user_id uuid)
 returns public.game_pf_seeds
 language plpgsql
 security definer
@@ -1189,7 +1215,8 @@ $$;
 revoke all on function public.ensure_game_pf_seeds(uuid) from public;
 grant execute on function public.ensure_game_pf_seeds(uuid) to service_role;
 
-create or replace function public.get_keno_pf_state()
+drop function if exists public.get_keno_pf_state() cascade;
+create function public.get_keno_pf_state()
 returns table (
   server_seed_hash text,
   client_seed text,
@@ -1229,7 +1256,8 @@ $$;
 
 grant execute on function public.get_keno_pf_state() to authenticated;
 
-create or replace function public.set_keno_client_seed(p_client_seed text)
+drop function if exists public.set_keno_client_seed(p_client_seed text) cascade;
+create function public.set_keno_client_seed(p_client_seed text)
 returns void
 language plpgsql
 security definer
@@ -1273,7 +1301,8 @@ $$;
 grant execute on function public.set_keno_client_seed(text) to authenticated;
 
 -- Settlement: called by edge function with service_role after provably fair draw
-create or replace function public.settle_keno_bet(
+drop function if exists public.settle_keno_bet(p_user_id uuid, p_wager numeric, p_risk text, p_picks int[], p_drawn int[], p_hits int, p_multiplier numeric, p_payout numeric, p_nonce bigint) cascade;
+create function public.settle_keno_bet(
   p_user_id uuid,
   p_wager numeric,
   p_risk text,
@@ -1372,7 +1401,8 @@ revoke all on function public.settle_keno_bet(uuid, numeric, text, int[], int[],
 grant execute on function public.settle_keno_bet(uuid, numeric, text, int[], int[], int, numeric, numeric, bigint) to service_role;
 
 -- Lock seeds + return server seed for one round (service role only)
-create or replace function public.consume_keno_nonce(p_user_id uuid)
+drop function if exists public.consume_keno_nonce(p_user_id uuid) cascade;
+create function public.consume_keno_nonce(p_user_id uuid)
 returns table (
   server_seed text,
   client_seed text,
@@ -1424,7 +1454,8 @@ grant all on table public.game_pf_seeds to service_role;
 grant usage on schema extensions to service_role;
 grant all on table public.game_pf_seeds to service_role;
 
-create or replace function public.ensure_game_pf_seeds(p_user_id uuid)
+drop function if exists public.ensure_game_pf_seeds(p_user_id uuid) cascade;
+create function public.ensure_game_pf_seeds(p_user_id uuid)
 returns public.game_pf_seeds
 language plpgsql
 security definer
@@ -1457,7 +1488,8 @@ $$;
 revoke all on function public.ensure_game_pf_seeds(uuid) from public;
 grant execute on function public.ensure_game_pf_seeds(uuid) to service_role;
 
-create or replace function public.get_keno_pf_state()
+drop function if exists public.get_keno_pf_state() cascade;
+create function public.get_keno_pf_state()
 returns table (
   server_seed_hash text,
   client_seed text,
@@ -1497,7 +1529,8 @@ $$;
 
 grant execute on function public.get_keno_pf_state() to authenticated;
 
-create or replace function public.set_keno_client_seed(p_client_seed text)
+drop function if exists public.set_keno_client_seed(p_client_seed text) cascade;
+create function public.set_keno_client_seed(p_client_seed text)
 returns void
 language plpgsql
 security definer
@@ -1540,7 +1573,8 @@ $$;
 
 grant execute on function public.set_keno_client_seed(text) to authenticated;
 
-create or replace function public.consume_keno_nonce(p_user_id uuid)
+drop function if exists public.consume_keno_nonce(p_user_id uuid) cascade;
+create function public.consume_keno_nonce(p_user_id uuid)
 returns table (
   server_seed text,
   client_seed text,
@@ -1705,7 +1739,8 @@ grant execute on function public.settle_keno_bet(uuid, numeric, text, int[], int
 alter table public.profiles
   add column if not exists is_admin boolean not null default false;
 
-create or replace function public.is_current_user_admin()
+drop function if exists public.is_current_user_admin() cascade;
+create function public.is_current_user_admin()
 returns boolean
 language sql
 stable
@@ -1722,7 +1757,8 @@ revoke all on function public.is_current_user_admin() from public;
 grant execute on function public.is_current_user_admin() to authenticated;
 
 -- Users cannot grant themselves admin via profile update
-create or replace function public.profiles_prevent_admin_escalation()
+drop function if exists public.profiles_prevent_admin_escalation() cascade;
+create function public.profiles_prevent_admin_escalation()
 returns trigger
 language plpgsql
 security definer
@@ -1743,7 +1779,8 @@ create trigger profiles_guard_admin
   before update on public.profiles
   for each row execute function public.profiles_prevent_admin_escalation();
 
-create or replace function public.require_admin()
+drop function if exists public.require_admin() cascade;
+create function public.require_admin()
 returns void
 language plpgsql
 security definer
@@ -1759,7 +1796,8 @@ $$;
 revoke all on function public.require_admin() from public;
 
 -- Dashboard stats
-create or replace function public.admin_get_stats()
+drop function if exists public.admin_get_stats() cascade;
+create function public.admin_get_stats()
 returns table (
   pending_withdrawals bigint,
   pending_withdrawals_usd numeric,
@@ -1790,7 +1828,8 @@ $$;
 grant execute on function public.admin_get_stats() to authenticated;
 
 -- Pending / in-flight withdrawals with user info
-create or replace function public.admin_list_withdrawals(p_status text default 'pending')
+drop function if exists public.admin_list_withdrawals(p_status text) cascade;
+create function public.admin_list_withdrawals(p_status text default 'pending')
 returns table (
   id uuid,
   user_id uuid,
@@ -1842,7 +1881,8 @@ $$;
 grant execute on function public.admin_list_withdrawals(text) to authenticated;
 
 -- Recent credited deposits
-create or replace function public.admin_list_recent_deposits(p_limit int default 15)
+drop function if exists public.admin_list_recent_deposits(p_limit int) cascade;
+create function public.admin_list_recent_deposits(p_limit int default 15)
 returns table (
   id uuid,
   user_id uuid,
@@ -1879,7 +1919,8 @@ $$;
 grant execute on function public.admin_list_recent_deposits(int) to authenticated;
 
 -- Mark withdrawal sent on-chain
-create or replace function public.admin_complete_crypto_withdrawal(
+drop function if exists public.admin_complete_crypto_withdrawal(p_withdrawal_id uuid, p_tx_hash text) cascade;
+create function public.admin_complete_crypto_withdrawal(
   p_withdrawal_id uuid,
   p_tx_hash text
 )
@@ -1919,7 +1960,8 @@ $$;
 grant execute on function public.admin_complete_crypto_withdrawal(uuid, text) to authenticated;
 
 -- Fail withdrawal and refund balance
-create or replace function public.admin_fail_crypto_withdrawal(
+drop function if exists public.admin_fail_crypto_withdrawal(p_withdrawal_id uuid, p_error_message text) cascade;
+create function public.admin_fail_crypto_withdrawal(
   p_withdrawal_id uuid,
   p_error_message text default 'Withdrawal could not be completed.'
 )
@@ -1963,7 +2005,8 @@ $$;
 grant execute on function public.admin_fail_crypto_withdrawal(uuid, text) to authenticated;
 
 -- Search users (grant/revoke admin, support lookup)
-create or replace function public.admin_search_users(p_query text)
+drop function if exists public.admin_search_users(p_query text) cascade;
+create function public.admin_search_users(p_query text)
 returns table (
   id uuid,
   username text,
@@ -2006,7 +2049,8 @@ $$;
 grant execute on function public.admin_search_users(text) to authenticated;
 
 -- Grant or revoke admin (cannot change own admin flag)
-create or replace function public.admin_set_user_admin(
+drop function if exists public.admin_set_user_admin(p_user_id uuid, p_is_admin boolean) cascade;
+create function public.admin_set_user_admin(
   p_user_id uuid,
   p_is_admin boolean
 )
@@ -2041,7 +2085,8 @@ grant execute on function public.admin_set_user_admin(uuid, boolean) to authenti
 -- Keno settlement: win/loss rows get a later created_at so newest-first lists show wager then win.
 -- Also expose is_admin via a small helper used by the app.
 
-create or replace function public.settle_keno_bet(
+drop function if exists public.settle_keno_bet(p_user_id uuid, p_wager numeric, p_risk text, p_picks int[], p_drawn int[], p_hits int, p_multiplier numeric, p_payout numeric, p_nonce bigint) cascade;
+create function public.settle_keno_bet(
   p_user_id uuid,
   p_wager numeric,
   p_risk text,
@@ -2144,7 +2189,8 @@ revoke all on function public.settle_keno_bet(uuid, numeric, text, int[], int[],
 grant execute on function public.settle_keno_bet(uuid, numeric, text, int[], int[], int, numeric, numeric, bigint) to service_role;
 
 -- Paginated, correctly ordered transaction history for Settings
-create or replace function public.get_user_transactions(
+drop function if exists public.get_user_transactions(p_page int, p_page_size int) cascade;
+create function public.get_user_transactions(
   p_page int default 0,
   p_page_size int default 10
 )
@@ -2245,7 +2291,8 @@ grant select on public.mines_games to authenticated;
 grant all on table public.mines_games to service_role;
 
 -- Start round: lock wager, store mine layout (server-only until bust/cashout)
-create or replace function public.start_mines_game(
+drop function if exists public.start_mines_game(p_user_id uuid, p_wager numeric, p_mine_count int, p_mine_tiles int[], p_nonce bigint) cascade;
+create function public.start_mines_game(
   p_user_id uuid,
   p_wager numeric,
   p_mine_count int,
@@ -2327,7 +2374,8 @@ revoke all on function public.start_mines_game(uuid, numeric, int, int[], bigint
 grant execute on function public.start_mines_game(uuid, numeric, int, int[], bigint) to service_role;
 
 -- Reveal a tile
-create or replace function public.mines_reveal_tile(
+drop function if exists public.mines_reveal_tile(p_user_id uuid, p_game_id uuid, p_tile int) cascade;
+create function public.mines_reveal_tile(
   p_user_id uuid,
   p_game_id uuid,
   p_tile int
@@ -2453,7 +2501,8 @@ end;
 $$;
 
 -- Combinatorics helper for SQL multiplier (matches client 0.99 × C(25,d)/C(25-m,d))
-create or replace function public.mines_comb(n int, r int)
+drop function if exists public.mines_comb(n int, r int) cascade;
+create function public.mines_comb(n int, r int)
 returns numeric
 language plpgsql
 immutable
@@ -2481,7 +2530,8 @@ revoke all on function public.mines_reveal_tile(uuid, uuid, int) from public;
 grant execute on function public.mines_reveal_tile(uuid, uuid, int) to service_role;
 
 -- Cash out
-create or replace function public.mines_cashout(
+drop function if exists public.mines_cashout(p_user_id uuid, p_game_id uuid) cascade;
+create function public.mines_cashout(
   p_user_id uuid,
   p_game_id uuid
 )
@@ -2563,7 +2613,8 @@ revoke all on function public.mines_cashout(uuid, uuid) from public;
 grant execute on function public.mines_cashout(uuid, uuid) to service_role;
 
 -- Active game for resume (no mine positions)
-create or replace function public.get_active_mines_game(p_user_id uuid)
+drop function if exists public.get_active_mines_game(p_user_id uuid) cascade;
+create function public.get_active_mines_game(p_user_id uuid)
 returns table (
   game_id uuid,
   wager numeric,
@@ -2597,7 +2648,8 @@ $$;
 revoke all on function public.get_active_mines_game(uuid) from public;
 grant execute on function public.get_active_mines_game(uuid) to service_role;
 
-create or replace function public.get_my_active_mines_game()
+drop function if exists public.get_my_active_mines_game() cascade;
+create function public.get_my_active_mines_game()
 returns table (
   game_id uuid,
   wager numeric,
@@ -2626,7 +2678,8 @@ $$;
 grant execute on function public.get_my_active_mines_game() to authenticated;
 
 -- PF wrappers (reuse keno seed row)
-create or replace function public.get_mines_pf_state()
+drop function if exists public.get_mines_pf_state() cascade;
+create function public.get_mines_pf_state()
 returns table (
   server_seed_hash text,
   client_seed text,
@@ -2641,7 +2694,8 @@ $$;
 
 grant execute on function public.get_mines_pf_state() to authenticated;
 
-create or replace function public.set_mines_client_seed(p_client_seed text)
+drop function if exists public.set_mines_client_seed(p_client_seed text) cascade;
+create function public.set_mines_client_seed(p_client_seed text)
 returns void
 language sql
 security definer
@@ -2683,7 +2737,8 @@ create policy "Users read own limbo bets"
 grant select on public.limbo_bets to authenticated;
 grant all on table public.limbo_bets to service_role;
 
-create or replace function public.settle_limbo_bet(
+drop function if exists public.settle_limbo_bet(p_user_id uuid, p_wager numeric, p_target_multiplier numeric, p_result_multiplier numeric, p_won boolean, p_payout numeric, p_nonce bigint) cascade;
+create function public.settle_limbo_bet(
   p_user_id uuid,
   p_wager numeric,
   p_target_multiplier numeric,
@@ -2792,7 +2847,8 @@ $$;
 revoke all on function public.settle_limbo_bet(uuid, numeric, numeric, numeric, boolean, numeric, bigint) from public;
 grant execute on function public.settle_limbo_bet(uuid, numeric, numeric, numeric, boolean, numeric, bigint) to service_role;
 
-create or replace function public.get_limbo_pf_state()
+drop function if exists public.get_limbo_pf_state() cascade;
+create function public.get_limbo_pf_state()
 returns table (
   server_seed_hash text,
   client_seed text,
@@ -2807,7 +2863,8 @@ $$;
 
 grant execute on function public.get_limbo_pf_state() to authenticated;
 
-create or replace function public.set_limbo_client_seed(p_client_seed text)
+drop function if exists public.set_limbo_client_seed(p_client_seed text) cascade;
+create function public.set_limbo_client_seed(p_client_seed text)
 returns void
 language sql
 security definer
@@ -2861,7 +2918,8 @@ create policy "Users read own blackjack hands"
 grant select on public.blackjack_hands to authenticated;
 grant all on table public.blackjack_hands to service_role;
 
-create or replace function public.start_blackjack_hand(
+drop function if exists public.start_blackjack_hand(p_user_id uuid, p_wager numeric, p_total_wager numeric, p_shoe int[], p_shoe_index int, p_player_cards int[], p_dealer_cards int[], p_doubled boolean, p_dealer_revealed boolean, p_status text, p_outcome text, p_payout numeric, p_nonce bigint) cascade;
+create function public.start_blackjack_hand(
   p_user_id uuid,
   p_wager numeric,
   p_total_wager numeric,
@@ -2991,7 +3049,8 @@ $$;
 revoke all on function public.start_blackjack_hand(uuid, numeric, numeric, int[], int, int[], int[], boolean, boolean, text, text, numeric, bigint) from public;
 grant execute on function public.start_blackjack_hand(uuid, numeric, numeric, int[], int, int[], int[], boolean, boolean, text, text, numeric, bigint) to service_role;
 
-create or replace function public.blackjack_update_active(
+drop function if exists public.blackjack_update_active(p_user_id uuid, p_hand_id uuid, p_player_cards int[], p_shoe_index int) cascade;
+create function public.blackjack_update_active(
   p_user_id uuid,
   p_hand_id uuid,
   p_player_cards int[],
@@ -3020,7 +3079,8 @@ $$;
 revoke all on function public.blackjack_update_active(uuid, uuid, int[], int) from public;
 grant execute on function public.blackjack_update_active(uuid, uuid, int[], int) to service_role;
 
-create or replace function public.blackjack_finish_hand(
+drop function if exists public.blackjack_finish_hand(p_user_id uuid, p_hand_id uuid, p_player_cards int[], p_dealer_cards int[], p_shoe_index int, p_doubled boolean, p_total_wager numeric, p_dealer_revealed boolean, p_outcome text, p_payout numeric, p_extra_wager numeric) cascade;
+create function public.blackjack_finish_hand(
   p_user_id uuid,
   p_hand_id uuid,
   p_player_cards int[],
@@ -3151,7 +3211,8 @@ grant execute on function public.blackjack_finish_hand(uuid, uuid, int[], int[],
 
 drop function if exists public.get_my_active_blackjack_hand();
 
-create or replace function public.get_my_active_blackjack_hand()
+drop function if exists public.get_my_active_blackjack_hand() cascade;
+create function public.get_my_active_blackjack_hand()
 returns table (
   hand_id uuid,
   wager numeric,
@@ -3196,7 +3257,8 @@ $$;
 
 grant execute on function public.get_my_active_blackjack_hand() to authenticated;
 
-create or replace function public.get_blackjack_pf_state()
+drop function if exists public.get_blackjack_pf_state() cascade;
+create function public.get_blackjack_pf_state()
 returns table (server_seed_hash text, client_seed text, next_nonce bigint)
 language sql
 security definer
@@ -3207,7 +3269,8 @@ $$;
 
 grant execute on function public.get_blackjack_pf_state() to authenticated;
 
-create or replace function public.set_blackjack_client_seed(p_client_seed text)
+drop function if exists public.set_blackjack_client_seed(p_client_seed text) cascade;
+create function public.set_blackjack_client_seed(p_client_seed text)
 returns void
 language sql
 security definer
@@ -3247,7 +3310,8 @@ drop function if exists public.blackjack_finish_hand(
   uuid, uuid, int[], int[], int, boolean, numeric, boolean, text, numeric, numeric
 );
 
-create or replace function public.start_blackjack_hand(
+drop function if exists public.start_blackjack_hand(p_user_id uuid, p_wager numeric, p_total_wager numeric, p_shoe int[], p_shoe_index int, p_player_cards int[], p_dealer_cards int[], p_doubled boolean, p_dealer_revealed boolean, p_status text, p_outcome text, p_payout numeric, p_nonce bigint, p_phase text, p_insurance_wager numeric, p_insurance_taken boolean, p_insurance_decided boolean, p_is_split boolean, p_player_hands jsonb, p_active_hand_index int) cascade;
+create function public.start_blackjack_hand(
   p_user_id uuid,
   p_wager numeric,
   p_total_wager numeric,
@@ -3399,7 +3463,8 @@ grant execute on function public.start_blackjack_hand(
   text, numeric, boolean, boolean, boolean, jsonb, int
 ) to service_role;
 
-create or replace function public.blackjack_update_active(
+drop function if exists public.blackjack_update_active(p_user_id uuid, p_hand_id uuid, p_player_cards int[], p_shoe_index int, p_player_hands jsonb, p_active_hand_index int, p_is_split boolean, p_phase text, p_total_wager numeric, p_doubled boolean, p_insurance_wager numeric, p_insurance_taken boolean, p_insurance_decided boolean) cascade;
+create function public.blackjack_update_active(
   p_user_id uuid,
   p_hand_id uuid,
   p_player_cards int[],
@@ -3450,7 +3515,8 @@ grant execute on function public.blackjack_update_active(
   uuid, uuid, int[], int, jsonb, int, boolean, text, numeric, boolean, numeric, boolean, boolean
 ) to service_role;
 
-create or replace function public.blackjack_debit_extra(
+drop function if exists public.blackjack_debit_extra(p_user_id uuid, p_hand_id uuid, p_extra_wager numeric, p_description text) cascade;
+create function public.blackjack_debit_extra(
   p_user_id uuid,
   p_hand_id uuid,
   p_extra_wager numeric,
@@ -3510,7 +3576,8 @@ $$;
 revoke all on function public.blackjack_debit_extra(uuid, uuid, numeric, text) from public;
 grant execute on function public.blackjack_debit_extra(uuid, uuid, numeric, text) to service_role;
 
-create or replace function public.blackjack_finish_hand(
+drop function if exists public.blackjack_finish_hand(p_user_id uuid, p_hand_id uuid, p_player_cards int[], p_dealer_cards int[], p_shoe_index int, p_doubled boolean, p_total_wager numeric, p_dealer_revealed boolean, p_outcome text, p_payout numeric, p_extra_wager numeric, p_phase text, p_player_hands jsonb, p_is_split boolean, p_active_hand_index int, p_insurance_wager numeric, p_insurance_taken boolean) cascade;
+create function public.blackjack_finish_hand(
   p_user_id uuid,
   p_hand_id uuid,
   p_player_cards int[],
@@ -3661,7 +3728,8 @@ grant execute on function public.blackjack_finish_hand(
   text, jsonb, boolean, int, numeric, boolean
 ) to service_role;
 
-create or replace function public.get_my_active_blackjack_hand()
+drop function if exists public.get_my_active_blackjack_hand() cascade;
+create function public.get_my_active_blackjack_hand()
 returns table (
   hand_id uuid,
   wager numeric,
@@ -3789,7 +3857,8 @@ grant select on public.case_battle_players to authenticated;
 grant all on public.case_battles to service_role;
 grant all on public.case_battle_players to service_role;
 
-create or replace function public.create_case_battle_entry(
+drop function if exists public.create_case_battle_entry(p_user_id uuid, p_battle_id uuid, p_slot_index int, p_entry_cost numeric, p_display_name text) cascade;
+create function public.create_case_battle_entry(
   p_user_id uuid,
   p_battle_id uuid,
   p_slot_index int,
@@ -3877,7 +3946,8 @@ $$;
 revoke all on function public.create_case_battle_entry(uuid, uuid, int, numeric, text) from public;
 grant execute on function public.create_case_battle_entry(uuid, uuid, int, numeric, text) to service_role;
 
-create or replace function public.insert_case_battle_bot(
+drop function if exists public.insert_case_battle_bot(p_battle_id uuid, p_slot_index int) cascade;
+create function public.insert_case_battle_bot(
   p_battle_id uuid,
   p_slot_index int
 )
@@ -3895,7 +3965,8 @@ $$;
 revoke all on function public.insert_case_battle_bot(uuid, int) from public;
 grant execute on function public.insert_case_battle_bot(uuid, int) to service_role;
 
-create or replace function public.complete_case_battle(
+drop function if exists public.complete_case_battle(p_battle_id uuid, p_winner_id uuid, p_winner_slot int, p_winner_payout numeric, p_pot_total numeric, p_battle_seed text, p_results jsonb, p_players jsonb) cascade;
+create function public.complete_case_battle(
   p_battle_id uuid,
   p_winner_id uuid,
   p_winner_slot int,
@@ -3978,7 +4049,8 @@ $$;
 revoke all on function public.complete_case_battle(uuid, uuid, int, numeric, numeric, text, jsonb, jsonb) from public;
 grant execute on function public.complete_case_battle(uuid, uuid, int, numeric, numeric, text, jsonb, jsonb) to service_role;
 
-create or replace function public.mark_case_battle_running(
+drop function if exists public.mark_case_battle_running(p_battle_id uuid, p_battle_seed_hash text) cascade;
+create function public.mark_case_battle_running(
   p_battle_id uuid,
   p_battle_seed_hash text
 )
@@ -4002,7 +4074,8 @@ grant execute on function public.mark_case_battle_running(uuid, text) to service
 
 drop function if exists public.get_open_case_battles(int);
 
-create or replace function public.get_open_case_battles(p_limit int default 20)
+drop function if exists public.get_open_case_battles(p_limit int) cascade;
+create function public.get_open_case_battles(p_limit int default 20)
 returns table (
   battle_id uuid,
   creator_id uuid,
@@ -4040,7 +4113,8 @@ $$;
 
 grant execute on function public.get_open_case_battles(int) to authenticated;
 
-create or replace function public.get_case_battle_pf_state()
+drop function if exists public.get_case_battle_pf_state() cascade;
+create function public.get_case_battle_pf_state()
 returns table (server_seed_hash text, client_seed text, next_nonce bigint)
 language sql
 security definer
@@ -4051,7 +4125,8 @@ $$;
 
 grant execute on function public.get_case_battle_pf_state() to authenticated;
 
-create or replace function public.set_case_battle_client_seed(p_client_seed text)
+drop function if exists public.set_case_battle_client_seed(p_client_seed text) cascade;
+create function public.set_case_battle_client_seed(p_client_seed text)
 returns void
 language sql
 security definer
@@ -4094,7 +4169,8 @@ where case_ids is null and case_id is not null;
 
 drop function if exists public.get_open_case_battles(int);
 
-create or replace function public.get_open_case_battles(p_limit int default 20)
+drop function if exists public.get_open_case_battles(p_limit int) cascade;
+create function public.get_open_case_battles(p_limit int default 20)
 returns table (
   battle_id uuid,
   creator_id uuid,
@@ -4150,7 +4226,8 @@ alter table public.case_battles
   add constraint case_battles_rounds_check
   check (rounds >= 1 and rounds <= 10);
 
-create or replace function public.insert_case_battle_bot(
+drop function if exists public.insert_case_battle_bot(p_battle_id uuid, p_slot_index int) cascade;
+create function public.insert_case_battle_bot(
   p_battle_id uuid,
   p_slot_index int
 )
@@ -4191,7 +4268,8 @@ begin
 end;
 $$;
 
-create or replace function public.complete_case_battle(
+drop function if exists public.complete_case_battle(p_battle_id uuid, p_winner_id uuid, p_winner_slot int, p_winner_payout numeric, p_pot_total numeric, p_battle_seed text, p_results jsonb, p_players jsonb, p_winner_payouts jsonb) cascade;
+create function public.complete_case_battle(
   p_battle_id uuid,
   p_winner_id uuid,
   p_winner_slot int,
@@ -4335,7 +4413,8 @@ alter table public.case_battles
 
 drop function if exists public.get_open_case_battles(int);
 
-create or replace function public.get_open_case_battles(p_limit int default 20)
+drop function if exists public.get_open_case_battles(p_limit int) cascade;
+create function public.get_open_case_battles(p_limit int default 20)
 returns table (
   battle_id uuid,
   creator_id uuid,
@@ -4411,7 +4490,8 @@ alter table public.case_battle_players
 
 drop function if exists public.create_case_battle_entry(uuid, uuid, int, numeric, text);
 
-create or replace function public.create_case_battle_entry(
+drop function if exists public.create_case_battle_entry(p_user_id uuid, p_battle_id uuid, p_slot_index int, p_entry_cost numeric, p_display_name text, p_borrow_percent int) cascade;
+create function public.create_case_battle_entry(
   p_user_id uuid,
   p_battle_id uuid,
   p_slot_index int,
@@ -4533,7 +4613,8 @@ grant execute on function public.create_case_battle_entry(uuid, uuid, int, numer
 
 drop function if exists public.get_open_case_battles(int);
 
-create or replace function public.get_open_case_battles(p_limit int default 20)
+drop function if exists public.get_open_case_battles(p_limit int) cascade;
+create function public.get_open_case_battles(p_limit int default 20)
 returns table (
   battle_id uuid,
   creator_id uuid,
@@ -4597,7 +4678,8 @@ grant execute on function public.get_open_case_battles(int) to authenticated;
 -- Withdrawals must deduct balance immediately. The profiles balance guard trigger
 -- was reverting balance changes from security-definer RPCs called as authenticated.
 
-create or replace function public.bypass_profile_balance_guard()
+drop function if exists public.bypass_profile_balance_guard() cascade;
+create function public.bypass_profile_balance_guard()
 returns void
 language plpgsql
 security definer
@@ -4611,7 +4693,8 @@ $$;
 revoke all on function public.bypass_profile_balance_guard() from public;
 grant execute on function public.bypass_profile_balance_guard() to authenticated, service_role;
 
-create or replace function public.profiles_prevent_balance_change()
+drop function if exists public.profiles_prevent_balance_change() cascade;
+create function public.profiles_prevent_balance_change()
 returns trigger
 language plpgsql
 security definer
@@ -4629,7 +4712,8 @@ begin
 end;
 $$;
 
-create or replace function public.request_crypto_withdrawal(
+drop function if exists public.request_crypto_withdrawal(p_chain text, p_destination text, p_usd_amount numeric) cascade;
+create function public.request_crypto_withdrawal(
   p_chain text,
   p_destination text,
   p_usd_amount numeric
@@ -4714,7 +4798,8 @@ $$;
 
 grant execute on function public.request_crypto_withdrawal(text, text, numeric) to authenticated;
 
-create or replace function public.admin_fail_crypto_withdrawal(
+drop function if exists public.admin_fail_crypto_withdrawal(p_withdrawal_id uuid, p_error_message text) cascade;
+create function public.admin_fail_crypto_withdrawal(
   p_withdrawal_id uuid,
   p_error_message text default 'Withdrawal could not be completed.'
 )
@@ -4839,7 +4924,8 @@ alter table public.case_battles
   add constraint case_battles_status_check
   check (status in ('waiting', 'pending_eos', 'running', 'completed', 'cancelled'));
 
-create or replace function public.mark_case_battle_running(
+drop function if exists public.mark_case_battle_running(p_battle_id uuid, p_battle_seed_hash text) cascade;
+create function public.mark_case_battle_running(
   p_battle_id uuid,
   p_battle_seed_hash text
 )
@@ -4860,7 +4946,8 @@ $$;
 
 drop function if exists public.get_open_case_battles(int);
 
-create or replace function public.get_open_case_battles(p_limit int default 20)
+drop function if exists public.get_open_case_battles(p_limit int) cascade;
+create function public.get_open_case_battles(p_limit int default 20)
 returns table (
   battle_id uuid,
   creator_id uuid,
@@ -4928,7 +5015,8 @@ grant execute on function public.get_open_case_battles(int) to authenticated;
 -- ===================================================
 -- Idempotent battle completion: allow pending_eos, skip double payout on race
 
-create or replace function public.complete_case_battle(
+drop function if exists public.complete_case_battle(p_battle_id uuid, p_winner_id uuid, p_winner_slot int, p_winner_payout numeric, p_pot_total numeric, p_battle_seed text, p_results jsonb, p_players jsonb, p_winner_payouts jsonb) cascade;
+create function public.complete_case_battle(
   p_battle_id uuid,
   p_winner_id uuid,
   p_winner_slot int,
@@ -5092,7 +5180,8 @@ alter table public.case_battles
 
 drop function if exists public.get_open_case_battles(int);
 
-create or replace function public.get_open_case_battles(p_limit int default 20)
+drop function if exists public.get_open_case_battles(p_limit int) cascade;
+create function public.get_open_case_battles(p_limit int default 20)
 returns table (
   battle_id uuid,
   creator_id uuid,
@@ -5156,7 +5245,8 @@ $$;
 grant execute on function public.get_open_case_battles(int) to authenticated;
 
 -- Allow completing from pending_jackpot_eos (rounds staged, jackpot resolved)
-create or replace function public.complete_case_battle(
+drop function if exists public.complete_case_battle(p_battle_id uuid, p_winner_id uuid, p_winner_slot int, p_winner_payout numeric, p_pot_total numeric, p_battle_seed text, p_results jsonb, p_players jsonb, p_winner_payouts jsonb) cascade;
+create function public.complete_case_battle(
   p_battle_id uuid,
   p_winner_id uuid,
   p_winner_slot int,
@@ -5307,7 +5397,8 @@ $$;
 -- Superseded by 20250522900000_case_battle_bot_random_roster.sql (10 bots, random pick).
 -- Assign unique bot display names atomically when inserting (prevents duplicate "Bot 1" on fast clicks).
 
-create or replace function public.insert_case_battle_bot(
+drop function if exists public.insert_case_battle_bot(p_battle_id uuid, p_slot_index int) cascade;
+create function public.insert_case_battle_bot(
   p_battle_id uuid,
   p_slot_index int
 )
@@ -5396,7 +5487,8 @@ $$;
 -- ===================================================
 -- Ten named battle bots; each "Call bot" picks one at random from those not already in the lobby.
 
-create or replace function public.insert_case_battle_bot(
+drop function if exists public.insert_case_battle_bot(p_battle_id uuid, p_slot_index int) cascade;
+create function public.insert_case_battle_bot(
   p_battle_id uuid,
   p_slot_index int
 )
@@ -5488,7 +5580,8 @@ $$;
 -- ===================================================
 -- Expose wager totals for chat level badges (no balance or other profile fields).
 
-create or replace function public.get_user_wager_levels(user_ids uuid[])
+drop function if exists public.get_user_wager_levels(user_ids uuid[]) cascade;
+create function public.get_user_wager_levels(user_ids uuid[])
 returns table(user_id uuid, total_wagered numeric)
 language sql
 stable
@@ -5516,7 +5609,8 @@ revoke execute on function public.bypass_profile_balance_guard() from authentica
 -- MIGRATION: 20250523200000_consume_keno_nonce_advance.sql
 -- ===================================================
 -- consume_keno_nonce must advance next_nonce after each use (case battles use multiple nonces per battle).
-create or replace function public.consume_keno_nonce(p_user_id uuid, p_advance int default 1)
+drop function if exists public.consume_keno_nonce(p_user_id uuid, p_advance int) cascade;
+create function public.consume_keno_nonce(p_user_id uuid, p_advance int default 1)
 returns table (
   server_seed text,
   client_seed text,
@@ -5582,7 +5676,8 @@ set payouts_credited = true
 where status = 'completed'
   and coalesce(winner_payout, 0) > 0;
 
-create or replace function public.complete_case_battle(
+drop function if exists public.complete_case_battle(p_battle_id uuid, p_winner_id uuid, p_winner_slot int, p_winner_payout numeric, p_pot_total numeric, p_battle_seed text, p_results jsonb, p_players jsonb, p_winner_payouts jsonb) cascade;
+create function public.complete_case_battle(
   p_battle_id uuid,
   p_winner_id uuid,
   p_winner_slot int,
@@ -5655,7 +5750,8 @@ begin
 end;
 $$;
 
-create or replace function public.apply_case_battle_payouts(
+drop function if exists public.apply_case_battle_payouts(p_battle_id uuid, p_user_id uuid) cascade;
+create function public.apply_case_battle_payouts(
   p_battle_id uuid,
   p_user_id uuid
 )
@@ -5794,7 +5890,8 @@ grant execute on function public.apply_case_battle_payouts(uuid, uuid) to servic
 
 drop function if exists public.consume_keno_nonce(uuid);
 
-create or replace function public.consume_keno_nonce(p_user_id uuid, p_advance int default 1)
+drop function if exists public.consume_keno_nonce(p_user_id uuid, p_advance int) cascade;
+create function public.consume_keno_nonce(p_user_id uuid, p_advance int default 1)
 returns table (
   server_seed text,
   client_seed text,
@@ -5894,7 +5991,8 @@ left join case_battle_loss_sums cb on cb.user_id = c.user_id
 where p.id = c.user_id;
 
 -- Record case battle losses when payouts are claimed (entry minus any credited win share).
-create or replace function public.apply_case_battle_payouts(
+drop function if exists public.apply_case_battle_payouts(p_battle_id uuid, p_user_id uuid) cascade;
+create function public.apply_case_battle_payouts(
   p_battle_id uuid,
   p_user_id uuid
 )
@@ -6091,7 +6189,8 @@ create policy "Users read own roulette bets"
 grant select on public.roulette_bets to authenticated;
 grant all on table public.roulette_bets to service_role;
 
-create or replace function public.settle_roulette_bet(
+drop function if exists public.settle_roulette_bet(p_user_id uuid, p_wager numeric, p_bet_type text, p_result_pocket smallint, p_result_color text, p_won boolean, p_payout numeric, p_nonce bigint) cascade;
+create function public.settle_roulette_bet(
   p_user_id uuid,
   p_wager numeric,
   p_bet_type text,
@@ -6206,7 +6305,8 @@ $$;
 revoke all on function public.settle_roulette_bet(uuid, numeric, text, smallint, text, boolean, numeric, bigint) from public;
 grant execute on function public.settle_roulette_bet(uuid, numeric, text, smallint, text, boolean, numeric, bigint) to service_role;
 
-create or replace function public.get_roulette_pf_state()
+drop function if exists public.get_roulette_pf_state() cascade;
+create function public.get_roulette_pf_state()
 returns table (
   server_seed_hash text,
   client_seed text,
@@ -6221,7 +6321,8 @@ $$;
 
 grant execute on function public.get_roulette_pf_state() to authenticated;
 
-create or replace function public.set_roulette_client_seed(p_client_seed text)
+drop function if exists public.set_roulette_client_seed(p_client_seed text) cascade;
+create function public.set_roulette_client_seed(p_client_seed text)
 returns void
 language sql
 security definer
@@ -6238,7 +6339,8 @@ grant execute on function public.set_roulette_client_seed(text) to authenticated
 -- ===================================================
 -- Mines: RTP via extra bust odds (multipliers stay at 99%). Edge passes p_force_mine when bias triggers.
 
-create or replace function public.mines_reveal_tile(
+drop function if exists public.mines_reveal_tile(p_user_id uuid, p_game_id uuid, p_tile int, p_force_mine boolean) cascade;
+create function public.mines_reveal_tile(
   p_user_id uuid,
   p_game_id uuid,
   p_tile int,
@@ -6418,7 +6520,8 @@ create policy "Affiliates read own commissions"
 grant select on public.affiliate_commissions to authenticated;
 
 -- Normalize referral codes to uppercase (case-insensitive input)
-create or replace function public.normalize_affiliate_code(p_code text)
+drop function if exists public.normalize_affiliate_code(p_code text) cascade;
+create function public.normalize_affiliate_code(p_code text)
 returns text
 language sql
 immutable
@@ -6428,7 +6531,8 @@ as $$
 $$;
 
 -- Unique referral code (8 chars, A-Z0-9)
-create or replace function public.generate_unique_affiliate_code()
+drop function if exists public.generate_unique_affiliate_code() cascade;
+create function public.generate_unique_affiliate_code()
 returns text
 language plpgsql
 security definer
@@ -6457,7 +6561,8 @@ begin
 end;
 $$;
 
-create or replace function public.ensure_user_affiliate_code(p_user_id uuid default auth.uid())
+drop function if exists public.ensure_user_affiliate_code(p_user_id uuid) cascade;
+create function public.ensure_user_affiliate_code(p_user_id uuid default auth.uid())
 returns text
 language plpgsql
 security definer
@@ -6504,7 +6609,8 @@ begin
   end loop;
 end $$;
 
-create or replace function public.apply_affiliate_referral(p_user_id uuid, p_code text)
+drop function if exists public.apply_affiliate_referral(p_user_id uuid, p_code text) cascade;
+create function public.apply_affiliate_referral(p_user_id uuid, p_code text)
 returns void
 language plpgsql
 security definer
@@ -6539,7 +6645,8 @@ revoke all on function public.apply_affiliate_referral(uuid, text) from public;
 grant execute on function public.apply_affiliate_referral(uuid, text) to service_role;
 
 -- Credit affiliate when a referred user deposits or wagers (trigger on transactions)
-create or replace function public.trg_affiliate_commission_on_transaction()
+drop function if exists public.trg_affiliate_commission_on_transaction() cascade;
+create function public.trg_affiliate_commission_on_transaction()
 returns trigger
 language plpgsql
 security definer
@@ -6615,7 +6722,8 @@ create trigger affiliate_commission_on_transaction
   execute function public.trg_affiliate_commission_on_transaction();
 
 -- Claim pending affiliate earnings to main balance
-create or replace function public.claim_affiliate_earnings()
+drop function if exists public.claim_affiliate_earnings() cascade;
+create function public.claim_affiliate_earnings()
 returns jsonb
 language plpgsql
 security definer
@@ -6676,7 +6784,8 @@ revoke all on function public.claim_affiliate_earnings() from public;
 grant execute on function public.claim_affiliate_earnings() to authenticated;
 
 -- Stats for Promotions page
-create or replace function public.get_affiliate_stats()
+drop function if exists public.get_affiliate_stats() cascade;
+create function public.get_affiliate_stats()
 returns jsonb
 language plpgsql
 security definer
@@ -6751,7 +6860,8 @@ revoke all on function public.get_affiliate_stats() from public;
 grant execute on function public.get_affiliate_stats() to authenticated;
 
 -- Transaction history: include affiliate type in sort order
-create or replace function public.get_user_transactions(
+drop function if exists public.get_user_transactions(p_page int, p_page_size int) cascade;
+create function public.get_user_transactions(
   p_page int default 0,
   p_page_size int default 10
 )
@@ -6835,7 +6945,8 @@ where c.claimed_at is null
       and t.created_at <= c.created_at + interval '2 seconds'
   );
 
-create or replace function public.trg_affiliate_commission_on_transaction()
+drop function if exists public.trg_affiliate_commission_on_transaction() cascade;
+create function public.trg_affiliate_commission_on_transaction()
 returns trigger
 language plpgsql
 security definer
@@ -6903,7 +7014,8 @@ begin
 end;
 $$;
 
-create or replace function public.claim_affiliate_earnings()
+drop function if exists public.claim_affiliate_earnings() cascade;
+create function public.claim_affiliate_earnings()
 returns jsonb
 language plpgsql
 security definer
@@ -6963,7 +7075,8 @@ $$;
 revoke all on function public.claim_affiliate_earnings() from public;
 grant execute on function public.claim_affiliate_earnings() to authenticated;
 
-create or replace function public.get_affiliate_stats()
+drop function if exists public.get_affiliate_stats() cascade;
+create function public.get_affiliate_stats()
 returns jsonb
 language plpgsql
 security definer
@@ -7040,7 +7153,8 @@ $$;
 -- ===================================================
 -- Let logged-in users apply a referral code once (Promotions page).
 
-create or replace function public.submit_affiliate_referral_code(p_code text)
+drop function if exists public.submit_affiliate_referral_code(p_code text) cascade;
+create function public.submit_affiliate_referral_code(p_code text)
 returns jsonb
 language plpgsql
 security definer
@@ -7103,7 +7217,8 @@ $$;
 revoke all on function public.submit_affiliate_referral_code(text) from public;
 grant execute on function public.submit_affiliate_referral_code(text) to authenticated;
 
-create or replace function public.get_affiliate_stats()
+drop function if exists public.get_affiliate_stats() cascade;
+create function public.get_affiliate_stats()
 returns jsonb
 language plpgsql
 security definer
@@ -7191,7 +7306,8 @@ $$;
 -- ===================================================
 -- Referral codes: store and match as uppercase (input case-insensitive).
 
-create or replace function public.normalize_affiliate_code(p_code text)
+drop function if exists public.normalize_affiliate_code(p_code text) cascade;
+create function public.normalize_affiliate_code(p_code text)
 returns text
 language sql
 immutable
@@ -7207,7 +7323,8 @@ where affiliate_code is not null
   and affiliate_code <> ''
   and affiliate_code <> public.normalize_affiliate_code(affiliate_code);
 
-create or replace function public.generate_unique_affiliate_code()
+drop function if exists public.generate_unique_affiliate_code() cascade;
+create function public.generate_unique_affiliate_code()
 returns text
 language plpgsql
 security definer
@@ -7236,7 +7353,8 @@ begin
 end;
 $$;
 
-create or replace function public.ensure_user_affiliate_code(p_user_id uuid default auth.uid())
+drop function if exists public.ensure_user_affiliate_code(p_user_id uuid) cascade;
+create function public.ensure_user_affiliate_code(p_user_id uuid default auth.uid())
 returns text
 language plpgsql
 security definer
@@ -7272,7 +7390,8 @@ begin
 end;
 $$;
 
-create or replace function public.apply_affiliate_referral(p_user_id uuid, p_code text)
+drop function if exists public.apply_affiliate_referral(p_user_id uuid, p_code text) cascade;
+create function public.apply_affiliate_referral(p_user_id uuid, p_code text)
 returns void
 language plpgsql
 security definer
@@ -7303,7 +7422,8 @@ begin
 end;
 $$;
 
-create or replace function public.submit_affiliate_referral_code(p_code text)
+drop function if exists public.submit_affiliate_referral_code(p_code text) cascade;
+create function public.submit_affiliate_referral_code(p_code text)
 returns jsonb
 language plpgsql
 security definer
@@ -7369,7 +7489,8 @@ $$;
 -- ===================================================
 -- claim_affiliate_earnings must bypass profiles balance guard (same as withdrawals / games).
 
-create or replace function public.claim_affiliate_earnings()
+drop function if exists public.claim_affiliate_earnings() cascade;
+create function public.claim_affiliate_earnings()
 returns jsonb
 language plpgsql
 security definer
@@ -7471,7 +7592,8 @@ grant select, insert on public.redemptions to authenticated;
 grant all on table public.redemptions to service_role;
 
 -- Update handle_new_user to grant welcome bonus
-create or replace function public.handle_new_user()
+drop function if exists public.handle_new_user() cascade;
+create function public.handle_new_user()
 returns trigger
 language plpgsql
 security definer set search_path = public
@@ -7490,7 +7612,8 @@ end;
 $$;
 
 -- Dual-currency credit (admin or system)
-create or replace function public.admin_credit_user(
+drop function if exists public.admin_credit_user(p_user_id uuid, p_amount numeric, p_note text, p_coin_type text) cascade;
+create function public.admin_credit_user(
   p_user_id uuid,
   p_amount numeric,
   p_note text default 'Admin credit',
@@ -7539,7 +7662,8 @@ alter table public.admin_credit_log add column if not exists coin_type text not 
 grant execute on function public.admin_credit_user to authenticated;
 
 -- Get coin balance RPC
-create or replace function public.get_coin_balance(p_coin_type text default 'balance')
+drop function if exists public.get_coin_balance(p_coin_type text) cascade;
+create function public.get_coin_balance(p_coin_type text default 'balance')
 returns numeric
 language plpgsql
 security definer
@@ -7566,7 +7690,8 @@ $$;
 grant execute on function public.get_coin_balance to authenticated;
 
 -- Adjust coins (atomic debit/credit, for system use only)
-create or replace function public.adjust_coins(
+drop function if exists public.adjust_coins(p_user_id uuid, p_amount numeric, p_coin_type text) cascade;
+create function public.adjust_coins(
   p_user_id uuid,
   p_amount numeric,
   p_coin_type text default 'balance'
@@ -7610,7 +7735,8 @@ $$;
 grant execute on function public.adjust_coins to service_role;
 
 -- Request SC redemption
-create or replace function public.request_sc_redemption(
+drop function if exists public.request_sc_redemption(p_sc_amount numeric, p_chain text, p_destination text) cascade;
+create function public.request_sc_redemption(
   p_sc_amount numeric,
   p_chain text,
   p_destination text
@@ -7673,7 +7799,8 @@ $$;
 grant execute on function public.request_sc_redemption(numeric, text, text) to authenticated;
 
 -- Process redemption (admin)
-create or replace function public.admin_process_redemption(
+drop function if exists public.admin_process_redemption(p_redemption_id uuid, p_status text, p_tx_hash text) cascade;
+create function public.admin_process_redemption(
   p_redemption_id uuid,
   p_status text,
   p_tx_hash text default null
@@ -7718,7 +7845,8 @@ $$;
 grant execute on function public.admin_process_redemption to authenticated;
 
 -- Admin list redemptions
-create or replace function public.admin_list_redemptions(p_status text default 'pending')
+drop function if exists public.admin_list_redemptions(p_status text) cascade;
+create function public.admin_list_redemptions(p_status text default 'pending')
 returns table (
   id uuid,
   user_id uuid,
@@ -7768,7 +7896,8 @@ grant execute on function public.admin_list_redemptions to authenticated;
 
 -- Update existing game settlement functions to accept p_coin_type
 -- Settle Limbo Bet (dual currency)
-create or replace function public.settle_limbo_bet(
+drop function if exists public.settle_limbo_bet(p_user_id uuid, p_wager numeric, p_target_multiplier numeric, p_result_multiplier numeric, p_won boolean, p_payout numeric, p_nonce bigint, p_coin_type text) cascade;
+create function public.settle_limbo_bet(
   p_user_id uuid,
   p_wager numeric,
   p_target_multiplier numeric,
@@ -7872,7 +8001,8 @@ revoke all on function public.settle_limbo_bet(uuid, numeric, numeric, numeric, 
 grant execute on function public.settle_limbo_bet(uuid, numeric, numeric, numeric, boolean, numeric, bigint, text) to service_role;
 
 -- Settle Keno Bet (dual currency)
-create or replace function public.settle_keno_bet(
+drop function if exists public.settle_keno_bet(p_user_id uuid, p_wager numeric, p_risk text, p_picks int[], p_drawn int[], p_hits int, p_multiplier numeric, p_payout numeric, p_nonce bigint, p_coin_type text) cascade;
+create function public.settle_keno_bet(
   p_user_id uuid,
   p_wager numeric,
   p_risk text,
@@ -7958,7 +8088,8 @@ revoke all on function public.settle_keno_bet(uuid, numeric, text, int[], int[],
 grant execute on function public.settle_keno_bet(uuid, numeric, text, int[], int[], int, numeric, numeric, bigint, text) to service_role;
 
 -- Settle Roulette Bet (dual currency)
-create or replace function public.settle_roulette_bet(
+drop function if exists public.settle_roulette_bet(p_user_id uuid, p_wager numeric, p_bet_type text, p_result_pocket int, p_result_color text, p_won boolean, p_payout numeric, p_nonce bigint, p_coin_type text) cascade;
+create function public.settle_roulette_bet(
   p_user_id uuid,
   p_wager numeric,
   p_bet_type text,
@@ -8042,7 +8173,8 @@ grant execute on function public.settle_roulette_bet(uuid, numeric, text, int, t
 
 -- Update credit_crypto_deposit to credit GC + bonus SC
 drop function if exists public.credit_crypto_deposit(uuid, numeric, text, text, numeric, numeric, uuid);
-create or replace function public.credit_crypto_deposit(
+drop function if exists public.credit_crypto_deposit(p_user_id uuid, p_usd_amount numeric, p_chain text, p_tx_hash text, p_crypto_amount numeric, p_exchange_rate numeric, p_deposit_id uuid) cascade;
+create function public.credit_crypto_deposit(
   p_user_id uuid,
   p_usd_amount numeric,
   p_chain text,
@@ -8101,7 +8233,8 @@ revoke all on function public.credit_crypto_deposit from public;
 grant execute on function public.credit_crypto_deposit to service_role;
 
 -- Update ensure_user_profile to include sweeps_coins and welcome bonus
-create or replace function public.ensure_user_profile()
+drop function if exists public.ensure_user_profile() cascade;
+create function public.ensure_user_profile()
 returns public.profiles
 language plpgsql
 security definer
@@ -8132,7 +8265,8 @@ $$;
 grant execute on function public.ensure_user_profile() to authenticated;
 
 -- Update admin_search_users to include sweeps_coins
-create or replace function public.admin_search_users(p_query text)
+drop function if exists public.admin_search_users(p_query text) cascade;
+create function public.admin_search_users(p_query text)
 returns table (
   id uuid,
   username text,
@@ -8165,7 +8299,8 @@ grant execute on function public.admin_search_users to authenticated;
 
 -- ==== Blackjack dual-currency RPCs ====
 
-create or replace function public.start_blackjack_hand(
+drop function if exists public.start_blackjack_hand(p_user_id uuid, p_wager numeric, p_total_wager numeric, p_shoe int[], p_shoe_index int, p_player_cards int[], p_dealer_cards int[], p_doubled boolean, p_dealer_revealed boolean, p_status text, p_outcome text, p_payout numeric, p_nonce bigint, p_phase text, p_insurance_wager numeric, p_insurance_taken boolean, p_insurance_decided boolean, p_is_split boolean, p_player_hands jsonb, p_active_hand_index int, p_coin_type text) cascade;
+create function public.start_blackjack_hand(
   p_user_id uuid,
   p_wager numeric,
   p_total_wager numeric,
@@ -8262,7 +8397,8 @@ $$;
 revoke all on function public.start_blackjack_hand(uuid, numeric, numeric, int[], int, int[], int[], boolean, boolean, text, text, numeric, bigint, text, numeric, boolean, boolean, boolean, jsonb, int, text) from public;
 grant execute on function public.start_blackjack_hand(uuid, numeric, numeric, int[], int, int[], int[], boolean, boolean, text, text, numeric, bigint, text, numeric, boolean, boolean, boolean, jsonb, int, text) to service_role;
 
-create or replace function public.blackjack_finish_hand(
+drop function if exists public.blackjack_finish_hand(p_user_id uuid, p_hand_id uuid, p_player_cards int[], p_dealer_cards int[], p_shoe_index int, p_doubled boolean, p_total_wager numeric, p_dealer_revealed boolean, p_outcome text, p_payout numeric, p_extra_wager numeric, p_phase text, p_player_hands jsonb, p_is_split boolean, p_active_hand_index int, p_insurance_wager numeric, p_insurance_taken boolean, p_coin_type text) cascade;
+create function public.blackjack_finish_hand(
   p_user_id uuid,
   p_hand_id uuid,
   p_player_cards int[],
@@ -8329,7 +8465,8 @@ $$;
 revoke all on function public.blackjack_finish_hand from public;
 grant execute on function public.blackjack_finish_hand to service_role;
 
-create or replace function public.blackjack_debit_extra(
+drop function if exists public.blackjack_debit_extra(p_user_id uuid, p_hand_id uuid, p_extra_wager numeric, p_description text, p_coin_type text) cascade;
+create function public.blackjack_debit_extra(
   p_user_id uuid,
   p_hand_id uuid,
   p_extra_wager numeric,
@@ -8373,7 +8510,8 @@ grant execute on function public.blackjack_debit_extra to service_role;
 
 -- ==== Mines dual-currency RPCs ====
 
-create or replace function public.start_mines_game(
+drop function if exists public.start_mines_game(p_user_id uuid, p_wager numeric, p_mine_count int, p_mine_tiles int[], p_nonce bigint, p_coin_type text) cascade;
+create function public.start_mines_game(
   p_user_id uuid,
   p_wager numeric,
   p_mine_count int,
@@ -8435,7 +8573,8 @@ $$;
 revoke all on function public.start_mines_game(uuid, numeric, int, int[], bigint, text) from public;
 grant execute on function public.start_mines_game(uuid, numeric, int, int[], bigint, text) to service_role;
 
-create or replace function public.mines_cashout(
+drop function if exists public.mines_cashout(p_user_id uuid, p_game_id uuid, p_coin_type text) cascade;
+create function public.mines_cashout(
   p_user_id uuid,
   p_game_id uuid,
   p_coin_type text default 'balance'
@@ -8520,7 +8659,8 @@ create policy "Users read own crash bets"
 grant select on public.crash_bets to authenticated;
 grant all on table public.crash_bets to service_role;
 
-create or replace function public.place_crash_bet(
+drop function if exists public.place_crash_bet(p_user_id uuid, p_wager numeric, p_crash_point numeric, p_nonce bigint, p_coin_type text) cascade;
+create function public.place_crash_bet(
   p_user_id uuid,
   p_wager numeric,
   p_crash_point numeric,
@@ -8574,7 +8714,8 @@ $$;
 revoke all on function public.place_crash_bet from public;
 grant execute on function public.place_crash_bet to service_role;
 
-create or replace function public.cash_out_crash(
+drop function if exists public.cash_out_crash(p_user_id uuid, p_bet_id uuid, p_cashed_at numeric) cascade;
+create function public.cash_out_crash(
   p_user_id uuid,
   p_bet_id uuid,
   p_cashed_at numeric
@@ -8628,7 +8769,8 @@ $$;
 revoke all on function public.cash_out_crash from public;
 grant execute on function public.cash_out_crash to service_role;
 
-create or replace function public.crash_settle_loss(
+drop function if exists public.crash_settle_loss(p_bet_id uuid) cascade;
+create function public.crash_settle_loss(
   p_bet_id uuid
 )
 returns void
@@ -8657,13 +8799,15 @@ revoke all on function public.crash_settle_loss from public;
 grant execute on function public.crash_settle_loss to service_role;
 
 -- PF wrappers for crash
-create or replace function public.get_crash_pf_state()
+drop function if exists public.get_crash_pf_state() cascade;
+create function public.get_crash_pf_state()
 returns table (server_seed_hash text, client_seed text, next_nonce bigint)
 language sql security definer set search_path = public
 as $$ select * from public.get_keno_pf_state(); $$;
 grant execute on function public.get_crash_pf_state() to authenticated;
 
-create or replace function public.set_crash_client_seed(p_client_seed text)
+drop function if exists public.set_crash_client_seed(p_client_seed text) cascade;
+create function public.set_crash_client_seed(p_client_seed text)
 returns void language sql security definer set search_path = public
 as $$ select public.set_keno_client_seed(p_client_seed); $$;
 grant execute on function public.set_crash_client_seed(text) to authenticated;
@@ -8694,7 +8838,8 @@ create policy "Users read own slots games"
 grant select on public.slots_games to authenticated;
 grant all on table public.slots_games to service_role;
 
-create or replace function public.settle_slots_bet(
+drop function if exists public.settle_slots_bet(p_user_id uuid, p_wager numeric, p_reels int[], p_won boolean, p_multiplier numeric, p_payout numeric, p_nonce bigint, p_coin_type text) cascade;
+create function public.settle_slots_bet(
   p_user_id uuid,
   p_wager numeric,
   p_reels int[],
@@ -8769,13 +8914,15 @@ $$;
 revoke all on function public.settle_slots_bet from public;
 grant execute on function public.settle_slots_bet to service_role;
 
-create or replace function public.get_slots_pf_state()
+drop function if exists public.get_slots_pf_state() cascade;
+create function public.get_slots_pf_state()
 returns table (server_seed_hash text, client_seed text, next_nonce bigint)
 language sql security definer set search_path = public
 as $$ select * from public.get_keno_pf_state(); $$;
 grant execute on function public.get_slots_pf_state() to authenticated;
 
-create or replace function public.set_slots_client_seed(p_client_seed text)
+drop function if exists public.set_slots_client_seed(p_client_seed text) cascade;
+create function public.set_slots_client_seed(p_client_seed text)
 returns void language sql security definer set search_path = public
 as $$ select public.set_keno_client_seed(p_client_seed); $$;
 grant execute on function public.set_slots_client_seed(text) to authenticated;
@@ -8798,7 +8945,8 @@ alter table public.profiles
 alter table public.profiles
   add column if not exists self_excluded_until timestamptz;
 
-create or replace function public.self_exclude(p_days int)
+drop function if exists public.self_exclude(p_days int) cascade;
+create function public.self_exclude(p_days int)
 returns void
 language plpgsql
 security definer
@@ -8820,7 +8968,8 @@ begin
 end;
 $$;
 
-create or replace function public.cancel_self_exclusion()
+drop function if exists public.cancel_self_exclusion() cascade;
+create function public.cancel_self_exclusion()
 returns void
 language plpgsql
 security definer
@@ -8838,7 +8987,8 @@ begin
 end;
 $$;
 
-create or replace function public.check_self_exclusion()
+drop function if exists public.check_self_exclusion() cascade;
+create function public.check_self_exclusion()
 returns table (
   excluded boolean,
   excluded_until timestamptz,
@@ -8880,7 +9030,8 @@ alter table public.profiles
   add column if not exists daily_deposit_limit numeric(12, 2),
   add column if not exists weekly_deposit_limit numeric(12, 2);
 
-create or replace function public.set_deposit_limits(
+drop function if exists public.set_deposit_limits(p_daily_limit numeric, p_weekly_limit numeric) cascade;
+create function public.set_deposit_limits(
   p_daily_limit numeric default null,
   p_weekly_limit numeric default null
 )
@@ -8909,7 +9060,8 @@ begin
 end;
 $$;
 
-create or replace function public.get_deposit_limits()
+drop function if exists public.get_deposit_limits() cascade;
+create function public.get_deposit_limits()
 returns table (
   daily_limit numeric,
   weekly_limit numeric,
@@ -8957,7 +9109,8 @@ grant execute on function public.get_deposit_limits() to authenticated;
 
 -- ── Update credit_crypto_deposit to enforce limits ──
 
-create or replace function public.credit_crypto_deposit(
+drop function if exists public.credit_crypto_deposit(p_user_id uuid, p_usd_amount numeric, p_chain text, p_tx_hash text, p_crypto_amount numeric, p_exchange_rate numeric, p_deposit_id uuid) cascade;
+create function public.credit_crypto_deposit(
   p_user_id uuid,
   p_usd_amount numeric,
   p_chain text,
@@ -9054,7 +9207,8 @@ grant execute on function public.credit_crypto_deposit(uuid, numeric, text, text
 
 -- ── Self-exclusion check helper for edge functions ──
 
-create or replace function public.check_user_self_exclusion(p_user_id uuid)
+drop function if exists public.check_user_self_exclusion(p_user_id uuid) cascade;
+create function public.check_user_self_exclusion(p_user_id uuid)
 returns boolean
 language plpgsql
 security definer

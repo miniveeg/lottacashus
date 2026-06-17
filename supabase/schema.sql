@@ -110,7 +110,14 @@ grant execute on function public.ensure_user_profile() to authenticated;
 alter table public.profiles replica identity full;
 
 -- Admin: credit a user's balance (for mail-in sweepstakes entry, adjustments, etc.)
--- admin_credit_user + admin_credit_log moved to migration 20250521200000_admin_access.sql
+create table if not exists public.admin_credit_log (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  amount numeric(12, 2) not null,
+  note text,
+  created_by uuid not null references public.profiles(id),
+  created_at timestamptz not null default now()
+);
 
 -- Responsible gaming: add columns to profiles
 alter table public.profiles add column if not exists birth_date date;

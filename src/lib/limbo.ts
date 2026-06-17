@@ -16,6 +16,7 @@ export type LimboBetResult = {
   payout: number;
   profit: number;
   nonce: number;
+  coinType: string;
 };
 
 function parsePfRow(data: unknown): LimboPfState | null {
@@ -64,10 +65,11 @@ export async function setLimboClientSeed(clientSeed: string): Promise<{ error: s
   return { error: error?.message ?? null };
 }
 
-export async function placeLimboBet(params: { wager: number; target: number }) {
+export async function placeLimboBet(params: { wager: number; target: number; coinType?: string }) {
   const { data, error } = await invokeEdgeFunction<LimboBetResult>("place-limbo-bet", {
     wager: params.wager,
     target: params.target,
+    coinType: params.coinType ?? "balance",
   });
 
   if (error) return { data: null as LimboBetResult | null, error };

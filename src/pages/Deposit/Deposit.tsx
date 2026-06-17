@@ -115,8 +115,12 @@ export function Deposit() {
         </Link>
       </div>
 
-      <p className="wallet__hint" style={{ marginBottom: "1rem" }}>
-        Available balance: <strong>{formatUsd(profile?.balance ?? 0)}</strong>
+      <p className="wallet__hint wallet__hint--balance">
+        Gold Coins (GC): <strong>{formatUsd(profile?.balance ?? 0)}</strong>
+        &ensp;Sweeps Coins (SC): <strong>{(profile?.sweepsCoins ?? 0).toFixed(2)}</strong>
+      </p>
+      <p className="wallet__hint wallet__hint--bonus">
+        Deposits credit GC + 1% bonus SC!
       </p>
 
       <section className="wallet__section">
@@ -164,17 +168,19 @@ export function Deposit() {
       <section className="wallet__section">
         <h2 className="wallet__list-title">Recent deposits</h2>
         {deposits.length === 0 ? (
-          <p className="wallet__hint">No deposits detected yet.</p>
+          <div className="lc-empty">
+            <p>No deposits detected yet</p>
+          </div>
         ) : (
           deposits.map((d) => (
             <div key={d.id} className="wallet__deposit-item">
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+              <div className="wallet__deposit-row">
                 <span>
                   <strong>{d.chain.toUpperCase()}</strong> · {formatUsd(d.usd_amount)}
                 </span>
                 <span className={`wallet__status wallet__status--${d.status}`}>{d.status}</span>
               </div>
-              <p className="wallet__hint" style={{ marginTop: "0.35rem" }}>
+              <p className="wallet__hint wallet__hint--meta">
                 {d.confirmations}/{d.required_confirmations} confirmations ·{" "}
                 {d.crypto_amount} {d.chain.toUpperCase()}
               </p>

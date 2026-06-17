@@ -1,6 +1,7 @@
 @import "./theme.css";
 @import "./lc-pages.css";
 @import "./atmosphere.css";
+@import "./animations.css";
 @import "./ui-motion.css";
 
 *, *::before, *::after {

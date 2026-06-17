@@ -108,3 +108,103 @@ $$;
 grant execute on function public.ensure_user_profile() to authenticated;
 
 alter table public.profiles replica identity full;
+
+-- Admin: credit a user's balance (for mail-in sweepstakes entry, adjustments, etc.)
+create or replace function public.admin_credit_user(
+  p_user_id uuid,
+  p_amount numeric,
+  p_note text default 'Admin credit'
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  _is_admin boolean;
+begin
+  select is_admin into _is_admin from public.profiles where id = auth.uid();
+  if _is_admin is not true then
+    raise exception 'Only admins can credit user balances.';
+  end if;
+
+  update public.profiles
+  set balance = balance + p_amount,
+      updated_at = now()
+  where id = p_user_id;
+
+  if not found then
+    raise exception 'User not found.';
+  end if;
+
+  insert into public.admin_credit_log (user_id, amount, note, created_by)
+  values (p_user_id, p_amount, p_note, auth.uid());
+end;
+$$;
+
+grant execute on function public.admin_credit_user to authenticated;
+
+create table if not exists public.admin_credit_log (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  amount numeric(12, 2) not null,
+  note text,
+  created_by uuid not null references public.profiles(id),
+  created_at timestamptz not null default now()
+);
+
+alter table public.admin_credit_log enable row level security;
+
+create policy "Admins can read credit log"
+  on public.admin_credit_log for select
+  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin = true));
+
+-- Responsible gaming: add columns to profiles
+alter table public.profiles add column if not exists birth_date date;
+alter table public.profiles add column if not exists age_verified boolean not null default false;
+alter table public.profiles add column if not exists deposit_limit_daily numeric(12, 2);
+alter table public.profiles add column if not exists deposit_limit_weekly numeric(12, 2);
+alter table public.profiles add column if not exists deposit_limit_reset_at timestamptz;
+
+-- Self-exclusion table
+create table if not exists public.self_exclusions (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  duration_days int not null check (duration_days in (30, 90, 180)),
+  starts_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  reason text,
+  created_at timestamptz not null default now()
+);
+
+alter table public.self_exclusions enable row level security;
+
+create policy "Users can read own self-exclusion"
+  on public.self_exclusions for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own self-exclusion"
+  on public.self_exclusions for insert
+  with check (auth.uid() = user_id);
+
+-- Session tracking for time reminders
+create table if not exists public.game_sessions (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  started_at timestamptz not null default now(),
+  last_activity_at timestamptz not null default now()
+);
+
+alter table public.game_sessions enable row level security;
+
+create policy "Users can read own sessions"
+  on public.game_sessions for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own sessions"
+  on public.game_sessions for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own sessions"
+  on public.game_sessions for update
+  using (auth.uid() = user_id);

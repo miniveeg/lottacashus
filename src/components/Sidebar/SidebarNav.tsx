@@ -10,6 +10,7 @@ type NavItem = { icon: UiIconName; label: string; href: string };
 const mainNav: NavItem[] = [
   { icon: "home", label: "Home", href: "/" },
   { icon: "originals", label: "Originals", href: ORIGINALS_PATH },
+  { icon: "slots", label: "Slots", href: "/slots" },
   { icon: "promotions", label: "Promotions", href: "/promotions" },
   { icon: "leaderboard", label: "Leaderboard", href: "/leaderboard" },
 ];
@@ -18,7 +19,13 @@ const accountNav: NavItem[] = [
   { icon: "settings", label: "Settings", href: "/settings" },
   { icon: "deposit", label: "Deposit", href: "/deposit" },
   { icon: "withdraw", label: "Withdraw", href: "/withdraw" },
+  { icon: "redeem", label: "Redeem", href: "/redeem" },
   { icon: "help", label: "Help", href: "/help" },
+];
+
+const legalNav: NavItem[] = [
+  { icon: "document", label: "Sweepstakes Rules", href: "/sweepstakes" },
+  { icon: "gift", label: "Free Entry", href: "/free-entry" },
 ];
 
 function navIsActive(href: string, pathname: string): boolean {
@@ -74,6 +81,15 @@ export function SidebarNav() {
         {!collapsed ? <p className="sidebar__label">Account</p> : null}
         <ul className="sidebar__nav">
           {accountItems.map((item) => (
+            <NavLink key={item.label} item={item} />
+          ))}
+        </ul>
+      </nav>
+
+      <nav className="sidebar__section" aria-label="Legal">
+        {!collapsed ? <p className="sidebar__label">Legal</p> : null}
+        <ul className="sidebar__nav">
+          {legalNav.map((item) => (
             <NavLink key={item.label} item={item} />
           ))}
         </ul>

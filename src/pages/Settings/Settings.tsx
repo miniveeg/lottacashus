@@ -21,6 +21,14 @@ import type { Transaction } from "../../types/transaction";
 import { TRANSACTION_LABELS } from "../../types/transaction";
 import { SettingsLevelSection } from "../../components/Level/SettingsLevelSection";
 import { MAX_USERNAME_LENGTH } from "../../lib/username";
+import {
+  fetchSelfExclusion,
+  createSelfExclusion,
+  fetchDepositLimits,
+  setDepositLimits,
+  type SelfExclusion,
+  type DepositLimits,
+} from "../../lib/responsibleGaming";
 import "./Settings.css";
 
 function formatTxDate(iso: string) {
@@ -52,6 +60,15 @@ export function Settings() {
   const [txLoading, setTxLoading] = useState(true);
   const [txPage, setTxPage] = useState(0);
   const [txTotal, setTxTotal] = useState(0);
+
+  const [selfExclusion, setSelfExclusion] = useState<SelfExclusion | null>(null);
+  const [seDuration, setSeDuration] = useState<30 | 90 | 180>(30);
+  const [seReason, setSeReason] = useState("");
+  const [seBusy, setSeBusy] = useState(false);
+  const [depositLimits, setDepositLimitsState] = useState<DepositLimits | null>(null);
+  const [dlDaily, setDlDaily] = useState("");
+  const [dlWeekly, setDlWeekly] = useState("");
+  const [dlBusy, setDlBusy] = useState(false);
 
   const txPageCount = Math.max(1, Math.ceil(txTotal / TRANSACTIONS_PAGE_SIZE));
 
@@ -94,6 +111,18 @@ export function Settings() {
       supabase.removeChannel(channel);
     };
   }, [user?.id, loadTransactions]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchSelfExclusion().then(setSelfExclusion);
+    fetchDepositLimits().then((limits) => {
+      setDepositLimitsState(limits);
+      if (limits) {
+        setDlDaily(limits.daily != null ? String(limits.daily) : "");
+        setDlWeekly(limits.weekly != null ? String(limits.weekly) : "");
+      }
+    });
+  }, [user]);
 
   useEffect(() => {
     const code = searchParams.get("code");
@@ -256,7 +285,7 @@ export function Settings() {
           </p>
         </div>
 
-        <form onSubmit={handleSaveUsername} style={{ marginTop: "1.25rem" }}>
+        <form onSubmit={handleSaveUsername} className="settings__username-form">
           <div className="settings__field">
             <label htmlFor="settings-username">Change username</label>
             <input
@@ -311,7 +340,7 @@ export function Settings() {
           </div>
         ) : (
           <div className="settings__discord">
-            <p className="settings__hint" style={{ flex: 1, margin: 0 }}>
+              <p className="settings__hint settings__hint--flex">
               No Discord account linked yet.
             </p>
             <button
@@ -325,13 +354,168 @@ export function Settings() {
           </div>
         )}
         {!isDiscordConfigured && (
-          <p className="settings__hint" style={{ marginTop: "0.75rem" }}>
+          <p className="settings__hint settings__hint--top">
             Add <code>VITE_DISCORD_CLIENT_ID</code> and deploy the <code>link-discord</code> Edge Function with Discord secrets.
           </p>
         )}
       </section>
 
-      {/* 3. Transactions */}
+      {/* 3. Responsible Gaming */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">Responsible Gaming</h2>
+        <p className="settings__section-desc">
+          Set limits on your play and take breaks when needed. All settings can be adjusted at any
+          time. If you need help, visit{" "}
+          <a
+            href="https://www.ncpgambling.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="settings__link"
+          >
+            National Council on Problem Gambling
+          </a>
+          .
+        </p>
+
+        <h3 className="settings__subsection-title">Deposit limits</h3>
+        <p className="settings__hint">
+          Set maximum deposit amounts. Leave empty for no limit.
+        </p>
+        <div className="settings__limit-row">
+          <div className="settings__field settings__field--small">
+            <label htmlFor="dl-daily">Daily limit ($)</label>
+            <input
+              id="dl-daily"
+              type="number"
+              min="0"
+              step="10"
+              placeholder="No limit"
+              value={dlDaily}
+              onChange={(e) => setDlDaily(e.target.value)}
+              disabled={dlBusy}
+            />
+          </div>
+          <div className="settings__field settings__field--small">
+            <label htmlFor="dl-weekly">Weekly limit ($)</label>
+            <input
+              id="dl-weekly"
+              type="number"
+              min="0"
+              step="10"
+              placeholder="No limit"
+              value={dlWeekly}
+              onChange={(e) => setDlWeekly(e.target.value)}
+              disabled={dlBusy}
+            />
+          </div>
+        </div>
+        <button
+          type="button"
+          className="settings__btn"
+          disabled={dlBusy}
+          onClick={async () => {
+            setError(null);
+            setSuccess(null);
+            setDlBusy(true);
+            const daily = dlDaily.trim() ? parseFloat(dlDaily) : null;
+            const weekly = dlWeekly.trim() ? parseFloat(dlWeekly) : null;
+            const { error: limitError } = await setDepositLimits(daily, weekly);
+            setDlBusy(false);
+            if (limitError) setError(limitError);
+            else {
+              setSuccess("Deposit limits updated.");
+              fetchDepositLimits().then(setDepositLimitsState);
+            }
+          }}
+        >
+          {dlBusy ? "Saving…" : "Save limits"}
+        </button>
+
+        <h3 className="settings__subsection-title settings__subsection-title--top">
+          Self-exclusion
+        </h3>
+        {selfExclusion && new Date(selfExclusion.expiresAt) > new Date() ? (
+          <div className="settings__se-active">
+            <p>
+              You are currently self-excluded until{" "}
+              <strong>
+                {new Intl.DateTimeFormat(undefined, {
+                  dateStyle: "long",
+                }).format(new Date(selfExclusion.expiresAt))}
+              </strong>
+              .
+            </p>
+            <p className="settings__hint">
+              Your account functions will be restricted during this period. This cannot be undone
+              early.
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="settings__hint">
+              Self-exclusion bans you from the platform for a set period. During this time, you
+              cannot play, deposit, or withdraw. This action is irreversible until the period ends.
+            </p>
+            <div className="settings__field">
+              <label htmlFor="se-duration">Duration</label>
+              <select
+                id="se-duration"
+                className="settings__select"
+                value={seDuration}
+                onChange={(e) => setSeDuration(Number(e.target.value) as 30 | 90 | 180)}
+                disabled={seBusy}
+              >
+                <option value={30}>30 days</option>
+                <option value={90}>90 days</option>
+                <option value={180}>180 days</option>
+              </select>
+            </div>
+            <div className="settings__field">
+              <label htmlFor="se-reason">Reason (optional)</label>
+              <input
+                id="se-reason"
+                type="text"
+                placeholder="Optional reason"
+                value={seReason}
+                onChange={(e) => setSeReason(e.target.value)}
+                disabled={seBusy}
+              />
+            </div>
+            <button
+              type="button"
+              className="settings__btn settings__btn--danger"
+              disabled={seBusy}
+              onClick={async () => {
+                if (
+                  !window.confirm(
+                    `Are you sure? You will be excluded for ${seDuration} days. This cannot be undone.`
+                  )
+                )
+                  return;
+                setError(null);
+                setSuccess(null);
+                setSeBusy(true);
+                const { error: seError } = await createSelfExclusion(
+                  seDuration,
+                  seReason.trim() || undefined
+                );
+                setSeBusy(false);
+                if (seError) setError(seError.message);
+                else {
+                  setSuccess(
+                    `Self-exclusion activated for ${seDuration} days.`
+                  );
+                  fetchSelfExclusion().then(setSelfExclusion);
+                }
+              }}
+            >
+              {seBusy ? "Activating…" : "Activate self-exclusion"}
+            </button>
+          </>
+        )}
+      </section>
+
+      {/* 4. Transactions */}
       <section className="settings__section">
         <h2 className="settings__section-title">Transactions</h2>
         <p className="settings__section-desc">
@@ -339,11 +523,14 @@ export function Settings() {
         </p>
 
         {txLoading ? (
-          <p className="settings__hint">Loading transactions…</p>
+          <div className="lc-loading">
+            <div className="lc-loading__pulse" />
+            <span>Loading transactions…</span>
+          </div>
         ) : transactions.length === 0 ? (
           <div className="settings__tx-empty">
             <p>No transactions yet.</p>
-            <p style={{ marginTop: "0.5rem", fontSize: "0.8rem" }}>
+            <p className="settings__tx-empty-hint">
               Your activity history will show up here automatically.
             </p>
           </div>

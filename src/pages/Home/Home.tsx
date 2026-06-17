@@ -57,7 +57,7 @@ export function Home() {
           </motion.h1>
           <motion.p className="home__lead" variants={fadeUpVariants}>
             A cinematic crypto casino built on one account, real on-chain rails, and rewards that
-            grow with every wager. Five house originals are live — fund your wallet and play in
+            grow with every wager. Six house originals are live — fund your wallet and play in
             seconds.
           </motion.p>
           <motion.div className="home__cta" variants={fadeUpVariants}>
@@ -129,7 +129,7 @@ export function Home() {
             <li>
               <span className="home__roadmap-dot home__roadmap-dot--live" />
               Live now — <Link to="/originals">Originals</Link>: Keno, Mines, Limbo, Roulette,
-              Blackjack, Case Battles
+              Blackjack, Crash, Case Battles
             </li>
             <li>
               <span className="home__roadmap-dot home__roadmap-dot--live" />

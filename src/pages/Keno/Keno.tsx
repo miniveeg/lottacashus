@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
+import { usePlayMode } from "../../contexts/PlayModeContext";
 import { LcSelect } from "../../components/LcSelect/LcSelect";
 import {
   getPaytableRow,
@@ -31,6 +32,7 @@ function randomPick(count: number): number[] {
 export function Keno() {
   const { user } = useAuth();
   const { profile, refreshProfile } = useProfile();
+  const { coinType, label: coinLabel } = usePlayMode();
 
   const [risk, setRisk] = useState<KenoRisk>("classic");
   const [selected, setSelected] = useState<number[]>([]);
@@ -115,8 +117,8 @@ export function Keno() {
       return;
     }
 
-    const balance = profile?.balance ?? 0;
-    if (wager > balance) {
+    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+    if (wager > activeBalance) {
       setError("Insufficient balance.");
       return;
     }
@@ -130,6 +132,7 @@ export function Keno() {
       wager,
       picks: selected,
       risk,
+      coinType,
     });
 
     setDrawing(false);
@@ -264,7 +267,7 @@ export function Keno() {
 
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="keno-wager">
-              Bet amount (USD)
+              Bet amount ({coinLabel})
             </label>
             <div className="game-controls__wager-row">
               <input

@@ -19,6 +19,7 @@ export type KenoBetResult = {
   nonce: number;
   picks: number[];
   risk: KenoRisk;
+  coinType: string;
 };
 
 export async function fetchKenoPfState(): Promise<{
@@ -76,11 +77,13 @@ export async function placeKenoBet(params: {
   wager: number;
   picks: number[];
   risk: KenoRisk;
+  coinType?: string;
 }): Promise<{ data: KenoBetResult | null; error: string | null }> {
   const { data, error } = await invokeEdgeFunction<KenoBetResult>("place-keno-bet", {
     wager: params.wager,
     picks: params.picks,
     risk: params.risk,
+    coinType: params.coinType ?? "balance",
   });
 
   if (error) return { data: null, error };

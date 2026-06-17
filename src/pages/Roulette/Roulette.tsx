@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
+import { usePlayMode } from "../../contexts/PlayModeContext";
 import {
   type RouletteBetType,
   type RouletteColor,
@@ -38,6 +39,7 @@ type HistoryEntry = { pocket: number; color: RouletteColor };
 export function Roulette() {
   const { user } = useAuth();
   const { profile, refreshProfile } = useProfile();
+  const { coinType, label: coinLabel } = usePlayMode();
 
   const [wager, setWager] = useState(1);
   const [wagerInput, setWagerInput] = useState("1.00");
@@ -89,7 +91,8 @@ export function Roulette() {
       setError("Log in to play.");
       return;
     }
-    if ((profile?.balance ?? 0) < wager) {
+    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+    if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
     }
@@ -101,7 +104,7 @@ export function Roulette() {
     setDisplayColor(null);
 
     const startedAt = Date.now();
-    const { data, error: betErr } = await placeRouletteBet({ wager, betType });
+    const { data, error: betErr } = await placeRouletteBet({ wager, betType, coinType });
     if (betErr || !data) {
       setSpinning(false);
       setError(betErr ?? "Bet failed.");
@@ -235,7 +238,7 @@ export function Roulette() {
 
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="roulette-wager">
-              Bet amount (USD)
+              Bet amount ({coinLabel})
             </label>
             <div className="game-controls__wager-row">
               <input

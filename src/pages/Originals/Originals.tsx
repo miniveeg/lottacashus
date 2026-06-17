@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Dices, Grid3X3, Bomb, TrendingUp, CircleDot, Spade, Swords } from "lucide-react";
+import { Dices, Grid3X3, Bomb, TrendingUp, CircleDot, Spade, Swords, Zap } from "lucide-react";
 import { ORIGINAL_GAMES } from "../../content/originals";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
 import { TiltCard } from "../../components/ui/TiltCard";
@@ -14,6 +14,7 @@ const GAME_ICONS: Record<string, typeof Dices> = {
   roulette: CircleDot,
   blackjack: Spade,
   "case-battles": Swords,
+  crash: Zap,
 };
 
 export function Originals() {

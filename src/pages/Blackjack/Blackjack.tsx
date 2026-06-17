@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
+import { usePlayMode } from "../../contexts/PlayModeContext";
 import { cardLabel, handValue, isRedCard } from "../../lib/games/blackjack";
 import { formatUsd } from "../../lib/format";
 import {
@@ -53,6 +54,7 @@ function outcomeLabel(outcome: string | null | undefined) {
 export function Blackjack() {
   const { user } = useAuth();
   const { profile, refreshProfile } = useProfile();
+  const { coinType, label: coinLabel } = usePlayMode();
 
   const [wager, setWager] = useState(1);
   const [wagerInput, setWagerInput] = useState("1.00");
@@ -121,7 +123,8 @@ export function Blackjack() {
       setError("Log in to play.");
       return;
     }
-    if ((profile?.balance ?? 0) < wager) {
+    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+    if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
     }
@@ -129,7 +132,7 @@ export function Blackjack() {
     setLastMessage(null);
     setHand(null);
     setBusy(true);
-    const { data, error: err } = await startBlackjack(wager);
+    const { data, error: err } = await startBlackjack(wager, coinType);
     setBusy(false);
     if (err || !data) {
       setError(err ?? "Could not start hand.");
@@ -158,7 +161,7 @@ export function Blackjack() {
             : action === "split"
               ? splitBlackjack
               : (id: string) => insuranceBlackjack(id, Boolean(insuranceTake));
-    const { data, error: err } = await fn(hand.handId);
+    const { data, error: err } = await fn(hand.handId, coinType);
     setBusy(false);
     if (err || !data) {
       setError(err ?? "Action failed.");
@@ -267,7 +270,7 @@ export function Blackjack() {
         <aside className="bj__controls game-controls">
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="bj-wager">
-              Bet amount (USD)
+              Bet amount ({coinLabel})
             </label>
             <div className="game-controls__wager-row">
               <input
@@ -343,7 +346,7 @@ export function Blackjack() {
                   className="bj__action-btn bj__action-btn--insurance"
                   onClick={() => runAction("insurance", true)}
                   disabled={
-                    busy || (profile?.balance ?? 0) < (hand?.insuranceAmount ?? 0)
+                    busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.insuranceAmount ?? 0)
                   }
                 >
                   Insurance
@@ -381,7 +384,7 @@ export function Blackjack() {
                   type="button"
                   className="bj__action-btn bj__action-btn--double"
                   onClick={() => runAction("double")}
-                  disabled={busy || (profile?.balance ?? 0) < (hand?.wager ?? 0)}
+                  disabled={busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.wager ?? 0)}
                 >
                   Double
                 </button>
@@ -391,7 +394,7 @@ export function Blackjack() {
                   type="button"
                   className="bj__action-btn bj__action-btn--split"
                   onClick={() => runAction("split")}
-                  disabled={busy || (profile?.balance ?? 0) < (hand?.wager ?? 0)}
+                  disabled={busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.wager ?? 0)}
                 >
                   Split
                 </button>

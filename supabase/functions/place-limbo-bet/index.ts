@@ -18,6 +18,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const wager = Number(body?.wager);
     const target = Number(body?.target ?? body?.targetMultiplier);
+    const coinType = String(body?.coinType ?? "balance");
 
     const validationError = validateLimboBet(wager, target);
     if (validationError) {
@@ -42,13 +43,22 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const { data: excluded } = await supabaseAdmin.rpc("check_user_self_exclusion", {
+      p_user_id: user.id,
+    });
+    if (excluded) {
+      return jsonResponse({ error: "Your account is self-excluded." }, 403);
+    }
+
+    const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
+
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("balance")
+      .select(coinColumn)
       .eq("id", user.id)
       .maybeSingle();
 
-    const balance = Number(profile?.balance ?? 0);
+    const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
     if (balance < wager) {
       return jsonResponse({ error: "Insufficient balance" }, 400);
     }
@@ -92,6 +102,7 @@ Deno.serve(async (req) => {
         p_won: won,
         p_payout: payout,
         p_nonce: nonce,
+        p_coin_type: coinType,
       }
     );
 
@@ -108,6 +119,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       betId: row?.bet_id,
       balance: Number(outBalance ?? balance),
+      coinType,
       target,
       resultMultiplier,
       won,

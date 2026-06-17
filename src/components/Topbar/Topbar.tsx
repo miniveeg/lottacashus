@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bell, LogIn, LogOut, Menu, Search, UserPlus } from "lucide-react";
+import { Bell, Coins, LogIn, LogOut, Menu, Search, UserPlus } from "lucide-react";
 import { NotificationsPanel } from "../NotificationsPanel/NotificationsPanel";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { useProfile } from "../../contexts/ProfileContext";
+import { usePlayMode } from "../../contexts/PlayModeContext";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { useToast } from "../../contexts/ToastContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
@@ -25,6 +26,7 @@ function searchCategoryLabel(category: SiteSearchItem["category"]): string {
 export function Topbar() {
   const { user, loading, signOut } = useAuth();
   const { profile, profileLoading } = useProfile();
+  const { coinType, setCoinType, label: coinLabel } = usePlayMode();
   const { pathname } = useLocation();
   const { unreadCount } = useNotifications();
   const { toggleMobile } = useSidebar();
@@ -45,11 +47,17 @@ export function Topbar() {
     user?.email?.split("@")[0] ??
     "Player";
 
+  const activeBalance = !user
+    ? 0
+    : coinType === "sweeps_coins"
+      ? (profile?.sweepsCoins ?? 0)
+      : (profile?.balance ?? 0);
+
   const balanceDisplay = !user
     ? formatUsd(0)
     : profileLoading
       ? "…"
-      : formatUsd(profile?.balance ?? 0);
+      : formatUsd(activeBalance);
 
   async function handleSignOut() {
     await signOut();
@@ -191,20 +199,33 @@ export function Topbar() {
           <Search size={18} aria-hidden />
         </motion.button>
 
-        <Link
-          to={user ? "/settings" : loginUrl(pathname)}
-          className="topbar__balance"
-          title="Account settings"
-          aria-busy={profileLoading || undefined}
-        >
-          <span className="topbar__balance-label">Balance</span>
-          <span className="topbar__balance-value">
-            {profileLoading ? (
-              <span className="visually-hidden">Loading balance</span>
-            ) : null}
-            {balanceDisplay}
-          </span>
-        </Link>
+        <div className="topbar__balance-group">
+          <Link
+            to={user ? "/settings" : loginUrl(pathname)}
+            className="topbar__balance"
+            title="Account settings"
+            aria-busy={profileLoading || undefined}
+          >
+            <span className="topbar__balance-label">{coinLabel}</span>
+            <span className="topbar__balance-value">
+              {profileLoading ? (
+                <span className="visually-hidden">Loading balance</span>
+              ) : null}
+              {balanceDisplay}
+            </span>
+          </Link>
+          <motion.button
+            type="button"
+            className="topbar__coin-toggle"
+            aria-label={`Switch to ${coinType === "balance" ? "SC" : "GC"}`}
+            onClick={() => setCoinType(coinType === "balance" ? "sweeps_coins" : "balance")}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title={coinType === "balance" ? "Sweeps Coins" : "Gold Coins"}
+          >
+            <Coins size={14} aria-hidden />
+          </motion.button>
+        </div>
 
         {loading ? (
           <span className="topbar__loading">…</span>

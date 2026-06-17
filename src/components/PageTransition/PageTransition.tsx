@@ -14,6 +14,7 @@ const SECTIONS: Record<string, string> = {
   "/limbo": "originals",
   "/roulette": "originals",
   "/blackjack": "originals",
+  "/crash": "originals",
   "/case-battles": "battles",
   "/deposit": "wallet",
   "/withdraw": "wallet",

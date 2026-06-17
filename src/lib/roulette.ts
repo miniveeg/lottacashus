@@ -19,6 +19,7 @@ export type RouletteBetResult = {
   profit: number;
   multiplier: number;
   nonce: number;
+  coinType: string;
 };
 
 function parsePfRow(data: unknown): RoulettePfState | null {
@@ -67,10 +68,11 @@ export async function setRouletteClientSeed(clientSeed: string): Promise<{ error
   return { error: error?.message ?? null };
 }
 
-export async function placeRouletteBet(params: { wager: number; betType: RouletteBetType }) {
+export async function placeRouletteBet(params: { wager: number; betType: RouletteBetType; coinType?: string }) {
   const { data, error } = await invokeEdgeFunction<RouletteBetResult>("place-roulette-bet", {
     wager: params.wager,
     betType: params.betType,
+    coinType: params.coinType ?? "balance",
   });
 
   if (error) return { data: null as RouletteBetResult | null, error };

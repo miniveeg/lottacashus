@@ -62,6 +62,24 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
     live: true,
     tag: "Beta",
   },
+  {
+    id: "crash",
+    name: "Crash",
+    description:
+      "Watch the multiplier rise. Cash out before it crashes. Provably fair.",
+    href: "/crash",
+    live: true,
+    tag: "New",
+  },
+  {
+    id: "slots",
+    name: "Slots",
+    description:
+      "Classic 3-reel slot machine. Match symbols to win big — Crown 50x, Star 25x, and more.",
+    href: "/slots",
+    live: true,
+    tag: "New",
+  },
 ];
 
 export const ORIGINALS_PATH = "/originals";

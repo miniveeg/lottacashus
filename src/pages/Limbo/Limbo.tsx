@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
+import { usePlayMode } from "../../contexts/PlayModeContext";
 import {
   LIMBO_MAX_TARGET,
   LIMBO_MIN_TARGET,
@@ -32,6 +33,7 @@ function clampTarget(value: number): number {
 export function Limbo() {
   const { user } = useAuth();
   const { profile, refreshProfile } = useProfile();
+  const { coinType, label: coinLabel } = usePlayMode();
 
   const [wager, setWager] = useState(1);
   const [wagerInput, setWagerInput] = useState("1.00");
@@ -91,7 +93,8 @@ export function Limbo() {
       setError("Log in to play.");
       return;
     }
-    if ((profile?.balance ?? 0) < wager) {
+    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+    if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
     }
@@ -103,7 +106,7 @@ export function Limbo() {
     setPopIn(false);
 
     const startedAt = Date.now();
-    const { data, error: betErr } = await placeLimboBet({ wager, target });
+    const { data, error: betErr } = await placeLimboBet({ wager, target, coinType });
     if (betErr || !data) {
       setRolling(false);
       setShowResult(true);
@@ -230,7 +233,7 @@ export function Limbo() {
 
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="limbo-wager">
-              Bet amount (USD)
+              Bet amount ({coinLabel})
             </label>
             <div className="game-controls__wager-row">
               <input

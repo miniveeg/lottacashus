@@ -18,13 +18,14 @@ type AuthContextValue = {
   session: Session | null;
   loading: boolean;
   configured: boolean;
-  sendSignupCode: (email: string, username?: string) => Promise<AuthResult>;
+  sendSignupCode: (email: string, username?: string, birthDate?: string) => Promise<AuthResult>;
   completeSignup: (
     email: string,
     code: string,
     password: string,
     username?: string,
-    referralCode?: string
+    referralCode?: string,
+    birthDate?: string
   ) => Promise<AuthResult>;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
@@ -80,8 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const sendSignupCode = useCallback(async (email: string, username?: string): Promise<AuthResult> => {
-    const { error } = await requestSignupCode(email, username);
+  const sendSignupCode = useCallback(async (email: string, username?: string, birthDate?: string): Promise<AuthResult> => {
+    const { error } = await requestSignupCode(email, username, birthDate);
     if (error) return { error };
     return { error: null };
   }, []);
@@ -92,14 +93,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       code: string,
       password: string,
       username?: string,
-      referralCode?: string
+      referralCode?: string,
+      birthDate?: string
     ): Promise<AuthResult> => {
       const { error: verifyError } = await verifySignupCode(
         email,
         code,
         password,
         username,
-        referralCode
+        referralCode,
+        birthDate
       );
       if (verifyError) return { error: verifyError };
 

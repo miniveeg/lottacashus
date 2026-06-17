@@ -40,6 +40,8 @@ export function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -73,6 +75,28 @@ export function Signup() {
       return;
     }
 
+    if (!ageConfirmed) {
+      setError("You must confirm that you are 18 or older.");
+      return;
+    }
+
+    if (!birthDate) {
+      setError("Enter your date of birth.");
+      return;
+    }
+
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    if (age < 18) {
+      setError("You must be at least 18 years old to register.");
+      return;
+    }
+
     const trimmedUsername = username.trim();
     if (trimmedUsername) {
       const usernameError = validateUsername(trimmedUsername);
@@ -86,7 +110,8 @@ export function Signup() {
     analytics.signup.started();
     const { error: sendError } = await sendSignupCode(
       email.trim(),
-      trimmedUsername ? normalizeUsername(trimmedUsername) : undefined
+      trimmedUsername ? normalizeUsername(trimmedUsername) : undefined,
+      birthDate || undefined
     );
     setSubmitting(false);
 
@@ -124,7 +149,8 @@ export function Signup() {
       code,
       password,
       trimmedUsername ? normalizeUsername(trimmedUsername) : undefined,
-      ref || undefined
+      ref || undefined,
+      birthDate || undefined
     );
     setSubmitting(false);
 
@@ -135,7 +161,7 @@ export function Signup() {
     }
 
     analytics.signup.completed(username);
-    toast.success("Account created — welcome to LottaCash! 🎉");
+    toast.success("Account created — welcome to LottaCash!");
     clearStoredAffiliateRef();
     navigate(redirectTo, { replace: true });
   }
@@ -246,6 +272,35 @@ export function Signup() {
                 minLength={6}
               />
             </div>
+
+            <div className="auth-field">
+              <label htmlFor="signup-birthdate">Date of birth</label>
+              <input
+                id="signup-birthdate"
+                type="date"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                required
+              />
+            </div>
+
+            <label className="auth-checkbox">
+              <input
+                type="checkbox"
+                checked={ageConfirmed}
+                onChange={(e) => setAgeConfirmed(e.target.checked)}
+                required
+              />
+              <span>I confirm that I am 18 years or older and agree to the{" "}
+                <Link to="/sweepstakes" target="_blank" className="auth-checkbox-link">
+                  Sweepstakes Rules
+                </Link>
+                {" "}and{" "}
+                <Link to="/privacy" target="_blank" className="auth-checkbox-link">
+                  Privacy Policy
+                </Link>
+              </span>
+            </label>
 
             <button type="submit" className="auth-submit" disabled={submitting || !configured}>
               {submitting ? "Sending code…" : "Send verification code"}

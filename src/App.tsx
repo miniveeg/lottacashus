@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
+import { PlayModeProvider } from "./contexts/PlayModeContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ToastRegion } from "./components/Toast/Toast";
@@ -19,6 +20,7 @@ import { Mines } from "./pages/Mines/Mines";
 import { Limbo } from "./pages/Limbo/Limbo";
 import { Roulette } from "./pages/Roulette/Roulette";
 import { Blackjack } from "./pages/Blackjack/Blackjack";
+import { Crash } from "./pages/Crash/Crash";
 import { Originals } from "./pages/Originals/Originals";
 const CaseBattlesCreate = lazy(() =>
   import("./pages/CaseBattles/CaseBattlesCreate").then((m) => ({ default: m.CaseBattlesCreate }))
@@ -43,12 +45,18 @@ import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
 import { ProfilePage } from "./pages/Profile/Profile";
 import { NotFound } from "./pages/NotFound/NotFound";
 import { AdminRoute } from "./components/AdminRoute/AdminRoute";
+import { Privacy } from "./pages/Privacy/Privacy";
+import { SweepstakesRules } from "./pages/SweepstakesRules/SweepstakesRules";
+import { FreeEntry } from "./pages/FreeEntry/FreeEntry";
+import Redeem from "./pages/Redeem/Redeem";
+import Slots from "./pages/Slots/Slots";
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <ProfileProvider>
+          <PlayModeProvider>
           <NotificationsProvider>
           <ToastProvider>
           <ToastRegion />
@@ -174,6 +182,14 @@ export default function App() {
               }
             />
             <Route
+              path="/crash"
+              element={
+                <AppShell>
+                  <Crash />
+                </AppShell>
+              }
+            />
+            <Route
               path="/case-battles"
               element={
                 <AppShell>
@@ -238,6 +254,47 @@ export default function App() {
               }
             />
             <Route
+              path="/privacy"
+              element={
+                <AppShell>
+                  <Privacy />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/sweepstakes"
+              element={
+                <AppShell>
+                  <SweepstakesRules />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/free-entry"
+              element={
+                <AppShell>
+                  <FreeEntry />
+                </AppShell>
+              }
+            />
+            <Route path="/responsible-gaming" element={<Navigate to="/settings" replace />} />
+            <Route
+              path="/slots"
+              element={
+                <AppShell>
+                  <Slots />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/redeem"
+              element={
+                <AppShell>
+                  <Redeem />
+                </AppShell>
+              }
+            />
+            <Route
               path="*"
               element={
                 <AppShell>
@@ -248,6 +305,7 @@ export default function App() {
           </Routes>
           </ToastProvider>
           </NotificationsProvider>
+          </PlayModeProvider>
         </ProfileProvider>
       </AuthProvider>
     </BrowserRouter>

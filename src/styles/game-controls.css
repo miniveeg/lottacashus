@@ -211,3 +211,68 @@
 .game-controls__stat-value--win  { color: var(--lc-emerald); }
 .game-controls__stat-value--loss { color: var(--lc-ruby); }
 .game-controls__stat-value--gold { color: var(--lc-gold); }
+
+/* ── Bet presets ── */
+.game-controls__preset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lc-text-secondary);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  cursor: pointer;
+  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+}
+
+.game-controls__preset:hover:not(:disabled) {
+  background: var(--lc-bg-hover);
+  color: var(--lc-crimson-soft);
+  border-color: var(--lc-border-accent);
+}
+
+.game-controls__preset--active {
+  background: var(--lc-crimson-glow);
+  border-color: var(--lc-crimson);
+  color: var(--lc-crimson-soft);
+}
+
+/* ── Wager adjustment (half/double) ── */
+.game-controls__wager-adj {
+  min-height: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--lc-radius-md);
+  font-family: var(--lc-font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--lc-text-secondary);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+}
+
+.game-controls__wager-adj:hover:not(:disabled) {
+  background: var(--lc-bg-hover);
+  color: var(--lc-crimson-soft);
+  border-color: var(--lc-border-accent);
+}
+
+.game-controls__wager-adj:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Error text ── */
+.game-controls__error {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--lc-ruby);
+  margin-top: 0.4rem;
+}

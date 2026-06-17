@@ -28,14 +28,14 @@
   border-radius: var(--lc-radius-sm);
   color: var(--lc-text-muted);
   border: 1px solid var(--lc-border);
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--lc-bg-hover);
   transition: color var(--lc-transition), border-color var(--lc-transition), background var(--lc-transition);
 }
 
 .sidebar__collapse-btn:hover {
   color: var(--lc-crimson-soft);
   border-color: var(--lc-border-accent);
-  background: rgba(220, 20, 60, 0.06);
+  background: var(--lc-crimson-glow);
 }
 
 .sidebar__body {
@@ -103,7 +103,7 @@
 }
 
 .sidebar__link:hover {
-  background: rgba(220, 20, 60, 0.05);
+  background: var(--lc-crimson-glow);
   color: var(--lc-text-primary);
 }
 
@@ -112,9 +112,9 @@
 }
 
 .sidebar__link--active {
-  background: rgba(220, 20, 60, 0.1);
+  background: var(--lc-crimson-glow);
   color: var(--lc-crimson-soft);
-  box-shadow: inset 0 0 24px rgba(220, 20, 60, 0.06);
+  box-shadow: inset 0 0 24px var(--lc-crimson-glow);
 }
 
 .sidebar__link--active::before {
@@ -124,7 +124,7 @@
 .sidebar__link-glow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at left center, rgba(220, 20, 60, 0.15) 0%, transparent 70%);
+  background: radial-gradient(ellipse at left center, var(--lc-crimson-glow) 0%, transparent 70%);
   opacity: 1;
   pointer-events: none;
   animation: sidebar-glow-pulse 2.5s ease-in-out infinite;
@@ -189,7 +189,7 @@
   font-size: 0.76rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--lc-text-primary);
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
   box-shadow: 0 2px 20px var(--lc-crimson-glow), var(--lc-shadow-inset);
   transition: filter var(--lc-transition), box-shadow var(--lc-transition);
@@ -199,8 +199,8 @@
 .sidebar-chat__notice a { color: var(--lc-crimson-soft); font-weight: 700; }
 
 .sidebar-chat__msg--own {
-  border-color: rgba(220, 20, 60, 0.22);
-  background: rgba(220, 20, 60, 0.05);
+  border-color: var(--lc-crimson-glow);
+  background: var(--lc-crimson-glow);
 }
 
 .sidebar-chat__msg-user { color: var(--lc-crimson-soft); }

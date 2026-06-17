@@ -1,0 +1,127 @@
+.site-footer {
+  margin-top: auto;
+  padding: 3rem 2rem 1.5rem;
+  border-top: 1px solid var(--lc-border);
+  background: var(--lc-bg-elevated);
+}
+
+.site-footer__inner {
+  max-width: var(--lc-page-max);
+  margin: 0 auto;
+  display: flex;
+  gap: 3rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.site-footer__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+}
+
+.site-footer__logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--lc-text-primary);
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: var(--lc-text-lg);
+}
+
+.site-footer__logo {
+  border-radius: 4px;
+}
+
+.site-footer__name {
+  color: var(--lc-text-primary);
+}
+
+.site-footer__tagline {
+  color: var(--lc-text-muted);
+  font-size: var(--lc-text-sm);
+  line-height: 1.5;
+  max-width: 260px;
+}
+
+.site-footer__nav {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.site-footer__col {
+  min-width: 130px;
+}
+
+.site-footer__heading {
+  font-family: var(--lc-font-display);
+  font-size: var(--lc-text-sm);
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.site-footer__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.site-footer__link {
+  color: var(--lc-text-muted);
+  text-decoration: none;
+  font-size: var(--lc-text-sm);
+  transition: color var(--lc-transition);
+}
+
+.site-footer__link:hover {
+  color: var(--lc-crimson-soft);
+}
+
+.site-footer__bottom {
+  max-width: var(--lc-page-max);
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--lc-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  text-align: center;
+}
+
+.site-footer__responsible {
+  color: var(--lc-text-muted);
+  font-size: var(--lc-text-xs);
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.site-footer__ncpg-link {
+  color: var(--lc-crimson-soft);
+  text-decoration: none;
+  font-weight: 500;
+  transition: opacity var(--lc-transition);
+}
+
+.site-footer__ncpg-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+.site-footer__copyright {
+  color: var(--lc-text-muted);
+  font-size: var(--lc-text-xs);
+}

@@ -2,12 +2,14 @@ import { useRef, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider, useSidebar } from "../../contexts/SidebarContext";
 import { isGuestBrowsableGamePath } from "../../content/originals";
+import { useSessionReminder } from "../../lib/useSessionReminder";
 import { AffiliateRefCapture } from "../AffiliateRefCapture/AffiliateRefCapture";
 import { AtmosphericLayer } from "../atmosphere/AtmosphericLayer";
 import { SmoothScroll } from "../atmosphere/SmoothScroll";
 import { GameGuestBanner } from "../GameGuestBanner/GameGuestBanner";
 import { Topbar } from "../Topbar/Topbar";
 import { Sidebar } from "../Sidebar/Sidebar";
+import { Footer } from "../Footer/Footer";
 import { PageTransition } from "../PageTransition/PageTransition";
 import "../../styles/layout.css";
 
@@ -21,6 +23,7 @@ function AppShellInner({ children }: AppShellProps) {
   const mainRef = useRef<HTMLElement>(null);
   const showGuestBanner = isGuestBrowsableGamePath(pathname);
   const showHero3d = pathname === "/";
+  useSessionReminder();
 
   return (
     <div
@@ -46,6 +49,7 @@ function AppShellInner({ children }: AppShellProps) {
           <PageTransition>
             {showGuestBanner ? <GameGuestBanner /> : null}
             {children}
+            <Footer />
           </PageTransition>
         </main>
       </SmoothScroll>

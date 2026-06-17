@@ -27,6 +27,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const action = String(body?.action ?? "") as MinesAction;
+    const coinType = String(body?.coinType ?? "balance");
 
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -45,6 +46,15 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
+    const { data: excluded } = await supabaseAdmin.rpc("check_user_self_exclusion", {
+      p_user_id: user.id,
+    });
+    if (excluded) {
+      return jsonResponse({ error: "Your account is self-excluded." }, 403);
+    }
+
+    const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
 
     if (action === "active") {
       const { data, error } = await supabaseAdmin.rpc("get_active_mines_game", {
@@ -76,11 +86,11 @@ Deno.serve(async (req) => {
 
       const { data: profile } = await supabaseAdmin
         .from("profiles")
-        .select("balance")
+        .select(coinColumn)
         .eq("id", user.id)
         .maybeSingle();
 
-      const balance = Number(profile?.balance ?? 0);
+      const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
       if (balance < wager) {
         return jsonResponse({ error: "Insufficient balance" }, 400);
       }
@@ -121,6 +131,7 @@ Deno.serve(async (req) => {
           p_mine_count: mineCount,
           p_mine_tiles: mineTiles,
           p_nonce: nonce,
+          p_coin_type: coinType,
         }
       );
 
@@ -136,6 +147,7 @@ Deno.serve(async (req) => {
       return jsonResponse({
         gameId: result?.game_id,
         balance: Number(result?.out_balance ?? balance - wager),
+        coinType,
         mineCount,
         wager,
         maxGems: getMaxGems(mineCount),
@@ -219,6 +231,7 @@ Deno.serve(async (req) => {
         multiplier,
         status,
         balance: Number(row?.out_balance ?? 0),
+        coinType,
         payout: Number(row?.payout ?? 0),
         mineTiles: isMine ? mineTiles : undefined,
         nextMultiplier:
@@ -237,6 +250,7 @@ Deno.serve(async (req) => {
         {
           p_user_id: user.id,
           p_game_id: gameId,
+          p_coin_type: coinType,
         }
       );
 
@@ -261,6 +275,7 @@ Deno.serve(async (req) => {
         multiplier,
         gemsRevealed: Number(row?.gems_revealed ?? 0),
         balance: Number(row?.out_balance ?? 0),
+        coinType,
         wager,
         profit: payout - wager,
       });

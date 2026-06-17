@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Trophy } from "lucide-react";
 import { formatUsd } from "../../lib/format";
 import { fetchBiggestWins, fetchMostWagered, type LeaderboardTab, type LeaderboardEntry } from "../../lib/leaderboard";
 import "./Leaderboard.css";
@@ -85,7 +86,7 @@ export function Leaderboard() {
                   <td className="leaderboard-table__rank">
                     {entry.rank <= 3 ? (
                       <span className={`leaderboard-table__medal leaderboard-table__medal--${entry.rank}`}>
-                        {entry.rank === 1 ? "🥇" : entry.rank === 2 ? "🥈" : "🥉"}
+                        {entry.rank === 1 ? <Trophy size={20} className="leaderboard-table__medal-icon--gold" /> : entry.rank === 2 ? <Trophy size={20} className="leaderboard-table__medal-icon--silver" /> : <Trophy size={20} className="leaderboard-table__medal-icon--bronze" />}
                       </span>
                     ) : (
                       entry.rank

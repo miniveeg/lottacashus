@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Gift, Handshake } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
@@ -145,7 +146,7 @@ export function Promotions() {
       <section className="promos__affiliate lc-panel" aria-labelledby="affiliate-heading">
         <div className="promos__affiliate-head">
           <div className="promos__hero-icon promos__affiliate-icon" aria-hidden="true">
-            🤝
+            <Handshake size={32} />
           </div>
           <div>
             <h2 id="affiliate-heading" className="promos__hero-title">
@@ -370,7 +371,7 @@ export function Promotions() {
 
       <section className="promos__hero lc-panel">
         <div className="promos__hero-icon" aria-hidden="true">
-          🎁
+          <Gift size={32} />
         </div>
         <div>
           <h2 className="promos__hero-title">More rewards coming</h2>

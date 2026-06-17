@@ -10,12 +10,12 @@
   align-items: center;
   gap: 1.25rem;
   padding: 1.5rem;
-  background: var(--lc-glass-bg);
+  background: var(--lc-bg-glass);
   backdrop-filter: var(--lc-glass-blur);
   -webkit-backdrop-filter: var(--lc-glass-blur);
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-xl);
-  box-shadow: var(--lc-glass-shadow);
+  box-shadow: var(--lc-shadow-sm);
   margin-bottom: 1.25rem;
   position: relative;
   overflow: hidden;
@@ -46,7 +46,7 @@
   font-weight: 700;
   font-size: 1.75rem;
   color: #fff8f6;
-  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-deep));
+  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-dim));
   box-shadow: 0 4px 20px rgba(139, 26, 36, 0.3);
 }
 
@@ -112,12 +112,12 @@
   flex-direction: column;
   gap: 0.25rem;
   padding: 1rem 1rem 0.85rem;
-  background: var(--lc-glass-bg);
+  background: var(--lc-bg-glass);
   backdrop-filter: var(--lc-glass-blur);
   -webkit-backdrop-filter: var(--lc-glass-blur);
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-lg);
-  box-shadow: var(--lc-glass-shadow);
+  box-shadow: var(--lc-shadow-sm);
   transition: border-color var(--lc-transition);
 }
 
@@ -177,7 +177,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.55rem 0.85rem;
-  background: var(--lc-glass-bg);
+  background: var(--lc-bg-glass);
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-lg);
   transition: border-color var(--lc-transition);
@@ -208,12 +208,12 @@
 /* ── Referral ── */
 .profile-referral {
   padding: 1.25rem;
-  background: var(--lc-glass-bg);
+  background: var(--lc-bg-glass);
   backdrop-filter: var(--lc-glass-blur);
   -webkit-backdrop-filter: var(--lc-glass-blur);
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-xl);
-  box-shadow: var(--lc-glass-shadow);
+  box-shadow: var(--lc-shadow-sm);
 }
 
 .profile-referral__code-row {
@@ -291,7 +291,7 @@
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: var(--lc-radius-md);
-  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-deep));
+  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-dim));
   color: #fff8f6;
   box-shadow: 0 4px 16px rgba(139, 26, 36, 0.3);
   transition: filter var(--lc-transition), transform var(--lc-transition);

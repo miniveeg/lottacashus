@@ -115,7 +115,7 @@ export function Withdraw() {
         </Link>
       </div>
 
-      <p className="wallet__hint" style={{ marginBottom: "1rem" }}>
+      <p className="wallet__hint wallet__hint--balance">
         Available balance: <strong>{formatUsd(profile?.balance ?? 0)}</strong>
       </p>
 
@@ -167,7 +167,7 @@ export function Withdraw() {
           </button>
         </form>
 
-        <p className="wallet__hint" style={{ marginTop: "1rem" }}>
+        <p className="wallet__hint wallet__hint--note">
           Withdrawals are queued and sent manually or automatically from treasury wallets. Processing
           times vary by network.
         </p>
@@ -176,17 +176,19 @@ export function Withdraw() {
       <section className="wallet__section">
         <h2 className="wallet__list-title">Recent withdrawals</h2>
         {withdrawals.length === 0 ? (
-          <p className="wallet__hint">No withdrawals yet.</p>
+          <div className="lc-empty">
+            <p>No withdrawals yet</p>
+          </div>
         ) : (
           withdrawals.map((w) => (
             <div key={w.id} className="wallet__deposit-item">
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <div className="wallet__deposit-row">
                 <span>
                   <strong>{w.chain.toUpperCase()}</strong> · {formatUsd(w.usd_amount)}
                 </span>
                 <span className={`wallet__status wallet__status--${w.status}`}>{w.status}</span>
               </div>
-              <p className="wallet__hint" style={{ marginTop: "0.35rem", wordBreak: "break-all" }}>
+              <p className="wallet__hint wallet__hint--meta">
                 {w.destination_address}
               </p>
             </div>

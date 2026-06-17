@@ -37,6 +37,7 @@ export type AdminUserResult = {
   username: string | null;
   email: string | null;
   balance: number;
+  sweepsCoins: number;
   isAdmin: boolean;
   createdAt: string;
 };
@@ -127,6 +128,7 @@ export async function searchAdminUsers(query: string) {
       username: (r.username as string | null) ?? null,
       email: (r.email as string | null) ?? null,
       balance: parseNum(r.balance),
+      sweepsCoins: parseNum(r.sweeps_coins),
       isAdmin: Boolean(r.is_admin),
       createdAt: r.created_at as string,
     })),
@@ -138,5 +140,60 @@ export async function setUserAdmin(userId: string, isAdmin: boolean) {
   return supabase.rpc("admin_set_user_admin", {
     p_user_id: userId,
     p_is_admin: isAdmin,
+  });
+}
+
+export type AdminRedemption = {
+  id: string;
+  userId: string;
+  username: string | null;
+  email: string | null;
+  scAmount: number;
+  paypalEmail: string;
+  status: string;
+  reviewedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+};
+
+export async function fetchAdminRedemptions(status: "pending" | "all" = "pending") {
+  const { data, error } = await supabase.rpc("admin_list_redemptions", { p_status: status });
+  if (error) return { data: null as AdminRedemption[] | null, error };
+  const rows = (data ?? []) as Record<string, unknown>[];
+  return {
+    data: rows.map((r) => ({
+      id: r.id as string,
+      userId: r.user_id as string,
+      username: (r.username as string | null) ?? null,
+      email: (r.email as string | null) ?? null,
+      scAmount: parseNum(r.sc_amount),
+      paypalEmail: r.paypal_email as string,
+      status: r.status as string,
+      reviewedBy: (r.reviewed_by as string | null) ?? null,
+      notes: (r.notes as string | null) ?? null,
+      createdAt: r.created_at as string,
+    })),
+    error: null,
+  };
+}
+
+export async function processAdminRedemption(
+  redemptionId: string,
+  action: "approve" | "reject",
+  notes?: string
+) {
+  return supabase.rpc("admin_process_redemption", {
+    p_redemption_id: redemptionId,
+    p_action: action,
+    p_notes: notes ?? null,
+  });
+}
+
+export async function adminCreditUser(userId: string, amount: number, note: string, coinType = "balance") {
+  return supabase.rpc("admin_credit_user", {
+    p_user_id: userId,
+    p_amount: amount,
+    p_note: note,
+    p_coin_type: coinType,
   });
 }

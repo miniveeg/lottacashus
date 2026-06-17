@@ -179,7 +179,7 @@
 }
 
 .admin__mono {
-  font-family: ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 0.78rem;
   word-break: break-all;
   color: var(--lc-text-secondary);
@@ -253,7 +253,7 @@
 }
 
 .admin__btn--primary:hover:not(:disabled) {
-  background: var(--lc-gold-bright, #ffd666);
+  background: var(--lc-crimson-soft);
 }
 
 .admin__btn--secondary {

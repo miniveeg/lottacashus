@@ -1,52 +1,7 @@
+import { AlertTriangle, Check, Info, Loader2, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import { useToast, type Toast } from "../../contexts/ToastContext";
 import "./Toast.css";
-
-// ── Icons ──────────────────────────────────────────────────────────────────
-
-function IconSuccess() {
-  return (
-    <svg className="lc-toast__icon" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M6.5 10l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconError() {
-  return (
-    <svg className="lc-toast__icon" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M10 6v5M10 13.5v.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconWarning() {
-  return (
-    <svg className="lc-toast__icon" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <path d="M10 2L18.66 17H1.34L10 2z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d="M10 8v4M10 14.5v.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconInfo() {
-  return (
-    <svg className="lc-toast__icon" viewBox="0 0 20 20" fill="none" aria-hidden>
-      <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M10 9v5M10 6v.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconClose() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
-      <path d="M1 1l10 10M11 1L1 11" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 // ── Single Toast Item ──────────────────────────────────────────────────────
 
@@ -91,15 +46,15 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
       onTouchEnd={onTouchEnd}
     >
       {toast.variant === "loading" ? (
-        <span className="lc-toast__spinner" aria-hidden />
+        <Loader2 size={16} className="lc-toast__spinner" />
       ) : toast.variant === "success" ? (
-        <IconSuccess />
+        <Check size={16} className="lc-toast__icon" aria-hidden />
       ) : toast.variant === "error" ? (
-        <IconError />
+        <X size={16} className="lc-toast__icon" aria-hidden />
       ) : toast.variant === "warning" ? (
-        <IconWarning />
+        <AlertTriangle size={16} className="lc-toast__icon" aria-hidden />
       ) : (
-        <IconInfo />
+        <Info size={16} className="lc-toast__icon" aria-hidden />
       )}
 
       <div className="lc-toast__body">
@@ -112,7 +67,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
         aria-label="Dismiss notification"
         onClick={handleDismiss}
       >
-        <IconClose />
+        <X size={12} />
       </button>
     </div>
   );

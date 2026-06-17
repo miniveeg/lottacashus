@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
+  adminCreditUser,
   completeAdminWithdrawal,
   failAdminWithdrawal,
   fetchAdminRecentDeposits,
   fetchAdminStats,
   fetchAdminWithdrawals,
+  fetchAdminRedemptions,
+  processAdminRedemption,
   searchAdminUsers,
   setUserAdmin,
   type AdminDeposit,
+  type AdminRedemption,
   type AdminStats,
   type AdminUserResult,
   type AdminWithdrawal,
@@ -43,6 +47,25 @@ export function Admin() {
   const [userResults, setUserResults] = useState<AdminUserResult[]>([]);
   const [userSearchError, setUserSearchError] = useState<string | null>(null);
   const [userSearching, setUserSearching] = useState(false);
+  const [redemptions, setRedemptions] = useState<AdminRedemption[]>([]);
+  const [fundingApproveBusy, setFundingApproveBusy] = useState<string | null>(null);
+  const [fundingRejectBusy, setFundingRejectBusy] = useState<string | null>(null);
+
+  const [creditUserId, setCreditUserId] = useState("");
+  const [creditAmount, setCreditAmount] = useState("");
+  const [creditCoinType, setCreditCoinType] = useState("balance");
+  const [creditNote, setCreditNote] = useState("");
+  const [creditStatus, setCreditStatus] = useState<string | null>(null);
+  const [creditBusy, setCreditBusy] = useState(false);
+
+  const loadRedemptions = useCallback(async () => {
+    const { data, error: err } = await fetchAdminRedemptions("pending");
+    if (!err && data) setRedemptions(data);
+  }, []);
+
+  useEffect(() => {
+    loadRedemptions();
+  }, [loadRedemptions]);
 
   const loadDashboard = useCallback(async () => {
     setError(null);
@@ -138,6 +161,29 @@ export function Admin() {
 
   function copyText(text: string) {
     void navigator.clipboard.writeText(text);
+  }
+
+  async function handleCredit(e: FormEvent) {
+    e.preventDefault();
+    setCreditStatus(null);
+    const uid = creditUserId.trim();
+    const amount = parseFloat(creditAmount);
+    if (!uid || !Number.isFinite(amount) || amount <= 0) {
+      setCreditStatus("Enter a valid user ID and amount.");
+      return;
+    }
+    setCreditBusy(true);
+    const coinLabel = creditCoinType === "sweeps_coins" ? "SC" : "GC";
+    const { error: err } = await adminCreditUser(uid, amount, creditNote.trim() || "Admin credit", creditCoinType);
+    setCreditBusy(false);
+    if (err) {
+      setCreditStatus(err.message);
+      return;
+    }
+    setCreditStatus(`Credited ${amount.toFixed(2)} ${coinLabel} to user.`);
+    setCreditAmount("");
+    setCreditNote("");
+    setCreditUserId("");
   }
 
   return (
@@ -329,7 +375,7 @@ export function Admin() {
                 <div>
                   <p className="admin__user-name">{displayUser(u.username, u.email)}</p>
                   <p className="admin__user-meta">
-                    {formatUsd(u.balance)} · {u.isAdmin ? "Admin" : "Member"}
+                    GC {formatUsd(u.balance)} · SC {(u.sweepsCoins ?? 0).toFixed(2)} · {u.isAdmin ? "Admin" : "Member"}
                   </p>
                 </div>
                 <button
@@ -343,6 +389,123 @@ export function Admin() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="admin__section">
+        <h2 className="admin__section-title">Redemption requests</h2>
+        <p className="admin__section-desc">
+          Pending Sweeps Coins redemption requests. Approve to process payout or reject.
+        </p>
+        {redemptions.length === 0 ? (
+          <p className="admin__hint">No pending redemptions.</p>
+        ) : (
+          <ul className="admin__user-list">
+            {redemptions.map((r) => (
+              <li key={r.id} className="admin__user-row">
+                <div>
+                  <p className="admin__user-name">{displayUser(r.username, r.email)}</p>
+                  <p className="admin__user-meta">
+                    {r.scAmount} SC &middot; PayPal: {r.paypalEmail} &middot;{" "}
+                    {new Date(r.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: "0.35rem" }}>
+                  <button
+                    type="button"
+                    className="admin__btn admin__btn--primary"
+                    disabled={fundingApproveBusy === r.id}
+                    onClick={async () => {
+                      setFundingApproveBusy(r.id);
+                      const { error: err } = await processAdminRedemption(r.id, "approve");
+                      setFundingApproveBusy(null);
+                      if (err) setActionError(err.message);
+                      else loadRedemptions();
+                    }}
+                  >
+                    {fundingApproveBusy === r.id ? "Approving…" : "Approve"}
+                  </button>
+                  <button
+                    type="button"
+                    className="admin__btn admin__btn--danger"
+                    disabled={fundingRejectBusy === r.id}
+                    onClick={async () => {
+                      setFundingRejectBusy(r.id);
+                      const { error: err } = await processAdminRedemption(r.id, "reject");
+                      setFundingRejectBusy(null);
+                      if (err) setActionError(err.message);
+                      else loadRedemptions();
+                    }}
+                  >
+                    {fundingRejectBusy === r.id ? "Rejecting…" : "Reject"}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="admin__section">
+        <h2 className="admin__section-title">Credit user balance</h2>
+        <p className="admin__section-desc">
+          Credit funds to a user&apos;s account. Used for manual sweepstakes mail-in entry
+          fulfillment and promotions. Enter the user&apos;s UUID.
+        </p>
+        <form className="admin__credit-form" onSubmit={handleCredit}>
+          <div className="admin__credit-row">
+            <input
+              className="admin__input admin__credit-input"
+              type="text"
+              placeholder="User ID (uuid)"
+              value={creditUserId}
+              onChange={(e) => setCreditUserId(e.target.value)}
+              disabled={creditBusy}
+            />
+            <input
+              className="admin__input admin__credit-amount"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="Amount"
+              value={creditAmount}
+              onChange={(e) => setCreditAmount(e.target.value)}
+              disabled={creditBusy}
+            />
+            <select
+              className="admin__input"
+              value={creditCoinType}
+              onChange={(e) => setCreditCoinType(e.target.value)}
+              disabled={creditBusy}
+              style={{ width: "auto", minWidth: "5rem" }}
+            >
+              <option value="balance">GC</option>
+              <option value="sweeps_coins">SC</option>
+            </select>
+            <input
+              className="admin__input admin__credit-note"
+              type="text"
+              placeholder="Note (optional)"
+              value={creditNote}
+              onChange={(e) => setCreditNote(e.target.value)}
+              disabled={creditBusy}
+            />
+            <button
+              type="submit"
+              className="admin__btn admin__btn--primary"
+              disabled={creditBusy}
+            >
+              {creditBusy ? "Crediting…" : "Credit"}
+            </button>
+          </div>
+          {creditStatus && (
+            <p
+              className={`admin__banner${creditStatus.includes("Error") || creditStatus.includes("error") ? " admin__banner--error" : ""}`}
+              role="status"
+            >
+              {creditStatus}
+            </p>
+          )}
+        </form>
       </section>
     </div>
   );

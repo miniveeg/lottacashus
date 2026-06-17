@@ -73,7 +73,7 @@
 }
 
 .wallet__address {
-  font-family: ui-monospace, monospace;
+  font-family: var(--lc-font-mono);
   font-size: 0.85rem;
   word-break: break-all;
   line-height: 1.45;
@@ -110,6 +110,24 @@
   font-size: 0.8rem;
   color: var(--lc-text-muted);
   line-height: 1.45;
+}
+
+.wallet__hint--balance {
+  margin-bottom: 1rem;
+}
+
+.wallet__hint--bonus {
+  margin-bottom: 1rem;
+  color: var(--lc-emerald);
+}
+
+.wallet__hint--meta {
+  margin-top: 0.35rem;
+  word-break: break-all;
+}
+
+.wallet__hint--note {
+  margin-top: 1rem;
 }
 
 .wallet__field {
@@ -165,6 +183,12 @@
   border-radius: var(--lc-radius-md);
   margin-bottom: 0.5rem;
   font-size: 0.85rem;
+}
+
+.wallet__deposit-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .wallet__status {

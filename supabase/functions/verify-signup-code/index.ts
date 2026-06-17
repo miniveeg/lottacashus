@@ -100,7 +100,6 @@ Deno.serve(async (req) => {
           id: authData.user.id,
           email,
           username: displayName,
-          balance: 0,
         },
         { onConflict: "id" }
       );

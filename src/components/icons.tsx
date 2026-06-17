@@ -12,6 +12,8 @@ import {
   Gem,
   Target,
   Check,
+  Diamond,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -30,6 +32,8 @@ const ICONS = {
   gem: Gem,
   target: Target,
   check: Check,
+  slots: Diamond,
+  redeem: Wallet,
 } as const;
 
 export type UiIconName = keyof typeof ICONS;

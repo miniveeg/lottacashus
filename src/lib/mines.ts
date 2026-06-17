@@ -24,6 +24,7 @@ export type MinesStartResult = {
   wager: number;
   maxGems: number;
   nonce: number;
+  coinType: string;
 };
 
 export type MinesRevealResult = {
@@ -125,11 +126,12 @@ export async function fetchActiveMinesGame(): Promise<{
   };
 }
 
-export async function startMinesGame(params: { wager: number; mineCount: number }) {
+export async function startMinesGame(params: { wager: number; mineCount: number; coinType?: string }) {
   return invokeEdgeFunction<MinesStartResult>("mines-game", {
     action: "start",
     wager: params.wager,
     mineCount: params.mineCount,
+    coinType: params.coinType ?? "balance",
   });
 }
 
@@ -137,19 +139,22 @@ export async function revealMinesTile(params: {
   gameId: string;
   tile: number;
   mineCount?: number;
+  coinType?: string;
 }) {
   return invokeEdgeFunction<MinesRevealResult>("mines-game", {
     action: "reveal",
     gameId: params.gameId,
     tile: params.tile,
     mineCount: params.mineCount,
+    coinType: params.coinType ?? "balance",
   });
 }
 
-export async function cashoutMinesGame(gameId: string) {
+export async function cashoutMinesGame(params: { gameId: string; coinType?: string }) {
   return invokeEdgeFunction<MinesCashoutResult>("mines-game", {
     action: "cashout",
-    gameId,
+    gameId: params.gameId,
+    coinType: params.coinType ?? "balance",
   });
 }
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
+import { usePlayMode } from "../../contexts/PlayModeContext";
 import {
   getMaxGems,
   getMinesMultiplier,
@@ -33,6 +34,7 @@ function randomUnrevealedTile(revealed: Set<number>): number | null {
 export function Mines() {
   const { user } = useAuth();
   const { profile, refreshProfile } = useProfile();
+  const { coinType, label: coinLabel } = usePlayMode();
 
   const [mineCount, setMineCount] = useState(3);
   const [wager, setWager] = useState(1);
@@ -110,8 +112,8 @@ export function Mines() {
       setError("Log in to play.");
       return;
     }
-    const balance = profile?.balance ?? 0;
-    if (wager > balance) {
+    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+    if (wager > activeBalance) {
       setError("Insufficient balance.");
       return;
     }
@@ -121,7 +123,7 @@ export function Mines() {
     setBusy(true);
     resetRound();
 
-    const { data, error: startErr } = await startMinesGame({ wager, mineCount });
+    const { data, error: startErr } = await startMinesGame({ wager, mineCount, coinType });
     setBusy(false);
 
     if (startErr || !data) {
@@ -144,6 +146,7 @@ export function Mines() {
       gameId,
       tile,
       mineCount,
+      coinType,
     });
 
     if (revealErr || !data) {
@@ -181,7 +184,7 @@ export function Mines() {
     setBusy(true);
     setError(null);
 
-    const { data, error: cashErr } = await cashoutMinesGame(gameId);
+    const { data, error: cashErr } = await cashoutMinesGame({ gameId, coinType });
     setBusy(false);
 
     if (cashErr || !data) {
@@ -321,7 +324,7 @@ export function Mines() {
 
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="mines-wager">
-              Bet amount (USD)
+              Bet amount ({coinLabel})
             </label>
             <div className="game-controls__wager-row">
               <input

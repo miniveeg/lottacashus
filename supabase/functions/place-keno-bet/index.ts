@@ -21,6 +21,7 @@ Deno.serve(async (req) => {
     const picks = Array.isArray(body?.picks)
       ? body.picks.map((n: unknown) => Number(n)).filter((n: number) => Number.isFinite(n))
       : [];
+    const coinType = String(body?.coinType ?? "balance");
 
     const validationError = validateKenoBet(picks, wager, risk);
     if (validationError) {
@@ -45,13 +46,22 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const { data: excluded } = await supabaseAdmin.rpc("check_user_self_exclusion", {
+      p_user_id: user.id,
+    });
+    if (excluded) {
+      return jsonResponse({ error: "Your account is self-excluded." }, 403);
+    }
+
+    const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
+
     const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .select("balance")
+      .select(coinColumn)
       .eq("id", user.id)
       .maybeSingle();
 
-    const balance = Number(profile?.balance ?? 0);
+    const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
     if (balance < wager) {
       return jsonResponse({ error: "Insufficient balance" }, 400);
     }
@@ -127,6 +137,7 @@ Deno.serve(async (req) => {
         p_multiplier: multiplier,
         p_payout: payout,
         p_nonce: Number(seedRow.nonce),
+        p_coin_type: coinType,
       }
     );
 
@@ -141,6 +152,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       betId: result?.bet_id as string | undefined,
       balance: Number(outBalance ?? balance),
+      coinType,
       drawn,
       hits,
       multiplier,

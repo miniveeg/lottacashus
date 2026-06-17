@@ -41,6 +41,7 @@ export type BlackjackActionResult = BlackjackHandView & {
   outcome?: string | null;
   payout?: number;
   nonce?: number;
+  coinType: string;
 };
 
 function parsePf(data: unknown): BlackjackPfState | null {
@@ -121,28 +122,28 @@ export async function blackjackAction(
   return { data: mapHand(data), error: null };
 }
 
-export function startBlackjack(wager: number) {
-  return blackjackAction({ action: "start", wager });
+export function startBlackjack(wager: number, coinType?: string) {
+  return blackjackAction({ action: "start", wager, coinType: coinType ?? "balance" });
 }
 
-export function hitBlackjack(handId: string) {
-  return blackjackAction({ action: "hit", handId });
+export function hitBlackjack(handId: string, coinType?: string) {
+  return blackjackAction({ action: "hit", handId, coinType: coinType ?? "balance" });
 }
 
-export function standBlackjack(handId: string) {
-  return blackjackAction({ action: "stand", handId });
+export function standBlackjack(handId: string, coinType?: string) {
+  return blackjackAction({ action: "stand", handId, coinType: coinType ?? "balance" });
 }
 
-export function doubleBlackjack(handId: string) {
-  return blackjackAction({ action: "double", handId });
+export function doubleBlackjack(handId: string, coinType?: string) {
+  return blackjackAction({ action: "double", handId, coinType: coinType ?? "balance" });
 }
 
-export function splitBlackjack(handId: string) {
-  return blackjackAction({ action: "split", handId });
+export function splitBlackjack(handId: string, coinType?: string) {
+  return blackjackAction({ action: "split", handId, coinType: coinType ?? "balance" });
 }
 
-export function insuranceBlackjack(handId: string, take: boolean) {
-  return blackjackAction({ action: "insurance", handId, take });
+export function insuranceBlackjack(handId: string, take: boolean, coinType?: string) {
+  return blackjackAction({ action: "insurance", handId, take, coinType: coinType ?? "balance" });
 }
 
 export function fetchActiveBlackjack() {

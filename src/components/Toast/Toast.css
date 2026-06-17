@@ -80,7 +80,7 @@
 /* Variant accents */
 .lc-toast--success { border-left: 3px solid var(--lc-emerald); box-shadow: var(--lc-shadow-md), 0 0 20px rgba(0,232,122,0.08), inset 0 1px 0 rgba(255,255,255,0.06); }
 .lc-toast--error   { border-left: 3px solid var(--lc-ruby);    box-shadow: var(--lc-shadow-md), 0 0 20px rgba(255,59,92,0.08), inset 0 1px 0 rgba(255,255,255,0.06); }
-.lc-toast--warning { border-left: 3px solid var(--lc-gold);    box-shadow: var(--lc-shadow-md), 0 0 20px rgba(255,204,68,0.1), inset 0 1px 0 rgba(255,255,255,0.06); }
+.lc-toast--warning { border-left: 3px solid var(--lc-gold);    box-shadow: var(--lc-shadow-md), 0 0 20px var(--lc-crimson-glow), inset 0 1px 0 rgba(255,255,255,0.06); }
 .lc-toast--info    { border-left: 3px solid var(--lc-violet);  }
 .lc-toast--loading { border-left: 3px solid rgba(255,255,255,0.15); }
 
@@ -99,7 +99,7 @@
   width: 1rem; height: 1rem;
   margin-top: 0.12rem;
   border: 2px solid rgba(255,255,255,0.12);
-  border-top-color: var(--lc-gold);
+  border-top-color: var(--lc-text-muted);
   border-radius: 50%;
   animation: lc-toast-spin 0.65s linear infinite;
 }

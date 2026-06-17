@@ -23,12 +23,12 @@
 
 /* ── Table ── */
 .leaderboard-table-wrap {
-  background: var(--lc-glass-bg);
+  background: var(--lc-bg-glass);
   backdrop-filter: var(--lc-glass-blur);
   -webkit-backdrop-filter: var(--lc-glass-blur);
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-xl);
-  box-shadow: var(--lc-glass-shadow);
+  box-shadow: var(--lc-shadow-sm);
   overflow: hidden;
 }
 
@@ -76,7 +76,21 @@
 }
 
 .leaderboard-table__medal {
-  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leaderboard-table__medal-icon--gold {
+  color: #ffd700;
+}
+
+.leaderboard-table__medal-icon--silver {
+  color: #c0c0c0;
+}
+
+.leaderboard-table__medal-icon--bronze {
+  color: #cd7f32;
 }
 
 .leaderboard-table__user {
@@ -93,7 +107,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-deep));
+  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-dim));
   color: #fff8f6;
   font-size: 0.75rem;
   font-weight: 700;

@@ -18,6 +18,7 @@ export type UserProfile = {
   email: string | null;
   isAdmin: boolean;
   balance: number;
+  sweepsCoins: number;
   totalWagered: number;
   totalDeposited: number;
   totalWithdrawn: number;
@@ -41,7 +42,7 @@ const ProfileContext = createContext<ProfileContextValue | null>(null);
 const BALANCE_POLL_MS = 1500;
 
 const PROFILE_SELECT =
-  "username, email, is_admin, balance, total_wagered, total_deposited, total_withdrawn, total_wins, total_losses, discord_id, discord_username, discord_avatar, discord_linked_at";
+  "username, email, is_admin, balance, sweeps_coins, total_wagered, total_deposited, total_withdrawn, total_wins, total_losses, discord_id, discord_username, discord_avatar, discord_linked_at";
 
 function parseNum(value: unknown): number {
   const n = Number(value);
@@ -60,6 +61,7 @@ function rowToProfile(row: Record<string, unknown>, isAdminOverride?: boolean): 
     email: (row.email as string | null) ?? null,
     isAdmin: isAdminOverride ?? Boolean(row.is_admin),
     balance: parseNum(row.balance),
+    sweepsCoins: parseNum(row.sweeps_coins),
     totalWagered: parseNum(row.total_wagered),
     totalDeposited: parseNum(row.total_deposited),
     totalWithdrawn: parseNum(row.total_withdrawn),
@@ -117,6 +119,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             email: user.email ?? null,
             isAdmin: false,
             balance: 0,
+            sweepsCoins: 0,
             totalWagered: 0,
             totalDeposited: 0,
             totalWithdrawn: 0,
@@ -227,6 +230,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
               email: user.email ?? null,
               isAdmin: false,
               balance: 0,
+              sweepsCoins: 0,
               totalWagered: 0,
               totalDeposited: 0,
               totalWithdrawn: 0,

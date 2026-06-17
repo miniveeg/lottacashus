@@ -1,6 +1,6 @@
 -- ===================================================
 -- LottaCash - Complete Database Schema
--- Generated: 2026-06-16 23:35
+-- Generated: 2026-06-16 23:38
 -- Run this ONCE in Supabase Dashboard  SQL Editor
 -- ===================================================
 
@@ -1621,7 +1621,17 @@ grant execute on function public.consume_keno_nonce(uuid) to service_role;
 -- Fix: RETURNS TABLE column "balance" shadowed profiles.balance in settle_keno_bet
 -- Must drop first: PostgreSQL cannot change OUT/return row type via CREATE OR REPLACE.
 
--- (removed manual drop)
+drop function if exists public.settle_keno_bet(
+  uuid,
+  numeric,
+  text,
+  integer[],
+  integer[],
+  integer,
+  numeric,
+  numeric,
+  bigint
+);
 
 create function public.settle_keno_bet(  p_user_id uuid,
   p_wager numeric,
@@ -3199,7 +3209,7 @@ $$;
 revoke all on function public.blackjack_finish_hand(uuid, uuid, int[], int[], int, boolean, numeric, boolean, text, numeric, numeric) from public;
 grant execute on function public.blackjack_finish_hand(uuid, uuid, int[], int[], int, boolean, numeric, boolean, text, numeric, numeric) to service_role;
 
--- (removed manual drop)
+drop function if exists public.get_my_active_blackjack_hand();
 
 drop function if exists public.get_my_active_blackjack_hand() cascade;
 create function public.get_my_active_blackjack_hand()
@@ -3288,13 +3298,17 @@ alter table public.blackjack_hands
   add column if not exists active_hand_index int not null default 0;
 
 -- Return type / signature changes require drop (CREATE OR REPLACE cannot alter OUT columns).
--- (removed manual drop)
+drop function if exists public.get_my_active_blackjack_hand();
 
--- (removed manual drop)
+drop function if exists public.start_blackjack_hand(
+  uuid, numeric, numeric, int[], int, int[], int[], boolean, boolean, text, text, numeric, bigint
+);
 
--- (removed manual drop)
+drop function if exists public.blackjack_update_active(uuid, uuid, int[], int);
 
--- (removed manual drop)
+drop function if exists public.blackjack_finish_hand(
+  uuid, uuid, int[], int[], int, boolean, numeric, boolean, text, numeric, numeric
+);
 
 drop function if exists public.start_blackjack_hand(p_user_id uuid, p_wager numeric, p_total_wager numeric, p_shoe int[], p_shoe_index int, p_player_cards int[], p_dealer_cards int[], p_doubled boolean, p_dealer_revealed boolean, p_status text, p_outcome text, p_payout numeric, p_nonce bigint, p_phase text, p_insurance_wager numeric, p_insurance_taken boolean, p_insurance_decided boolean, p_is_split boolean, p_player_hands jsonb, p_active_hand_index int) cascade;
 create function public.start_blackjack_hand(
@@ -4058,7 +4072,7 @@ $$;
 revoke all on function public.mark_case_battle_running(uuid, text) from public;
 grant execute on function public.mark_case_battle_running(uuid, text) to service_role;
 
--- (removed manual drop)
+drop function if exists public.get_open_case_battles(int);
 
 drop function if exists public.get_open_case_battles(p_limit int) cascade;
 create function public.get_open_case_battles(p_limit int default 20)
@@ -4153,7 +4167,7 @@ update public.case_battles
 set case_ids = jsonb_build_array(case_id)
 where case_ids is null and case_id is not null;
 
--- (removed manual drop)
+drop function if exists public.get_open_case_battles(int);
 
 drop function if exists public.get_open_case_battles(p_limit int) cascade;
 create function public.get_open_case_battles(p_limit int default 20)
@@ -4203,7 +4217,7 @@ grant execute on function public.get_open_case_battles(int) to authenticated;
 -- ===================================================
 -- Case battles: allow up to 10 rounds, safer bot insert, multi-winner payouts
 
--- (removed manual drop)
+drop function if exists public.complete_case_battle(uuid, uuid, int, numeric, numeric, text, jsonb, jsonb);
 
 alter table public.case_battles
   drop constraint if exists case_battles_rounds_check;
@@ -4397,7 +4411,7 @@ alter table public.case_battles
 -- ===================================================
 -- List waiting/running battles + completed battles for 10 minutes after they end
 
--- (removed manual drop)
+drop function if exists public.get_open_case_battles(int);
 
 drop function if exists public.get_open_case_battles(p_limit int) cascade;
 create function public.get_open_case_battles(p_limit int default 20)
@@ -4474,7 +4488,7 @@ alter table public.case_battle_players
   add constraint case_battle_players_borrow_check
   check (borrow_percent >= 0 and borrow_percent <= 80);
 
--- (removed manual drop)
+drop function if exists public.create_case_battle_entry(uuid, uuid, int, numeric, text);
 
 drop function if exists public.create_case_battle_entry(p_user_id uuid, p_battle_id uuid, p_slot_index int, p_entry_cost numeric, p_display_name text, p_borrow_percent int) cascade;
 create function public.create_case_battle_entry(
@@ -4597,7 +4611,7 @@ grant execute on function public.create_case_battle_entry(uuid, uuid, int, numer
 -- ===================================================
 -- Expose battle options on lobby list
 
--- (removed manual drop)
+drop function if exists public.get_open_case_battles(int);
 
 drop function if exists public.get_open_case_battles(p_limit int) cascade;
 create function public.get_open_case_battles(p_limit int default 20)
@@ -4930,7 +4944,7 @@ begin
 end;
 $$;
 
--- (removed manual drop)
+drop function if exists public.get_open_case_battles(int);
 
 drop function if exists public.get_open_case_battles(p_limit int) cascade;
 create function public.get_open_case_battles(p_limit int default 20)
@@ -5164,7 +5178,7 @@ alter table public.case_battles
   add constraint case_battles_status_check
   check (status in ('waiting', 'pending_eos', 'running', 'pending_jackpot_eos', 'completed', 'cancelled'));
 
--- (removed manual drop)
+drop function if exists public.get_open_case_battles(int);
 
 drop function if exists public.get_open_case_battles(p_limit int) cascade;
 create function public.get_open_case_battles(p_limit int default 20)
@@ -5874,7 +5888,7 @@ grant execute on function public.apply_case_battle_payouts(uuid, uuid) to servic
 -- Fix ambiguous consume_keno_nonce(uuid) vs consume_keno_nonce(uuid, int) overload.
 -- PostgREST calls with only p_user_id cannot pick between them when p_advance has a default.
 
--- (removed manual drop)
+drop function if exists public.consume_keno_nonce(uuid);
 
 drop function if exists public.consume_keno_nonce(p_user_id uuid, p_advance int) cascade;
 create function public.consume_keno_nonce(p_user_id uuid, p_advance int default 1)
@@ -8158,7 +8172,7 @@ revoke all on function public.settle_roulette_bet(uuid, numeric, text, int, text
 grant execute on function public.settle_roulette_bet(uuid, numeric, text, int, text, boolean, numeric, bigint, text) to service_role;
 
 -- Update credit_crypto_deposit to credit GC + bonus SC
--- (removed manual drop)
+drop function if exists public.credit_crypto_deposit(uuid, numeric, text, text, numeric, numeric, uuid);
 drop function if exists public.credit_crypto_deposit(p_user_id uuid, p_usd_amount numeric, p_chain text, p_tx_hash text, p_crypto_amount numeric, p_exchange_rate numeric, p_deposit_id uuid) cascade;
 create function public.credit_crypto_deposit(
   p_user_id uuid,
@@ -8251,7 +8265,7 @@ $$;
 grant execute on function public.ensure_user_profile() to authenticated;
 
 -- Update admin_search_users to include sweeps_coins
--- (removed manual drop)
+drop function if exists public.admin_search_users(text) cascade;
 drop function if exists public.admin_search_users(p_query text) cascade;
 create function public.admin_search_users(p_query text)
 returns table (

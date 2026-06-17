@@ -110,54 +110,7 @@ grant execute on function public.ensure_user_profile() to authenticated;
 alter table public.profiles replica identity full;
 
 -- Admin: credit a user's balance (for mail-in sweepstakes entry, adjustments, etc.)
-create or replace function public.admin_credit_user(
-  p_user_id uuid,
-  p_amount numeric,
-  p_note text default 'Admin credit'
-)
-returns void
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  _is_admin boolean;
-begin
-  select is_admin into _is_admin from public.profiles where id = auth.uid();
-  if _is_admin is not true then
-    raise exception 'Only admins can credit user balances.';
-  end if;
-
-  update public.profiles
-  set balance = balance + p_amount,
-      updated_at = now()
-  where id = p_user_id;
-
-  if not found then
-    raise exception 'User not found.';
-  end if;
-
-  insert into public.admin_credit_log (user_id, amount, note, created_by)
-  values (p_user_id, p_amount, p_note, auth.uid());
-end;
-$$;
-
-grant execute on function public.admin_credit_user to authenticated;
-
-create table if not exists public.admin_credit_log (
-  id bigint generated always as identity primary key,
-  user_id uuid not null references public.profiles(id) on delete cascade,
-  amount numeric(12, 2) not null,
-  note text,
-  created_by uuid not null references public.profiles(id),
-  created_at timestamptz not null default now()
-);
-
-alter table public.admin_credit_log enable row level security;
-
-create policy "Admins can read credit log"
-  on public.admin_credit_log for select
-  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin = true));
+-- admin_credit_user + admin_credit_log moved to migration 20250521200000_admin_access.sql
 
 -- Responsible gaming: add columns to profiles
 alter table public.profiles add column if not exists birth_date date;

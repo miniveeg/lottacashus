@@ -5,7 +5,7 @@ import {
   type CaseRarity,
   type LootCase,
 } from "../../lib/games/case-battles";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import type { CaseBattleDrop, CaseBattlePlayer, CaseBattleView } from "../../lib/caseBattles";
 import { CaseOpenReel } from "./CaseOpenReel";
 
@@ -156,7 +156,7 @@ export function CaseBattlePlayerColumn({
                       <span className="cbr__p-col-last-drop-gem" style={{ color: lastColor }} aria-hidden>◆</span>
                       <span className="cbr__p-col-last-drop-name">{lastDrop.name}</span>
                       <span className="cbr__p-col-last-drop-val" style={{ color: lastColor }}>
-                        {formatUsd(lastDrop.value)}
+                        {formatCoins(lastDrop.value, "balance")}
                       </span>
                       {revealedRounds >= battle.rounds && (
                         <span className="cbr__p-col-last-drop-done">Final</span>
@@ -176,7 +176,7 @@ export function CaseBattlePlayerColumn({
         <footer className="cbr__p-col-foot">
           <span className="cbr__p-col-foot-label">Total pulled</span>
           <span className="cbr__p-col-foot-val">
-            {gamemode === "terminal" ? formatUsd(totals.terminalScore) : formatUsd(totals.displayTotal)}
+            {gamemode === "terminal" ? formatCoins(totals.terminalScore, "balance") : formatCoins(totals.displayTotal, "balance")}
           </span>
         </footer>
       )}

@@ -1,4 +1,4 @@
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import type { CaseBattleView } from "../../lib/caseBattles";
 import { gamemodeLabel } from "./caseBattlesUi";
 import {
@@ -52,13 +52,13 @@ function FinalPlayerCard({
         </span>
         {line.isWinner && <span className="cbr__final-card-badge">Winner</span>}
       </div>
-      <p className="cbr__final-card-unboxed">Unboxed {formatUsd(line.unboxedTotal)}</p>
+      <p className="cbr__final-card-unboxed">Unboxed {formatCoins(line.unboxedTotal, "balance")}</p>
       <p
         className={
           "cbr__final-card-won" + (winAmount > 0 ? " cbr__final-card-won--positive" : "")
         }
       >
-        {winAmount > 0 ? `Won ${formatUsd(winAmount)}` : line.isWinner && slotShare > 0 ? "Won —" : "—"}
+        {winAmount > 0 ? `Won ${formatCoins(winAmount, "balance")}` : line.isWinner && slotShare > 0 ? "Won —" : "—"}
       </p>
       {line.isWinner && line.isBot && slotShare > 0 && winAmount > 0 && (
         <p className="cbr__final-card-note">Full slot share — not credited to balance</p>
@@ -69,11 +69,11 @@ function FinalPlayerCard({
       {line.borrowPercent > 0 && (
         <p className="cbr__final-card-borrow">
           {line.borrowPercent}% borrow
-          {line.entryPaid != null ? ` · ${formatUsd(line.entryPaid)} paid` : ""}
+          {line.entryPaid != null ? ` · ${formatCoins(line.entryPaid, "balance")} paid` : ""}
         </p>
       )}
       {showTeamShareNote && (
-        <p className="cbr__final-card-note">Team share {formatUsd(teamShare)} before borrow</p>
+        <p className="cbr__final-card-note">Team share {formatCoins(teamShare, "balance")} before borrow</p>
       )}
     </div>
   );
@@ -117,7 +117,7 @@ export function CaseBattleFinalResults({
           )}
         </h2>
         <p className="cbr__final-pot">
-          Total unboxed <strong>{formatUsd(totalUnboxed)}</strong>
+          Total unboxed <strong>{formatCoins(totalUnboxed, "balance")}</strong>
           <span className="cbr__final-pot-note"> {payoutNote}</span>
         </p>
         {isJackpot && jackpotWinner && (

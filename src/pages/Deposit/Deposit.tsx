@@ -6,7 +6,13 @@ import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
 import { useToast } from "../../contexts/ToastContext";
 import { fetchDepositAddress, fetchMyDeposits } from "../../lib/crypto";
-import { formatUsd } from "../../lib/format";
+import {
+  depositBonusSc,
+  depositGc,
+  formatCoins,
+  formatCoinsWithUsd,
+  formatUsd,
+} from "../../lib/format";
 import { analytics } from "../../lib/analytics";
 import {
   CONFIRMATIONS_LABEL,
@@ -116,12 +122,27 @@ export function Deposit() {
         </Link>
       </div>
 
+      <section className="wallet__info-panel" aria-label="How deposits work">
+        <p className="wallet__info-text">
+          Deposit crypto to fund your account. You'll receive Gold Coins (GC) for gameplay plus
+          bonus Sweeps Coins (SC) as a promotional reward.
+        </p>
+        <p className="wallet__info-rate">
+          <strong>100 GC = $1 USD</strong> &middot; <strong>1 bonus SC per $1 deposited</strong>
+        </p>
+        <p className="wallet__info-example">
+          <span className="wallet__info-example-input">$10</span>
+          <span className="wallet__info-example-arrow" aria-hidden="true">&rarr;</span>
+          <span className="wallet__info-example-output">
+            {formatCoins(depositGc(10), "balance")} + {formatCoins(depositBonusSc(10), "sweeps_coins")} bonus
+          </span>
+        </p>
+      </section>
+
       <p className="wallet__hint wallet__hint--balance">
-        Gold Coins (GC): <strong>{formatUsd(profile?.balance ?? 0)}</strong>
-        &ensp;Sweeps Coins (SC): <strong>{(profile?.sweepsCoins ?? 0).toFixed(2)}</strong>
-      </p>
-      <p className="wallet__hint wallet__hint--bonus">
-        Deposits credit GC + 1% bonus SC!
+        Gold Coins (GC): <strong>{formatCoinsWithUsd(profile?.balance ?? 0, "balance")}</strong>
+        <br />
+        Sweeps Coins (SC): <strong>{formatCoinsWithUsd(profile?.sweepsCoins ?? 0, "sweeps_coins")}</strong>
       </p>
 
       <section className="wallet__section">
@@ -186,6 +207,10 @@ export function Deposit() {
               <p className="wallet__hint wallet__hint--meta">
                 {d.confirmations}/{d.required_confirmations} confirmations ·{" "}
                 {d.crypto_amount} {d.chain.toUpperCase()}
+              </p>
+              <p className="wallet__hint wallet__hint--meta wallet__hint--yield">
+                Yields: {formatCoins(depositGc(d.usd_amount), "balance")} +{" "}
+                {formatCoins(depositBonusSc(d.usd_amount), "sweeps_coins")} bonus
               </p>
             </div>
           ))

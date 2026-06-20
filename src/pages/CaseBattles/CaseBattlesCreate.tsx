@@ -24,7 +24,7 @@ import {
   type BattleGamemode,
   type PlayerModeId,
 } from "../../lib/games/case-battles/config";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import { createCaseBattle } from "../../lib/caseBattles";
 import { CasePickerModal } from "./CasePickerModal";
 import { CaseBattleRoundsStrip } from "./CaseBattleRoundsStrip";
@@ -200,7 +200,7 @@ export function CaseBattlesCreate() {
           
           <div className="cbc__summary-row">
             <dt>Case value</dt>
-            <dd>{formatUsd(createTotal)}</dd>
+            <dd>{formatCoins(createTotal, "balance")}</dd>
           </div>
           <div className="cbc__summary-row">
             <dt>Options</dt>
@@ -212,7 +212,7 @@ export function CaseBattlesCreate() {
           </div>
           <div className="cbc__summary-row cbc__summary-row--total">
             <dt>Pay now</dt>
-            <dd>{formatUsd(upfrontCost)}</dd>
+            <dd>{formatCoins(upfrontCost, "balance")}</dd>
           </div>
           {effectiveBorrow > 0 && (
             <div className="cbc__summary-row">
@@ -222,7 +222,7 @@ export function CaseBattlesCreate() {
           )}
           <div className="cbc__summary-row cbc__summary-row--pot">
             <dt>Max pot</dt>
-            <dd>{selectedCaseIds.length ? formatUsd(maxPot) : "—"}</dd>
+            <dd>{selectedCaseIds.length ? formatCoins(maxPot, "balance") : "—"}</dd>
           </div>
         </dl>
       </div>
@@ -232,7 +232,7 @@ export function CaseBattlesCreate() {
         disabled={!canCreate}
         onClick={() => void handleCreate()}
       >
-        {busy ? "Creating…" : `Create · ${formatUsd(upfrontCost)}`}
+        {busy ? "Creating…" : `Create · ${formatCoins(upfrontCost, "balance")}`}
       </button>
     </>
   );
@@ -265,7 +265,7 @@ export function CaseBattlesCreate() {
             disabled={!canCreate}
             onClick={() => void handleCreate()}
           >
-            {busy ? "…" : `Create ${formatUsd(upfrontCost)}`}
+            {busy ? "…" : `Create ${formatCoins(upfrontCost, "balance")}`}
           </button>
         }
       />
@@ -468,7 +468,7 @@ export function CaseBattlesCreate() {
 
             <p className="cbc__cases-stats">
               <strong>{selectedCaseIds.length}</strong> / {MAX_CASES_PER_BATTLE} rounds ·{" "}
-              <strong>{formatUsd(createTotal)}</strong> total case value
+              <strong>{formatCoins(createTotal, "balance")}</strong> total case value
             </p>
 
             {selectedCaseIds.length > 0 && (
@@ -518,7 +518,7 @@ export function CaseBattlesCreate() {
                       </div>
                       <div className="cbc__case-body">
                         <p className="cbc__case-name">{c?.name ?? caseId}</p>
-                        <p className="cbc__case-price">{formatUsd(c?.price ?? 0)}</p>
+                        <p className="cbc__case-price">{formatCoins(c?.price ?? 0, "balance")}</p>
                         <div className="cbc__qty">
                           <button
                             type="button"

@@ -1,14 +1,15 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { formatUsd } from "../../lib/format";
+import { formatCoins, type CoinType } from "../../lib/format";
 import "./GameFeedback.css";
 
 interface GameFeedbackProps {
   type: "win" | "loss" | "big-win";
   amount?: number;
   multiplier?: number;
+  coinType?: CoinType;
 }
 
-export function GameFeedback({ type, amount, multiplier }: GameFeedbackProps) {
+export function GameFeedback({ type, amount, multiplier, coinType = "balance" }: GameFeedbackProps) {
   const isBigWin = type === "big-win";
   const isWin = type === "win" || isBigWin;
 
@@ -45,7 +46,7 @@ export function GameFeedback({ type, amount, multiplier }: GameFeedbackProps) {
             <p className="game-feedback__multiplier">{multiplier.toFixed(2)}×</p>
           )}
           {amount !== undefined && amount > 0 && (
-            <p className="game-feedback__amount">{formatUsd(amount)}</p>
+            <p className="game-feedback__amount">{formatCoins(amount, coinType)}</p>
           )}
         </motion.div>
       </motion.div>

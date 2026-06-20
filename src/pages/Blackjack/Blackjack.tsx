@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { cardRank, cardSuit, handValue, isRedCard } from "../../lib/games/blackjack";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import {
   doubleBlackjack,
   fetchActiveBlackjack,
@@ -130,7 +130,7 @@ export function Blackjack() {
 
   const finishSettled = (data: BlackjackActionResult) => {
     setLastMessage(
-      `${outcomeLabel(data.outcome)}${data.payout ? ` — ${formatUsd(data.payout)}` : ""}`
+      `${outcomeLabel(data.outcome)}${data.payout ? ` — ${formatCoins(data.payout, coinType)}` : ""}`
     );
     applyHand({ ...data, status: "settled" });
   };
@@ -355,7 +355,7 @@ export function Blackjack() {
           ) : insuranceOffer ? (
             <div className="bj__insurance">
               <p className="bj__insurance-text">
-                Dealer shows Ace. Take insurance for {formatUsd(hand?.insuranceAmount ?? 0)}?
+                Dealer shows Ace. Take insurance for {formatCoins(hand?.insuranceAmount ?? 0, coinType)}?
               </p>
               <div className="bj__actions">
                 <button

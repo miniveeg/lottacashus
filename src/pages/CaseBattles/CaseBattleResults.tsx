@@ -1,4 +1,4 @@
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import type { CaseBattleView } from "../../lib/caseBattles";
 import { gamemodeLabel } from "./caseBattlesUi";
 import {
@@ -53,7 +53,7 @@ function PlayerResultColumn({
       </div>
       <div className="cbr__result-col-body">
         <p className="cbr__result-col-unboxed">
-          Unboxed <strong>{formatUsd(line.unboxedTotal)}</strong>
+          Unboxed <strong>{formatCoins(line.unboxedTotal, "balance")}</strong>
         </p>
         {isJackpot && line.jackpotPct != null && (
           <p className="cbr__result-col-jp">{line.jackpotPct}% jackpot odds</p>
@@ -61,7 +61,7 @@ function PlayerResultColumn({
         {line.borrowPercent > 0 && (
           <p className="cbr__result-col-borrow">
             {line.borrowPercent}% borrow
-            {line.entryPaid != null ? ` · paid ${formatUsd(line.entryPaid)}` : ""}
+            {line.entryPaid != null ? ` · paid ${formatCoins(line.entryPaid, "balance")}` : ""}
           </p>
         )}
         <p
@@ -69,10 +69,10 @@ function PlayerResultColumn({
             "cbr__result-col-payout" + (winAmount > 0 ? " cbr__result-col-payout--win" : "")
           }
         >
-          {winAmount > 0 ? `Won ${formatUsd(winAmount)}` : line.isWinner ? "Won —" : "—"}
+          {winAmount > 0 ? `Won ${formatCoins(winAmount, "balance")}` : line.isWinner ? "Won —" : "—"}
         </p>
         {showTeamShareNote && (
-          <p className="cbr__result-col-borrow-note">Team share {formatUsd(teamShare)}</p>
+          <p className="cbr__result-col-borrow-note">Team share {formatCoins(teamShare, "balance")}</p>
         )}
       </div>
     </div>
@@ -88,7 +88,7 @@ export function CaseBattleResultsSummary({ battle }: { battle: CaseBattleView })
     <>
       <h3 className="cbr__results-title">Final results</h3>
       <p className="cbr__results-sub">
-        {gamemodeLabel(battle.gamemode)} · Total unboxed {formatUsd(battleTotalUnboxed(battle))}
+        {gamemodeLabel(battle.gamemode)} · Total unboxed {formatCoins(battleTotalUnboxed(battle), "balance")}
         {isJackpot && jackpotLandedSlot != null && (
           <>
             {" "}
@@ -181,7 +181,7 @@ export function CaseBattleResults({
                     {line.isYou ? " (you)" : ""}
                   </span>
                   <span className="cbr__results-unboxed">
-                    Unboxed {formatUsd(line.unboxedTotal)}
+                    Unboxed {formatCoins(line.unboxedTotal, "balance")}
                   </span>
                 </div>
               </div>
@@ -192,7 +192,7 @@ export function CaseBattleResults({
                 {line.borrowPercent > 0 && (
                   <span className="cbr__results-borrow">
                     {line.borrowPercent}% borrow
-                    {line.entryPaid != null ? ` · paid ${formatUsd(line.entryPaid)}` : ""}
+                    {line.entryPaid != null ? ` · paid ${formatCoins(line.entryPaid, "balance")}` : ""}
                   </span>
                 )}
                 <span
@@ -200,10 +200,10 @@ export function CaseBattleResults({
                     "cbr__results-payout" + (winAmount > 0 ? " cbr__results-payout--win" : "")
                   }
                 >
-                  {winAmount > 0 ? `Won ${formatUsd(winAmount)}` : line.isWinner ? "Won —" : "—"}
+                  {winAmount > 0 ? `Won ${formatCoins(winAmount, "balance")}` : line.isWinner ? "Won —" : "—"}
                 </span>
                 {showTeamShareNote && (
-                  <span className="cbr__results-borrow-note">Team share {formatUsd(teamShare)}</span>
+                  <span className="cbr__results-borrow-note">Team share {formatCoins(teamShare, "balance")}</span>
                 )}
               </div>
             </li>

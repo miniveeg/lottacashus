@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import {
   addBotToCaseBattle,
   claimCaseBattlePayout,
@@ -621,11 +621,11 @@ export function CaseBattleArena({
           </span>
         </div>
         <p className="cbr__arena-meta">
-          {battle.rounds} case{battle.rounds === 1 ? "" : "s"} · Entry {formatUsd(battle.entryCost)} per seat
+          {battle.rounds} case{battle.rounds === 1 ? "" : "s"} · Entry {formatCoins(battle.entryCost, "balance")} per seat
           {showStaticResults ? (
             <>
               {" "}
-              · Unboxed {formatUsd(battleTotalUnboxed(battle))} · Entry pot {formatUsd(battle.potTotal)}
+              · Unboxed {formatCoins(battleTotalUnboxed(battle), "balance")} · Entry pot {formatCoins(battle.potTotal, "balance")}
             </>
           ) : showPotInMeta ? (
             <>
@@ -633,7 +633,7 @@ export function CaseBattleArena({
               · {battle.status === "waiting"
                 ? "Pot so far"
                 : "Unboxed"}{" "}
-              {formatUsd(displayPot)}
+              {formatCoins(displayPot, "balance")}
             </>
           ) : null}
         </p>
@@ -668,7 +668,7 @@ export function CaseBattleArena({
             role="status"
             aria-live="polite"
           >
-            You won {formatUsd(myWinPayout)}
+            You won {formatCoins(myWinPayout, "balance")}
           </span>
         )}
         {showStaticResults && !isWinner && userId && userInBattle && (

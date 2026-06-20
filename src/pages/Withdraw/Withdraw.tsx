@@ -6,10 +6,19 @@ import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
 import { useToast } from "../../contexts/ToastContext";
 import { fetchMyWithdrawals, requestWithdrawal, validateCryptoAddress } from "../../lib/crypto";
-import { formatUsd } from "../../lib/format";
+import {
+  coinsToUsd,
+  formatCoins,
+  formatCoinsWithUsd,
+  formatUsd,
+  SC_PER_USD,
+} from "../../lib/format";
 import { analytics } from "../../lib/analytics";
 import { CRYPTO_CHAINS, type CryptoChain } from "../../types/crypto";
 import "../Wallet/Wallet.css";
+
+/** Minimum withdrawal in SC. 10 SC = $0.10 USD. */
+const MIN_WITHDRAW_SC = 10;
 
 export function Withdraw() {
   const { user, loading: authLoading } = useAuth();
@@ -18,7 +27,7 @@ export function Withdraw() {
   const toast = useToast();
   const [chain, setChain] = useState<CryptoChain>("sol");
   const [destination, setDestination] = useState("");
-  const [usdAmount, setUsdAmount] = useState("");
+  const [scAmount, setScAmount] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -57,19 +66,23 @@ export function Withdraw() {
     );
   }
 
+  const scBalance = profile?.sweepsCoins ?? 0;
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    const amount = parseFloat(usdAmount);
-    if (!Number.isFinite(amount) || amount < 10) {
-      setError("Minimum withdrawal is $10.");
+    const scValue = parseFloat(scAmount);
+    if (!Number.isFinite(scValue) || scValue < MIN_WITHDRAW_SC) {
+      setError(
+        `Minimum withdrawal is ${MIN_WITHDRAW_SC} SC (${formatUsd(MIN_WITHDRAW_SC / SC_PER_USD)}).`,
+      );
       return;
     }
 
-    if ((profile?.balance ?? 0) < amount) {
-      setError("Insufficient balance.");
+    if (scValue > scBalance) {
+      setError("Insufficient Sweeps Coins balance.");
       return;
     }
 
@@ -78,8 +91,12 @@ export function Withdraw() {
       return;
     }
 
+    // Convert SC to USD before calling the RPC (which expects a USD amount).
+    // 100 SC = $1 USD, so usdAmount = scValue / 100.
+    const usdAmount = coinsToUsd(scValue, "sweeps_coins");
+
     setSubmitting(true);
-    const { error: reqError } = await requestWithdrawal(chain, destination, amount);
+    const { error: reqError } = await requestWithdrawal(chain, destination, usdAmount);
     setSubmitting(false);
 
     if (reqError) {
@@ -89,21 +106,27 @@ export function Withdraw() {
       return;
     }
 
-    analytics.wallet.withdrawInitiated(chain, amount);
+    analytics.wallet.withdrawInitiated(chain, usdAmount);
     await refreshProfile();
     setSuccess("Withdrawal submitted. It will be processed from our treasury wallets.");
     toast.success("Withdrawal request submitted!");
-    setUsdAmount("");
+    setScAmount("");
     setDestination("");
     loadWithdrawals();
   }
+
+  // Live preview of the SC → USD conversion as the user types.
+  const parsedSc = parseFloat(scAmount);
+  const previewUsd =
+    Number.isFinite(parsedSc) && parsedSc > 0 ? coinsToUsd(parsedSc, "sweeps_coins") : 0;
 
   return (
     <div className="wallet lc-page lc-page--narrow">
       <header className="lc-page__header">
         <h1 className="lc-page__title wallet__title">Withdraw</h1>
         <p className="lc-page__subtitle wallet__subtitle">
-          Request a payout in SOL, LTC, or ETH to your external wallet.
+          Withdraw your Sweeps Coins (SC) as cryptocurrency. 100 SC = $1 USD. Minimum withdrawal: 10 SC
+          ($0.10).
         </p>
       </header>
 
@@ -116,8 +139,16 @@ export function Withdraw() {
         </Link>
       </div>
 
+      <section className="wallet__balance-panel" aria-label="Available Sweeps Coins">
+        <p className="wallet__balance-label">Available Sweeps Coins (SC)</p>
+        <p className="wallet__balance-value">{formatCoins(scBalance, "sweeps_coins")}</p>
+        <p className="wallet__balance-usd">&asymp; {formatUsd(coinsToUsd(scBalance, "sweeps_coins"))}</p>
+      </section>
+
       <p className="wallet__hint wallet__hint--balance">
-        Available balance: <strong>{formatUsd(profile?.balance ?? 0)}</strong>
+        Sweeps Coins (SC) are redeemable for cash. Gold Coins (GC) are play money and cannot be
+        withdrawn. Current GC balance:{" "}
+        <strong>{formatCoinsWithUsd(profile?.balance ?? 0, "balance")}</strong>.
       </p>
 
       <section className="wallet__section">
@@ -152,17 +183,22 @@ export function Withdraw() {
           </div>
 
           <div className="wallet__field">
-            <label htmlFor="withdraw-amount">Amount (USD)</label>
+            <label htmlFor="withdraw-amount">Amount (SC)</label>
             <input
               id="withdraw-amount"
               type="number"
-              min={10}
+              min={MIN_WITHDRAW_SC}
               step="0.01"
-              value={usdAmount}
-              onChange={(e) => setUsdAmount(e.target.value)}
-              placeholder="Min $10"
+              value={scAmount}
+              onChange={(e) => setScAmount(e.target.value)}
+              placeholder={`Min ${MIN_WITHDRAW_SC} SC`}
               required
             />
+            <p className="wallet__hint wallet__hint--meta">
+              {Number.isFinite(parsedSc) && parsedSc > 0
+                ? `${formatCoins(parsedSc, "sweeps_coins")} = ${formatUsd(previewUsd)}`
+                : `100 SC = ${formatUsd(1)} · 10 SC = ${formatUsd(0.1)}`}
+            </p>
           </div>
 
           <button type="submit" className="wallet__btn" disabled={submitting}>

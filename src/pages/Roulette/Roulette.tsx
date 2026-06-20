@@ -9,7 +9,7 @@ import {
   roulettePotentialWin,
   rouletteWinChance,
 } from "../../lib/games/roulette";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import {
   fetchRoulettePfState,
   placeRouletteBet,
@@ -231,7 +231,7 @@ export function Roulette() {
                 ))}
               </div>
               <p className="game-controls__option-hint">
-                Win chance {(winChance * 100).toFixed(2)}% · Payout {formatUsd(potentialWin)}
+                Win chance {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
               </p>
             </div>
           </div>
@@ -306,7 +306,7 @@ export function Roulette() {
               </p>
               <p className="roulette__result-payout">
                 {lastResult.won
-                  ? `Won ${formatUsd(lastResult.payout)}`
+                  ? `Won ${formatCoins(lastResult.payout, coinType)}`
                   : "No win this round"}
               </p>
             </div>

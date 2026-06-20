@@ -9,7 +9,7 @@ import {
   KENO_RISKS,
   type KenoRisk,
 } from "../../lib/games/keno";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import { fetchKenoPfState, placeKenoBet, setKenoClientSeed } from "../../lib/keno";
 import "../../styles/game-controls.css";
 import "./Keno.css";
@@ -349,7 +349,7 @@ export function Keno() {
               </p>
               <p className="keno__result-payout">
                 {lastResult.payout > 0
-                  ? `Won ${formatUsd(lastResult.payout)}`
+                  ? `Won ${formatCoins(lastResult.payout, coinType)}`
                   : "No win this round"}
               </p>
             </div>

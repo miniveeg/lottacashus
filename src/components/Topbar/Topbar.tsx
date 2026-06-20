@@ -10,7 +10,7 @@ import { usePlayMode } from "../../contexts/PlayModeContext";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { useToast } from "../../contexts/ToastContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
-import { formatUsd } from "../../lib/format";
+import { formatUsd, formatCoins, coinsToUsd, type CoinType } from "../../lib/format";
 import { analytics } from "../../lib/analytics";
 import { searchSite, type SiteSearchItem } from "../../lib/siteSearch";
 import { BrandLogo } from "../BrandLogo/BrandLogo";
@@ -54,11 +54,15 @@ export function Topbar() {
       ? (profile?.sweepsCoins ?? 0)
       : (profile?.balance ?? 0);
 
+  // Show the coin amount with its symbol (e.g. "10,000.00 GC") plus a small
+  // USD-equivalent line so users always know the real-world value.
   const balanceDisplay = !user
-    ? formatUsd(0)
+    ? formatCoins(0, coinType as CoinType)
     : profileLoading
       ? "…"
-      : formatUsd(activeBalance);
+      : formatCoins(activeBalance, coinType as CoinType);
+
+  const balanceUsd = coinsToUsd(activeBalance, coinType as CoinType);
 
   async function handleSignOut() {
     await signOut();
@@ -222,7 +226,7 @@ export function Topbar() {
           <Link
             to={user ? "/settings" : loginUrl(pathname)}
             className="topbar__balance"
-            title="Account settings"
+            title={profileLoading ? "Loading…" : `${formatCoins(activeBalance, coinType as CoinType)} = ${formatUsd(balanceUsd)}`}
             aria-busy={profileLoading || undefined}
           >
             <span className="topbar__balance-label">{coinLabel}</span>
@@ -232,6 +236,9 @@ export function Topbar() {
               ) : null}
               {balanceDisplay}
             </span>
+            {user && !profileLoading && (
+              <span className="topbar__balance-usd">{formatUsd(balanceUsd)}</span>
+            )}
           </Link>
           <motion.button
             type="button"

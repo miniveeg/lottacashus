@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import {
   fetchCrashPfState,
   placeCrashBet,
@@ -360,7 +360,7 @@ export function Crash() {
               )}
               {phase === "cashed_out" && (
                 <span className="crash__mult-label crash__mult-label--win">
-                  Cashed out — won {formatUsd(lastResult?.payout ?? 0)}
+                  Cashed out — won {formatCoins(lastResult?.payout ?? 0, coinType)}
                 </span>
               )}
             </div>
@@ -370,7 +370,7 @@ export function Crash() {
             <div className="crash__outcome crash__outcome--loss" role="status" aria-live="assertive">
               <p>
                 Crashed at <strong>{lastResult.crashedAt.toFixed(2)}x</strong> — lost{" "}
-                <strong>{formatUsd(wager)}</strong>
+                <strong>{formatCoins(wager, coinType)}</strong>
               </p>
             </div>
           )}
@@ -435,7 +435,7 @@ export function Crash() {
               className="crash__cashout-btn"
               onClick={handleCashOut}
             >
-              Cash out at {multiplier.toFixed(2)}x (${potentialPayout.toFixed(2)})
+              Cash out at {multiplier.toFixed(2)}x ({formatCoins(potentialPayout, coinType)})
             </button>
           ) : (
             <button

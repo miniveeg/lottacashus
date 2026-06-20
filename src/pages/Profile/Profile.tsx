@@ -4,7 +4,7 @@ import { Lock } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { loginUrl } from "../../lib/authRedirect";
-import { formatUsd } from "../../lib/format";
+import { formatCoinsWithUsd, formatUsd } from "../../lib/format";
 import { fetchPublicProfile, fetchReferralInfo, claimAffiliateBalance, type ProfileStats, type ReferralInfo } from "../../lib/profile";
 import { UiIcon } from "../../components/icons";
 import "./Profile.css";
@@ -157,8 +157,20 @@ export function ProfilePage() {
       <section className="profile-stats">
         <div className="profile-stat">
           <UiIcon name="gem" size={18} />
-          <span className="profile-stat__label">Balance</span>
-          <span className="profile-stat__value">{formatUsd(p.balance)}</span>
+          <span className="profile-stat__label">Gold Coins</span>
+          <span className="profile-stat__value">{formatCoinsWithUsd(p.balance, "balance")}</span>
+          <span className="profile-stat__sublabel">Play money</span>
+        </div>
+        <div className="profile-stat">
+          <UiIcon name="redeem" size={18} />
+          <span className="profile-stat__label">Sweeps Coins</span>
+          <span className="profile-stat__value">
+            {formatCoinsWithUsd(
+              (p as { sweepsCoins?: number }).sweepsCoins ?? 0,
+              "sweeps_coins"
+            )}
+          </span>
+          <span className="profile-stat__sublabel">Redeemable for cash</span>
         </div>
         <div className="profile-stat">
           <UiIcon name="target" size={18} />

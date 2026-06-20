@@ -10,7 +10,7 @@ import {
   MINES_MAX_COUNT,
   MINES_MIN_COUNT,
 } from "../../lib/games/mines";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import {
   cashoutMinesGame,
   fetchMinesPfState,
@@ -198,8 +198,8 @@ export function Mines() {
 
     setLastMessage(
       auto
-        ? `All gems found! Won ${formatUsd(data.payout)}`
-        : `Cashed out ${formatUsd(data.payout)} at ${data.multiplier}×`
+        ? `All gems found! Won ${formatCoins(data.payout, coinType)}`
+        : `Cashed out ${formatCoins(data.payout, coinType)} at ${data.multiplier}×`
     );
     setLastOutcome("win");
     resetRound();
@@ -291,7 +291,7 @@ export function Mines() {
                 Multiplier: <strong>{multiplier.toFixed(2)}×</strong>
               </span>
               <span>
-                Cashout: <strong>{formatUsd(potentialPayout)}</strong>
+                Cashout: <strong>{formatCoins(potentialPayout, coinType)}</strong>
               </span>
               <span>
                 Gems: <strong>{gemsRevealed}</strong> / {maxGems}
@@ -426,7 +426,7 @@ export function Mines() {
                   <span>…</span>
                 </>
               ) : (
-                `Cash out ${formatUsd(potentialPayout)}`
+                `Cash out ${formatCoins(potentialPayout, coinType)}`
               )}
             </button>
           )}

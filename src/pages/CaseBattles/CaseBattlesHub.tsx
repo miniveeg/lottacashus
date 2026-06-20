@@ -5,7 +5,7 @@ import { useProfile } from "../../contexts/ProfileContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { ORIGINALS_PATH } from "../../content/originals";
 import { getCaseById } from "../../lib/games/case-battles";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import { filterListedBattles, listOpenCaseBattles, type OpenBattleRow } from "../../lib/caseBattles";
 import { LcSelect, type LcSelectOption } from "../../components/LcSelect/LcSelect";
 import { CaseBattlesTopbar } from "./CaseBattlesTopbar";
@@ -130,7 +130,7 @@ export function CaseBattlesHub() {
             <span className="cb-page__stat-label">Open</span>
           </div>
           <div className="cb-page__stat">
-            <span className="cb-page__stat-value">{formatUsd(totalPot)}</span>
+            <span className="cb-page__stat-value">{formatCoins(totalPot, "balance")}</span>
             <span className="cb-page__stat-label">In pots</span>
           </div>
         </div>
@@ -270,10 +270,10 @@ export function CaseBattlesHub() {
                         <strong>{row.rounds}</strong> rounds
                       </span>
                       <span className="cbh__metric">
-                        <strong>{formatUsd(entry)}</strong> / player
+                        <strong>{formatCoins(entry, "balance")}</strong> / player
                       </span>
                       <span className="cbh__metric cbh__metric--pot">
-                        Pot <strong>{formatUsd(row.pot_total)}</strong>
+                        Pot <strong>{formatCoins(row.pot_total, "balance")}</strong>
                       </span>
                     </div>
 

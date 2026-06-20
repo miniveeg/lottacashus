@@ -8,7 +8,7 @@ import {
   LIMBO_MIN_TARGET,
   limboWinChance,
 } from "../../lib/games/limbo";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import {
   fetchLimboPfState,
   placeLimboBet,
@@ -191,7 +191,7 @@ export function Limbo() {
               {lastResult.won ? (
                 <p>
                   Hit <strong>{formatMultiplier(lastResult.result)}×</strong> — won{" "}
-                  <strong>{formatUsd(lastResult.payout)}</strong>
+                  <strong>{formatCoins(lastResult.payout, coinType)}</strong>
                 </p>
               ) : (
                 <p>
@@ -249,7 +249,7 @@ export function Limbo() {
                 ))}
               </div>
               <p className="game-controls__option-hint">
-                Win chance ≈ {(winChance * 100).toFixed(2)}% · Payout {formatUsd(potentialWin)}
+                Win chance ≈ {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
               </p>
             </div>
           </div>

@@ -153,6 +153,14 @@
   color: var(--lc-ruby);
 }
 
+.profile-stat__sublabel {
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--lc-text-muted);
+  margin-top: 0.1rem;
+}
+
 /* ── Section ── */
 .profile-section {
   margin-bottom: 1.25rem;
@@ -367,5 +375,15 @@
 
   .profile-referral__code {
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .profile-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-stat__value {
+    font-size: 0.95rem;
   }
 }

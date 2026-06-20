@@ -3,24 +3,42 @@ import { CheckCircle } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
+import {
+  formatCoins,
+  formatCoinsWithUsd,
+  coinsToUsd,
+  formatUsd,
+  SC_USD_RATE,
+} from "../../lib/format";
+import { validateCryptoAddress } from "../../lib/crypto";
+import { CRYPTO_CHAINS, type CryptoChain } from "../../types/crypto";
 import "./Redeem.css";
 
 const MIN_REDEMPTION_SC = 100;
-const SC_USD_RATE = 0.1;
 
 export default function Redeem() {
   const { user } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const [scAmount, setScAmount] = useState("");
-  const [paypalEmail, setPaypalEmail] = useState("");
+  const [chain, setChain] = useState<CryptoChain>("sol");
+  const [destination, setDestination] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const sweepsCoins = profile?.sweepsCoins ?? 0;
-  const usdValue = sweepsCoins * SC_USD_RATE;
   const parsedAmount = parseFloat(scAmount);
-  const isValid = Number.isFinite(parsedAmount) && parsedAmount >= MIN_REDEMPTION_SC && parsedAmount <= sweepsCoins && paypalEmail.includes("@");
+  const amountValid =
+    Number.isFinite(parsedAmount) &&
+    parsedAmount >= MIN_REDEMPTION_SC &&
+    parsedAmount <= sweepsCoins;
+  const addressValid = validateCryptoAddress(chain, destination.trim());
+  const isValid = amountValid && addressValid;
+
+  const safeAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
+  const usdValue = coinsToUsd(safeAmount, "sweeps_coins");
+  const balanceUsd = coinsToUsd(sweepsCoins, "sweeps_coins");
+  const minUsd = coinsToUsd(MIN_REDEMPTION_SC, "sweeps_coins");
 
   async function handleRedeem() {
     setError(null);
@@ -32,7 +50,7 @@ export default function Redeem() {
     }
 
     if (!isValid) {
-      setError("Enter a valid amount (min 100 SC).");
+      setError(`Enter a valid amount (min ${MIN_REDEMPTION_SC} SC) and a valid ${chain.toUpperCase()} address.`);
       return;
     }
 
@@ -44,9 +62,9 @@ export default function Redeem() {
     setSubmitting(true);
 
     const { error: rpcError } = await supabase.rpc("request_sc_redemption", {
-      p_user_id: user.id,
       p_sc_amount: parsedAmount,
-      p_paypal_email: paypalEmail.trim(),
+      p_chain: chain,
+      p_destination: destination.trim(),
     });
 
     setSubmitting(false);
@@ -75,7 +93,9 @@ export default function Redeem() {
     <div className="redeem lc-page lc-page--narrow">
       <header className="lc-page__header">
         <h1 className="lc-page__title">Redeem Sweeps Coins</h1>
-        <p className="lc-page__subtitle">Cash out your SC for real money via PayPal.</p>
+        <p className="lc-page__subtitle">
+          Cash out your SC for real money via crypto (SOL, LTC, or ETH) to your external wallet.
+        </p>
       </header>
 
       {success ? (
@@ -83,17 +103,20 @@ export default function Redeem() {
           <div className="redeem__success-icon" aria-hidden><CheckCircle size={48} /></div>
           <p className="redeem__success-title">Redemption Requested!</p>
           <p className="redeem__success-desc">
-            Your request to redeem {parsedAmount} SC (${(parsedAmount * SC_USD_RATE).toFixed(2)}) has
-            been submitted. Our team will review and process it within 3&ndash;5 business days.
+            Your request to redeem {formatCoinsWithUsd(parsedAmount, "sweeps_coins")} to your{" "}
+            {chain.toUpperCase()} address has been submitted. Our team will review and process it
+            within 3&ndash;5 business days.
           </p>
         </div>
       ) : (
         <div className="redeem__card">
           <div className="redeem__balance">
-            <p className="redeem__balance-label">Available Sweeps Coins</p>
-            <p className="redeem__balance-value">{sweepsCoins.toFixed(2)} SC</p>
+            <p className="redeem__balance-label">Available</p>
+            <p className="redeem__balance-value">
+              {formatCoins(sweepsCoins, "sweeps_coins")}
+            </p>
             <p className="redeem__rate">
-              = ${usdValue.toFixed(2)} USD &middot; 1 SC = ${SC_USD_RATE.toFixed(2)}
+              {formatUsd(balanceUsd)} USD &middot; 100 SC = {formatUsd(1)} &middot; 1 SC = {formatUsd(SC_USD_RATE)}
             </p>
           </div>
 
@@ -115,28 +138,52 @@ export default function Redeem() {
               disabled={submitting}
               placeholder="100"
             />
-            <p className="redeem__info">Minimum {MIN_REDEMPTION_SC} SC (${(MIN_REDEMPTION_SC * SC_USD_RATE).toFixed(2)})</p>
+            <p className="redeem__info">
+              Minimum {MIN_REDEMPTION_SC} SC ({formatUsd(minUsd)}).
+            </p>
           </div>
 
           <div className="redeem__field">
-            <label className="redeem__label" htmlFor="paypal-email">
-              PayPal email
-            </label>
-            <input
-              id="paypal-email"
-              className="redeem__input"
-              type="email"
-              value={paypalEmail}
-              onChange={(e) => setPaypalEmail(e.target.value)}
-              disabled={submitting}
-              placeholder="you@example.com"
-            />
-            <p className="redeem__info">Enter the email address linked to your PayPal account.</p>
+            <span className="redeem__label">Payout chain</span>
+            <div className="redeem__chain-picker">
+              {CRYPTO_CHAINS.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={`redeem__chain-btn${chain === c.id ? " redeem__chain-btn--active" : ""}`}
+                  onClick={() => setChain(c.id)}
+                  disabled={submitting}
+                >
+                  {c.symbol}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {scAmount && Number.isFinite(parsedAmount) && parsedAmount >= MIN_REDEMPTION_SC && (
+          <div className="redeem__field">
+            <label className="redeem__label" htmlFor="redeem-destination">
+              Destination {chain.toUpperCase()} address
+            </label>
+            <input
+              id="redeem-destination"
+              className="redeem__input"
+              type="text"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              disabled={submitting}
+              placeholder={`Your ${chain.toUpperCase()} wallet address`}
+              autoComplete="off"
+              spellCheck={false}
+            />
+            <p className="redeem__info">
+              Enter the external wallet address that will receive your payout.
+            </p>
+          </div>
+
+          {amountValid && addressValid && (
             <p className="redeem__info redeem__info--payout">
-              You will receive ${(parsedAmount * SC_USD_RATE).toFixed(2)} USD
+              Redeeming {formatCoins(parsedAmount, "sweeps_coins")} = {formatUsd(usdValue)} USD to your{" "}
+              {chain.toUpperCase()} address: {destination.trim()}
             </p>
           )}
 
@@ -147,7 +194,9 @@ export default function Redeem() {
             onClick={handleRedeem}
           >
             {submitting && <span className="redeem__submit-spinner" aria-hidden="true" />}
-            {submitting ? "Submitting\u2026" : `Redeem SC for $${(parsedAmount * SC_USD_RATE).toFixed(2)}`}
+            {submitting
+              ? "Submitting\u2026"
+              : `Redeem ${formatCoins(safeAmount, "sweeps_coins")} for ${formatUsd(usdValue)}`}
           </button>
         </div>
       )}

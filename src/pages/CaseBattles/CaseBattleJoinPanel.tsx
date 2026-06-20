@@ -4,7 +4,7 @@ import {
   MAX_BORROW_PERCENT,
   payoutKeepMultiplier,
 } from "../../lib/games/case-battles";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import { joinCaseBattle, type CaseBattleView } from "../../lib/caseBattles";
 
 type CaseBattleJoinPanelProps = {
@@ -46,7 +46,7 @@ export function CaseBattleJoinPanel({
   return (
     <div className="cbr__join-panel">
       <p className="cbr__join-panel-lead">
-        Join this battle — entry {formatUsd(battle.entryCost)} full price
+        Join this battle — entry {formatCoins(battle.entryCost, "balance")} full price
       </p>
       <div className="cbr__join-panel-borrow">
         <button
@@ -73,7 +73,7 @@ export function CaseBattleJoinPanel({
         </label>
       </div>
       <p className="cbr__join-panel-cost">
-        You pay <strong>{formatUsd(joinCost)}</strong>
+        You pay <strong>{formatCoins(joinCost, "balance")}</strong>
         {effectiveBorrow > 0 && (
           <span className="cbr__join-panel-note">
             {" "}
@@ -82,7 +82,7 @@ export function CaseBattleJoinPanel({
         )}
       </p>
       {!canAfford && (
-        <p className="cbr__join-panel-warn">Insufficient balance ({formatUsd(balance)} available)</p>
+        <p className="cbr__join-panel-warn">Insufficient balance ({formatCoins(balance, "balance")} available)</p>
       )}
       <button
         type="button"

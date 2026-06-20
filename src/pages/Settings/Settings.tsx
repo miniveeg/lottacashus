@@ -12,7 +12,14 @@ import {
   validateDiscordState,
 } from "../../lib/discord";
 import { createUserNotification } from "../../lib/notifications";
-import { formatUsd, getCashFlowTally } from "../../lib/format";
+import {
+  formatCoins,
+  formatCoinsWithUsd,
+  formatUsd,
+  GC_USD_RATE,
+  getCashFlowTally,
+  SC_USD_RATE,
+} from "../../lib/format";
 import { supabase } from "../../lib/supabase";
 import {
   fetchTransactionsPage,
@@ -43,6 +50,15 @@ function txAmountClass(type: Transaction["type"], amount: number) {
   if (type === "deposit" || type === "win" || type === "affiliate") return "settings__tx-amount--pos";
   if (type === "withdrawal" || type === "loss" || type === "wager") return "settings__tx-amount--neg";
   return amount >= 0 ? "settings__tx-amount--pos" : "settings__tx-amount--neg";
+}
+
+/**
+ * Infer the coin currency for a transaction. Withdrawals (cash redemptions)
+ * and affiliate bonuses are Sweeps Coins (SC); everything else is Gold Coins (GC).
+ */
+function txCoinType(type: Transaction["type"]): "balance" | "sweeps_coins" {
+  if (type === "withdrawal" || type === "affiliate") return "sweeps_coins";
+  return "balance";
 }
 
 export function Settings() {
@@ -226,11 +242,19 @@ export function Settings() {
             <label>Username</label>
             <span>{profile?.username ?? "—"}</span>
           </div>
-          <div className="settings__account-item">
-            <label>Balance</label>
-            <span className="settings__balance-inline">
-              {profileLoading ? "…" : formatUsd(profile?.balance ?? 0)}
+          <div className="settings__account-item settings__account-item--balance">
+            <label>Gold Coins (GC)</label>
+            <span className="settings__balance-inline settings__balance-inline--gc">
+              {profileLoading ? "…" : formatCoinsWithUsd(profile?.balance ?? 0, "balance")}
             </span>
+            <span className="settings__balance-note">Play money — no redemption value</span>
+          </div>
+          <div className="settings__account-item settings__account-item--balance">
+            <label>Sweeps Coins (SC)</label>
+            <span className="settings__balance-inline settings__balance-inline--sc">
+              {profileLoading ? "…" : formatCoinsWithUsd(profile?.sweepsCoins ?? 0, "sweeps_coins")}
+            </span>
+            <span className="settings__balance-note">Redeemable for cash</span>
           </div>
         </div>
 
@@ -243,6 +267,24 @@ export function Settings() {
         </div>
 
         <div className="settings__stats-grid">
+          <div className="settings__stat">
+            <p className="settings__stat-label">Gold Coins (GC)</p>
+            <p className="settings__stat-value">
+              {profileLoading ? "…" : formatCoins(profile?.balance ?? 0, "balance")}
+            </p>
+            <p className="settings__stat-sub">
+              ≈ {formatUsd((profile?.balance ?? 0) * GC_USD_RATE)} · Play money
+            </p>
+          </div>
+          <div className="settings__stat">
+            <p className="settings__stat-label">Sweeps Coins (SC)</p>
+            <p className="settings__stat-value settings__stat-value--win">
+              {profileLoading ? "…" : formatCoins(profile?.sweepsCoins ?? 0, "sweeps_coins")}
+            </p>
+            <p className="settings__stat-sub">
+              ≈ {formatUsd((profile?.sweepsCoins ?? 0) * SC_USD_RATE)} · Redeemable
+            </p>
+          </div>
           <div className="settings__stat">
             <p className="settings__stat-label">Total wagered</p>
             <p className="settings__stat-value">
@@ -627,6 +669,20 @@ export function Settings() {
                     <td>
                       <span className={`settings__tx-type settings__tx-type--${tx.type}`}>
                         {TRANSACTION_LABELS[tx.type]}
+                      </span>{" "}
+                      <span
+                        className={`settings__tx-coin-badge ${
+                          txCoinType(tx.type) === "sweeps_coins"
+                            ? "settings__tx-coin-badge--sc"
+                            : "settings__tx-coin-badge--gc"
+                        }`}
+                        title={
+                          txCoinType(tx.type) === "sweeps_coins"
+                            ? "Sweeps Coins transaction (redeemable for cash)"
+                            : "Gold Coins transaction (play money)"
+                        }
+                      >
+                        {txCoinType(tx.type) === "sweeps_coins" ? "SC" : "GC"}
                       </span>
                     </td>
                     <td className={txAmountClass(tx.type, tx.amount)}>

@@ -1,5 +1,5 @@
 import { RARITY_COLORS, type CaseRarity } from "../../lib/games/case-battles";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import type { CaseBattleDrop, CaseBattlePlayer } from "../../lib/caseBattles";
 
 export function PulledItemCard({ drop, round }: { drop: CaseBattleDrop; round?: number }) {
@@ -9,7 +9,7 @@ export function PulledItemCard({ drop, round }: { drop: CaseBattleDrop; round?: 
       {round != null && <span className="cbr__pull-item-round">R{round + 1}</span>}
       <span className="cbr__pull-item-name">{drop.name}</span>
       <span className="cbr__pull-item-val" style={{ color }}>
-        {formatUsd(drop.value)}
+        {formatCoins(drop.value, "balance")}
       </span>
     </div>
   );

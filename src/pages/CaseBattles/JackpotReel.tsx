@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import type { CaseBattlePlayer } from "../../lib/caseBattles";
 import "./JackpotReel.css";
 
@@ -42,7 +42,7 @@ function PlayerTile({
       <span className="cb-jackpot-reel__avatar">{player.isBot ? "🤖" : "👤"}</span>
       <span className="cb-jackpot-reel__name">{player.displayName}</span>
       <span className="cb-jackpot-reel__pct">{pct.toFixed(1)}%</span>
-      <span className="cb-jackpot-reel__val">{formatUsd(player.totalValue)}</span>
+      <span className="cb-jackpot-reel__val">{formatCoins(player.totalValue, "balance")}</span>
     </div>
   );
 }

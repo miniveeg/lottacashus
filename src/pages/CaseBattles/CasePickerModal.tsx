@@ -7,7 +7,7 @@ import {
   MAX_COPIES_PER_CASE_TYPE,
 } from "../../lib/games/case-battles/config";
 import type { LootCase } from "../../lib/games/case-battles/cases";
-import { formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 
 type SortOrder = "asc" | "desc";
 
@@ -59,7 +59,7 @@ export function CasePickerModal({
                 Rounds <strong>{rounds}</strong> / {MAX_CASES_PER_BATTLE}
               </span>
               <span>
-                Total <strong>{formatUsd(totalCost)}</strong>
+                Total <strong>{formatCoins(totalCost, "balance")}</strong>
               </span>
             </div>
           </div>
@@ -125,7 +125,7 @@ export function CasePickerModal({
                   <span aria-hidden>📦</span>
                 </div>
                 <h3 className={`${p}__case-name`}>{c.name}</h3>
-                <p className={`${p}__case-price`}>{formatUsd(c.price)}</p>
+                <p className={`${p}__case-price`}>{formatCoins(c.price, "balance")}</p>
                 {inBattle > 0 && (
                   <span className={`${p}__case-count`}>×{inBattle} in battle</span>
                 )}

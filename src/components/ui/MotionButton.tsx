@@ -3,6 +3,14 @@ import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
 import { springTransition } from "../../lib/motion";
 import { cn } from "../../lib/cn";
 
+/**
+ * MotionButton — "Obsidian Gold" button.
+ *
+ * Visual surface (gold gradient primary, subtle border secondary,
+ * transparent ghost) lives in `src/styles/ui-motion.css`. React
+ * only handles the motion: clean scale hover (1.02, no y-translate)
+ * and a tiny scale-down on tap. Respects prefers-reduced-motion.
+ */
 type MotionButtonProps = Omit<HTMLMotionProps<"button">, "children"> & {
   variant?: "primary" | "secondary" | "ghost";
   glow?: boolean;
@@ -40,7 +48,7 @@ export const MotionButton = forwardRef<HTMLButtonElement, MotionButtonProps>(
           glow && "lc-motion-btn--glow",
           className,
         )}
-        whileHover={reduceMotion ? undefined : { scale: 1.02, y: -1 }}
+        whileHover={reduceMotion ? undefined : { scale: 1.02 }}
         whileTap={reduceMotion ? undefined : { scale: 0.98 }}
         transition={springTransition}
         {...props}

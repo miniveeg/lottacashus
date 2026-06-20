@@ -1,8 +1,8 @@
 /* ════════════════════════════════════════════════════════════════
-   LottaCash — Background atmosphere layer
-   Subtle radial gradients + vignette. Fixed, pointer-events:none,
-   z-index:0 so content sits above. Low opacity — atmospheric, not
-   distracting.
+   LottaCash — Background atmosphere layer · "Obsidian Gold"
+   Subtle gold + violet radials over deep obsidian. Fixed,
+   pointer-events:none, z-index:0 so content sits above. Low
+   opacity — atmospheric, not distracting.
    ════════════════════════════════════════════════════════════════ */
 
 .lc-atmosphere {
@@ -20,19 +20,19 @@
   opacity: 0.4;
 }
 
-/* Subtle radial glows — crimson at top, violet at bottom-right */
+/* Subtle radial glows — GOLD at top center, violet at bottom-right */
 .lc-atmosphere__fog {
   position: absolute;
   inset: 0;
   background:
     radial-gradient(ellipse 120% 70% at 50% -10%,
-      rgba(225, 29, 72, 0.06) 0%,
+      rgba(245, 185, 66, 0.03) 0%,
       transparent 55%),
     radial-gradient(ellipse 80% 60% at 92% 90%,
-      rgba(139, 92, 246, 0.04) 0%,
+      rgba(139, 92, 246, 0.02) 0%,
       transparent 50%),
     radial-gradient(ellipse 60% 45% at 8% 80%,
-      rgba(56, 189, 248, 0.025) 0%,
+      rgba(245, 185, 66, 0.015) 0%,
       transparent 45%);
   animation: lc-fog-drift 28s ease-in-out infinite alternate;
   will-change: transform, opacity;
@@ -66,23 +66,29 @@
 
 /* ── Glass surface utility ── */
 .lc-glass {
-  background: var(--lc-bg-glass);
-  backdrop-filter: blur(var(--lc-glass-blur));
-  -webkit-backdrop-filter: blur(var(--lc-glass-blur));
-  border: 1px solid var(--lc-glass-border);
-  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-sm), var(--glass-highlight);
 }
 
 /* Fallback when backdrop-filter is unavailable (older Firefox,
    disabled-GPU contexts): use a more opaque surface. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .lc-glass {
-    background: var(--lc-bg-panel);
+    background: var(--bg-surface);
   }
 }
 
+/* Gold-tinted glass — premium panels, hero CTAs */
+.lc-glass--gold {
+  border-color: var(--border-gold);
+  box-shadow: var(--shadow-sm), 0 0 24px var(--gold-glow), var(--glass-highlight);
+}
+
+/* Crimson-tinted glass — live indicators, errors (compat alias) */
 .lc-glass--crimson {
-  border-color: var(--lc-border-accent);
-  box-shadow: var(--lc-shadow-sm), 0 0 24px rgba(225, 29, 72, 0.08),
-              var(--lc-glass-highlight);
+  border-color: var(--crimson-glow);
+  box-shadow: var(--shadow-sm), 0 0 24px rgba(225, 29, 72, 0.08), var(--glass-highlight);
 }

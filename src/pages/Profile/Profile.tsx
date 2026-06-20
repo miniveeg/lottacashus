@@ -6,7 +6,6 @@ import { useProfile } from "../../contexts/ProfileContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { formatCoinsWithUsd, formatUsd } from "../../lib/format";
 import { fetchPublicProfile, fetchReferralInfo, claimAffiliateBalance, type ProfileStats, type ReferralInfo } from "../../lib/profile";
-import { UiIcon } from "../../components/icons";
 import "./Profile.css";
 
 type Badge = { id: string; name: string; description: string; icon: string; check: (p: ProfileStats) => boolean };
@@ -106,7 +105,7 @@ export function ProfilePage() {
 
   if (loading || (isOwnProfile && authLoading)) {
     return (
-      <div className="lc-page">
+      <div className="lc-page lc-page--medium profile-page">
         <div className="lc-loading">
           <div className="lc-loading__pulse" aria-hidden />
           <p>Loading profile…</p>
@@ -117,7 +116,7 @@ export function ProfilePage() {
 
   if (!stats) {
     return (
-      <div className="lc-page">
+      <div className="lc-page lc-page--medium profile-page">
         <div className="lc-empty">
           <p className="lc-alert lc-alert--error">Profile not found.</p>
         </div>
@@ -133,6 +132,7 @@ export function ProfilePage() {
   const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : "—";
   const netPL = wins - losses;
   const memberSince = stats.memberSince ? new Date(stats.memberSince).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null;
+  const sweepsBalance = (p as { sweepsCoins?: number }).sweepsCoins ?? 0;
 
   return (
     <div className="lc-page lc-page--medium profile-page">
@@ -155,47 +155,39 @@ export function ProfilePage() {
 
       {/* Stats grid */}
       <section className="profile-stats">
-        <div className="profile-stat">
-          <UiIcon name="gem" size={18} />
+        <div className="profile-stat profile-stat--gc">
           <span className="profile-stat__label">Gold Coins</span>
-          <span className="profile-stat__value">{formatCoinsWithUsd(p.balance, "balance")}</span>
+          <span className="profile-stat__value profile-stat__value--gold">
+            {formatCoinsWithUsd(p.balance, "balance")}
+          </span>
           <span className="profile-stat__sublabel">Play money</span>
         </div>
-        <div className="profile-stat">
-          <UiIcon name="redeem" size={18} />
+        <div className="profile-stat profile-stat--sc">
           <span className="profile-stat__label">Sweeps Coins</span>
-          <span className="profile-stat__value">
-            {formatCoinsWithUsd(
-              (p as { sweepsCoins?: number }).sweepsCoins ?? 0,
-              "sweeps_coins"
-            )}
+          <span className="profile-stat__value profile-stat__value--emerald">
+            {formatCoinsWithUsd(sweepsBalance, "sweeps_coins")}
           </span>
           <span className="profile-stat__sublabel">Redeemable for cash</span>
         </div>
         <div className="profile-stat">
-          <UiIcon name="target" size={18} />
           <span className="profile-stat__label">Total Wagered</span>
           <span className="profile-stat__value">{formatUsd(p.totalWagered)}</span>
         </div>
         <div className="profile-stat">
-          <UiIcon name="gift" size={18} />
           <span className="profile-stat__label">Deposited</span>
           <span className="profile-stat__value">{formatUsd(p.totalDeposited)}</span>
         </div>
         <div className="profile-stat">
-          <span className="profile-stat__glow" aria-hidden="true">↑</span>
           <span className="profile-stat__label">Withdrawn</span>
           <span className="profile-stat__value">{formatUsd(p.totalWithdrawn)}</span>
         </div>
         <div className="profile-stat">
-          <UiIcon name="trophy" size={18} />
           <span className="profile-stat__label">Net P/L</span>
-          <span className={`profile-stat__value ${netPL >= 0 ? "profile-stat__value--positive" : "profile-stat__value--negative"}`}>
+          <span className={`profile-stat__value ${netPL >= 0 ? "profile-stat__value--emerald" : "profile-stat__value--danger"}`}>
             {netPL >= 0 ? "+" : ""}{formatUsd(netPL)}
           </span>
         </div>
         <div className="profile-stat">
-          <UiIcon name="check" size={18} />
           <span className="profile-stat__label">Win Rate</span>
           <span className="profile-stat__value">{winRate}%</span>
         </div>

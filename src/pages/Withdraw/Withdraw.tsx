@@ -125,8 +125,8 @@ export function Withdraw() {
       <header className="lc-page__header">
         <h1 className="lc-page__title wallet__title">Withdraw</h1>
         <p className="lc-page__subtitle wallet__subtitle">
-          Withdraw your Sweeps Coins (SC) as cryptocurrency. 100 SC = $1 USD. Minimum withdrawal: 10 SC
-          ($0.10).
+          Cash out your Sweeps Coins (SC) as cryptocurrency. Minimum withdrawal:{" "}
+          {MIN_WITHDRAW_SC} SC ({formatUsd(MIN_WITHDRAW_SC / SC_PER_USD)}).
         </p>
       </header>
 
@@ -142,7 +142,9 @@ export function Withdraw() {
       <section className="wallet__balance-panel" aria-label="Available Sweeps Coins">
         <p className="wallet__balance-label">Available Sweeps Coins (SC)</p>
         <p className="wallet__balance-value">{formatCoins(scBalance, "sweeps_coins")}</p>
-        <p className="wallet__balance-usd">&asymp; {formatUsd(coinsToUsd(scBalance, "sweeps_coins"))}</p>
+        <p className="wallet__balance-usd">
+          &asymp; {formatUsd(coinsToUsd(scBalance, "sweeps_coins"))}
+        </p>
       </section>
 
       <p className="wallet__hint wallet__hint--balance">
@@ -209,7 +211,7 @@ export function Withdraw() {
 
         <p className="wallet__hint wallet__hint--note">
           Withdrawals are queued and sent manually or automatically from treasury wallets. Processing
-          times vary by network.
+          times vary by network. GC cannot be withdrawn — only SC is redeemable for cash.
         </p>
       </section>
 

@@ -20,7 +20,7 @@ function prefersReducedMotion(): boolean {
  * scrolling. Behaviour notes:
  *  - When the user prefers reduced motion we skip Lenis entirely and rely on
  *    native scrolling (better for accessibility and avoids fighting the OS).
- *  - Touch devices keep native momentum scrolling (smoothTouch is off).
+ *  - Touch devices keep native momentum scrolling (syncTouch defaults to off).
  *  - Keyboard scrolling is left to the browser.
  *  - When `scrollKey` changes (route change) we jump to the top immediately
  *    so the new page starts at its header.
@@ -29,6 +29,7 @@ export function SmoothScroll({ children, targetRef, scrollKey }: SmoothScrollPro
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
+    // Skip Lenis for reduced-motion users — native scroll is better here.
     if (prefersReducedMotion()) return;
 
     const el = targetRef.current;

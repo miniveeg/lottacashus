@@ -82,8 +82,8 @@ export default function Redeem() {
     return (
       <div className="redeem lc-page lc-page--narrow">
         <header className="lc-page__header">
-          <h1 className="lc-page__title">Redeem</h1>
-          <p className="lc-page__subtitle">Log in to cash out your Sweeps Coins.</p>
+          <h1 className="lc-page__title">Redeem Sweeps Coins</h1>
+          <p className="lc-page__subtitle">Log in to cash out your Sweeps Coins for real money.</p>
         </header>
       </div>
     );
@@ -101,7 +101,7 @@ export default function Redeem() {
       {success ? (
         <div className="redeem__success">
           <div className="redeem__success-icon" aria-hidden><CheckCircle size={48} /></div>
-          <p className="redeem__success-title">Redemption Requested!</p>
+          <p className="redeem__success-title">Redemption Requested</p>
           <p className="redeem__success-desc">
             Your request to redeem {formatCoinsWithUsd(parsedAmount, "sweeps_coins")} to your{" "}
             {chain.toUpperCase()} address has been submitted. Our team will review and process it
@@ -181,10 +181,24 @@ export default function Redeem() {
           </div>
 
           {amountValid && addressValid && (
-            <p className="redeem__info redeem__info--payout">
-              Redeeming {formatCoins(parsedAmount, "sweeps_coins")} = {formatUsd(usdValue)} USD to your{" "}
-              {chain.toUpperCase()} address: {destination.trim()}
-            </p>
+            <div className="redeem__summary">
+              <div className="redeem__summary-row">
+                <span className="redeem__summary-label">Redeeming</span>
+                <span className="redeem__summary-value redeem__summary-value--sc">
+                  {formatCoins(parsedAmount, "sweeps_coins")}
+                </span>
+              </div>
+              <div className="redeem__summary-arrow" aria-hidden="true">↓</div>
+              <div className="redeem__summary-row">
+                <span className="redeem__summary-label">You receive</span>
+                <span className="redeem__summary-value redeem__summary-value--usd">
+                  {formatUsd(usdValue)} USD
+                </span>
+              </div>
+              <p className="redeem__summary-dest">
+                To {chain.toUpperCase()}: <code>{destination.trim()}</code>
+              </p>
+            </div>
           )}
 
           <button
@@ -195,7 +209,7 @@ export default function Redeem() {
           >
             {submitting && <span className="redeem__submit-spinner" aria-hidden="true" />}
             {submitting
-              ? "Submitting\u2026"
+              ? "Submitting…"
               : `Redeem ${formatCoins(safeAmount, "sweeps_coins")} for ${formatUsd(usdValue)}`}
           </button>
         </div>

@@ -3,14 +3,14 @@ import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import "./PageTransition.css";
 
-type TransitionKind = "initial" | "major" | "minor" | "same";
+type TransitionKind = "initial" | "major" | "same";
 
-/* Clean fade — opacity only. No transform, no blur. 250ms standard.
+/* Clean opacity-only fade — 0.2s in, 0.15s out. No transform, no blur.
    Reduced motion renders the children with no wrapper animation. */
 const fadeVariants: Variants = {
   initial: { opacity: 0 },
-  animate: { opacity: 1, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } },
-  exit: { opacity: 0, transition: { duration: 0.18, ease: [0.4, 0, 0.2, 1] } },
+  animate: { opacity: 1, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } },
+  exit: { opacity: 0, transition: { duration: 0.15, ease: [0.4, 0, 0.2, 1] } },
 };
 
 interface PageTransitionProps {

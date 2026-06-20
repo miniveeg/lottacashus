@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Trophy, Medal, Crown } from "lucide-react";
+import { Trophy, Crown, Medal } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatUsd } from "../../lib/format";
 import {
@@ -12,7 +12,12 @@ import { ScrollReveal } from "../../components/ui/ScrollReveal";
 import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Leaderboard.css";
 
-const TABS: { id: LeaderboardTab; label: string; valueLabel: string; secondaryLabel?: string }[] = [
+const TABS: {
+  id: LeaderboardTab;
+  label: string;
+  valueLabel: string;
+  secondaryLabel?: string;
+}[] = [
   { id: "wins", label: "Biggest Wins", valueLabel: "Win amount" },
   { id: "wagered", label: "Most Wagered", valueLabel: "Total wagered", secondaryLabel: "Win rate" },
 ];
@@ -46,34 +51,36 @@ export function Leaderboard() {
   const rest = entries.slice(3);
 
   return (
-    <div className="lc-page lc-page--medium leaderboard-page">
+    <div className="leaderboard-page lc-page lc-page--medium">
+      {/* ── Header ── */}
       <motion.header
-        className="lc-page__header leaderboard-header"
+        className="leaderboard-page__header"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
-        <motion.span className="lc-page__eyebrow" variants={fadeUpVariants}>
-          <Trophy size={11} strokeWidth={2.4} />
+        <motion.span className="leaderboard-page__eyebrow" variants={fadeUpVariants}>
+          <Trophy size={12} strokeWidth={2.4} />
           Leaderboard
         </motion.span>
-        <motion.h1 className="lc-page__title" variants={fadeUpVariants}>
+        <motion.h1 className="leaderboard-page__title" variants={fadeUpVariants}>
           Top players on LottaCash
         </motion.h1>
-        <motion.p className="lc-page__subtitle" variants={fadeUpVariants}>
+        <motion.p className="leaderboard-page__subtitle" variants={fadeUpVariants}>
           The biggest single wins and lifetime wagers across the platform. Updated in real time as
           bets settle.
         </motion.p>
       </motion.header>
 
-      <div className="lc-tabs" role="tablist" aria-label="Leaderboard categories">
+      {/* ── Tabs ── */}
+      <div className="leaderboard-tabs" role="tablist" aria-label="Leaderboard categories">
         {TABS.map((t) => (
           <button
             key={t.id}
             type="button"
             role="tab"
             aria-selected={tab === t.id}
-            className={`lc-tab${tab === t.id ? " lc-tab--active" : ""}`}
+            className={`leaderboard-tab${tab === t.id ? " leaderboard-tab--active" : ""}`}
             onClick={() => setTab(t.id)}
           >
             {t.label}
@@ -82,8 +89,8 @@ export function Leaderboard() {
       </div>
 
       {loading ? (
-        <div className="lc-loading">
-          <div className="lc-loading__pulse" aria-hidden />
+        <div className="leaderboard-loading">
+          <div className="leaderboard-loading__pulse" aria-hidden />
           <p>Loading leaderboard…</p>
         </div>
       ) : entries.length === 0 ? (
@@ -109,7 +116,7 @@ export function Leaderboard() {
             </ScrollReveal>
           )}
 
-          {/* ── Table (rank 4+) ── */}
+          {/* ── Table (rank 4+) — desktop ── */}
           {rest.length > 0 && (
             <ScrollReveal className="leaderboard-table-wrap" as="div">
               <table className="leaderboard-table">
@@ -190,6 +197,7 @@ function PodiumCard({ entry, index, valueLabel, showSecondary }: PodiumCardProps
 
   return (
     <article className={`leaderboard-podium__card leaderboard-podium__card--${rank}`}>
+      <div className="leaderboard-podium__accent" aria-hidden="true" style={{ background: config.accent }} />
       <div className="leaderboard-podium__medal" aria-hidden="true">
         <Icon size={22} strokeWidth={2} />
       </div>
@@ -205,13 +213,12 @@ function PodiumCard({ entry, index, valueLabel, showSecondary }: PodiumCardProps
           {entry.secondary.toFixed(1)}% win rate
         </div>
       ) : null}
-      <div className="leaderboard-podium__accent" aria-hidden="true" style={{ background: config.accent }} />
     </article>
   );
 }
 
 const PODIUM_CONFIG = [
-  { accent: "linear-gradient(180deg, rgba(255, 215, 0, 0.18) 0%, transparent 70%)" },
-  { accent: "linear-gradient(180deg, rgba(192, 192, 192, 0.16) 0%, transparent 70%)" },
-  { accent: "linear-gradient(180deg, rgba(205, 127, 50, 0.16) 0%, transparent 70%)" },
+  { accent: "linear-gradient(180deg, rgba(245, 185, 66, 0.22) 0%, transparent 70%)" },
+  { accent: "linear-gradient(180deg, rgba(192, 192, 192, 0.18) 0%, transparent 70%)" },
+  { accent: "linear-gradient(180deg, rgba(205, 127, 50, 0.18) 0%, transparent 70%)" },
 ];

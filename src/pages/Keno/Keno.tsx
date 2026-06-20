@@ -9,7 +9,7 @@ import {
   KENO_RISKS,
   type KenoRisk,
 } from "../../lib/games/keno";
-import { formatCoins } from "../../lib/format";
+import { coinsToUsd, formatCoins, formatUsd } from "../../lib/format";
 import { fetchKenoPfState, placeKenoBet, setKenoClientSeed } from "../../lib/keno";
 import "../../styles/game-controls.css";
 import "./Keno.css";
@@ -53,7 +53,6 @@ export function Keno() {
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
-  const [showFairness, setShowFairness] = useState(false);
 
   const pickCount = selected.length;
   const paytable = useMemo(
@@ -111,9 +110,6 @@ export function Keno() {
     setWagerInput(v.toFixed(2));
   };
 
-  const halfWager = () => applyWager(wager / 2);
-  const doubleWager = () => applyWager(wager * 2);
-
   const handleBet = async () => {
     if (!user) {
       setError("Log in to play.");
@@ -123,7 +119,6 @@ export function Keno() {
       setError("Select at least one number.");
       return;
     }
-
     if (wager > activeBalance) {
       setError("Insufficient balance.");
       return;
@@ -148,7 +143,6 @@ export function Keno() {
       return;
     }
 
-    // Reveal drawn numbers one-by-one for satisfying stagger.
     setDrawn(data.drawn);
     data.drawn.forEach((_, i) => {
       window.setTimeout(() => {
@@ -179,41 +173,41 @@ export function Keno() {
   const revealComplete = drawn !== null && revealCount >= drawn.length;
 
   return (
-    <div className="keno lc-game-page">
-      <header className="keno__header">
-        <div className="keno__header-main">
-          <h1 className="keno__title">Keno</h1>
-          <p className="keno__subtitle">
+    <div className="game-page keno">
+      <header className="game-page__header">
+        <div className="game-page__header-text">
+          <h1 className="game-page__title">Keno</h1>
+          <p className="game-page__subtitle">
             Pick 1–10 numbers. 10 drawn per round. Provably fair lottery-style game.
           </p>
         </div>
-        <div className="keno__header-meta">
-          <span className="keno__rtp-badge">94.5% RTP</span>
-        </div>
+        <span className="game-page__rtp">94.5% RTP</span>
       </header>
 
-      <div className="keno__layout">
-        <section className="keno__board-panel">
-          <div className="keno__board-toolbar">
+      <div className="game-page__layout">
+        <section className="game-page__stage keno__stage">
+          <div className="keno__toolbar">
             <span className="keno__pick-count">
               <strong>{pickCount}</strong>/{MAX_PICKS} selected
             </span>
-            <button
-              type="button"
-              className="keno__tool-btn"
-              onClick={autoPick}
-              disabled={drawing}
-            >
-              Auto Pick
-            </button>
-            <button
-              type="button"
-              className="keno__tool-btn"
-              onClick={clearTable}
-              disabled={drawing}
-            >
-              Clear
-            </button>
+            <div className="keno__toolbar-actions">
+              <button
+                type="button"
+                className="keno__tool-btn"
+                onClick={autoPick}
+                disabled={drawing}
+              >
+                Auto Pick
+              </button>
+              <button
+                type="button"
+                className="keno__tool-btn"
+                onClick={clearTable}
+                disabled={drawing}
+              >
+                Clear
+              </button>
+            </div>
           </div>
 
           <div className="keno__grid" role="group" aria-label="Keno number grid">
@@ -238,7 +232,6 @@ export function Keno() {
                   aria-pressed={isSelected}
                 >
                   <span>{n}</span>
-                  {isHit && <span className="keno__cell-gem" aria-hidden="true" />}
                 </button>
               );
             })}
@@ -280,7 +273,13 @@ export function Keno() {
           )}
         </section>
 
-        <aside className="keno__controls game-controls">
+        <aside className="game-page__controls game-controls">
+          <div className="game-page__balance">
+            <span className="game-page__balance-label">Balance · {coinLabel}</span>
+            <span className="game-page__balance-value">{formatCoins(activeBalance, coinType)}</span>
+            <span className="game-page__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
+          </div>
+
           <div className="game-controls__options">
             <div className="game-controls__option">
               <span className="game-controls__option-label" id="keno-risk-label">
@@ -317,7 +316,7 @@ export function Keno() {
               <button
                 type="button"
                 className="game-controls__wager-adj"
-                onClick={halfWager}
+                onClick={() => applyWager(wager / 2)}
                 disabled={drawing}
                 aria-label="Half bet"
               >
@@ -326,7 +325,7 @@ export function Keno() {
               <button
                 type="button"
                 className="game-controls__wager-adj"
-                onClick={doubleWager}
+                onClick={() => applyWager(wager * 2)}
                 disabled={drawing}
                 aria-label="Double bet"
               >
@@ -348,115 +347,80 @@ export function Keno() {
             </div>
           </div>
 
-          {error && (
-            <p className="keno__error" role="alert">
-              {error}
-            </p>
-          )}
-
-          {lastResult && drawn && (
-            <div
-              className={`keno__result${lastResult.payout > 0 ? " keno__result--win" : " keno__result--loss"}`}
-              role="status"
-              aria-live="polite"
-            >
-              <p>
-                <strong>{lastResult.hits}</strong> hit{lastResult.hits !== 1 ? "s" : ""} ·{" "}
-                <strong>{lastResult.multiplier}×</strong>
-              </p>
-              <p className="keno__result-payout">
-                {lastResult.payout > 0
-                  ? `Won ${formatCoins(lastResult.payout, coinType)}`
-                  : "No win this round"}
-              </p>
-            </div>
-          )}
-
           <button
             type="button"
-            className="keno__bet-btn"
+            className="game-controls__play"
             onClick={handleBet}
             disabled={drawing || pickCount < 1 || !user}
             aria-busy={drawing}
           >
-            {drawing ? (
-              <>
-                <span className="keno__spinner" aria-hidden="true" />
-                <span>{revealComplete ? "Done…" : "Drawing…"}</span>
-              </>
-            ) : (
-              "Bet"
-            )}
+            {drawing ? (revealComplete ? "Done…" : "Drawing…") : "Play"}
           </button>
 
-          <div className="keno__stats">
-            <div className="keno__stat">
-              <span className="keno__stat-label">Balance</span>
-              <span className="keno__stat-value">{formatCoins(activeBalance, coinType)}</span>
-            </div>
-            <div className="keno__stat">
-              <span className="keno__stat-label">Last payout</span>
-              <span
-                className={`keno__stat-value${
-                  lastResult
-                    ? lastResult.payout > 0
-                      ? " keno__stat-value--win"
-                      : " keno__stat-value--loss"
-                    : ""
-                }`}
-              >
-                {lastResult ? formatCoins(lastResult.payout, coinType) : "—"}
-              </span>
-            </div>
-          </div>
+          {error && <p className="game-controls__error" role="alert">{error}</p>}
 
-          <p className="keno__hint">
+          {lastResult && drawn && (
+            <div className="game-controls__stats">
+              <div className="game-controls__stat-row">
+                <span className="game-controls__stat-label">Hits</span>
+                <span className="game-controls__stat-value game-controls__stat-value--gold">
+                  {lastResult.hits} · {lastResult.multiplier}×
+                </span>
+              </div>
+              <div className="game-controls__stat-row">
+                <span className="game-controls__stat-label">Payout</span>
+                <span
+                  className={`game-controls__stat-value${
+                    lastResult.payout > 0
+                      ? " game-controls__stat-value--win"
+                      : " game-controls__stat-value--loss"
+                  }`}
+                >
+                  {lastResult.payout > 0
+                    ? formatCoins(lastResult.payout, coinType)
+                    : "No win"}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <p className="game-page__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
           </p>
 
-          <div className="keno__fairness">
-            <button
-              type="button"
-              className="keno__fairness-toggle"
-              aria-expanded={showFairness}
-              onClick={() => setShowFairness((v) => !v)}
-            >
-              <span>Provably fair</span>
-              <span className="keno__fairness-icon" aria-hidden>▾</span>
-            </button>
-            {showFairness && (
-              <div className="keno__fairness-body">
-                <p>
-                  <span className="keno__fairness-k">Server seed (hash)</span>
-                  <code className="keno__hash">{pfHash ?? "…"}</code>
-                </p>
-                <p>
-                  <span className="keno__fairness-k">Next nonce</span>
-                  <code className="keno__hash">{pfNonce}</code>
-                </p>
-                <label className="keno__seed-label">
-                  <span className="keno__fairness-k">Client seed</span>
-                  <input
-                    type="text"
-                    className="keno__seed-input"
-                    value={clientSeed}
-                    maxLength={64}
-                    onChange={(e) => setClientSeed(e.target.value)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="keno__tool-btn"
-                  onClick={saveClientSeed}
-                >
-                  Save client seed
-                </button>
-                <p className="keno__fairness-note">
-                  Draws use HMAC-SHA256 with Fisher-Yates selection (Stake Keno).
-                </p>
+          <details className="game-page__fairness">
+            <summary>Provably Fair</summary>
+            <div className="game-page__fairness-body">
+              <div className="game-page__fairness-row">
+                <span className="game-page__fairness-k">Server seed (hash)</span>
+                <code className="game-page__fairness-code">{pfHash ?? "…"}</code>
               </div>
-            )}
-          </div>
+              <div className="game-page__fairness-row">
+                <span className="game-page__fairness-k">Next nonce</span>
+                <code className="game-page__fairness-code">{pfNonce}</code>
+              </div>
+              <div className="game-page__fairness-row">
+                <span className="game-page__fairness-k">Client seed</span>
+                <input
+                  type="text"
+                  className="game-page__fairness-input"
+                  value={clientSeed}
+                  maxLength={64}
+                  onChange={(e) => setClientSeed(e.target.value)}
+                />
+              </div>
+              <button
+                type="button"
+                className="game-page__fairness-save"
+                onClick={saveClientSeed}
+              >
+                Save client seed
+              </button>
+              <p className="game-page__fairness-note">
+                Draws use HMAC-SHA256 with Fisher-Yates selection (Stake Keno).
+              </p>
+            </div>
+          </details>
         </aside>
       </div>
     </div>

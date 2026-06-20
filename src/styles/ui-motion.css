@@ -1,12 +1,14 @@
 /* ════════════════════════════════════════════════════════════════
    LottaCash — Motion utility classes & motion-button system
-   Two concerns:
-     1. `.lc-motion-btn` — shared button styling used by MotionButton
-        and MotionLink components.
-     2. `.lc-motion-*` — opt-in animation utility classes.
+   "Obsidian Gold" variant. Gold primary gradient, clean hover
+   (scale only, no y-translate). Reduced-motion aware.
    ════════════════════════════════════════════════════════════════ */
 
-/* ── Motion button base ── */
+/* ── Motion button base ──
+   Min-height 44px (WCAG touch target), Inter font, gold-tuned
+   transitions. The MotionButton / MotionLink React components
+   apply `whileHover: scale 1.02` and `whileTap: scale 0.98`
+   directly — CSS only handles the visual surface. */
 .lc-motion-btn {
   position: relative;
   display: inline-flex;
@@ -15,10 +17,10 @@
   gap: var(--space-2);
   min-height: 44px;
   padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-sm);
-  font-family: var(--lc-font-display);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: var(--text-sm);
   letter-spacing: 0;
   line-height: 1.2;
   border: 1px solid transparent;
@@ -42,11 +44,11 @@
   background: linear-gradient(
     105deg,
     transparent 40%,
-    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.18) 50%,
     transparent 60%
   );
   transform: translateX(-120%);
-  transition: transform 0.6s var(--lc-ease-out);
+  transition: transform 0.6s var(--ease-out);
   pointer-events: none;
 }
 
@@ -54,48 +56,49 @@
   transform: translateX(120%);
 }
 
-/* Primary: crimson gradient + subtle glow */
+/* ── Primary: GOLD gradient + subtle glow on hover ── */
 .lc-motion-btn--primary {
-  background: linear-gradient(135deg, var(--lc-crimson) 0%, var(--lc-crimson-dim) 100%);
-  color: #fff;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset,
-              0 2px 16px var(--lc-crimson-glow),
+  background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold-deep) 100%);
+  color: #1a1208;
+  font-weight: 700;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset,
+              0 2px 16px var(--gold-glow),
               var(--lc-shadow-inset);
 }
 
 .lc-motion-btn--primary:hover {
   filter: brightness(1.06);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset,
-              0 4px 24px var(--lc-crimson-glow-strong),
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset,
+              0 4px 24px var(--gold-glow-strong),
               var(--lc-shadow-inset);
 }
 
-/* Secondary: subtle border + light bg on hover */
+/* ── Secondary: subtle border + light bg on hover ── */
 .lc-motion-btn--secondary {
   background: rgba(255, 255, 255, 0.02);
-  border-color: var(--lc-border-strong);
-  color: var(--lc-text-primary);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 .lc-motion-btn--secondary:hover {
   background: rgba(255, 255, 255, 0.05);
-  border-color: var(--lc-border-accent);
+  border-color: var(--border-gold);
 }
 
-/* Ghost: transparent, text-color change on hover */
+/* ── Ghost: transparent, text-color change on hover ── */
 .lc-motion-btn--ghost {
   background: transparent;
-  color: var(--lc-text-secondary);
+  color: var(--text-secondary);
   padding-left: var(--space-3);
   padding-right: var(--space-3);
 }
 
 .lc-motion-btn--ghost:hover {
-  color: var(--lc-text-primary);
+  color: var(--text-primary);
   background: rgba(255, 255, 255, 0.03);
 }
 
-/* Glow (subtle breathing for CTAs) */
+/* ── Glow (subtle gold breathing for CTAs) ── */
 .lc-motion-btn--glow {
   animation: lc-glow-pulse 2s ease-in-out infinite alternate;
 }
@@ -104,15 +107,15 @@
    Motion utility classes (apply to any element)
    ════════════════════════════════════════════════════════════════ */
 .lc-motion-fade-up {
-  animation: lc-fade-up 0.4s var(--lc-ease-out) both;
+  animation: lc-fade-up 0.4s var(--ease-out) both;
 }
 
 .lc-motion-scale-in {
-  animation: lc-scale-in 0.32s var(--lc-ease-out) both;
+  animation: lc-scale-in 0.32s var(--ease-out) both;
 }
 
 .lc-motion-slide-down {
-  animation: lc-slide-down 0.22s var(--lc-ease-out) both;
+  animation: lc-slide-down 0.22s var(--ease-out) both;
 }
 
 .lc-motion-glow {

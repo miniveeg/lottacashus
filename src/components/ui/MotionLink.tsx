@@ -4,6 +4,14 @@ import { motion, useReducedMotion } from "framer-motion";
 import { springTransition } from "../../lib/motion";
 import { cn } from "../../lib/cn";
 
+/**
+ * MotionLink — "Obsidian Gold" link-as-button.
+ *
+ * Same visual surface as MotionButton (gold gradient primary, subtle
+ * border secondary, transparent ghost). Motion: clean scale hover
+ * (1.02, no y-translate) + tiny tap scale-down. Respects
+ * prefers-reduced-motion.
+ */
 type MotionLinkProps = LinkProps & {
   variant?: "primary" | "secondary" | "ghost";
   glow?: boolean;
@@ -36,7 +44,7 @@ export const MotionLink = forwardRef<HTMLAnchorElement, MotionLinkProps>(
           glow && "lc-motion-btn--glow",
           className,
         )}
-        whileHover={reduceMotion ? undefined : { scale: 1.02, y: -1 }}
+        whileHover={reduceMotion ? undefined : { scale: 1.02 }}
         whileTap={reduceMotion ? undefined : { scale: 0.98 }}
         transition={springTransition}
         {...props}

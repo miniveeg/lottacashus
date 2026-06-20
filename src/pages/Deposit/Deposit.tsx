@@ -124,7 +124,7 @@ export function Deposit() {
 
       <section className="wallet__info-panel" aria-label="How deposits work">
         <p className="wallet__info-text">
-          Deposit crypto to fund your account. You'll receive Gold Coins (GC) for gameplay plus
+          Deposit crypto to fund your account. You&apos;ll receive Gold Coins (GC) for gameplay plus
           bonus Sweeps Coins (SC) as a promotional reward.
         </p>
         <p className="wallet__info-rate">

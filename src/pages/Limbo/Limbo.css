@@ -1,30 +1,31 @@
-/* ───────────────────────────────────────────────────────────
-   Limbo — premium redesign
-   ─────────────────────────────────────────────────────────── */
-
-.limbo {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+/* ════════════════════════════════════════════════════════════════
+   LottaCash — Unified game page (Obsidian Gold)
+   Shared structure used by every Originals game.
+   ════════════════════════════════════════════════════════════════ */
+.game-page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--space-6) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-16);
 }
 
-/* ── Header ── */
-.limbo__header {
+.game-page__header {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem 1.5rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
-.limbo__header-main { min-width: 0; max-width: 46rem; }
+.game-page__header-text {
+  min-width: 0;
+}
 
-.limbo__title {
-  margin: 0 0 0.35rem;
+.game-page__title {
   font-family: var(--lc-font-display);
-  font-size: clamp(1.85rem, 1.4rem + 2vw, 2.4rem);
-  font-weight: 800;
+  font-size: var(--lc-text-3xl);
+  font-weight: 700;
   letter-spacing: -0.02em;
+  margin: 0 0 var(--space-1);
   line-height: 1.05;
   background: linear-gradient(120deg, #fff 0%, var(--lc-crimson-soft) 100%);
   -webkit-background-clip: text;
@@ -32,478 +33,359 @@
   color: transparent;
 }
 
-.limbo__subtitle {
-  margin: 0;
+.game-page__subtitle {
+  font-size: var(--lc-text-sm);
   color: var(--lc-text-secondary);
-  font-size: 0.95rem;
-  line-height: 1.55;
+  margin: 0;
+  line-height: 1.5;
 }
 
-.limbo__rtp-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 999px;
-  background: rgba(225, 29, 72, 0.1);
-  border: 1px solid rgba(225, 29, 72, 0.28);
-  font-family: var(--lc-font-display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.game-page__rtp {
+  flex-shrink: 0;
+  padding: var(--space-1) var(--space-3);
+  background: var(--lc-crimson-glow);
   color: var(--lc-crimson-soft);
+  border: 1px solid var(--lc-border-accent);
+  border-radius: var(--radius-full);
+  font-family: var(--lc-font-display);
+  font-size: var(--lc-text-xs);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 
-.limbo__rtp-badge::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--lc-crimson-soft);
-  box-shadow: 0 0 8px var(--lc-crimson-soft);
-}
-
-/* ── Layout ── */
-.limbo__layout {
+.game-page__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(300px, 32%, 360px);
-  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--space-5);
   align-items: start;
 }
 
-@media (max-width: 980px) {
-  .limbo__layout { grid-template-columns: 1fr; }
+.game-page__stage {
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  min-height: 400px;
+  box-shadow: var(--lc-shadow-sm);
 }
 
-/* ── Stage panel ── */
-.limbo__stage-panel {
-  background:
-    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(225, 29, 72, 0.06), transparent 60%),
-    var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-xl);
-  padding: 2rem 1.5rem;
+.game-page__controls {
+  position: sticky;
+  top: calc(var(--lc-topbar-height) + var(--space-4));
+}
+
+.game-page__balance {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--lc-border);
+}
+
+.game-page__balance-label {
+  font-family: var(--lc-font-display);
+  font-size: var(--lc-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--lc-text-muted);
+}
+
+.game-page__balance-value {
+  font-family: var(--lc-font-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--lc-text-primary);
+}
+
+.game-page__balance-usd {
+  font-size: var(--lc-text-xs);
+  color: var(--lc-text-muted);
+}
+
+.game-page__fairness {
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--lc-border);
+  padding-top: var(--space-3);
+}
+
+.game-page__fairness summary {
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--lc-font-display);
+  font-size: var(--lc-text-sm);
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) 0;
+}
+
+.game-page__fairness summary::-webkit-details-marker {
+  display: none;
+}
+
+.game-page__fairness summary::after {
+  content: "▾";
+  font-size: 0.7em;
+  color: var(--lc-text-muted);
+  transition: transform var(--lc-transition);
+}
+
+.game-page__fairness[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.game-page__fairness-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3) 0 0;
+  font-size: var(--lc-text-sm);
+}
+
+.game-page__fairness-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.game-page__fairness-k {
+  font-size: var(--lc-text-xs);
+  color: var(--lc-text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.game-page__fairness-code,
+.game-page__fairness-input {
+  font-family: var(--lc-font-mono);
+  font-size: var(--lc-text-xs);
+  padding: var(--space-2) var(--space-3);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--lc-text-primary);
+  word-break: break-all;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.game-page__fairness-input:focus {
+  outline: none;
+  border-color: var(--lc-crimson);
+  box-shadow: var(--lc-focus-ring);
+}
+
+.game-page__fairness-note {
+  font-size: var(--lc-text-xs);
+  color: var(--lc-text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.game-page__fairness-save {
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--lc-font-display);
+  font-size: var(--lc-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--lc-text-secondary);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+}
+
+.game-page__fairness-save:hover:not(:disabled) {
+  background: var(--lc-bg-hover);
+  color: var(--lc-crimson-soft);
+  border-color: var(--lc-border-accent);
+}
+
+.game-page__fairness-save:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.game-page__hint {
+  margin: var(--space-3) 0 0;
+  font-size: var(--lc-text-sm);
+  color: var(--lc-text-muted);
+  text-align: center;
+}
+
+.game-page__hint a {
+  color: var(--lc-crimson-soft);
+  text-decoration: none;
+}
+
+.game-page__hint a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 980px) {
+  .game-page__layout {
+    grid-template-columns: 1fr;
+  }
+  .game-page__controls {
+    order: -1;
+    position: static;
+  }
+}
+/* ════════════════════════════════════════════════════════════════
+   Limbo — stage content
+   ════════════════════════════════════════════════════════════════ */
+.limbo__stage {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  min-height: 320px;
+  gap: var(--space-6);
+  min-height: 400px;
   justify-content: center;
-  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
 }
 
-/* ── Big result display ── */
 .limbo__display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-8) var(--space-6);
+  width: 100%;
   text-align: center;
-  padding: 2.25rem 3rem;
-  border-radius: var(--lc-radius-xl);
-  border: 2px solid var(--lc-border-strong);
-  background: radial-gradient(ellipse at center, var(--lc-bg-elevated) 0%, var(--lc-bg-panel) 70%);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
-  min-width: 14rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--radius-lg);
+  position: relative;
+  overflow: hidden;
 }
 
-.limbo__display--rolling {
-  border-color: var(--lc-crimson);
-  box-shadow: 0 0 28px var(--lc-crimson-glow);
-  animation: limbo-wait-pulse 1.2s ease-in-out infinite;
+.limbo__display::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, var(--lc-crimson-glow-faint), transparent 70%);
+  opacity: 0;
+  transition: opacity var(--lc-transition-slow);
+  pointer-events: none;
 }
 
-@keyframes limbo-wait-pulse {
-  0%, 100% { transform: scale(1);    box-shadow: 0 0 18px var(--lc-crimson-glow); }
-  50%      { transform: scale(1.02); box-shadow: 0 0 32px var(--lc-crimson-glow); }
+.limbo__display--rolling::before,
+.limbo__display--win::before {
+  opacity: 1;
 }
 
 .limbo__display--win {
-  border-color: rgba(0, 232, 122, 0.6);
-  box-shadow: 0 0 32px rgba(0, 232, 122, 0.25);
-  animation: limbo-win-pulse 0.7s ease-out;
-}
-
-@keyframes limbo-win-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(0, 232, 122, 0.55); }
-  100% { box-shadow: 0 0 0 22px rgba(0, 232, 122, 0); }
+  border-color: var(--lc-emerald);
+  box-shadow: 0 0 32px var(--lc-emerald-glow);
 }
 
 .limbo__display--loss {
-  border-color: rgba(255, 59, 92, 0.5);
-  box-shadow: 0 0 24px rgba(255, 59, 92, 0.25);
-  animation: limbo-loss-pulse 0.55s ease-out;
-}
-
-@keyframes limbo-loss-pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(255, 59, 92, 0.5); }
-  100% { box-shadow: 0 0 0 18px rgba(255, 59, 92, 0); }
+  border-color: var(--lc-ruby);
 }
 
 .limbo__display-label {
-  display: block;
   font-family: var(--lc-font-display);
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: var(--lc-text-xs);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   color: var(--lc-text-muted);
-  margin-bottom: 0.65rem;
 }
 
 .limbo__display-value {
-  display: block;
-  font-family: var(--lc-font-display);
-  font-size: clamp(2.75rem, 9vw, 4.5rem);
-  font-weight: 800;
-  line-height: 1;
+  font-family: var(--lc-font-mono);
+  font-size: var(--lc-text-3xl);
+  font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--lc-text-primary);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.04em;
-  transform-origin: center center;
+  line-height: 1;
+  transition: color var(--lc-transition), transform var(--lc-transition-spring);
+}
+
+.limbo__display--win .limbo__display-value {
+  color: var(--lc-emerald);
+  text-shadow: 0 0 24px var(--lc-emerald-glow);
+}
+
+.limbo__display--loss .limbo__display-value {
+  color: var(--lc-ruby);
 }
 
 .limbo__display-value--waiting {
-  font-size: clamp(2rem, 6vw, 3rem);
   color: var(--lc-text-muted);
-  letter-spacing: 0.15em;
-  animation: limbo-dots-pulse 1s ease-in-out infinite;
-}
-
-@keyframes limbo-dots-pulse {
-  0%, 100% { opacity: 0.35; }
-  50%      { opacity: 0.85; }
+  animation: limbo-pulse 1s ease-in-out infinite;
 }
 
 .limbo__display-value--pop {
-  animation: limbo-balloon-pop 0.55s cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
+  animation: limbo-pop 480ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes limbo-balloon-pop {
-  0%   { opacity: 0; transform: scale(0.35); }
-  55%  { opacity: 1; transform: scale(1.12); }
-  75%  { transform: scale(0.96); }
-  100% { opacity: 1; transform: scale(1); }
+@keyframes limbo-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
-.limbo__display--win .limbo__display-value { color: var(--lc-emerald); }
-.limbo__display--loss .limbo__display-value { color: #f87171; }
+@keyframes limbo-pop {
+  0% { transform: scale(0.7); opacity: 0; }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
 
-.limbo__display-target {
-  display: block;
-  margin-top: 0.75rem;
+.limbo__display-meta {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: var(--lc-text-sm);
+  color: var(--lc-text-muted);
+}
+
+.limbo__display-target,
+.limbo__display-chance {
   font-family: var(--lc-font-mono);
-  font-size: 0.9rem;
-  color: var(--lc-text-secondary);
 }
 
-/* ── Outcome banner ── */
-.limbo__outcome {
-  text-align: center;
-  font-size: 0.95rem;
-  padding: 0.75rem 1rem;
-  border-radius: var(--lc-radius-md);
-  width: 100%;
-  max-width: 26rem;
-  animation: limbo-outcome-in 0.3s ease-out;
+.limbo__display-chance strong,
+.limbo__display-target strong {
+  color: var(--lc-crimson-soft);
+  font-weight: 600;
 }
-
-@keyframes limbo-outcome-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.limbo__outcome--win {
-  background: rgba(0, 232, 122, 0.08);
-  border: 1px solid rgba(0, 232, 122, 0.3);
-  color: var(--lc-emerald);
-}
-
-.limbo__outcome--loss {
-  background: rgba(255, 59, 92, 0.07);
-  border: 1px solid rgba(255, 59, 92, 0.25);
-  color: #fca5a5;
-}
-
-.limbo__outcome p { margin: 0; }
-.limbo__outcome strong { font-family: var(--lc-font-mono); font-weight: 700; }
 
 /* ── History strip ── */
 .limbo__history {
   display: flex;
+  gap: var(--space-2);
   flex-wrap: wrap;
-  gap: 0.4rem;
   justify-content: center;
-  max-width: 28rem;
 }
 
 .limbo__history-chip {
-  min-width: 2.8rem;
-  padding: 0.3rem 0.55rem;
-  border-radius: var(--lc-radius-sm);
-  font-size: 0.74rem;
-  font-weight: 700;
   font-family: var(--lc-font-mono);
-  text-align: center;
-  border: 1px solid var(--lc-border);
+  font-size: var(--lc-text-xs);
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
   background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
   color: var(--lc-text-secondary);
-  transition: transform var(--lc-transition);
 }
 
-.limbo__history-chip:hover { transform: translateY(-1px); }
-
 .limbo__history-chip--win {
-  border-color: rgba(0, 232, 122, 0.4);
   color: var(--lc-emerald);
-  background: rgba(0, 232, 122, 0.06);
+  background: var(--lc-emerald-glow);
+  border-color: rgba(16, 185, 129, 0.3);
 }
 
 .limbo__history-chip--loss {
-  border-color: rgba(255, 59, 92, 0.3);
   color: #fca5a5;
-  background: rgba(255, 59, 92, 0.05);
-}
-
-/* ── Controls ── */
-.limbo__controls {
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-xl);
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  position: sticky;
-  top: calc(var(--lc-topbar-height) + 1rem);
-  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
-}
-
-@media (max-width: 980px) {
-  .limbo__controls { position: static; }
-}
-
-.limbo__controls .game-controls__presets {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.4rem;
-  margin-top: 0.55rem;
-}
-
-.limbo__target-presets {
-  margin-top: 0.55rem;
-}
-
-/* Win chance pill */
-.limbo__win-chance {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: 999px;
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  font-size: 0.78rem;
-  color: var(--lc-text-secondary);
-}
-
-.limbo__win-chance strong {
-  color: var(--lc-crimson-soft);
-  font-family: var(--lc-font-mono);
-  font-weight: 700;
-}
-
-/* ── Error & button ── */
-.limbo__error {
-  margin: 0;
-  color: #ff8fa3;
-  font-size: 0.85rem;
-  padding: 0.55rem 0.75rem;
-  background: rgba(255, 59, 92, 0.1);
-  border: 1px solid rgba(255, 59, 92, 0.3);
-  border-radius: var(--lc-radius-sm);
-}
-
-.limbo__bet-btn {
-  width: 100%;
-  margin-top: 0.25rem;
-  min-height: 3rem;
-  padding: 0.85rem 1rem;
-  font-family: var(--lc-font-display);
-  font-size: 0.95rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border: none;
-  border-radius: var(--lc-radius-lg);
-  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
-  color: #fff;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  box-shadow: 0 4px 20px var(--lc-crimson-glow), var(--lc-shadow-inset);
-  transition:
-    transform var(--lc-transition-spring),
-    filter var(--lc-transition),
-    box-shadow var(--lc-transition);
-}
-
-.limbo__bet-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.08);
-  box-shadow: 0 8px 32px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
-}
-
-.limbo__bet-btn:focus-visible {
-  outline: 2px solid var(--lc-crimson-soft);
-  outline-offset: 2px;
-}
-
-.limbo__bet-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.limbo__spinner {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  border-top-color: #fff;
-  animation: limbo-spinner 0.7s linear infinite;
-}
-
-@keyframes limbo-spinner { to { transform: rotate(360deg); } }
-
-/* ── Hint & stats ── */
-.limbo__hint {
-  font-size: 0.8rem;
-  color: var(--lc-text-muted);
-  margin: 0;
-  text-align: center;
-}
-
-.limbo__hint a { color: var(--lc-crimson-soft); font-weight: 600; }
-
-/* ── Fairness ── */
-.limbo__fairness {
-  border-top: 1px solid var(--lc-border);
-  padding-top: 0.75rem;
-}
-
-.limbo__fairness-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--lc-text-muted);
-  font-family: var(--lc-font-display);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  padding: 0;
-}
-
-.limbo__fairness-toggle:hover { color: var(--lc-text-primary); }
-
-.limbo__fairness-toggle[aria-expanded="true"] .limbo__fairness-icon {
-  transform: rotate(180deg);
-}
-
-.limbo__fairness-icon {
-  font-size: 0.7rem;
-  transition: transform var(--lc-transition);
-}
-
-.limbo__fairness-body {
-  margin-top: 0.75rem;
-  padding: 0.85rem;
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-md);
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  font-size: 0.78rem;
-  color: var(--lc-text-secondary);
-}
-
-.limbo__fairness-body p { margin: 0; }
-
-.limbo__fairness-k {
-  display: block;
-  font-family: var(--lc-font-display);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--lc-text-muted);
-  margin-bottom: 0.2rem;
-}
-
-.limbo__hash {
-  display: block;
-  word-break: break-all;
-  font-family: var(--lc-font-mono);
-  font-size: 0.7rem;
-  color: var(--lc-text-primary);
-}
-
-.limbo__seed-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.limbo__seed-input {
-  background: var(--lc-bg-base);
-  border: 1px solid var(--lc-border-strong);
-  border-radius: var(--lc-radius-sm);
-  color: var(--lc-text-primary);
-  padding: 0.45rem 0.6rem;
-  font-family: var(--lc-font-mono);
-  font-size: 0.8rem;
-  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
-}
-
-.limbo__seed-input:focus {
-  outline: none;
-  border-color: var(--lc-border-accent);
-  box-shadow: var(--lc-focus-ring);
-}
-
-.limbo__tool-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 36px;
-  padding: 0.35rem 0.85rem;
-  background: var(--lc-bg-hover);
-  border: 1px solid var(--lc-border-strong);
-  color: var(--lc-text-primary);
-  border-radius: var(--lc-radius-sm);
-  font-family: var(--lc-font-display);
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  align-self: flex-start;
-  transition: background var(--lc-transition), border-color var(--lc-transition);
-}
-
-.limbo__tool-btn:hover:not(:disabled) {
-  background: var(--lc-bg-active);
-  border-color: var(--lc-border-accent);
-}
-
-.limbo__tool-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.limbo__fairness-note {
-  color: var(--lc-text-muted);
-  font-size: 0.72rem;
-  line-height: 1.45;
+  background: var(--lc-ruby-glow);
+  border-color: rgba(239, 68, 68, 0.3);
 }

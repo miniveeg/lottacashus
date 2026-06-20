@@ -181,11 +181,11 @@ export function Signup() {
   return (
     <div className="auth-page lc-page--auth">
       <div className="auth-card">
-        <BrandLogo className="auth-card__logo" size={72} />
-        <h1 className="auth-card__title">Join LottaCash</h1>
+        <BrandLogo className="auth-card__logo" size={48} />
+        <h1 className="auth-card__title">Create your account</h1>
         <p className="auth-card__subtitle">
           {step === "details"
-            ? "Create your account and claim your welcome bonus"
+            ? "Join LottaCash and claim your welcome bonus in seconds."
             : `Enter the 6-digit code we sent to ${email}`}
         </p>
 
@@ -204,7 +204,11 @@ export function Signup() {
 
         {step === "details" ? (
           <form className="auth-form" onSubmit={handleSendCode} noValidate>
-            {error && <p className="auth-error" role="alert" id="signup-error">{error}</p>}
+            {error && (
+              <p className="auth-error" role="alert" id="signup-error">
+                {error}
+              </p>
+            )}
 
             <div className="auth-field">
               <label htmlFor="signup-email">Email</label>
@@ -302,7 +306,8 @@ export function Signup() {
                 onChange={(e) => setAgeConfirmed(e.target.checked)}
                 required
               />
-              <span>I confirm that I am 18 years or older and agree to the{" "}
+              <span>
+                I confirm that I am 18 years or older and agree to the{" "}
                 <Link to="/sweepstakes" target="_blank" className="auth-checkbox-link">
                   Sweepstakes Rules
                 </Link>
@@ -320,7 +325,11 @@ export function Signup() {
           </form>
         ) : (
           <form className="auth-form" onSubmit={handleVerify} noValidate>
-            {error && <p className="auth-error" role="alert" id="signup-verify-error">{error}</p>}
+            {error && (
+              <p className="auth-error" role="alert" id="signup-verify-error">
+                {error}
+              </p>
+            )}
 
             <p className="auth-hint">Code expires in 10 minutes.</p>
 

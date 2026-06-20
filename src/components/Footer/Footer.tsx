@@ -37,11 +37,11 @@ export function Footer() {
       <div className="site-footer__inner">
         <div className="site-footer__brand">
           <Link to="/" className="site-footer__logo-link">
-            <BrandLogo className="site-footer__logo" size={28} alt="" />
+            <BrandLogo className="site-footer__logo" size={32} alt="" />
             <span className="site-footer__name">LottaCash</span>
           </Link>
           <p className="site-footer__tagline">
-            Premium crypto entertainment platform.
+            Premium crypto entertainment platform — play with Gold Coins or Sweeps Coins.
           </p>
         </div>
 

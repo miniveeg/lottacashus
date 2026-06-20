@@ -17,6 +17,18 @@ type AppShellProps = {
   children: ReactNode;
 };
 
+/**
+ * AppShell — the outermost layout frame for the LottaCash app.
+ *
+ * Obsidian Gold redesign:
+ *   • Grid: topbar row (60px) + sidebar/main row (fills viewport)
+ *   • Sidebar collapses on desktop, becomes off-canvas drawer on mobile
+ *   • Main column scrolls vertically; horizontal overflow is clipped
+ *   • AtmosphericLayer sits behind everything (z-index 0)
+ *   • SmoothScroll wraps main for Lenis inertia (skipped for reduced motion)
+ *   • PageTransition fades between routes (opacity-only, 0.2s)
+ *   • Footer sits at the bottom of main, after the page content
+ */
 function AppShellInner({ children }: AppShellProps) {
   const { pathname } = useLocation();
   const { mobileOpen, closeMobile, collapsed } = useSidebar();

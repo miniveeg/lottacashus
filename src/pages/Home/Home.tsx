@@ -2,14 +2,20 @@ import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Wallet,
-  Zap,
-  TrendingUp,
-  Dices,
-  ArrowRight,
-  Sparkles,
   ShieldCheck,
+  Zap,
   Coins,
+  Dices,
+  Grid3X3,
+  Bomb,
+  TrendingUp,
+  CircleDot,
+  Spade,
+  Swords,
+  Sparkles,
+  ArrowRight,
+  Headset,
+  Gem,
 } from "lucide-react";
 import { MotionLink } from "../../components/ui/MotionLink";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
@@ -18,40 +24,55 @@ import { ORIGINAL_GAMES, ORIGINALS_PATH } from "../../content/originals";
 import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Home.css";
 
-// Lazy-load the 3D scene so Three.js is split into its own chunk and only
-// fetched on the home page. This must match the lazy import used by
-// AtmosphericLayer to avoid duplicate copies of the module.
+// Lazy-load the 3D obsidian scene so Three.js stays in its own chunk.
 const ObsidianScene = lazy(() =>
-  import("../../components/atmosphere/ObsidianScene").then((m) => ({ default: m.ObsidianScene }))
+  import("../../components/atmosphere/ObsidianScene").then((m) => ({ default: m.ObsidianScene })),
 );
 
-type Pillar = {
-  title: string;
-  desc: string;
-  icon: typeof Wallet;
+const GAME_ICONS: Record<string, typeof Dices> = {
+  keno: Grid3X3,
+  mines: Bomb,
+  limbo: TrendingUp,
+  roulette: CircleDot,
+  blackjack: Spade,
+  "case-battles": Swords,
+  crash: Zap,
+  slots: Coins,
 };
 
-const pillars: Pillar[] = [
+type Feature = {
+  title: string;
+  desc: string;
+  icon: typeof ShieldCheck;
+};
+
+const features: Feature[] = [
   {
-    title: "One wallet",
-    desc: "A single USD balance powers every game on LottaCash. No juggling purses, no waiting on transfers between titles — what you deposit is what you play with.",
-    icon: Wallet,
+    title: "Provably Fair",
+    desc: "Every bet settles on the server with verifiable seeds — server hash, client seed, and nonce. Verify any round yourself.",
+    icon: ShieldCheck,
   },
   {
-    title: "Crypto in & out",
-    desc: "Deposit and withdraw with SOL, LTC, and ETH. Your own addresses, on-chain transparency, and credits the moment confirmations land.",
+    title: "Dual Currency",
+    desc: "Gold Coins (GC) for fun play, Sweeps Coins (SC) redeemable for real cash at 1 SC = $0.10. Toggle instantly from your balance.",
+    icon: Coins,
+  },
+  {
+    title: "Instant Crypto",
+    desc: "Deposit and withdraw with SOL, LTC, and ETH. Your own addresses, on-chain transparency, credits the moment confirmations land.",
     icon: Zap,
   },
   {
-    title: "Level up",
-    desc: "Wager-based ranks from 0 to 100. Every bet nudges your progress, and your level is permanent and visible on your profile.",
-    icon: TrendingUp,
+    title: "No Hidden Fees",
+    desc: "Transparent RTPs on every game, published rates, no surprise deductions. What you see is exactly what you get.",
+    icon: Gem,
   },
-  {
-    title: "Provably fair",
-    desc: "Server seeds, client seeds, and EOS block hashes power every outcome. Verify any round yourself — fairness is built into the rails.",
-    icon: ShieldCheck,
-  },
+];
+
+const trustBadges = [
+  { label: "Provably Fair", icon: ShieldCheck },
+  { label: "Instant Withdrawals", icon: Zap },
+  { label: "24/7 Support", icon: Headset },
 ];
 
 export function Home() {
@@ -59,215 +80,164 @@ export function Home() {
   const showcase = ORIGINAL_GAMES.filter((g) => g.live).slice(0, 8);
 
   return (
-    <div className="home">
-      {/* ── Hero ── */}
-      <section className="home__hero">
-        <div className="home__hero-3d" aria-hidden="true">
+    <div className="home-page">
+      {/* ─────────────────────────────────────────────────────
+          HERO — full viewport, centered, gold radial glow
+         ───────────────────────────────────────────────────── */}
+      <section className="home-hero">
+        <div className="home-hero__scene" aria-hidden="true">
           <Suspense fallback={null}>
-            <ObsidianScene className="home__hero-canvas" />
+            <ObsidianScene className="home-hero__canvas" />
           </Suspense>
         </div>
-        <div className="home__hero-fog" aria-hidden="true" />
+        <div className="home-hero__glow" aria-hidden="true" />
+        <div className="home-hero__vignette" aria-hidden="true" />
 
-        <div className="home__hero-inner">
-          <motion.div
-            className="home__hero-copy"
-            initial="hidden"
-            animate="visible"
-            variants={staggerContainer}
-          >
-            <motion.span className="home__eyebrow" variants={fadeUpVariants}>
-              <Sparkles size={12} strokeWidth={2.4} />
-              Welcome to LottaCash
-            </motion.span>
+        <motion.div
+          className="home-hero__inner"
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer}
+        >
+          <motion.span className="home-hero__eyebrow" variants={fadeUpVariants}>
+            <Sparkles size={12} strokeWidth={2.4} />
+            Welcome to LottaCash
+          </motion.span>
 
-            <motion.h1 className="home__headline" variants={fadeUpVariants}>
-              Your seat at the table starts here
-            </motion.h1>
+          <motion.h1 className="home-hero__headline" variants={fadeUpVariants}>
+            Play. Win. Cash Out.
+          </motion.h1>
 
-            <motion.p className="home__lead" variants={fadeUpVariants}>
-              A cinematic crypto casino built on one account, real on-chain rails, and rewards that
-              grow with every wager. Eight house originals are live — fund your wallet and play in
-              seconds.
-            </motion.p>
+          <motion.p className="home-hero__sub" variants={fadeUpVariants}>
+            Premium crypto casino with provably fair games, instant deposits, and real cash
+            redemptions.
+          </motion.p>
 
-            <motion.div className="home__cta" variants={fadeUpVariants}>
-              {!loading && user ? (
-                <>
-                  <MotionLink to="/deposit" variant="primary" glow>
-                    Deposit &amp; Play
-                  </MotionLink>
-                  <MotionLink to={ORIGINALS_PATH} variant="secondary">
-                    Browse originals
-                  </MotionLink>
-                </>
-              ) : (
-                <>
-                  <MotionLink to="/signup" variant="primary" glow>
-                    Create account
-                  </MotionLink>
-                  <MotionLink to="/login" variant="secondary">
-                    Log in
-                  </MotionLink>
-                </>
-              )}
-            </motion.div>
-
-            <motion.ul className="home__hero-meta" variants={fadeUpVariants}>
-              <li>
-                <Coins size={14} strokeWidth={2.2} />
-                <span>Gold &amp; Sweeps Coins</span>
-              </li>
-              <li>
-                <ShieldCheck size={14} strokeWidth={2.2} />
-                <span>Provably fair</span>
-              </li>
-              <li>
-                <Zap size={14} strokeWidth={2.2} />
-                <span>Crypto payouts</span>
-              </li>
-            </motion.ul>
+          <motion.div className="home-hero__ctas" variants={fadeUpVariants}>
+            {!loading && user ? (
+              <>
+                <MotionLink to="/deposit" variant="primary" glow className="home-btn--gold">
+                  Deposit &amp; Play
+                </MotionLink>
+                <MotionLink to={ORIGINALS_PATH} variant="secondary" className="home-btn--outline">
+                  Browse games
+                </MotionLink>
+              </>
+            ) : (
+              <>
+                <MotionLink to="/signup" variant="primary" glow className="home-btn--gold">
+                  Create account
+                </MotionLink>
+                <MotionLink to="/login" variant="secondary" className="home-btn--outline">
+                  Log in
+                </MotionLink>
+              </>
+            )}
           </motion.div>
-        </div>
+
+          <motion.ul className="home-hero__trust" variants={fadeUpVariants}>
+            {trustBadges.map((b) => (
+              <li key={b.label}>
+                <b.icon size={14} strokeWidth={2.2} aria-hidden="true" />
+                <span>{b.label}</span>
+              </li>
+            ))}
+          </motion.ul>
+        </motion.div>
       </section>
 
-      {/* ── Pillars ── */}
-      <section className="home__section home__container" aria-labelledby="pillars-title">
-        <ScrollReveal className="home__section-head" as="div">
-          <span className="home__kicker">What is LottaCash?</span>
-          <h2 id="pillars-title" className="home__section-title">
-            Built for clarity, speed, and serious play.
+      {/* ─────────────────────────────────────────────────────
+          GAMES SHOWCASE — "House Originals"
+         ───────────────────────────────────────────────────── */}
+      <section className="home-section" aria-labelledby="games-title">
+        <ScrollReveal className="home-section__head" as="div">
+          <h2 id="games-title" className="home-section__title">
+            House Originals
           </h2>
-          <p className="home__section-text">
-            LottaCash is a dark, crimson-accented entertainment hub focused on the essentials:
-            one account, real on-chain rails, and rewards that scale with every wager. Sign up
-            with email verification, fund your wallet with crypto, and climb levels as you play.
+          <p className="home-section__subtitle">
+            Provably fair games with industry-leading RTPs
           </p>
         </ScrollReveal>
 
-        <div className="home__pillar-grid">
-          {pillars.map((item, i) => (
-            <ScrollReveal key={item.title} delay={i}>
-              <article className="home__pillar">
-                <div className="home__pillar-icon" aria-hidden="true">
-                  <item.icon size={22} strokeWidth={1.75} />
+        <div className="home-games">
+          {showcase.map((game, i) => {
+            const Icon = GAME_ICONS[game.id] ?? Dices;
+            return (
+              <ScrollReveal key={game.id} delay={i} as="article" className="home-game">
+                <div className="home-game__icon" aria-hidden="true">
+                  <Icon size={28} strokeWidth={1.75} />
                 </div>
-                <h3 className="home__pillar-title">{item.title}</h3>
-                <p className="home__pillar-desc">{item.desc}</p>
-              </article>
-            </ScrollReveal>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Games showcase ── */}
-      <section className="home__section home__container" aria-labelledby="games-title">
-        <ScrollReveal className="home__section-head" as="div">
-          <span className="home__kicker">House Originals</span>
-          <h2 id="games-title" className="home__section-title">
-            Eight provably fair games. One wallet.
-          </h2>
-          <p className="home__section-text">
-            From quick-fire picks to multiplayer case battles — every original settles on the
-            server with verifiable seeds. Pick one to start playing.
-          </p>
-        </ScrollReveal>
-
-        <div className="home__games-grid">
-          {showcase.map((game, i) => (
-            <ScrollReveal key={game.id} delay={i * 0.5} as="article" className="home__game-card">
-              <div className="home__game-card-top">
-                <span className="home__game-tag">{game.tag ?? "Live"}</span>
-              </div>
-              <h3 className="home__game-title">{game.name}</h3>
-              <p className="home__game-desc">{game.description}</p>
-              <Link to={game.href} className="home__game-cta">
-                Play
-                <ArrowRight size={14} strokeWidth={2.2} />
-              </Link>
-            </ScrollReveal>
-          ))}
+                <h3 className="home-game__name">{game.name}</h3>
+                <p className="home-game__desc">{game.description}</p>
+                <div className="home-game__meta">
+                  {game.rtp ? <span className="home-game__rtp">{game.rtp}</span> : null}
+                  <span className="home-game__fair">Provably Fair</span>
+                </div>
+                <Link to={game.href} className="home-game__play">
+                  Play
+                  <ArrowRight size={14} strokeWidth={2.2} />
+                </Link>
+              </ScrollReveal>
+            );
+          })}
         </div>
 
-        <ScrollReveal className="home__games-footer" as="div">
-          <Link to={ORIGINALS_PATH} className="home__games-link">
-            See all originals
+        <ScrollReveal className="home-section__more" as="div">
+          <Link to={ORIGINALS_PATH} className="home-section__more-link">
+            See all games
             <ArrowRight size={16} strokeWidth={2.2} />
           </Link>
         </ScrollReveal>
       </section>
 
-      {/* ── Roadmap ── */}
-      <section className="home__section home__container" aria-labelledby="roadmap-title">
-        <ScrollReveal className="home__roadmap" as="div">
-          <div className="home__roadmap-glow" aria-hidden="true" />
-          <div className="home__roadmap-copy">
-            <span className="home__kicker">What&rsquo;s next</span>
-            <h2 id="roadmap-title" className="home__section-title">
-              Shipping fast, in the open.
-            </h2>
-            <ul className="home__roadmap-list">
-              <li>
-                <span className="home__roadmap-dot home__roadmap-dot--live" />
-                <span>
-                  <strong>Live now</strong> — accounts, crypto deposits &amp; withdrawals,
-                  leveling, Discord link, Help center.
-                </span>
-              </li>
-              <li>
-                <span className="home__roadmap-dot home__roadmap-dot--live" />
-                <span>
-                  <strong>Live now</strong> — eight Originals: Keno, Mines, Limbo, Roulette,
-                  Blackjack, Crash, Slots, Case Battles.
-                </span>
-              </li>
-              <li>
-                <span className="home__roadmap-dot home__roadmap-dot--live" />
-                <span>
-                  <strong>Live now</strong> — <Link to="/promotions">Promotions hub</Link> with
-                  affiliate referrals and commission claiming.
-                </span>
-              </li>
-              <li>
-                <span className="home__roadmap-dot" />
-                <span>Coming — expanded casino lobby and third-party providers.</span>
-              </li>
-              <li>
-                <span className="home__roadmap-dot" />
-                <span>Later — VIP tiers and Discord community rewards.</span>
-              </li>
-            </ul>
-          </div>
+      {/* ─────────────────────────────────────────────────────
+          WHY CHOOSE US — "The LottaCash difference"
+         ───────────────────────────────────────────────────── */}
+      <section className="home-section" aria-labelledby="difference-title">
+        <ScrollReveal className="home-section__head" as="div">
+          <h2 id="difference-title" className="home-section__title">
+            The LottaCash difference
+          </h2>
+          <p className="home-section__subtitle">
+            Four pillars that make us the premium choice in crypto gaming
+          </p>
         </ScrollReveal>
+
+        <div className="home-features">
+          {features.map((f, i) => (
+            <ScrollReveal key={f.title} delay={i} as="article" className="home-feature">
+              <div className="home-feature__icon" aria-hidden="true">
+                <f.icon size={22} strokeWidth={1.75} />
+              </div>
+              <h3 className="home-feature__title">{f.title}</h3>
+              <p className="home-feature__desc">{f.desc}</p>
+            </ScrollReveal>
+          ))}
+        </div>
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="home__section home__container" aria-labelledby="final-title">
-        <ScrollReveal className="home__final" as="div">
-          <div className="home__final-glow" aria-hidden="true" />
-          <Dices className="home__final-icon" size={28} strokeWidth={1.6} aria-hidden="true" />
-          <h2 id="final-title" className="home__final-title">
+      {/* ─────────────────────────────────────────────────────
+          FINAL CTA
+         ───────────────────────────────────────────────────── */}
+      <section className="home-final" aria-labelledby="final-title">
+        <ScrollReveal className="home-final__inner" as="div">
+          <div className="home-final__glow" aria-hidden="true" />
+          <h2 id="final-title" className="home-final__title">
             Ready to play?
           </h2>
-          <p className="home__final-text">
-            Create your account in under a minute, claim your welcome bonus, and take your seat
-            at the table.
+          <p className="home-final__text">
+            Create your free account in 30 seconds
           </p>
-          <div className="home__final-cta">
+          <div className="home-final__cta">
             {!loading && user ? (
-              <MotionLink to={ORIGINALS_PATH} variant="primary" glow>
-                Browse originals
+              <MotionLink to={ORIGINALS_PATH} variant="primary" glow className="home-btn--gold">
+                Browse games
                 <ArrowRight size={16} strokeWidth={2.2} />
               </MotionLink>
             ) : (
-              <>
-                <MotionLink to="/signup" variant="primary" glow>
-                  Create account
-                </MotionLink>
-                <MotionLink to="/help" variant="secondary">
-                  Read the FAQ
-                </MotionLink>
-              </>
+              <MotionLink to="/signup" variant="primary" glow className="home-btn--gold">
+                Create account
+              </MotionLink>
             )}
           </div>
         </ScrollReveal>

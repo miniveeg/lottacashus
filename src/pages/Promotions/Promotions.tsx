@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Gift, Handshake, Copy, Check, Sparkles, TrendingUp, Users } from "lucide-react";
+import {
+  Gift,
+  Handshake,
+  Copy,
+  Check,
+  Sparkles,
+  TrendingUp,
+  Users,
+  ArrowRight,
+} from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../../contexts/AuthContext";
@@ -99,7 +108,7 @@ export function Promotions() {
     setReferralSuccess(
       referrer_code
         ? `Referral code "${referrer_code}" applied to your account.`
-        : "Referral code applied to your account."
+        : "Referral code applied to your account.",
     );
     setReferralInput("");
     await loadAffiliate();
@@ -123,7 +132,9 @@ export function Promotions() {
       return;
     }
     if (affiliate.claimable_balance > 0) {
-      setAffiliateError("Claim did not credit your balance. Refresh and try again, or contact support.");
+      setAffiliateError(
+        "Claim did not credit your balance. Refresh and try again, or contact support.",
+      );
       await loadAffiliate();
     }
   }
@@ -140,35 +151,36 @@ export function Promotions() {
   }
 
   return (
-    <div className="promos lc-page lc-page--wide">
+    <div className="promotions-page lc-page lc-page--wide">
+      {/* ── Header ── */}
       <motion.header
-        className="lc-page__header promos__header"
+        className="promotions-page__header"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
-        <motion.span className="lc-page__eyebrow" variants={fadeUpVariants}>
-          <Sparkles size={11} strokeWidth={2.4} />
+        <motion.span className="promotions-page__eyebrow" variants={fadeUpVariants}>
+          <Sparkles size={12} strokeWidth={2.4} />
           Rewards
         </motion.span>
-        <motion.h1 className="lc-page__title" variants={fadeUpVariants}>
+        <motion.h1 className="promotions-page__title" variants={fadeUpVariants}>
           Promotions
         </motion.h1>
-        <motion.p className="lc-page__subtitle" variants={fadeUpVariants}>
-          Earn from referrals and watch for seasonal offers. Claim affiliate earnings on this page
-          when you are ready.
+        <motion.p className="promotions-page__subtitle" variants={fadeUpVariants}>
+          Earn from referrals and watch for seasonal offers. Claim affiliate earnings here when
+          you&rsquo;re ready.
         </motion.p>
       </motion.header>
 
-      {/* ── Affiliate hero ── */}
-      <ScrollReveal className="promos__affiliate lc-panel" as="section">
-        <div className="promos__affiliate-head">
-          <div className="promos__affiliate-icon" aria-hidden="true">
+      {/* ── Affiliate hero panel ── */}
+      <ScrollReveal className="promotions-affiliate" as="section">
+        <div className="promotions-affiliate__head">
+          <div className="promotions-affiliate__icon" aria-hidden="true">
             <Handshake size={28} strokeWidth={1.7} />
           </div>
           <div>
-            <h2 className="promos__hero-title">Affiliates</h2>
-            <p className="promos__hero-text promos__affiliate-intro">
+            <h2 className="promotions-affiliate__title">Affiliates</h2>
+            <p className="promotions-affiliate__intro">
               Share your link. When someone signs up and plays, you earn{" "}
               <strong>5% of every deposit</strong> they make, plus{" "}
               <strong>$1 for every $100 wagered</strong> (paid proportionally on each bet). Earnings
@@ -177,61 +189,73 @@ export function Promotions() {
           </div>
         </div>
 
-        <ul className="promos__rate-list">
+        <ul className="promotions-affiliate__rates">
           <li>
-            <span className="promos__rate-label">Deposits</span>
-            <span className="promos__rate-value">5% commission</span>
+            <span className="promotions-affiliate__rate-label">Deposits</span>
+            <span className="promotions-affiliate__rate-value">5% commission</span>
           </li>
           <li>
-            <span className="promos__rate-label">Wagers</span>
-            <span className="promos__rate-value">$1 per $100 wagered</span>
+            <span className="promotions-affiliate__rate-label">Wagers</span>
+            <span className="promotions-affiliate__rate-value">$1 per $100 wagered</span>
           </li>
         </ul>
 
         {loading ? (
-          <p className="promos__affiliate-muted">Loading…</p>
+          <p className="promotions-affiliate__muted">Loading…</p>
         ) : !user ? (
           <>
-            <div className="promos__affiliate-referral">
-              <h3 className="promos__affiliate-referral-title">Have a referral code?</h3>
-              <p className="promos__affiliate-referral-text">
-                Enter your friend&apos;s code when you create an account. You can only set it once.
+            <div className="promotions-affiliate__referral-box">
+              <h3 className="promotions-affiliate__referral-title">Have a referral code?</h3>
+              <p className="promotions-affiliate__referral-text">
+                Enter your friend&rsquo;s code when you create an account. You can only set it once.
               </p>
-              <MotionLink to={signupUrl(pathname)} variant="primary">
+              <MotionLink
+                to={signupUrl(pathname)}
+                variant="primary"
+                className="promotions-btn--gold"
+              >
                 Sign up with a code
               </MotionLink>
             </div>
-            <div className="promos__hero-cta">
-              <MotionLink to={signupUrl(pathname)} variant="primary" glow>
+            <div className="promotions-affiliate__cta-row">
+              <MotionLink
+                to={signupUrl(pathname)}
+                variant="primary"
+                glow
+                className="promotions-btn--gold"
+              >
                 Sign up to get your link
               </MotionLink>
-              <MotionLink to={loginUrl(pathname)} variant="secondary">
+              <MotionLink to={loginUrl(pathname)} variant="secondary" className="promotions-btn--outline">
                 Log in
               </MotionLink>
             </div>
           </>
         ) : affiliateLoading ? (
-          <p className="promos__affiliate-muted">Loading your affiliate stats…</p>
+          <p className="promotions-affiliate__muted">Loading your affiliate stats…</p>
         ) : affiliateError ? (
-          <p className="promos__affiliate-error" role="alert">
+          <p className="promotions-affiliate__error" role="alert">
             {affiliateError}
           </p>
         ) : affiliate ? (
           <>
             {affiliate.has_referrer ? (
-              <p className="promos__affiliate-referrer-set">
+              <p className="promotions-affiliate__referrer-set">
                 Referred by <strong>{affiliate.referrer_code ?? "a friend"}</strong>
                 {" — "}this can only be set once.
               </p>
             ) : (
-              <form className="promos__affiliate-referral" onSubmit={(e) => void handleApplyReferral(e)}>
-                <h3 className="promos__affiliate-referral-title">Add a referral code</h3>
-                <p className="promos__affiliate-referral-text">
+              <form
+                className="promotions-affiliate__referral-box"
+                onSubmit={(e) => void handleApplyReferral(e)}
+              >
+                <h3 className="promotions-affiliate__referral-title">Add a referral code</h3>
+                <p className="promotions-affiliate__referral-text">
                   Were you invited by someone? Enter their code here. You can only do this once.
                 </p>
-                <div className="promos__affiliate-referral-row">
+                <div className="promotions-affiliate__referral-row">
                   <input
-                    className="promos__affiliate-link-input"
+                    className="promotions-affiliate__input"
                     type="text"
                     autoComplete="off"
                     placeholder="Friend's code"
@@ -242,7 +266,7 @@ export function Promotions() {
                   />
                   <button
                     type="submit"
-                    className="promos__btn promos__btn--gold"
+                    className="promotions-btn promotions-btn--gold"
                     disabled={referralSubmitting || !referralInput.trim()}
                   >
                     {referralSubmitting ? "Applying…" : "Apply code"}
@@ -252,19 +276,20 @@ export function Promotions() {
             )}
 
             {referralSuccess ? (
-              <p className="promos__affiliate-success" role="status">
+              <p className="promotions-affiliate__success" role="status">
                 {referralSuccess}
               </p>
             ) : null}
 
-            <div className="promos__affiliate-code-row">
+            {/* ── Referral code + copy ── */}
+            <div className="promotions-affiliate__code-row">
               <div>
-                <p className="promos__affiliate-label">Your code</p>
-                <p className="promos__affiliate-code">{affiliate.affiliate_code}</p>
+                <p className="promotions-affiliate__label">Your code</p>
+                <p className="promotions-affiliate__code">{affiliate.affiliate_code}</p>
               </div>
               <button
                 type="button"
-                className="promos__btn promos__btn--ghost"
+                className="promotions-btn promotions-btn--ghost"
                 onClick={() => copyText(affiliate.affiliate_code, "code")}
               >
                 {copied === "code" ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2.2} />}
@@ -272,21 +297,21 @@ export function Promotions() {
               </button>
             </div>
 
-            <div className="promos__affiliate-link-row">
-              <label className="promos__affiliate-label" htmlFor="affiliate-link">
+            <div className="promotions-affiliate__link-row">
+              <label className="promotions-affiliate__label" htmlFor="affiliate-link">
                 Referral link
               </label>
-              <div className="promos__affiliate-link-wrap">
+              <div className="promotions-affiliate__link-wrap">
                 <input
                   id="affiliate-link"
-                  className="promos__affiliate-link-input"
+                  className="promotions-affiliate__input"
                   type="text"
                   readOnly
                   value={signupLink}
                 />
                 <button
                   type="button"
-                  className="promos__btn promos__btn--gold"
+                  className="promotions-btn promotions-btn--gold"
                   onClick={() => copyText(signupLink, "link")}
                 >
                   {copied === "link" ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2.2} />}
@@ -295,21 +320,22 @@ export function Promotions() {
               </div>
             </div>
 
-            <div className="promos__affiliate-claim">
-              <div className="promos__affiliate-claim-main">
-                <p className="promos__affiliate-label">Available to claim</p>
-                <p className="promos__affiliate-claim-amount">
+            {/* ── Claim card ── */}
+            <div className="promotions-affiliate__claim">
+              <div className="promotions-affiliate__claim-main">
+                <p className="promotions-affiliate__label">Available to claim</p>
+                <p className="promotions-affiliate__claim-amount">
                   {formatUsd(affiliate.claimable_balance)}
                 </p>
                 {affiliate.total_claimed > 0 ? (
-                  <p className="promos__affiliate-claim-hint">
+                  <p className="promotions-affiliate__claim-hint">
                     {formatUsd(affiliate.total_claimed)} claimed to balance so far
                   </p>
                 ) : null}
               </div>
               <button
                 type="button"
-                className="promos__btn promos__btn--gold promos__affiliate-claim-btn"
+                className="promotions-btn promotions-btn--gold promotions-affiliate__claim-btn"
                 onClick={() => void handleClaim()}
                 disabled={claiming || affiliate.claimable_balance <= 0}
               >
@@ -322,56 +348,61 @@ export function Promotions() {
             </div>
 
             {claimSuccess ? (
-              <p className="promos__affiliate-success" role="status">
+              <p className="promotions-affiliate__success" role="status">
                 {claimSuccess}
               </p>
             ) : null}
 
-            <div className="promos__affiliate-stats">
-              <div className="promos__affiliate-stat">
+            {/* ── Stats ── */}
+            <div className="promotions-affiliate__stats">
+              <div className="promotions-affiliate__stat">
                 <Users size={14} strokeWidth={2.2} />
-                <span className="promos__affiliate-stat-value">{affiliate.referred_count}</span>
-                <span className="promos__affiliate-stat-label">Referrals</span>
+                <span className="promotions-affiliate__stat-value">{affiliate.referred_count}</span>
+                <span className="promotions-affiliate__stat-label">Referrals</span>
               </div>
-              <div className="promos__affiliate-stat">
+              <div className="promotions-affiliate__stat">
                 <TrendingUp size={14} strokeWidth={2.2} />
-                <span className="promos__affiliate-stat-value">
+                <span className="promotions-affiliate__stat-value">
                   {formatUsd(affiliate.total_earned)}
                 </span>
-                <span className="promos__affiliate-stat-label">Lifetime earned</span>
+                <span className="promotions-affiliate__stat-label">Lifetime earned</span>
               </div>
-              <div className="promos__affiliate-stat">
-                <span className="promos__affiliate-stat-value">
+              <div className="promotions-affiliate__stat">
+                <span className="promotions-affiliate__stat-value">
                   {formatUsd(affiliate.earned_from_deposits)}
                 </span>
-                <span className="promos__affiliate-stat-label">Pending · deposits</span>
+                <span className="promotions-affiliate__stat-label">Pending · deposits</span>
               </div>
-              <div className="promos__affiliate-stat">
-                <span className="promos__affiliate-stat-value">
+              <div className="promotions-affiliate__stat">
+                <span className="promotions-affiliate__stat-value">
                   {formatUsd(affiliate.earned_from_wagers)}
                 </span>
-                <span className="promos__affiliate-stat-label">Pending · wagers</span>
+                <span className="promotions-affiliate__stat-label">Pending · wagers</span>
               </div>
             </div>
 
+            {/* ── Recent commissions ── */}
             {affiliate.recent_commissions.length > 0 ? (
-              <div className="promos__affiliate-recent">
-                <h3 className="promos__affiliate-recent-title">Pending earnings</h3>
-                <ul className="promos__affiliate-recent-list">
+              <div className="promotions-affiliate__recent">
+                <h3 className="promotions-affiliate__recent-title">Pending earnings</h3>
+                <ul className="promotions-affiliate__recent-list">
                   {affiliate.recent_commissions.map((row) => (
-                    <li key={row.id} className="promos__affiliate-recent-item">
+                    <li key={row.id} className="promotions-affiliate__recent-item">
                       <span>
                         {row.kind === "deposit" ? "Deposit commission" : "Wager commission"}
-                        <span className="promos__affiliate-recent-meta">
+                        <span className="promotions-affiliate__recent-meta">
                           {" "}
                           on {formatUsd(row.base_amount)} volume
                         </span>
                       </span>
-                      <span className="promos__affiliate-recent-right">
-                        <span className="promos__affiliate-recent-amount">
+                      <span className="promotions-affiliate__recent-right">
+                        <span className="promotions-affiliate__recent-amount">
                           +{formatUsd(row.commission_amount)}
                         </span>
-                        <time className="promos__affiliate-recent-date" dateTime={row.created_at}>
+                        <time
+                          className="promotions-affiliate__recent-date"
+                          dateTime={row.created_at}
+                        >
                           {formatCommissionDate(row.created_at)}
                         </time>
                       </span>
@@ -380,7 +411,7 @@ export function Promotions() {
                 </ul>
               </div>
             ) : (
-              <p className="promos__affiliate-muted">
+              <p className="promotions-affiliate__muted">
                 No earnings yet — share your link to start collecting commissions.
               </p>
             )}
@@ -389,19 +420,19 @@ export function Promotions() {
       </ScrollReveal>
 
       {/* ── More rewards banner ── */}
-      <ScrollReveal className="promos__hero lc-panel" as="section">
-        <div className="promos__hero-icon" aria-hidden="true">
+      <ScrollReveal className="promotions-banner" as="section">
+        <div className="promotions-banner__icon" aria-hidden="true">
           <Gift size={28} strokeWidth={1.7} />
         </div>
         <div>
-          <h2 className="promos__hero-title">More rewards coming</h2>
-          <p className="promos__hero-text">
-            Your account, leveling, and Discord link are already in place. When new campaigns launch,
-            they&apos;ll show here and in notifications.
+          <h2 className="promotions-banner__title">More rewards coming</h2>
+          <p className="promotions-banner__text">
+            Your account, leveling, and Discord link are already in place. When new campaigns
+            launch, they&rsquo;ll show here and in notifications.
           </p>
           {!loading && user && (
-            <div className="promos__hero-cta">
-              <MotionLink to="/settings" variant="secondary">
+            <div className="promotions-banner__cta">
+              <MotionLink to="/settings" variant="secondary" className="promotions-btn--outline">
                 View your account
               </MotionLink>
               <MotionLink to="/help" variant="ghost">
@@ -413,19 +444,20 @@ export function Promotions() {
       </ScrollReveal>
 
       {/* ── Roadmap cards ── */}
-      <section className="promos__grid" aria-label="Planned promotions">
-        <ScrollReveal className="promos__section-head" as="div">
-          <span className="promos__kicker">On the roadmap</span>
-          <h2 className="promos__section-title">What we&apos;re building next</h2>
+      <section className="promotions-roadmap" aria-label="Planned promotions">
+        <ScrollReveal className="promotions-roadmap__head" as="div">
+          <span className="promotions-roadmap__kicker">On the roadmap</span>
+          <h2 className="promotions-roadmap__title">What we&rsquo;re building next</h2>
         </ScrollReveal>
-        <div className="promos__cards">
+        <div className="promotions-roadmap__grid">
           {upcoming.map((item, i) => (
-            <ScrollReveal key={item.title} delay={i} as="article" className="promos__card">
-              <span className="promos__card-badge">{item.tag}</span>
-              <h3 className="promos__card-title">{item.title}</h3>
-              <p className="promos__card-desc">{item.desc}</p>
-              <Link to="/sweepstakes" className="promos__card-link">
+            <ScrollReveal key={item.title} delay={i} as="article" className="promotions-roadmap__card">
+              <span className="promotions-roadmap__badge">{item.tag}</span>
+              <h3 className="promotions-roadmap__card-title">{item.title}</h3>
+              <p className="promotions-roadmap__card-desc">{item.desc}</p>
+              <Link to="/sweepstakes" className="promotions-roadmap__card-link">
                 Sweepstakes rules
+                <ArrowRight size={12} strokeWidth={2.2} />
               </Link>
             </ScrollReveal>
           ))}

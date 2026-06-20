@@ -1,14 +1,13 @@
-/* ───────────────────────────────────────────────────────────────
-   Toast notifications — clean cards
+/* ════════════════════════════════════════════════════════════════
+   LottaCash Toast notifications — Obsidian Gold redesign
    ─ Bottom-right on desktop, bottom-center on mobile
-   ─ Variants: success (emerald), error (red), info (slate),
-                warning (amber), loading (spinner)
+   ─ Clean cards: bg-elevated, 1px border, radius-lg, shadow-lg
+   ─ Variants: success (emerald left border), error (red), info (blue),
+                warning (gold), loading (spinner)
    ─ Slide-in animation, auto-dismiss, swipe-to-dismiss on mobile
    ─ Max 5 visible (queued by ToastContext)
-   ─────────────────────────────────────────────────────────────── */
+   ════════════════════════════════════════════════════════════════ */
 
-/* Toast region — fixed container, doesn't capture pointer events
-   (each toast sets pointer-events: auto). */
 .lc-toast-region {
   position: fixed;
   z-index: 9999;
@@ -16,8 +15,8 @@
   flex-direction: column;
   gap: 0.55rem;
   pointer-events: none;
-  bottom: 1rem;
-  right: 1rem;
+  bottom: var(--space-4, 1rem);
+  right: var(--space-4, 1rem);
   align-items: flex-end;
   max-width: min(380px, calc(100vw - 2rem));
 }
@@ -28,7 +27,7 @@
     left: 0;
     align-items: center;
     max-width: 100%;
-    bottom: calc(1rem + var(--lc-safe-bottom));
+    bottom: calc(var(--space-4, 1rem) + var(--lc-safe-bottom, 0px));
   }
 }
 
@@ -37,20 +36,24 @@
   pointer-events: auto;
   display: flex;
   align-items: flex-start;
-  gap: 0.65rem;
+  gap: var(--space-3, 0.75rem);
   padding: 0.8rem 1rem;
-  border-radius: var(--lc-radius-md);
-  border: 1px solid var(--lc-border-strong);
-  background: rgba(14, 14, 22, 0.92);
+  border-radius: var(--radius-lg, 14px);
+  border: 1px solid var(--border, var(--lc-border, rgba(255, 255, 255, 0.08)));
+  background: var(--bg-elevated, var(--lc-bg-elevated, #1c1c28));
   backdrop-filter: blur(24px) saturate(1.4);
   -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  box-shadow: var(--lc-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--shadow-lg, 0 12px 40px rgba(0, 0, 0, 0.5));
   min-width: 240px;
   max-width: 360px;
   cursor: default;
   user-select: none;
   animation: lc-toast-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
   touch-action: pan-y;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lc-toast { background: var(--bg-elevated, var(--lc-bg-elevated, #1c1c28)); }
 }
 
 @media (max-width: 900px) {
@@ -89,26 +92,12 @@
   .lc-toast--exiting { animation: none; }
 }
 
-/* Variant accents — colored left border + subtle glow */
-.lc-toast--success {
-  border-left: 3px solid var(--lc-emerald);
-  box-shadow: var(--lc-shadow-md), 0 0 20px rgba(0, 232, 122, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-.lc-toast--error {
-  border-left: 3px solid var(--lc-ruby);
-  box-shadow: var(--lc-shadow-md), 0 0 20px rgba(255, 59, 92, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-.lc-toast--warning {
-  border-left: 3px solid #f59e0b;
-  box-shadow: var(--lc-shadow-md), 0 0 20px rgba(245, 158, 11, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-.lc-toast--info {
-  border-left: 3px solid #64748b;
-  box-shadow: var(--lc-shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-.lc-toast--loading {
-  border-left: 3px solid rgba(255, 255, 255, 0.18);
-}
+/* Variant accents — colored left border */
+.lc-toast--success { border-left: 3px solid var(--success, #10b981); }
+.lc-toast--error   { border-left: 3px solid var(--danger, #ef4444); }
+.lc-toast--warning { border-left: 3px solid var(--gold, #f5b942); }
+.lc-toast--info    { border-left: 3px solid var(--info, #3b82f6); }
+.lc-toast--loading { border-left: 3px solid rgba(255, 255, 255, 0.18); }
 
 /* Variant icons */
 .lc-toast__icon {
@@ -118,11 +107,11 @@
   margin-top: 0.12rem;
 }
 
-.lc-toast--success .lc-toast__icon { color: var(--lc-emerald); }
-.lc-toast--error   .lc-toast__icon { color: var(--lc-ruby); }
-.lc-toast--warning .lc-toast__icon { color: #f59e0b; }
-.lc-toast--info    .lc-toast__icon { color: #94a3b8; }
-.lc-toast--loading .lc-toast__icon { color: var(--lc-text-secondary); }
+.lc-toast--success .lc-toast__icon { color: var(--success, #10b981); }
+.lc-toast--error   .lc-toast__icon { color: var(--danger, #ef4444); }
+.lc-toast--warning .lc-toast__icon { color: var(--gold, #f5b942); }
+.lc-toast--info    .lc-toast__icon { color: var(--info, #3b82f6); }
+.lc-toast--loading .lc-toast__icon { color: var(--text-secondary, var(--lc-text-secondary, #a1a1aa)); }
 
 /* Spinner (loading variant) */
 .lc-toast__spinner {
@@ -131,7 +120,7 @@
   height: 1rem;
   margin-top: 0.15rem;
   border: 2px solid rgba(255, 255, 255, 0.12);
-  border-top-color: var(--lc-text-secondary);
+  border-top-color: var(--text-secondary, var(--lc-text-secondary, #a1a1aa));
   border-radius: 50%;
   animation: lc-toast-spin 0.65s linear infinite;
 }
@@ -143,11 +132,11 @@
 
 .lc-toast__message {
   margin: 0;
-  font-family: var(--lc-font-body);
-  font-size: 0.88rem;
+  font-family: var(--lc-font-body, 'Inter', system-ui, sans-serif);
+  font-size: var(--text-sm, 0.875rem);
   font-weight: 500;
   line-height: 1.45;
-  color: var(--lc-text-primary);
+  color: var(--text-primary, var(--lc-text-primary, #fafafa));
   word-break: break-word;
 }
 
@@ -164,17 +153,18 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  color: var(--lc-text-muted);
-  transition: color var(--lc-transition), background var(--lc-transition);
+  color: var(--text-muted, var(--lc-text-muted, #71717a));
+  transition: color var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1)),
+              background var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
   margin-top: 0.05rem;
 }
 
 .lc-toast__close:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--lc-text-primary);
+  color: var(--text-primary, var(--lc-text-primary, #fafafa));
 }
 
 .lc-toast__close:focus-visible {
   outline: none;
-  box-shadow: var(--lc-focus-ring);
+  box-shadow: 0 0 0 3px var(--gold-glow, rgba(245, 185, 66, 0.15));
 }

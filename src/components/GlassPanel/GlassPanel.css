@@ -1,17 +1,20 @@
-/* LottaCash — Premium Glass Panel
-   backdrop-filter blur(20px), semi-transparent bg, subtle border,
-   inset highlight. Falls back to solid bg when backdrop-filter
-   isn't supported (older Firefox, locked-down GPUs). */
+/* ════════════════════════════════════════════════════════════════
+   LottaCash Glass Panel — Obsidian Gold redesign
+   ─ backdrop-filter: blur(16px)
+   ─ background: var(--bg-glass)
+   ─ 1px border, radius-lg
+   ─ Solid --bg-surface fallback when backdrop-filter unavailable
+   ════════════════════════════════════════════════════════════════ */
 
 .glass-panel {
-  background: rgba(8, 8, 14, 0.55);
-  backdrop-filter: blur(20px) saturate(1.4);
-  -webkit-backdrop-filter: blur(20px) saturate(1.4);
-  border: 1px solid var(--lc-glass-border);
-  border-radius: var(--lc-radius-lg);
+  background: var(--bg-glass, rgba(17, 17, 24, 0.72));
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid var(--border, var(--lc-border, rgba(255, 255, 255, 0.08)));
+  border-radius: var(--radius-lg, var(--lc-radius-lg, 14px));
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    var(--lc-shadow-inset);
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: hidden;
 }
@@ -19,7 +22,7 @@
 /* Solid fallback when backdrop-filter is unavailable */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-panel {
-    background: var(--lc-bg-panel);
+    background: var(--bg-surface, var(--lc-bg-panel, #111118));
   }
 }
 
@@ -53,19 +56,20 @@
   border-radius: inherit;
 }
 
+/* Glow variant — subtle gold halo */
 .glass-panel--glow {
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 40px var(--lc-crimson-glow),
-    var(--lc-shadow-inset);
-  border-color: var(--lc-border-accent);
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 0 40px var(--gold-glow, rgba(245, 185, 66, 0.15)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-color: var(--border-gold, var(--gold, rgba(245, 185, 66, 0.3)));
 }
 
-.glass-panel--sm { padding: 0.75rem 1rem; }
-.glass-panel--md { padding: 1.25rem 1.5rem; }
-.glass-panel--lg { padding: 1.75rem 2rem; }
+.glass-panel--sm { padding: var(--space-3, 0.75rem) var(--space-4, 1rem); }
+.glass-panel--md { padding: var(--space-5, 1.25rem) var(--space-6, 1.5rem); }
+.glass-panel--lg { padding: var(--space-8, 2rem) var(--space-10, 2.5rem); }
 
 @media (max-width: 480px) {
-  .glass-panel--md { padding: 1rem 1.15rem; }
-  .glass-panel--lg { padding: 1.25rem 1.35rem; }
+  .glass-panel--md { padding: var(--space-4, 1rem) var(--space-5, 1.25rem); }
+  .glass-panel--lg { padding: var(--space-6, 1.5rem) var(--space-6, 1.5rem); }
 }

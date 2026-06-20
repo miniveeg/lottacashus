@@ -11,8 +11,9 @@ type ScrollRevealProps = {
 
 /**
  * Fades + slides a section into view the first time it enters the
- * viewport. Respects `prefers-reduced-motion` by rendering the
- * children with no transform.
+ * viewport. Uses `fadeUpVariants` from `../../lib/motion` (opacity
+ * 0 → 1, y 16 → 0, 0.4s ease-out). Respects `prefers-reduced-motion`
+ * by rendering the children with no transform.
  */
 export function ScrollReveal({ children, className, delay = 0, as = "div" }: ScrollRevealProps) {
   // Use `any` for the ref because framer-motion's `motion[as]` produces a

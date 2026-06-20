@@ -10,21 +10,21 @@ import {
 type TiltCardProps = {
   children: ReactNode;
   className?: string;
-  /** Max tilt in degrees. Clamped to a subtle max for premium feel. */
+  /** Max tilt in degrees. Clamped to a subtle 3° max for premium feel. */
   intensity?: number;
 };
 
 /**
- * Subtle 3D tilt on hover. Caps the rotation at 5° by default so cards
- * feel tactile without becoming distracting. Respects
+ * Subtle 3D tilt on hover. Caps the rotation at 3° so cards feel
+ * tactile without becoming distracting. Respects
  * `prefers-reduced-motion` by disabling rotation entirely.
  */
-export function TiltCard({ children, className, intensity = 5 }: TiltCardProps) {
+export function TiltCard({ children, className, intensity = 3 }: TiltCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
 
-  // Cap the intensity at 5° so callers can't accidentally over-tilt.
-  const maxTilt = Math.min(intensity, 5);
+  // Cap the intensity at 3° so callers can't accidentally over-tilt.
+  const maxTilt = Math.min(intensity, 3);
 
   const x = useMotionValue(0);
   const y = useMotionValue(0);

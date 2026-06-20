@@ -189,8 +189,8 @@ export function Admin() {
   return (
     <div className="admin lc-page lc-page--wide">
       <header className="lc-page__header admin__header">
-        <h1 className="lc-page__title admin__title">Admin</h1>
-        <p className="lc-page__subtitle admin__subtitle">
+        <h1 className="lc-page__title">Admin</h1>
+        <p className="lc-page__subtitle">
           Manage withdrawals, review deposits, process redemptions, and assign admin access.
         </p>
       </header>
@@ -206,6 +206,7 @@ export function Admin() {
         </p>
       )}
 
+      {/* Stats overview */}
       <section className="admin__stats" aria-label="Overview">
         <div className="admin__stat">
           <span className="admin__stat-label">Pending withdrawals</span>
@@ -213,7 +214,7 @@ export function Admin() {
             {loading ? "…" : (stats?.pendingWithdrawals ?? 0)}
           </span>
         </div>
-        <div className="admin__stat">
+        <div className="admin__stat admin__stat--gold">
           <span className="admin__stat-label">Pending volume</span>
           <span className="admin__stat-value admin__stat-value--gold">
             {loading ? "…" : formatUsd(stats?.pendingWithdrawalsUsd ?? 0)}
@@ -229,16 +230,19 @@ export function Admin() {
         </div>
       </section>
 
-      <section className="admin__section">
+      {/* Pending withdrawals */}
+      <section className="admin__section lc-panel">
         <div className="admin__section-head">
-          <h2 className="admin__section-title">Pending withdrawals</h2>
+          <div>
+            <h2 className="admin__section-title">Pending withdrawals</h2>
+            <p className="admin__section-desc">
+              Send crypto from treasury wallets, then mark complete with the tx hash. Fail refunds the user&apos;s balance.
+            </p>
+          </div>
           <button type="button" className="admin__refresh" onClick={() => loadDashboard()} disabled={loading}>
             Refresh
           </button>
         </div>
-        <p className="admin__section-desc">
-          Send crypto from treasury wallets, then mark complete with the tx hash. Fail refunds the user&apos;s balance.
-        </p>
 
         {loading ? (
           <div className="lc-loading admin__loading">
@@ -317,9 +321,14 @@ export function Admin() {
         )}
       </section>
 
-      <section className="admin__section">
-        <h2 className="admin__section-title">Recent deposits</h2>
-        <p className="admin__section-desc">Last credited on-chain deposits.</p>
+      {/* Recent deposits table */}
+      <section className="admin__section lc-panel">
+        <div className="admin__section-head">
+          <div>
+            <h2 className="admin__section-title">Recent deposits</h2>
+            <p className="admin__section-desc">Last credited on-chain deposits.</p>
+          </div>
+        </div>
         {deposits.length === 0 ? (
           <p className="admin__empty">No credited deposits yet.</p>
         ) : (
@@ -338,7 +347,7 @@ export function Admin() {
                   <tr key={d.id}>
                     <td>{displayUser(d.username, null)}</td>
                     <td>{d.chain.toUpperCase()}</td>
-                    <td>{formatUsd(d.usdAmount)}</td>
+                    <td className="admin__table-amount">{formatUsd(d.usdAmount)}</td>
                     <td>{formatDate(d.creditedAt)}</td>
                   </tr>
                 ))}
@@ -348,14 +357,19 @@ export function Admin() {
         )}
       </section>
 
-      <section className="admin__section">
-        <h2 className="admin__section-title">User access</h2>
-        <p className="admin__section-desc">
-          Search by username, email, or user ID to grant or revoke admin. You cannot change your own admin status here.
-        </p>
+      {/* User access search */}
+      <section className="admin__section lc-panel">
+        <div className="admin__section-head">
+          <div>
+            <h2 className="admin__section-title">User access</h2>
+            <p className="admin__section-desc">
+              Search by username, email, or user ID to grant or revoke admin. You cannot change your own admin status here.
+            </p>
+          </div>
+        </div>
         <form className="admin__search" onSubmit={handleUserSearch}>
           <input
-            className="admin__input"
+            className="admin__input admin__search-input"
             type="search"
             placeholder="Search users…"
             value={userQuery}
@@ -377,7 +391,11 @@ export function Admin() {
                 <div>
                   <p className="admin__user-name">{displayUser(u.username, u.email)}</p>
                   <p className="admin__user-meta">
-                    GC {formatUsd(u.balance)} · SC {(u.sweepsCoins ?? 0).toFixed(2)} · {u.isAdmin ? "Admin" : "Member"}
+                    <span className="admin__coin admin__coin--gc">GC {formatUsd(u.balance)}</span>
+                    {" · "}
+                    <span className="admin__coin admin__coin--sc">SC {(u.sweepsCoins ?? 0).toFixed(2)}</span>
+                    {" · "}
+                    {u.isAdmin ? "Admin" : "Member"}
                   </p>
                 </div>
                 <button
@@ -393,13 +411,18 @@ export function Admin() {
         )}
       </section>
 
-      <section className="admin__section">
-        <h2 className="admin__section-title">Redemption requests</h2>
-        <p className="admin__section-desc">
-          Pending Sweeps Coins redemption requests. Approve to process payout or reject.
-        </p>
+      {/* Redemption requests */}
+      <section className="admin__section lc-panel">
+        <div className="admin__section-head">
+          <div>
+            <h2 className="admin__section-title">Redemption requests</h2>
+            <p className="admin__section-desc">
+              Pending Sweeps Coins redemption requests. Approve to process payout or reject.
+            </p>
+          </div>
+        </div>
         {redemptions.length === 0 ? (
-          <p className="admin__hint">No pending redemptions.</p>
+          <p className="admin__empty">No pending redemptions.</p>
         ) : (
           <ul className="admin__user-list">
             {redemptions.map((r) => (
@@ -407,7 +430,10 @@ export function Admin() {
                 <div>
                   <p className="admin__user-name">{displayUser(r.username, r.email)}</p>
                   <p className="admin__user-meta">
-                    {r.scAmount} SC &middot; PayPal: {r.paypalEmail} &middot;{" "}
+                    <span className="admin__coin admin__coin--sc">{r.scAmount} SC</span>
+                    {" · "}
+                    PayPal: {r.paypalEmail}
+                    {" · "}
                     {new Date(r.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -447,12 +473,17 @@ export function Admin() {
         )}
       </section>
 
-      <section className="admin__section">
-        <h2 className="admin__section-title">Credit user balance</h2>
-        <p className="admin__section-desc">
-          Credit funds to a user&apos;s account. Used for manual sweepstakes mail-in entry
-          fulfillment and promotions. Enter the user&apos;s UUID.
-        </p>
+      {/* Credit user balance */}
+      <section className="admin__section lc-panel">
+        <div className="admin__section-head">
+          <div>
+            <h2 className="admin__section-title">Credit user balance</h2>
+            <p className="admin__section-desc">
+              Credit funds to a user&apos;s account. Used for manual sweepstakes mail-in entry
+              fulfillment and promotions. Enter the user&apos;s UUID.
+            </p>
+          </div>
+        </div>
         <form className="admin__credit-form" onSubmit={handleCredit}>
           <div className="admin__credit-row">
             <input
@@ -500,7 +531,7 @@ export function Admin() {
           </div>
           {creditStatus && (
             <p
-              className={`admin__banner${creditStatus.includes("Error") || creditStatus.includes("error") ? " admin__banner--error" : ""}`}
+              className={`admin__banner${creditStatus.includes("Error") || creditStatus.includes("error") ? " admin__banner--error" : " admin__banner--success"}`}
               role="status"
             >
               {creditStatus}

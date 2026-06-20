@@ -4,6 +4,16 @@ import { Float } from "@react-three/drei";
 // Selective import so the bundler can drop the rest of Three.js.
 import { OctahedronGeometry } from "three";
 
+/**
+ * ObsidianScene — subtle 3D obsidian shards drifting behind the home page.
+ *
+ * Obsidian Gold redesign:
+ *   • 4 shards (down from 5) — quieter, less busy
+ *   • Very slow rotation / float (gentler than before)
+ *   • 0.3 opacity overall (down from 0.4)
+ *   • Gold emissive instead of crimson — matches the new design language
+ *   • Only renders on the home page (controlled by AtmosphericLayer's show3d)
+ */
 function Shard({
   position,
   rotation,
@@ -20,18 +30,17 @@ function Shard({
   }, [scale]);
 
   return (
-    // Slower, gentler float than the previous config — the scene is meant to
-    // sit quietly behind the home page, not draw the eye.
-    <Float speed={0.55} rotationIntensity={0.22} floatIntensity={0.32}>
+    // Very slow, gentle float — the scene sits quietly behind the home page.
+    <Float speed={0.35} rotationIntensity={0.14} floatIntensity={0.22}>
       <mesh position={position} rotation={rotation} geometry={geometry}>
         <meshStandardMaterial
           color="#0a0a12"
-          emissive="#dc143c"
-          emissiveIntensity={0.10}
+          emissive="#f5b942"
+          emissiveIntensity={0.06}
           metalness={0.85}
-          roughness={0.4}
+          roughness={0.45}
           transparent
-          opacity={0.55}
+          opacity={0.5}
         />
       </mesh>
     </Float>
@@ -39,10 +48,10 @@ function Shard({
 }
 
 function ObsidianShards() {
-  // Fewer shards (5 vs 8) — subtler, less busy on home page.
+  // 4 shards — subtler, less busy on the home page.
   const shards = useMemo(
     () =>
-      Array.from({ length: 5 }, (_, i) => ({
+      Array.from({ length: 4 }, (_, i) => ({
         position: [
           (Math.random() - 0.5) * 14,
           (Math.random() - 0.5) * 8,
@@ -62,8 +71,8 @@ function ObsidianShards() {
   return (
     <>
       <ambientLight intensity={0.22} />
-      <pointLight position={[4, 4, 6]} intensity={0.55} color="#dc143c" />
-      <pointLight position={[-6, -2, 4]} intensity={0.28} color="#8b5cf6" />
+      <pointLight position={[4, 4, 6]} intensity={0.4} color="#f5b942" />
+      <pointLight position={[-6, -2, 4]} intensity={0.2} color="#8b5cf6" />
       {shards.map((s) => (
         <Shard key={s.key} position={s.position} rotation={s.rotation} scale={s.scale} />
       ))}
@@ -77,7 +86,7 @@ type ObsidianSceneProps = {
 
 export function ObsidianScene({ className }: ObsidianSceneProps) {
   return (
-    <div className={className} aria-hidden="true" style={{ opacity: 0.4 }}>
+    <div className={className} aria-hidden="true" style={{ opacity: 0.3 }}>
       <Canvas
         camera={{ position: [0, 0, 8], fov: 45 }}
         dpr={[1, 1.25]}

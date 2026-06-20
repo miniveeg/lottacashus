@@ -1,14 +1,23 @@
-/* ───────────────────────────────────────────────────────────────
-   App shell grid — premium, spacious, cohesive
-   ─ topbar row (fixed height) + sidebar/main row (fills viewport)
-   ─ sidebar becomes an off-canvas drawer ≤ 900px
-   ─ main scrolls vertically; sidebar/sidebar drawer never scroll the page
-   ─────────────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════
+   LottaCash — App shell grid (Obsidian Gold redesign)
+   ─ 60px topbar row + sidebar/main row (fills viewport)
+   ─ Sidebar: 240px expanded / 68px collapsed
+   ─ Mobile (≤900px): sidebar becomes off-canvas drawer with backdrop
+   ─ Main: vertical scroll only; horizontal overflow hidden
+   ════════════════════════════════════════════════════════════════ */
 
+/* Local layout tokens — fall back to theme tokens, then to spec values.
+   This keeps the shell self-contained even if Agent 1 hasn't shipped
+   the matching tokens in theme.css yet. */
 .app-shell {
-  --app-sidebar-w: var(--lc-sidebar-width);
+  --topbar-height: var(--lc-topbar-height, 60px);
+  --sidebar-width: var(--lc-sidebar-width, 240px);
+  --sidebar-collapsed: var(--lc-sidebar-collapsed, 68px);
+  --app-sidebar-w: var(--sidebar-width);
+  --app-shell-bg: var(--bg-base, #0a0a0f);
+
   display: grid;
-  grid-template-rows: var(--lc-topbar-height) minmax(0, 1fr);
+  grid-template-rows: var(--topbar-height) minmax(0, 1fr);
   grid-template-columns: var(--app-sidebar-w) minmax(0, 1fr);
   grid-template-areas:
     "topbar topbar"
@@ -17,30 +26,35 @@
   min-height: 100dvh;
   overflow: hidden;
   position: relative;
+  background: var(--app-shell-bg);
   /* Sidebar width animates smoothly when collapsing / expanding. */
-  transition: grid-template-columns var(--lc-transition-slow);
+  transition: grid-template-columns var(--lc-transition-slow, 400ms cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .app-shell--sidebar-collapsed {
-  --app-sidebar-w: var(--lc-sidebar-collapsed);
+  --app-sidebar-w: var(--sidebar-collapsed);
 }
 
+/* ── Topbar row ── */
 .app-shell__topbar {
   grid-area: topbar;
   position: relative;
-  z-index: 100;
+  z-index: var(--lc-z-topbar, 200);
 }
 
+/* ── Sidebar column ── */
 .app-shell__sidebar {
   grid-area: sidebar;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   position: relative;
   overflow: hidden;
-  z-index: 50;
+  z-index: var(--lc-z-sticky, 50);
 }
 
+/* ── Main column ── */
 .app-shell__main {
   grid-area: main;
   min-width: 0;
@@ -49,18 +63,18 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
-  z-index: 1;
-  /* Generous, consistent breathing room around page content.
-     Pages can still set their own inner gutters; this just keeps
-     the shell from feeling cramped at the edges. */
-  scroll-behavior: auto; /* SmoothScroll handles inertia via Lenis */
+  z-index: var(--lc-z-content, 1);
+  scroll-behavior: auto; /* Lenis (SmoothScroll) handles inertia */
 }
 
+/* ── Mobile backdrop (hidden on desktop) ── */
 .app-shell__backdrop {
   display: none;
 }
 
-/* ── Mobile ≤ 900px: off-canvas drawer, full-width main ──────── */
+/* ════════════════════════════════════════════════════════════════
+   Mobile ≤ 900px: sidebar becomes an off-canvas drawer
+   ════════════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .app-shell,
   .app-shell--sidebar-collapsed {
@@ -74,15 +88,15 @@
 
   .app-shell__sidebar {
     position: fixed;
-    top: var(--lc-topbar-height);
+    top: var(--topbar-height);
     left: 0;
     bottom: 0;
-    width: var(--lc-drawer-width);
+    width: min(280px, 85vw);
     max-width: 100%;
-    z-index: 200;
+    z-index: var(--lc-z-overlay, 100);
     transform: translateX(-100%);
     transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
-    box-shadow: var(--lc-shadow-lg);
+    box-shadow: var(--shadow-lg, 0 12px 40px rgba(0, 0, 0, 0.5));
     will-change: transform;
   }
 
@@ -93,16 +107,16 @@
   .app-shell__backdrop {
     display: block;
     position: fixed;
-    inset: var(--lc-topbar-height) 0 0 0;
-    z-index: 150;
+    inset: var(--topbar-height) 0 0 0;
+    z-index: 90;
     border: none;
     padding: 0;
     margin: 0;
-    /* Subtle blur + dark overlay: lets the drawer stand out without
-       fully blacking out the page (keeps context visible). */
-    background: rgba(2, 2, 6, 0.72);
-    backdrop-filter: blur(6px) saturate(0.8);
-    -webkit-backdrop-filter: blur(6px) saturate(0.8);
+    /* Dark overlay + subtle blur — keeps page context visible while
+       still letting the drawer stand out. */
+    background: rgba(5, 5, 8, 0.7);
+    backdrop-filter: blur(6px) saturate(0.85);
+    -webkit-backdrop-filter: blur(6px) saturate(0.85);
     opacity: 0;
     pointer-events: none;
     transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -115,7 +129,7 @@
   }
 }
 
-/* Reduced motion: kill the slow grid + drawer transitions. */
+/* ── Reduced motion: kill the slow grid + drawer transitions ── */
 @media (prefers-reduced-motion: reduce) {
   .app-shell,
   .app-shell__sidebar,

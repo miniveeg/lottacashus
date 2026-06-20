@@ -1,6 +1,8 @@
-/* ───────────────────────────────────────────────────────────────
-   Topbar level progress — spacious, premium chip
-   ─────────────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════
+   Topbar level progress — Obsidian Gold chip
+   ─ Premium chip that opens the level detail popover
+   ─ Full variant on desktop, compact variant on mobile
+   ════════════════════════════════════════════════════════════════ */
 
 .topbar-level-wrap {
   position: relative;
@@ -19,15 +21,16 @@
   max-width: 240px;
   gap: 0.35rem;
   padding: 0.35rem 0.7rem;
-  border-radius: var(--lc-radius-md);
-  border: 1px solid var(--lc-border);
-  background: rgba(255, 255, 255, 0.025);
-  transition: border-color var(--lc-transition), background var(--lc-transition);
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--border, var(--lc-border, rgba(255, 255, 255, 0.08)));
+  background: var(--bg-elevated, var(--lc-bg-elevated, #1c1c28));
+  transition: border-color var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1)),
+              background var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .topbar-level--full:hover {
-  border-color: var(--lc-border-accent);
-  background: var(--lc-crimson-glow);
+  border-color: var(--gold, #f5b942);
+  background: var(--gold-glow, rgba(245, 185, 66, 0.15));
 }
 
 .topbar-level__header {
@@ -48,7 +51,7 @@
   background: none;
   cursor: pointer;
   flex-shrink: 0;
-  transition: opacity var(--lc-transition);
+  transition: opacity var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .topbar-level__level-btn:disabled {
@@ -62,14 +65,14 @@
 
 .topbar-level__level-btn:focus-visible {
   outline: none;
-  box-shadow: var(--lc-focus-ring);
-  border-radius: var(--lc-radius-sm);
+  box-shadow: 0 0 0 3px var(--gold-glow, rgba(245, 185, 66, 0.15));
+  border-radius: var(--radius-sm, 6px);
 }
 
 .topbar-level__level-label {
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--lc-text-muted);
+  color: var(--text-muted, var(--lc-text-muted, #71717a));
   letter-spacing: 0.02em;
 }
 
@@ -77,7 +80,7 @@
   flex-shrink: 0;
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--lc-text-muted);
+  color: var(--text-muted, var(--lc-text-muted, #71717a));
   line-height: 1;
   user-select: none;
   opacity: 0.6;
@@ -90,13 +93,13 @@
   white-space: nowrap;
   font-weight: 600;
   font-size: 0.85rem;
-  color: var(--lc-text-secondary);
+  color: var(--text-secondary, var(--lc-text-secondary, #a1a1aa));
   text-decoration: none;
-  transition: color var(--lc-transition);
+  transition: color var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .topbar-level__name:hover {
-  color: var(--lc-text-primary);
+  color: var(--text-primary, var(--lc-text-primary, #fafafa));
 }
 
 .topbar-level__track {
@@ -121,16 +124,17 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  border-radius: var(--lc-radius-md);
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid var(--lc-border);
+  border-radius: var(--radius-md, 10px);
+  background: var(--bg-elevated, var(--lc-bg-elevated, #1c1c28));
+  border: 1px solid var(--border, var(--lc-border, rgba(255, 255, 255, 0.08)));
   cursor: pointer;
-  transition: border-color var(--lc-transition), background var(--lc-transition);
+  transition: border-color var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1)),
+              background var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .topbar-level__compact-btn:hover:not(:disabled) {
-  border-color: var(--lc-crimson-dim);
-  background: var(--lc-crimson-glow);
+  border-color: var(--gold, #f5b942);
+  background: var(--gold-glow, rgba(245, 185, 66, 0.15));
 }
 
 .topbar-level__compact-btn:disabled {
@@ -140,7 +144,7 @@
 
 .topbar-level__compact-btn:focus-visible {
   outline: none;
-  box-shadow: var(--lc-focus-ring);
+  box-shadow: 0 0 0 3px var(--gold-glow, rgba(245, 185, 66, 0.15));
 }
 
 .topbar-level__detail-anchor--compact {

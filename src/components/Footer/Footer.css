@@ -1,27 +1,39 @@
-/* ───────────────────────────────────────────────────────────────
-   Footer — simple, clean, three columns on desktop
-   ─────────────────────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════
+   LottaCash Footer — Obsidian Gold redesign
+   ─ bg-surface, hairline top border, generous padding
+   ─ 3 columns desktop → 1 column mobile
+   ─ Brand + tagline, page links, legal links
+   ─ text-sm muted, links hover = gold
+   ════════════════════════════════════════════════════════════════ */
 
 .site-footer {
+  --sf-bg: var(--bg-surface, var(--lc-bg-panel, #111118));
+  --sf-border: var(--border, var(--lc-border, rgba(255, 255, 255, 0.08)));
+  --sf-gold: var(--gold, #f5b942);
+  --sf-gold-bright: var(--gold-bright, #fcd34d);
+  --sf-text: var(--text-primary, var(--lc-text-primary, #fafafa));
+  --sf-text-2: var(--text-secondary, var(--lc-text-secondary, #a1a1aa));
+  --sf-text-muted: var(--text-muted, var(--lc-text-muted, #71717a));
+
   margin-top: auto;
-  padding: 2.5rem 1.5rem 1.25rem;
-  border-top: 1px solid var(--lc-border);
-  background: var(--lc-bg-elevated);
+  padding: var(--space-8, 2rem) var(--space-6, 1.5rem);
+  border-top: 1px solid var(--sf-border);
+  background: var(--sf-bg);
 }
 
 .site-footer__inner {
-  max-width: var(--lc-page-max);
+  max-width: var(--lc-page-max, 1200px);
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
-  gap: 2rem;
+  gap: var(--space-8, 2rem);
   align-items: start;
 }
 
 .site-footer__brand {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2, 0.5rem);
   min-width: 0;
 }
 
@@ -30,24 +42,30 @@
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
-  color: var(--lc-text-primary);
-  font-family: var(--lc-font-display);
-  font-weight: 700;
+  color: var(--sf-text);
+  font-family: var(--lc-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: 800;
   font-size: 1.15rem;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .site-footer__logo {
   border-radius: 4px;
-  filter: drop-shadow(0 0 10px var(--lc-crimson-glow));
+  filter: drop-shadow(0 0 10px var(--gold-glow, rgba(245, 185, 66, 0.15)));
 }
 
-.site-footer__name { color: var(--lc-text-primary); }
+/* Gold-gradient brand wordmark */
+.site-footer__name {
+  background: linear-gradient(135deg, var(--sf-gold-bright) 0%, var(--sf-gold) 55%, var(--gold-deep, #d97706) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 
 .site-footer__tagline {
   margin: 0;
-  color: var(--lc-text-muted);
-  font-size: 0.8rem;
+  color: var(--sf-text-muted);
+  font-size: var(--text-sm, 0.875rem);
   line-height: 1.5;
   max-width: 280px;
 }
@@ -57,13 +75,13 @@
 }
 
 .site-footer__heading {
-  font-family: var(--lc-font-display);
-  font-size: 0.7rem;
+  font-family: var(--lc-font-display, 'Inter', system-ui, sans-serif);
+  font-size: var(--text-xs, 0.75rem);
   font-weight: 700;
-  color: var(--lc-text-secondary);
-  margin: 0 0 0.75rem;
+  color: var(--sf-text-2);
+  margin: 0 0 var(--space-3, 0.75rem);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
 }
 
 .site-footer__list {
@@ -76,21 +94,21 @@
 }
 
 .site-footer__link {
-  color: var(--lc-text-muted);
+  color: var(--sf-text-muted);
   text-decoration: none;
-  font-size: 0.8rem;
-  transition: color var(--lc-transition);
+  font-size: var(--text-sm, 0.875rem);
+  transition: color var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .site-footer__link:hover {
-  color: var(--lc-crimson-soft);
+  color: var(--sf-gold-bright);
 }
 
 .site-footer__bottom {
-  max-width: var(--lc-page-max);
-  margin: 2rem auto 0;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--lc-border);
+  max-width: var(--lc-page-max, 1200px);
+  margin: var(--space-8, 2rem) auto 0;
+  padding-top: var(--space-5, 1.25rem);
+  border-top: 1px solid var(--sf-border);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -99,8 +117,8 @@
 }
 
 .site-footer__responsible {
-  color: var(--lc-text-muted);
-  font-size: 0.72rem;
+  color: var(--sf-text-muted);
+  font-size: var(--text-xs, 0.75rem);
   display: flex;
   gap: 0.75rem;
   align-items: center;
@@ -109,42 +127,42 @@
 }
 
 .site-footer__ncpg-link {
-  color: var(--lc-crimson-soft);
+  color: var(--sf-gold);
   text-decoration: none;
   font-weight: 600;
-  transition: opacity var(--lc-transition);
+  transition: color var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 .site-footer__ncpg-link:hover {
-  opacity: 0.85;
+  color: var(--sf-gold-bright);
   text-decoration: underline;
 }
 
 .site-footer__copyright {
-  color: var(--lc-text-muted);
-  font-size: 0.72rem;
+  color: var(--sf-text-muted);
+  font-size: var(--text-xs, 0.75rem);
 }
 
 /* ── Tablet / mobile ── */
 @media (max-width: 768px) {
-  .site-footer { padding: 2.25rem 1.25rem 1.25rem; }
+  .site-footer { padding: var(--space-8, 2rem) var(--space-5, 1.25rem) var(--space-5, 1.25rem); }
   .site-footer__inner {
     grid-template-columns: 1fr 1fr;
-    gap: 1.75rem;
+    gap: var(--space-6, 1.5rem);
   }
   .site-footer__brand {
     grid-column: 1 / -1;
     min-width: 0;
   }
   .site-footer__tagline { max-width: none; }
-  .site-footer__bottom { margin-top: 1.5rem; padding-top: 1.25rem; }
+  .site-footer__bottom { margin-top: var(--space-6, 1.5rem); padding-top: var(--space-5, 1.25rem); }
 }
 
 @media (max-width: 480px) {
-  .site-footer { padding: 2rem 1rem 1.25rem; }
+  .site-footer { padding: var(--space-8, 2rem) var(--space-4, 1rem) var(--space-5, 1.25rem); }
   .site-footer__inner {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: var(--space-6, 1.5rem);
   }
   .site-footer__responsible {
     flex-direction: column;

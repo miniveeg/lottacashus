@@ -56,9 +56,11 @@ export function Login() {
   return (
     <div className="auth-page lc-page--auth">
       <div className="auth-card">
-        <BrandLogo className="auth-card__logo" size={72} />
+        <BrandLogo className="auth-card__logo" size={48} />
         <h1 className="auth-card__title">Welcome back</h1>
-        <p className="auth-card__subtitle">Log in to your LottaCash account</p>
+        <p className="auth-card__subtitle">
+          Log in to your LottaCash account to continue playing.
+        </p>
 
         {!configured && (
           <p className="auth-config-warning">
@@ -68,7 +70,11 @@ export function Login() {
         )}
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          {error && <p className="auth-error" role="alert" id="login-error">{error}</p>}
+          {error && (
+            <p className="auth-error" role="alert" id="login-error">
+              {error}
+            </p>
+          )}
 
           <div className="auth-field">
             <label htmlFor="login-email">Email</label>

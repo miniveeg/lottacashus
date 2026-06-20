@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════
-   LottaCash — Keyframe animations
+   LottaCash — Keyframe animations · "Obsidian Gold"
    Subtle, purposeful. Each animation serves feedback, orientation,
    or delight. All have reduced-motion overrides.
    ════════════════════════════════════════════════════════════════ */
@@ -12,7 +12,7 @@
 
 /* ── Fade up (reveal on mount / scroll) ── */
 @keyframes lc-fade-up {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -22,10 +22,10 @@
   100% { background-position: 200% 0; }
 }
 
-/* ── Subtle glow pulse for CTAs (very subtle, 2s ease-in-out) ── */
+/* ── Subtle gold glow pulse for CTAs (very subtle, 2s ease-in-out) ── */
 @keyframes lc-glow-pulse {
-  from { box-shadow: 0 0 0 0 var(--lc-crimson-glow-faint), 0 0 12px var(--lc-crimson-glow-faint); }
-  to   { box-shadow: 0 0 0 1px var(--lc-crimson-glow),       0 0 22px var(--lc-crimson-glow); }
+  from { box-shadow: 0 0 0 0 var(--gold-glow-faint), 0 0 12px var(--gold-glow-faint); }
+  to   { box-shadow: 0 0 0 1px var(--gold-glow),       0 0 22px var(--gold-glow); }
 }
 
 /* ── Slide down (dropdowns, notifications) ── */
@@ -78,12 +78,12 @@
 
 .anim-fade-in-up,
 .anim-fade-up {
-  animation: lc-fade-up 0.4s var(--lc-ease-out) both;
+  animation: lc-fade-up 0.4s var(--ease-out) both;
 }
 
 .anim-fade-in-scale,
 .anim-scale-in {
-  animation: lc-scale-in 0.32s var(--lc-ease-out) both;
+  animation: lc-scale-in 0.32s var(--ease-out) both;
 }
 
 .anim-fade-in {
@@ -102,9 +102,9 @@
 .anim-shimmer {
   background: linear-gradient(
     90deg,
-    var(--lc-bg-panel) 25%,
-    var(--lc-bg-hover) 50%,
-    var(--lc-bg-panel) 75%
+    var(--bg-surface) 25%,
+    var(--bg-surface-2) 50%,
+    var(--bg-surface) 75%
   );
   background-size: 200% 100%;
   animation: lc-shimmer 1.6s ease-in-out infinite;
@@ -116,11 +116,11 @@
 }
 
 .anim-scale-bounce {
-  animation: lc-scale-in 0.55s var(--lc-ease-spring) both;
+  animation: lc-scale-in 0.55s var(--ease-spring) both;
 }
 
 .anim-count-pop {
-  animation: lc-count-pop 0.3s var(--lc-ease-spring);
+  animation: lc-count-pop 0.3s var(--ease-spring);
 }
 
 .anim-spin {
@@ -132,7 +132,7 @@
 }
 
 .anim-slide-down {
-  animation: lc-slide-down 0.22s var(--lc-ease-out) both;
+  animation: lc-slide-down 0.22s var(--ease-out) both;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -141,7 +141,7 @@
    here so removing them from this file won't break unowned files.
    ════════════════════════════════════════════════════════════════ */
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -161,8 +161,8 @@
 }
 
 @keyframes glow-pulse {
-  from { box-shadow: 0 0 0 0 var(--lc-crimson-glow-faint), 0 0 12px var(--lc-crimson-glow-faint); }
-  to   { box-shadow: 0 0 0 1px var(--lc-crimson-glow),       0 0 22px var(--lc-crimson-glow); }
+  from { box-shadow: 0 0 0 0 var(--gold-glow-faint), 0 0 12px var(--gold-glow-faint); }
+  to   { box-shadow: 0 0 0 1px var(--gold-glow),       0 0 22px var(--gold-glow); }
 }
 
 @keyframes float {
@@ -199,8 +199,8 @@
 }
 
 @keyframes border-pulse {
-  0%, 100% { border-color: var(--lc-border); }
-  50%      { border-color: var(--lc-crimson); }
+  0%, 100% { border-color: var(--border); }
+  50%      { border-color: var(--gold); }
 }
 
 @keyframes slide-up {
@@ -219,9 +219,9 @@
 }
 
 /* Legacy alias used by other agents — kept verbatim. */
-.anim-slide-in-left  { animation: slide-in-left  0.4s var(--lc-ease-out) both; }
-.anim-slide-in-right { animation: slide-in-right 0.4s var(--lc-ease-out) both; }
-.anim-slide-up       { animation: slide-up       0.4s var(--lc-ease-out) both; }
+.anim-slide-in-left  { animation: slide-in-left  0.4s var(--ease-out) both; }
+.anim-slide-in-right { animation: slide-in-right 0.4s var(--ease-out) both; }
+.anim-slide-up       { animation: slide-up       0.4s var(--ease-out) both; }
 .anim-border-pulse   { animation: border-pulse   2s ease-in-out infinite; }
 .anim-fog-drift-reverse { animation: fog-drift-reverse 30s ease-in-out infinite; will-change: transform, opacity; }
 

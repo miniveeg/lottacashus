@@ -110,13 +110,13 @@ export function ForgotPassword() {
   return (
     <div className="auth-page lc-page--auth">
       <div className="auth-card">
-        <BrandLogo className="auth-card__logo" size={72} />
+        <BrandLogo className="auth-card__logo" size={48} />
         <h1 className="auth-card__title">Reset password</h1>
         <p className="auth-card__subtitle">
-          {step === "email" && "Enter your account email"}
+          {step === "email" && "Enter your account email to receive a reset code."}
           {step === "code" && `Enter the code we sent to ${email}`}
-          {step === "password" && "Choose a new password"}
-          {step === "done" && "You're all set"}
+          {step === "password" && "Choose a new password for your account."}
+          {step === "done" && "You're all set."}
         </p>
 
         {!configured && (
@@ -127,7 +127,11 @@ export function ForgotPassword() {
 
         {step === "email" && (
           <form className="auth-form" onSubmit={handleSendCode} noValidate>
-            {error && <p className="auth-error" role="alert" id="reset-error">{error}</p>}
+            {error && (
+              <p className="auth-error" role="alert" id="reset-error">
+                {error}
+              </p>
+            )}
             <div className="auth-field">
               <label htmlFor="reset-email">Email</label>
               <input
@@ -151,8 +155,16 @@ export function ForgotPassword() {
 
         {step === "code" && (
           <form className="auth-form" onSubmit={handleCodeContinue} noValidate>
-            {error && <p className="auth-error" role="alert" id="reset-code-error">{error}</p>}
-            {info && <p className="auth-success" role="status">{info}</p>}
+            {error && (
+              <p className="auth-error" role="alert" id="reset-code-error">
+                {error}
+              </p>
+            )}
+            {info && (
+              <p className="auth-success" role="status">
+                {info}
+              </p>
+            )}
             <p className="auth-hint">Code expires in 10 minutes.</p>
             <div className="auth-field">
               <label htmlFor="reset-code">Reset code</label>
@@ -193,7 +205,11 @@ export function ForgotPassword() {
 
         {step === "password" && (
           <form className="auth-form" onSubmit={handleResetPassword} noValidate>
-            {error && <p className="auth-error" role="alert" id="reset-pwd-error">{error}</p>}
+            {error && (
+              <p className="auth-error" role="alert" id="reset-pwd-error">
+                {error}
+              </p>
+            )}
             <p className="auth-hint">
               For security, your old password cannot be shown. Set a new one below.
             </p>

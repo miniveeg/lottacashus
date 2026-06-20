@@ -1,17 +1,74 @@
 /* ════════════════════════════════════════════════════════════════
-   LottaCash — Shared bet panel for Originals games
-   Spacious, consistent, touch-friendly. Used by Keno, Mines, Limbo,
-   Roulette, Blackjack. Adopted as a panel by page-specific layouts.
+   LottaCash — Unified game controls panel · "Obsidian Gold"
+   THE shared bet panel for ALL Originals games (Keno, Mines, Limbo,
+   Roulette, Blackjack, Crash, Slots). Identical across games — only
+   the stage differs. Premium casino aesthetic: gold play button,
+   emerald cashout, mono numerals, generous spacing.
    ════════════════════════════════════════════════════════════════ */
 
 .game-controls {
   min-width: 0;
   padding: var(--space-5);
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--lc-shadow-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   overflow: hidden;
+}
+
+/* ── Balance display — prominent, top of panel ──
+   Shows current coin (GC or SC) with optional USD equivalent.
+   Subtle inner panel to separate from controls. */
+.game-controls__balance {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.game-controls__balance-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.game-controls__balance-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.game-controls__balance-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.game-controls__balance-currency {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.game-controls__balance-currency--gc { color: var(--gold); }
+.game-controls__balance-currency--sc { color: var(--sc-color); }
+
+.game-controls__balance-usd {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
 }
 
 /* ── Options block (label + control rows) ── */
@@ -21,7 +78,7 @@
   gap: var(--space-4);
   padding-bottom: var(--space-4);
   margin-bottom: var(--space-1);
-  border-bottom: 1px solid var(--lc-border);
+  border-bottom: 1px solid var(--border);
 }
 
 .game-controls__option {
@@ -33,18 +90,18 @@
 }
 
 .game-controls__option-label {
-  font-family: var(--lc-font-display);
-  font-size: 0.78rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--lc-text-secondary);
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
 }
 
 .game-controls__option-hint {
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
   font-weight: 400;
-  color: var(--lc-text-muted);
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -62,17 +119,17 @@
 .game-controls__mines-slider {
   flex: 1;
   min-width: 0;
-  accent-color: var(--lc-crimson);
+  accent-color: var(--gold);
 }
 
 .game-controls__mines-value {
   flex-shrink: 0;
-  font-family: var(--lc-font-mono);
-  font-weight: 500;
+  font-family: var(--font-mono);
+  font-weight: 600;
   min-width: var(--space-8);
   text-align: center;
-  color: var(--lc-crimson-soft);
-  font-size: 0.95rem;
+  color: var(--text-gold);
+  font-size: var(--text-sm);
 }
 
 /* ── Wager block ── */
@@ -83,12 +140,12 @@
 
 .game-controls__wager-label {
   display: block;
-  font-family: var(--lc-font-display);
-  font-size: 0.78rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--lc-text-secondary);
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
   margin-bottom: var(--space-2);
 }
 
@@ -100,56 +157,61 @@
   align-items: stretch;
 }
 
-/* Wager input — mono for numbers, clear focus */
+/* Wager input — mono for numbers, right-aligned, gold focus ring */
 .game-controls__wager-input {
   min-width: 0;
   width: 100%;
   min-height: 44px;
-  padding: var(--space-2) var(--space-3);
-  font-family: var(--lc-font-mono);
-  font-size: 1.05rem;
-  font-weight: 500;
-  color: var(--lc-text-primary);
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border-strong);
-  border-radius: var(--radius-sm);
+  padding: 0 var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-base);
+  font-weight: 600;
+  text-align: right;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
   box-sizing: border-box;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
 .game-controls__wager-input:focus {
   outline: none;
-  border-color: var(--lc-crimson);
+  border-color: var(--gold);
   box-shadow: var(--lc-focus-ring);
 }
 
 /* Half / double adjustment buttons — 44px square touch targets */
 .game-controls__wager-half,
-.game-controls__wager-double {
+.game-controls__wager-double,
+.game-controls__wager-adj {
   min-height: 44px;
+  min-width: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm);
-  font-family: var(--lc-font-display);
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--lc-text-secondary);
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   transition: background var(--lc-transition), color var(--lc-transition),
               border-color var(--lc-transition);
 }
 
 .game-controls__wager-half:hover:not(:disabled),
-.game-controls__wager-double:hover:not(:disabled) {
-  background: var(--lc-bg-hover);
-  color: var(--lc-crimson-soft);
-  border-color: var(--lc-border-accent);
+.game-controls__wager-double:hover:not(:disabled),
+.game-controls__wager-adj:hover:not(:disabled) {
+  background: var(--bg-surface-2);
+  color: var(--text-gold);
+  border-color: var(--border-gold);
 }
 
 .game-controls__wager-half:disabled,
-.game-controls__wager-double:disabled {
+.game-controls__wager-double:disabled,
+.game-controls__wager-adj:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -167,29 +229,30 @@
   align-items: center;
   justify-content: center;
   min-height: 32px;
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-full);
-  font-family: var(--lc-font-display);
-  font-size: 0.78rem;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--lc-text-secondary);
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border-strong);
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   cursor: pointer;
   transition: background var(--lc-transition), color var(--lc-transition),
               border-color var(--lc-transition);
 }
 
 .game-controls__preset:hover:not(:disabled) {
-  background: var(--lc-bg-hover);
-  color: var(--lc-crimson-soft);
-  border-color: var(--lc-border-accent);
+  background: var(--bg-surface-2);
+  color: var(--text-gold);
+  border-color: var(--border-gold);
 }
 
+/* Active preset = gold gradient + dark text (premium chip) */
 .game-controls__preset--active {
-  background: rgba(225, 29, 72, 0.12);
-  border-color: var(--lc-crimson);
-  color: var(--lc-crimson-soft);
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold-deep));
+  border-color: transparent;
+  color: #1a1208;
 }
 
 .game-controls__preset:disabled {
@@ -197,53 +260,25 @@
   cursor: not-allowed;
 }
 
-/* ── Wager adjustment (half/double) — alias class ── */
-.game-controls__wager-adj {
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-sm);
-  font-family: var(--lc-font-display);
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--lc-text-secondary);
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border-strong);
-  transition: background var(--lc-transition), color var(--lc-transition),
-              border-color var(--lc-transition);
-}
-
-.game-controls__wager-adj:hover:not(:disabled) {
-  background: var(--lc-bg-hover);
-  color: var(--lc-crimson-soft);
-  border-color: var(--lc-border-accent);
-}
-
-.game-controls__wager-adj:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* ── Play button (primary CTA) ── */
+/* ── Play button (primary CTA) — gold gradient, full width, prominent ── */
 .game-controls__play {
   width: 100%;
-  margin-top: var(--space-4);
-  min-height: 48px;
+  margin-top: var(--space-2);
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border-radius: var(--radius-sm);
-  font-family: var(--lc-font-display);
-  font-size: 0.92rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: #fff;
-  background: linear-gradient(135deg, var(--lc-crimson) 0%, var(--lc-crimson-dim) 100%);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset,
-              0 2px 16px var(--lc-crimson-glow),
+  color: #1a1208;
+  background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold-deep) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset,
+              0 2px 16px var(--gold-glow),
               var(--lc-shadow-inset);
   transition: transform var(--lc-transition), filter var(--lc-transition),
               box-shadow var(--lc-transition);
@@ -252,8 +287,8 @@
 .game-controls__play:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.06);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset,
-              0 6px 24px var(--lc-crimson-glow-strong),
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset,
+              0 6px 24px var(--gold-glow-strong),
               var(--lc-shadow-inset);
 }
 
@@ -263,18 +298,20 @@
   transform: none;
 }
 
-/* Cashout variant — emerald */
-.game-controls__play--cashout {
-  background: linear-gradient(135deg, var(--lc-emerald) 0%, var(--lc-emerald-dim) 100%);
+/* Cashout variant — emerald (real money feel) */
+.game-controls__play--cashout,
+.game-controls__cashout {
+  background: linear-gradient(135deg, var(--success) 0%, #047857 100%);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset,
-              0 2px 16px var(--lc-emerald-glow),
+              0 2px 16px var(--sc-glow),
               var(--lc-shadow-inset);
   color: #fff;
 }
 
-.game-controls__play--cashout:hover:not(:disabled) {
+.game-controls__play--cashout:hover:not(:disabled),
+.game-controls__cashout:hover:not(:disabled) {
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset,
-              0 6px 24px rgba(16, 185, 129, 0.35),
+              0 6px 24px rgba(16, 185, 129, 0.4),
               var(--lc-shadow-inset);
 }
 
@@ -282,7 +319,7 @@
 .game-controls__stats {
   margin-top: var(--space-4);
   padding-top: var(--space-3);
-  border-top: 1px solid var(--lc-border);
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
@@ -292,39 +329,45 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.85rem;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-sm);
+}
+
+.game-controls__stat-row:last-child {
+  border-bottom: none;
 }
 
 .game-controls__stat-label {
-  color: var(--lc-text-muted);
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .game-controls__stat-value {
-  font-family: var(--lc-font-mono);
-  font-weight: 500;
-  color: var(--lc-text-secondary);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
-.game-controls__stat-value--win  { color: var(--lc-emerald); }
-.game-controls__stat-value--loss { color: var(--lc-ruby); }
-.game-controls__stat-value--gold { color: var(--lc-crimson-soft); }
+.game-controls__stat-value--win  { color: var(--success); }
+.game-controls__stat-value--loss { color: var(--danger); }
+.game-controls__stat-value--gold { color: var(--text-gold); }
 
 /* ── Error feedback ── */
 .game-controls__error {
   margin-top: var(--space-2);
   padding: var(--space-2) var(--space-3);
-  font-size: 0.82rem;
+  font-size: var(--text-xs);
   font-weight: 500;
   color: #fca5a5;
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
 }
 
 /* ── Mobile — denser but still touch-friendly ── */
 @media (max-width: 480px) {
   .game-controls { padding: var(--space-4); }
   .game-controls__options { gap: var(--space-3); }
-  .game-controls__play { min-height: 48px; }
+  .game-controls__play { min-height: 52px; }
 }

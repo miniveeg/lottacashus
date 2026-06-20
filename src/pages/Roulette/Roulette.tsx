@@ -9,7 +9,7 @@ import {
   roulettePotentialWin,
   rouletteWinChance,
 } from "../../lib/games/roulette";
-import { formatCoins } from "../../lib/format";
+import { coinsToUsd, formatCoins, formatUsd } from "../../lib/format";
 import {
   fetchRoulettePfState,
   placeRouletteBet,
@@ -28,10 +28,11 @@ const BET_OPTIONS: {
   label: string;
   payout: string;
   odds: string;
+  color: "red" | "black" | "green";
 }[] = [
-  { type: "red", label: "Red", payout: "2×", odds: "18/37" },
-  { type: "black", label: "Black", payout: "2×", odds: "18/37" },
-  { type: "green", label: "0", payout: "36×", odds: "1/37" },
+  { type: "red", label: "Red", payout: "2×", odds: "18/37", color: "red" },
+  { type: "black", label: "Black", payout: "2×", odds: "18/37", color: "black" },
+  { type: "green", label: "0", payout: "36×", odds: "1/37", color: "green" },
 ];
 
 type HistoryEntry = { pocket: number; color: RouletteColor };
@@ -60,7 +61,6 @@ export function Roulette() {
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
-  const [showFairness, setShowFairness] = useState(false);
 
   const winChance = useMemo(() => rouletteWinChance(betType), [betType]);
   const potentialWin = useMemo(() => roulettePotentialWin(wager, betType), [wager, betType]);
@@ -143,21 +143,21 @@ export function Roulette() {
   };
 
   return (
-    <div className="roulette lc-game-page">
-      <header className="roulette__header">
-        <div className="roulette__header-main">
-          <h1 className="roulette__title">Roulette</h1>
-          <p className="roulette__subtitle">
+    <div className="game-page roulette">
+      <header className="game-page__header">
+        <div className="game-page__header-text">
+          <h1 className="game-page__title">Roulette</h1>
+          <p className="game-page__subtitle">
             European roulette. 37 pockets. Bet color, parity, dozen, or single number.
           </p>
         </div>
-        <span className="roulette__rtp-badge">97.3% RTP</span>
+        <span className="game-page__rtp">97.3% RTP</span>
       </header>
 
-      <div className="roulette__layout">
-        <section className="roulette__board-panel">
-          <div className="roulette__board-toolbar">
-            <span className="roulette__toolbar-label">
+      <div className="game-page__layout">
+        <section className="game-page__stage roulette__stage">
+          <div className="roulette__stage-toolbar">
+            <span className="roulette__stage-label">
               {spinning ? "Spinning…" : "European · 0–36"}
             </span>
             {history.length > 0 && (
@@ -201,34 +201,22 @@ export function Roulette() {
               </span>
             </div>
           )}
-
-          <div className="roulette__paytable-wrap">
-            <p className="roulette__paytable-title">Payouts</p>
-            <div className="roulette__paytable">
-              <div className="roulette__paytable-cell">
-                <span className="roulette__paytable-hits">Red</span>
-                <span className="roulette__paytable-mult">2×</span>
-              </div>
-              <div className="roulette__paytable-cell">
-                <span className="roulette__paytable-hits">Black</span>
-                <span className="roulette__paytable-mult">2×</span>
-              </div>
-              <div className="roulette__paytable-cell">
-                <span className="roulette__paytable-hits">0 (Green)</span>
-                <span className="roulette__paytable-mult">36×</span>
-              </div>
-            </div>
-          </div>
         </section>
 
-        <aside className="roulette__controls game-controls">
+        <aside className="game-page__controls game-controls">
+          <div className="game-page__balance">
+            <span className="game-page__balance-label">Balance · {coinLabel}</span>
+            <span className="game-page__balance-value">{formatCoins(activeBalance, coinType)}</span>
+            <span className="game-page__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
+          </div>
+
           <div className="game-controls__options">
             <div className="game-controls__option">
               <span className="game-controls__option-label" id="roulette-bet-label">
                 Bet on
               </span>
               <div
-                className="roulette__bet-grid"
+                className="roulette__bet-pills"
                 role="group"
                 aria-labelledby="roulette-bet-label"
               >
@@ -237,9 +225,9 @@ export function Roulette() {
                     key={opt.type}
                     type="button"
                     className={[
-                      "roulette__bet-cell",
-                      `roulette__bet-cell--${opt.type}`,
-                      betType === opt.type && "roulette__bet-cell--selected",
+                      "roulette__bet-pill",
+                      `roulette__bet-pill--${opt.color}`,
+                      betType === opt.type && "roulette__bet-pill--selected",
                     ]
                       .filter(Boolean)
                       .join(" ")}
@@ -247,10 +235,8 @@ export function Roulette() {
                     disabled={spinning}
                     aria-pressed={betType === opt.type}
                   >
-                    <span className="roulette__bet-cell-label">{opt.label}</span>
-                    <span className="roulette__bet-cell-meta">
-                      {opt.payout} · {opt.odds}
-                    </span>
+                    <span className="roulette__bet-pill-label">{opt.label}</span>
+                    <span className="roulette__bet-pill-meta">{opt.payout} · {opt.odds}</span>
                   </button>
                 ))}
               </div>
@@ -312,99 +298,76 @@ export function Roulette() {
             </div>
           </div>
 
-          {error && (
-            <p className="roulette__error" role="alert">
-              {error}
-            </p>
-          )}
-
           <button
             type="button"
-            className="roulette__bet-btn"
+            className="game-controls__play"
             onClick={handleBet}
             disabled={spinning || !user}
             aria-busy={spinning}
           >
-            {spinning ? (
-              <>
-                <span className="roulette__spinner" aria-hidden="true" />
-                <span>Spinning…</span>
-              </>
-            ) : (
-              "Bet"
-            )}
+            {spinning ? "Spinning…" : "Play"}
           </button>
 
-          <div className="keno__stats">
-            <div className="keno__stat">
-              <span className="keno__stat-label">Balance</span>
-              <span className="keno__stat-value">{formatCoins(activeBalance, coinType)}</span>
-            </div>
-            <div className="keno__stat">
-              <span className="keno__stat-label">Last payout</span>
-              <span
-                className={`keno__stat-value${
-                  lastResult
-                    ? lastResult.won
-                      ? " keno__stat-value--win"
-                      : " keno__stat-value--loss"
-                    : ""
-                }`}
-              >
-                {lastResult ? formatCoins(lastResult.payout, coinType) : "—"}
-              </span>
-            </div>
-          </div>
+          {error && <p className="game-controls__error" role="alert">{error}</p>}
 
-          <p className="roulette__hint">
+          {lastResult && !spinning && (
+            <div className="game-controls__stats">
+              <div className="game-controls__stat-row">
+                <span className="game-controls__stat-label">Last result</span>
+                <span
+                  className={`game-controls__stat-value${
+                    lastResult.won
+                      ? " game-controls__stat-value--win"
+                      : " game-controls__stat-value--loss"
+                  }`}
+                >
+                  {lastResult.won
+                    ? formatCoins(lastResult.payout, coinType)
+                    : "No win"}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <p className="game-page__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
           </p>
 
-          <div className="roulette__fairness">
-            <button
-              type="button"
-              className="roulette__fairness-toggle"
-              aria-expanded={showFairness}
-              onClick={() => setShowFairness((v) => !v)}
-            >
-              <span>Provably fair</span>
-              <span className="roulette__fairness-icon" aria-hidden>▾</span>
-            </button>
-            {showFairness && (
-              <div className="roulette__fairness-body">
-                <p>
-                  <span className="roulette__fairness-k">Server seed (hash)</span>
-                  <code className="roulette__hash">{pfHash ?? "…"}</code>
-                </p>
-                <p>
-                  <span className="roulette__fairness-k">Next nonce</span>
-                  <code className="roulette__hash">{pfNonce}</code>
-                </p>
-                <label className="roulette__seed-label">
-                  <span className="roulette__fairness-k">Client seed</span>
-                  <input
-                    type="text"
-                    className="roulette__seed-input"
-                    value={clientSeed}
-                    maxLength={64}
-                    onChange={(e) => setClientSeed(e.target.value)}
-                    disabled={spinning}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="roulette__tool-btn"
-                  onClick={saveClientSeed}
-                  disabled={spinning}
-                >
-                  Save client seed
-                </button>
-                <p className="roulette__fairness-note">
-                  HMAC-SHA256 → pocket = floor(float × 37). European layout.
-                </p>
+          <details className="game-page__fairness">
+            <summary>Provably Fair</summary>
+            <div className="game-page__fairness-body">
+              <div className="game-page__fairness-row">
+                <span className="game-page__fairness-k">Server seed (hash)</span>
+                <code className="game-page__fairness-code">{pfHash ?? "…"}</code>
               </div>
-            )}
-          </div>
+              <div className="game-page__fairness-row">
+                <span className="game-page__fairness-k">Next nonce</span>
+                <code className="game-page__fairness-code">{pfNonce}</code>
+              </div>
+              <div className="game-page__fairness-row">
+                <span className="game-page__fairness-k">Client seed</span>
+                <input
+                  type="text"
+                  className="game-page__fairness-input"
+                  value={clientSeed}
+                  maxLength={64}
+                  onChange={(e) => setClientSeed(e.target.value)}
+                  disabled={spinning}
+                />
+              </div>
+              <button
+                type="button"
+                className="game-page__fairness-save"
+                onClick={saveClientSeed}
+                disabled={spinning}
+              >
+                Save client seed
+              </button>
+              <p className="game-page__fairness-note">
+                HMAC-SHA256 → pocket = floor(float × 37). European layout.
+              </p>
+            </div>
+          </details>
         </aside>
       </div>
     </div>

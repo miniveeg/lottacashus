@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════
-   LottaCash — Global base styles & resets
+   LottaCash — Global base styles & resets · "Obsidian Gold"
    Order matters: tokens → page chrome → forms → a11y
    ════════════════════════════════════════════════════════════════ */
 
@@ -25,22 +25,23 @@ body,
   overflow: hidden;
 }
 
-/* Native dark-mode UI controls, scrollbars, dialogs */
+/* Native dark-mode UI controls + smooth scroll (overridden for reduced motion) */
 html {
   color-scheme: dark;
   scroll-behavior: smooth;
 }
 
 body {
-  font-family: var(--lc-font-body);
+  font-family: var(--font-sans);
   font-size: 16px;
   font-weight: 400;
   line-height: 1.6;
-  color: var(--lc-text-primary);
-  background: var(--lc-bg-base);
+  color: var(--text-primary);
+  background: var(--bg-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv11', 'ss01';
 }
 
 body.lc-sidebar-open {
@@ -79,7 +80,7 @@ canvas {
   display: block;
 }
 
-/* ── Scrollbar (thin, crimson thumb — works in WebKit + Firefox) ── */
+/* ── Scrollbar (thin, GOLD thumb — works in WebKit + Firefox) ── */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -90,56 +91,56 @@ canvas {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(225, 29, 72, 0.28);
+  background: rgba(245, 185, 66, 0.28);
   border-radius: var(--radius-full);
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(225, 29, 72, 0.5);
+  background: rgba(245, 185, 66, 0.5);
   background-clip: padding-box;
   border: 2px solid transparent;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(225, 29, 72, 0.28) transparent;
+  scrollbar-color: rgba(245, 185, 66, 0.28) transparent;
 }
 
-/* ── Selection (crimson tint) ── */
+/* ── Selection (gold tint) ── */
 ::selection {
-  background: rgba(225, 29, 72, 0.28);
-  color: var(--lc-text-primary);
+  background: rgba(245, 185, 66, 0.28);
+  color: var(--text-primary);
 }
 
-/* ── Native selects ── */
+/* ── Native selects — gold-accented ── */
 select,
 .lc-select-native {
   appearance: none;
   -webkit-appearance: none;
   min-height: 2.75rem;
   padding: 0.5rem 2.5rem 0.5rem 0.85rem;
-  font-family: var(--lc-font-body);
+  font-family: var(--font-sans);
   font-size: 0.95rem;
   font-weight: 500;
   line-height: 1.4;
-  color: var(--lc-text-primary);
-  background-color: var(--lc-bg-elevated);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.7rem center;
   background-size: 1rem;
-  border: 1px solid var(--lc-border-strong);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition), background-color var(--lc-transition);
 }
 
 select:hover:not(:disabled),
 .lc-select-native:hover:not(:disabled) {
-  border-color: var(--lc-border-accent);
-  background-color: var(--lc-bg-hover);
+  border-color: var(--border-gold);
+  background-color: var(--bg-surface-2);
 }
 
 select:focus,
@@ -147,7 +148,7 @@ select:focus-visible,
 .lc-select-native:focus,
 .lc-select-native:focus-visible {
   outline: none;
-  border-color: var(--lc-crimson);
+  border-color: var(--gold);
   box-shadow: var(--lc-focus-ring);
 }
 
@@ -158,8 +159,8 @@ select:disabled,
 }
 
 select option {
-  background: var(--lc-bg-panel);
-  color: var(--lc-text-primary);
+  background: var(--bg-surface);
+  color: var(--text-primary);
   padding: 0.5rem;
 }
 
@@ -173,7 +174,7 @@ select option {
 .lc-field__label {
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--lc-text-secondary);
+  color: var(--text-secondary);
   letter-spacing: 0.02em;
 }
 
@@ -205,7 +206,7 @@ select option {
   min-height: 12rem;
   padding: var(--space-10) var(--space-6);
   text-align: center;
-  color: var(--lc-text-muted);
+  color: var(--text-muted);
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -214,7 +215,7 @@ select option {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, rgba(225, 29, 72, 0.22), rgba(139, 92, 246, 0.12));
+  background: linear-gradient(135deg, rgba(245, 185, 66, 0.24), rgba(245, 185, 66, 0.08));
   animation: lc-loading-pulse 1.4s ease-in-out infinite;
 }
 
@@ -226,7 +227,7 @@ select option {
 }
 
 /* ── Global keyboard focus indicator ──
-   2px crimson outline that meets WCAG 2.2 3:1 against dark surfaces.
+   2px gold outline that meets WCAG 2.2 3:1 against dark surfaces.
    Pairs with the focus-ring box-shadow on form controls. */
 :focus-visible {
   outline: var(--lc-focus-outline);

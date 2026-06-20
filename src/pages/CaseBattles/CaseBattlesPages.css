@@ -10,12 +10,12 @@
 }
 
 .cb-page {
-  --cb-accent: #38bdf8;
-  --cb-accent-2: #2563eb;
-  --cb-accent-dim: rgba(56, 189, 248, 0.14);
-  --cb-accent-glow: rgba(56, 189, 248, 0.35);
-  --cb-panel: rgba(16, 20, 30, 0.88);
-  --cb-panel-border: rgba(148, 163, 184, 0.12);
+  --cb-accent: var(--lc-crimson);
+  --cb-accent-2: var(--lc-crimson-dim);
+  --cb-accent-dim: var(--lc-crimson-glow);
+  --cb-accent-glow: var(--lc-crimson-glow-strong);
+  --cb-panel: var(--lc-bg-panel);
+  --cb-panel-border: var(--lc-border);
   max-width: 1080px;
   margin: 0 auto;
   padding: 1.25rem clamp(1rem, 3vw, 1.5rem) 5rem;
@@ -29,9 +29,8 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(56, 189, 248, 0.1), transparent 58%),
-    radial-gradient(ellipse 50% 45% at 0% 80%, rgba(225, 29, 72, 0.06), transparent 50%),
-    radial-gradient(ellipse 40% 35% at 100% 60%, rgba(168, 85, 247, 0.05), transparent 45%);
+    radial-gradient(ellipse 90% 55% at 50% -15%, var(--lc-crimson-glow-faint), transparent 58%),
+    radial-gradient(ellipse 50% 45% at 0% 80%, var(--lc-crimson-glow-faint), transparent 50%);
 }
 
 .cb-page__topbar {
@@ -150,7 +149,7 @@
 
 .cb-page__btn-ghost:hover:not(:disabled) {
   border-color: var(--cb-accent);
-  color: #7dd3fc;
+  color: var(--lc-crimson-soft);
 }
 
 .cb-page__btn-ghost:disabled {
@@ -169,7 +168,7 @@
   border-radius: var(--lc-radius-xl);
   border: 1px solid var(--cb-panel-border);
   background:
-    radial-gradient(ellipse 60% 80% at 0% 0%, rgba(56, 189, 248, 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 80% at 0% 0%, var(--lc-crimson-glow-faint), transparent 60%),
     linear-gradient(135deg, var(--cb-panel), rgba(22, 28, 42, 0.6));
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
@@ -184,7 +183,7 @@
   font-size: clamp(1.5rem, 1.2rem + 1.5vw, 1.85rem);
   font-weight: 800;
   letter-spacing: -0.02em;
-  background: linear-gradient(120deg, #ffffff 0%, #7dd3fc 100%);
+  background: linear-gradient(120deg, #ffffff 0%, var(--lc-crimson-soft) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -215,7 +214,7 @@
 }
 
 .cb-page__stat:hover {
-  border-color: rgba(56, 189, 248, 0.35);
+  border-color: var(--lc-border-accent);
   transform: translateY(-1px);
 }
 

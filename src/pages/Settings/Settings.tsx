@@ -216,11 +216,13 @@ export function Settings() {
         ? "settings__tally-value--negative"
         : "settings__tally-value--neutral";
 
+  const netPL = (profile?.totalWins ?? 0) - (profile?.totalLosses ?? 0);
+
   return (
     <div className="settings lc-page lc-page--medium">
-      <header className="lc-page__header">
-        <h1 className="lc-page__title settings__title">Settings</h1>
-        <p className="lc-page__subtitle settings__subtitle">
+      <header className="lc-page__header settings__header">
+        <h1 className="lc-page__title">Settings</h1>
+        <p className="lc-page__subtitle">
           Manage your account, balances, limits, and transaction history.
         </p>
       </header>
@@ -229,42 +231,46 @@ export function Settings() {
       {success && <p className="settings__success" role="status">{success}</p>}
 
       {/* 1. Account */}
-      <section className="settings__section">
+      <section className="settings__section lc-panel">
         <h2 className="settings__section-title">Account</h2>
         <p className="settings__section-desc">
           Your sign-in details and current balances.
         </p>
 
-        <div className="settings__account-header">
-          <div className="settings__account-item">
-            <label>Email</label>
-            <span>{user?.email ?? profile?.email ?? "—"}</span>
-          </div>
-          <div className="settings__account-item">
-            <label>Username</label>
-            <span>{profile?.username ?? "—"}</span>
-          </div>
-          <div className="settings__account-item settings__account-item--balance">
-            <label>Gold Coins (GC)</label>
-            <span className="settings__balance-inline settings__balance-inline--gc">
+        <div className="settings__balance-grid">
+          <div className="settings__balance-card settings__balance-card--gc">
+            <span className="settings__balance-label">Gold Coins (GC)</span>
+            <span className="settings__balance-value">
               {profileLoading ? "…" : formatCoinsWithUsd(profile?.balance ?? 0, "balance")}
             </span>
             <span className="settings__balance-note">Play money — no redemption value</span>
           </div>
-          <div className="settings__account-item settings__account-item--balance">
-            <label>Sweeps Coins (SC)</label>
-            <span className="settings__balance-inline settings__balance-inline--sc">
+          <div className="settings__balance-card settings__balance-card--sc">
+            <span className="settings__balance-label">Sweeps Coins (SC)</span>
+            <span className="settings__balance-value">
               {profileLoading ? "…" : formatCoinsWithUsd(profile?.sweepsCoins ?? 0, "sweeps_coins")}
             </span>
             <span className="settings__balance-note">Redeemable for cash</span>
           </div>
         </div>
 
+        <dl className="settings__meta-grid">
+          <div className="settings__meta-item">
+            <dt>Email</dt>
+            <dd>{user?.email ?? profile?.email ?? "—"}</dd>
+          </div>
+          <div className="settings__meta-item">
+            <dt>Username</dt>
+            <dd>{profile?.username ?? "—"}</dd>
+          </div>
+        </dl>
+
         <form onSubmit={handleSaveUsername} className="settings__username-form" noValidate>
           <div className="settings__field">
             <label htmlFor="settings-username">Change username</label>
             <input
               id="settings-username"
+              className="settings__input"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -283,78 +289,90 @@ export function Settings() {
       </section>
 
       {/* 2. Player Level */}
-      <section className="settings__section">
+      <section className="settings__section lc-panel">
         <h2 className="settings__section-title">Player Level</h2>
         <p className="settings__section-desc">
           Progress through tiers by wagering. Higher tiers unlock perks and rewards.
         </p>
 
         <div className="settings__level-wrap">
-          <h3 className="settings__level-heading">Level & XP</h3>
           <SettingsLevelSection
             totalWagered={profile?.totalWagered ?? 0}
             loading={profileLoading}
           />
         </div>
 
-        <div className="settings__stats-grid" style={{ marginBottom: 0 }}>
-          <div className="settings__stat">
-            <p className="settings__stat-label">Total wagered</p>
-            <p className="settings__stat-value">
+        <div className="settings__stat-row">
+          <div className="settings__mini-stat">
+            <span className="settings__mini-stat-label">Total wagered</span>
+            <span className="settings__mini-stat-value">
               {profileLoading ? "…" : formatUsd(profile?.totalWagered ?? 0)}
-            </p>
+            </span>
           </div>
         </div>
       </section>
 
-      {/* 3. Stats */}
-      <section className="settings__section">
-        <h2 className="settings__section-title">Stats</h2>
+      {/* 3. Statistics */}
+      <section className="settings__section lc-panel">
+        <h2 className="settings__section-title">Statistics</h2>
         <p className="settings__section-desc">
           Lifetime totals across deposits, withdrawals, wins, and losses.
         </p>
 
         <div className="settings__stats-grid">
           <div className="settings__stat">
-            <p className="settings__stat-label">Total deposited</p>
-            <p className="settings__stat-value">
+            <span className="settings__stat-label">Wagered</span>
+            <span className="settings__stat-value">
+              {profileLoading ? "…" : formatUsd(profile?.totalWagered ?? 0)}
+            </span>
+          </div>
+          <div className="settings__stat">
+            <span className="settings__stat-label">Deposited</span>
+            <span className="settings__stat-value">
               {profileLoading ? "…" : formatUsd(profile?.totalDeposited ?? 0)}
-            </p>
+            </span>
           </div>
           <div className="settings__stat">
-            <p className="settings__stat-label">Total withdrawn</p>
-            <p className="settings__stat-value">
+            <span className="settings__stat-label">Withdrawn</span>
+            <span className="settings__stat-value">
               {profileLoading ? "…" : formatUsd(profile?.totalWithdrawn ?? 0)}
-            </p>
+            </span>
           </div>
           <div className="settings__stat">
-            <p className="settings__stat-label">Total wins</p>
-            <p className="settings__stat-value settings__stat-value--win">
+            <span className="settings__stat-label">Wins</span>
+            <span className="settings__stat-value settings__stat-value--win">
               {profileLoading ? "…" : formatUsd(profile?.totalWins ?? 0)}
-            </p>
+            </span>
           </div>
           <div className="settings__stat">
-            <p className="settings__stat-label">Total losses</p>
-            <p className="settings__stat-value settings__stat-value--loss">
+            <span className="settings__stat-label">Losses</span>
+            <span className="settings__stat-value settings__stat-value--loss">
               {profileLoading ? "…" : formatUsd(profile?.totalLosses ?? 0)}
-            </p>
+            </span>
+          </div>
+          <div className="settings__stat">
+            <span className="settings__stat-label">Net P/L</span>
+            <span
+              className={`settings__stat-value ${
+                netPL >= 0 ? "settings__stat-value--win" : "settings__stat-value--loss"
+              }`}
+            >
+              {profileLoading ? "…" : `${netPL >= 0 ? "+" : ""}${formatUsd(netPL)}`}
+            </span>
           </div>
         </div>
 
-        <div className="settings__tally" style={{ marginBottom: 0 }}>
-          <p className="settings__tally-label">Net P/L (withdrawn − deposited)</p>
+        <div className="settings__tally">
+          <p className="settings__tally-label">Net cash flow (withdrawn − deposited)</p>
           <p className={`settings__tally-value ${tallyClass}`}>
             {profileLoading ? "…" : cashFlow.formatted}
           </p>
           <p className="settings__tally-hint">{cashFlow.label}</p>
-          <p className="settings__tally-hint">
-            Positive means you withdrew more than you deposited; negative means you deposited more.
-          </p>
         </div>
       </section>
 
       {/* 4. Discord */}
-      <section className="settings__section">
+      <section className="settings__section lc-panel">
         <h2 className="settings__section-title">Discord</h2>
         <p className="settings__section-desc">
           Link Discord for future rewards, levelling, and server perks when the LottaCash Discord launches.
@@ -377,20 +395,18 @@ export function Settings() {
                 <p className="settings__discord-status">Connected</p>
               </div>
             </div>
-            <div className="settings__btn-row">
-              <button
-                type="button"
-                className="settings__btn settings__btn--ghost"
-                onClick={handleUnlinkDiscord}
-                disabled={discordBusy}
-              >
-                Unlink Discord
-              </button>
-            </div>
+            <button
+              type="button"
+              className="settings__btn settings__btn--ghost"
+              onClick={handleUnlinkDiscord}
+              disabled={discordBusy}
+            >
+              Unlink Discord
+            </button>
           </div>
         ) : (
-          <div className="settings__discord">
-              <p className="settings__hint settings__hint--flex">
+          <div className="settings__discord settings__discord--unlinked">
+            <p className="settings__hint settings__hint--flex">
               No Discord account linked yet.
             </p>
             <button
@@ -410,8 +426,8 @@ export function Settings() {
         )}
       </section>
 
-      {/* 3. Responsible Gaming */}
-      <section className="settings__section">
+      {/* 5. Responsible Gaming */}
+      <section className="settings__section lc-panel">
         <h2 className="settings__section-title">Responsible Gaming</h2>
         <p className="settings__section-desc">
           Set limits on your play and take breaks when needed. All settings can be adjusted at any
@@ -436,6 +452,7 @@ export function Settings() {
             <label htmlFor="dl-daily">Daily limit ($)</label>
             <input
               id="dl-daily"
+              className="settings__input"
               type="number"
               min="0"
               step="10"
@@ -449,6 +466,7 @@ export function Settings() {
             <label htmlFor="dl-weekly">Weekly limit ($)</label>
             <input
               id="dl-weekly"
+              className="settings__input"
               type="number"
               min="0"
               step="10"
@@ -577,7 +595,7 @@ export function Settings() {
               <label htmlFor="se-duration">Duration</label>
               <select
                 id="se-duration"
-                className="settings__select"
+                className="settings__input settings__select"
                 value={seDuration}
                 onChange={(e) => setSeDuration(Number(e.target.value) as 30 | 90 | 180)}
                 disabled={seBusy}
@@ -591,6 +609,7 @@ export function Settings() {
               <label htmlFor="se-reason">Reason (optional)</label>
               <input
                 id="se-reason"
+                className="settings__input"
                 type="text"
                 placeholder="Optional reason"
                 value={seReason}
@@ -619,9 +638,7 @@ export function Settings() {
                 setSeBusy(false);
                 if (seError) setError(seError);
                 else {
-                  setSuccess(
-                    `Self-exclusion activated for ${seDuration} days.`
-                  );
+                  setSuccess(`Self-exclusion activated for ${seDuration} days.`);
                   fetchSelfExclusion().then(setSelfExclusion);
                 }
               }}
@@ -633,8 +650,8 @@ export function Settings() {
         )}
       </section>
 
-      {/* 4. Transactions */}
-      <section className="settings__section">
+      {/* 6. Transactions */}
+      <section className="settings__section lc-panel">
         <h2 className="settings__section-title">Transactions</h2>
         <p className="settings__section-desc">
           Deposits, withdrawals, wagers, and wins. Each bet shows the wager before the result.
@@ -667,7 +684,7 @@ export function Settings() {
               </thead>
               <tbody>
                 {transactions.map((tx) => (
-                  <tr key={tx.id}>
+                  <tr key={tx.id} className="settings__tx-row">
                     <td>{formatTxDate(tx.created_at)}</td>
                     <td>
                       <span className={`settings__tx-type settings__tx-type--${tx.type}`}>

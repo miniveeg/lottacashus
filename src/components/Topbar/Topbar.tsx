@@ -26,7 +26,7 @@ function searchCategoryLabel(category: SiteSearchItem["category"]): string {
 export function Topbar() {
   const { user, loading, signOut } = useAuth();
   const { profile, profileLoading } = useProfile();
-  const { coinType, setCoinType, label: coinLabel } = usePlayMode();
+  const { coinType, setCoinType } = usePlayMode();
   const { pathname } = useLocation();
   const { unreadCount } = useNotifications();
   const { toggleMobile } = useSidebar();
@@ -41,6 +41,7 @@ export function Topbar() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const searchResults = searchSite(searchQuery);
+  const isSweeps = coinType === "sweeps_coins";
 
   const displayName =
     profile?.username ??
@@ -50,12 +51,11 @@ export function Topbar() {
 
   const activeBalance = !user
     ? 0
-    : coinType === "sweeps_coins"
+    : isSweeps
       ? (profile?.sweepsCoins ?? 0)
       : (profile?.balance ?? 0);
 
-  // Show the coin amount with its symbol (e.g. "10,000.00 GC") plus a small
-  // USD-equivalent line so users always know the real-world value.
+  // "10,000.00 GC" — formatCoins includes the symbol.
   const balanceDisplay = !user
     ? formatCoins(0, coinType as CoinType)
     : profileLoading
@@ -127,8 +127,7 @@ export function Topbar() {
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
 
-  // Auto-focus the search input when the mobile search overlay opens so the
-  // keyboard appears immediately and the user can start typing.
+  // Auto-focus the search input when the mobile search overlay opens.
   useEffect(() => {
     if (mobileSearchOpen) {
       const id = window.setTimeout(() => searchInputRef.current?.focus(), 60);
@@ -150,17 +149,13 @@ export function Topbar() {
           <Menu size={20} aria-hidden />
         </motion.button>
         <Link to="/" className="topbar__brand">
-          <BrandLogo className="topbar__logo" size={32} alt="" />
+          <BrandLogo className="topbar__logo" size={28} alt="" />
           <span className="topbar__name">LottaCash</span>
         </Link>
       </div>
 
       <div className="topbar__search-wrap" ref={searchWrapRef}>
-        <form
-          className="topbar__search"
-          role="search"
-          onSubmit={handleSearchSubmit}
-        >
+        <form className="topbar__search" role="search" onSubmit={handleSearchSubmit}>
           <Search size={16} aria-hidden className="topbar__search-icon" />
           <input
             ref={searchInputRef}
@@ -222,42 +217,42 @@ export function Topbar() {
           {mobileSearchOpen ? <X size={18} aria-hidden /> : <Search size={18} aria-hidden />}
         </motion.button>
 
-        <div className="topbar__balance-group">
-          <Link
-            to={user ? "/settings" : loginUrl(pathname)}
-            className="topbar__balance"
-            title={profileLoading ? "Loading…" : `${formatCoins(activeBalance, coinType as CoinType)} = ${formatUsd(balanceUsd)}`}
-            aria-busy={profileLoading || undefined}
-            aria-label={profileLoading ? "Loading balance" : `${coinLabel}: ${balanceDisplay}${user ? `, equivalent to ${formatUsd(balanceUsd)}` : ""}`}
-          >
-            <span className="topbar__balance-row">
-              <span className="topbar__balance-label">{coinLabel}</span>
+        {/* Balance + coin toggle (only when logged in) */}
+        {user && (
+          <div className="topbar__balance-group" data-coin={isSweeps ? "sc" : "gc"}>
+            <Link
+              to="/settings"
+              className={`topbar__balance${isSweeps ? " topbar__balance--sc" : " topbar__balance--gc"}`}
+              title={profileLoading ? "Loading…" : `${formatCoins(activeBalance, coinType as CoinType)} = ${formatUsd(balanceUsd)}`}
+              aria-busy={profileLoading || undefined}
+              aria-label={profileLoading ? "Loading balance" : `${formatCoins(activeBalance, coinType as CoinType)}${user ? `, equivalent to ${formatUsd(balanceUsd)}` : ""}`}
+            >
               <span className="topbar__balance-value">
                 {profileLoading ? (
                   <span className="visually-hidden">Loading balance</span>
                 ) : null}
                 {balanceDisplay}
               </span>
-            </span>
-            {user && !profileLoading && (
-              <span className="topbar__balance-usd">{formatUsd(balanceUsd)}</span>
-            )}
-          </Link>
-          <motion.button
-            type="button"
-            className="topbar__coin-toggle"
-            aria-label={`Switch to ${coinType === "balance" ? "Sweeps Coins" : "Gold Coins"} (currently ${coinType === "balance" ? "Gold Coins" : "Sweeps Coins"})`}
-            aria-pressed={coinType === "sweeps_coins"}
-            onClick={() => setCoinType(coinType === "balance" ? "sweeps_coins" : "balance")}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            title={coinType === "balance" ? "Showing Gold Coins — click to show Sweeps Coins" : "Showing Sweeps Coins — click to show Gold Coins"}
-          >
-            <span className="topbar__coin-toggle-label" aria-hidden="true">
-              {coinType === "balance" ? "GC" : "SC"}
-            </span>
-          </motion.button>
-        </div>
+              {user && !profileLoading && (
+                <span className="topbar__balance-usd">{formatUsd(balanceUsd)}</span>
+              )}
+            </Link>
+            <motion.button
+              type="button"
+              className={`topbar__coin-toggle${isSweeps ? " topbar__coin-toggle--sc" : " topbar__coin-toggle--gc"}`}
+              aria-label={`Switch to ${isSweeps ? "Gold Coins" : "Sweeps Coins"} (currently ${isSweeps ? "Sweeps Coins" : "Gold Coins"})`}
+              aria-pressed={isSweeps}
+              onClick={() => setCoinType(isSweeps ? "balance" : "sweeps_coins")}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              title={isSweeps ? "Showing Sweeps Coins — click to show Gold Coins" : "Showing Gold Coins — click to show Sweeps Coins"}
+            >
+              <span className="topbar__coin-toggle-label" aria-hidden="true">
+                {isSweeps ? "SC" : "GC"}
+              </span>
+            </motion.button>
+          </div>
+        )}
 
         {loading ? (
           <span className="topbar__loading">…</span>
@@ -277,7 +272,7 @@ export function Topbar() {
               whileTap={{ scale: 0.97 }}
             >
               <LogOut size={14} aria-hidden />
-              Log out
+              <span className="topbar__btn-label">Log out</span>
             </motion.button>
           </>
         ) : (

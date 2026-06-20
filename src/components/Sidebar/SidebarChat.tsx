@@ -17,6 +17,12 @@ function formatChatTime(iso: string) {
   }).format(new Date(iso));
 }
 
+function avatarLetter(username: string | undefined | null): string {
+  const name = (username ?? "").trim();
+  if (!name) return "?";
+  return name.charAt(0).toUpperCase();
+}
+
 export function SidebarChat() {
   const { user, session, configured } = useAuth();
   const { pathname } = useLocation();
@@ -161,18 +167,23 @@ export function SidebarChat() {
                   key={msg.id}
                   className={`sidebar-chat__msg${isOwn ? " sidebar-chat__msg--own" : ""}`}
                 >
-                  <div className="sidebar-chat__msg-meta">
-                    <span className="sidebar-chat__msg-user-row">
-                      {msg.level != null && (
-                        <LevelBadge level={msg.level} size="sm" title={`Level ${msg.level}`} />
-                      )}
-                      <span className="sidebar-chat__msg-user">{msg.username}</span>
-                    </span>
-                    <time className="sidebar-chat__msg-time" dateTime={msg.created_at}>
-                      {formatChatTime(msg.created_at)}
-                    </time>
+                  <span className="sidebar-chat__avatar" aria-hidden="true">
+                    {avatarLetter(msg.username)}
+                  </span>
+                  <div className="sidebar-chat__bubble">
+                    <div className="sidebar-chat__msg-meta">
+                      <span className="sidebar-chat__msg-user-row">
+                        {msg.level != null && (
+                          <LevelBadge level={msg.level} size="sm" title={`Level ${msg.level}`} />
+                        )}
+                        <span className="sidebar-chat__msg-user">{msg.username}</span>
+                      </span>
+                      <time className="sidebar-chat__msg-time" dateTime={msg.created_at}>
+                        {formatChatTime(msg.created_at)}
+                      </time>
+                    </div>
+                    <p className="sidebar-chat__msg-body">{msg.body}</p>
                   </div>
-                  <p className="sidebar-chat__msg-body">{msg.body}</p>
                 </li>
               );
             })}

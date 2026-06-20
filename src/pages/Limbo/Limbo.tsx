@@ -8,7 +8,7 @@ import {
   LIMBO_MIN_TARGET,
   limboWinChance,
 } from "../../lib/games/limbo";
-import { formatCoins } from "../../lib/format";
+import { coinsToUsd, formatCoins, formatUsd } from "../../lib/format";
 import {
   fetchLimboPfState,
   placeLimboBet,
@@ -58,7 +58,6 @@ export function Limbo() {
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
-  const [showFairness, setShowFairness] = useState(false);
 
   const winChance = useMemo(() => limboWinChance(target), [target]);
   const potentialWin = useMemo(
@@ -152,24 +151,24 @@ export function Limbo() {
   };
 
   return (
-    <div className="limbo lc-game-page">
-      <header className="limbo__header">
-        <div className="limbo__header-main">
-          <h1 className="limbo__title">Limbo</h1>
-          <p className="limbo__subtitle">
+    <div className="game-page limbo">
+      <header className="game-page__header">
+        <div className="game-page__header-text">
+          <h1 className="game-page__title">Limbo</h1>
+          <p className="game-page__subtitle">
             Pick a target multiplier. Roll higher to win.
           </p>
         </div>
-        <span className="limbo__rtp-badge">99% RTP</span>
+        <span className="game-page__rtp">99% RTP</span>
       </header>
 
-      <div className="limbo__layout">
-        <section className="limbo__stage-panel">
+      <div className="game-page__layout">
+        <section className="game-page__stage limbo__stage">
           <div
             className={`limbo__display${rolling ? " limbo__display--rolling" : ""}${lastResult?.won ? " limbo__display--win" : lastResult && !lastResult.won ? " limbo__display--loss" : ""}`}
             aria-live="polite"
           >
-            <span className="limbo__display-label">Result</span>
+            <span className="limbo__display-label">Result multiplier</span>
             <span
               className={[
                 "limbo__display-value",
@@ -181,29 +180,15 @@ export function Limbo() {
             >
               {showResult ? `${formatMultiplier(displayMult)}×` : "···"}
             </span>
-            <span className="limbo__display-target">
-              Target {formatMultiplier(target)}×
-            </span>
-          </div>
-
-          {lastResult && !rolling && (
-            <div
-              className={`limbo__outcome${lastResult.won ? " limbo__outcome--win" : " limbo__outcome--loss"}`}
-              role="status"
-              aria-live="polite"
-            >
-              {lastResult.won ? (
-                <p>
-                  Hit <strong>{formatMultiplier(lastResult.result)}×</strong> · won{" "}
-                  <strong>{formatCoins(lastResult.payout, coinType)}</strong>
-                </p>
-              ) : (
-                <p>
-                  Landed <strong>{formatMultiplier(lastResult.result)}×</strong> · below target
-                </p>
-              )}
+            <div className="limbo__display-meta">
+              <span className="limbo__display-target">
+                Target {formatMultiplier(target)}×
+              </span>
+              <span className="limbo__display-chance">
+                Win chance {(winChance * 100).toFixed(2)}%
+              </span>
             </div>
-          )}
+          </div>
 
           {history.length > 0 && (
             <div className="limbo__history" aria-label="Recent results">
@@ -220,7 +205,13 @@ export function Limbo() {
           )}
         </section>
 
-        <aside className="limbo__controls game-controls">
+        <aside className="game-page__controls game-controls">
+          <div className="game-page__balance">
+            <span className="game-page__balance-label">Balance · {coinLabel}</span>
+            <span className="game-page__balance-value">{formatCoins(activeBalance, coinType)}</span>
+            <span className="game-page__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
+          </div>
+
           <div className="game-controls__options">
             <div className="game-controls__option">
               <label className="game-controls__option-label" htmlFor="limbo-target">
@@ -239,7 +230,7 @@ export function Limbo() {
                 }}
                 disabled={rolling}
               />
-              <div className="game-controls__presets limbo__target-presets">
+              <div className="game-controls__presets">
                 {TARGET_PRESETS.map((t) => (
                   <button
                     key={t}
@@ -255,9 +246,6 @@ export function Limbo() {
               <p className="game-controls__option-hint">
                 Payout {formatCoins(potentialWin, coinType)}
               </p>
-              <span className="limbo__win-chance">
-                Win chance <strong>{(winChance * 100).toFixed(2)}%</strong>
-              </span>
             </div>
           </div>
 
@@ -313,94 +301,77 @@ export function Limbo() {
             </div>
           </div>
 
-          {error && (
-            <p className="limbo__error" role="alert">
-              {error}
-            </p>
-          )}
-
           <button
             type="button"
-            className="limbo__bet-btn"
+            className="game-controls__play"
             onClick={handleBet}
             disabled={rolling || !user}
             aria-busy={rolling}
           >
-            {rolling ? (
-              <>
-                <span className="limbo__spinner" aria-hidden="true" />
-                <span>Rolling…</span>
-              </>
-            ) : (
-              "Bet"
-            )}
+            {rolling ? "Rolling…" : "Play"}
           </button>
 
-          <div className="keno__stats">
-            <div className="keno__stat">
-              <span className="keno__stat-label">Balance</span>
-              <span className="keno__stat-value">{formatCoins(activeBalance, coinType)}</span>
-            </div>
-            <div className="keno__stat">
-              <span className="keno__stat-label">Last payout</span>
-              <span
-                className={`keno__stat-value${
-                  lastResult
-                    ? lastResult.won
-                      ? " keno__stat-value--win"
-                      : " keno__stat-value--loss"
-                    : ""
-                }`}
-              >
-                {lastResult ? formatCoins(lastResult.payout, coinType) : "—"}
-              </span>
-            </div>
-          </div>
+          {error && <p className="game-controls__error" role="alert">{error}</p>}
 
-          <p className="limbo__hint">
+          {lastResult && !rolling && (
+            <div className="game-controls__stats">
+              <div className="game-controls__stat-row">
+                <span className="game-controls__stat-label">Last roll</span>
+                <span
+                  className={`game-controls__stat-value${
+                    lastResult.won
+                      ? " game-controls__stat-value--win"
+                      : " game-controls__stat-value--loss"
+                  }`}
+                >
+                  {formatMultiplier(lastResult.result)}× ·{" "}
+                  {lastResult.won
+                    ? formatCoins(lastResult.payout, coinType)
+                    : "No win"}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <p className="game-page__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
           </p>
 
-          <div className="limbo__fairness">
-            <button
-              type="button"
-              className="limbo__fairness-toggle"
-              aria-expanded={showFairness}
-              onClick={() => setShowFairness((v) => !v)}
-            >
-              <span>Provably fair</span>
-              <span className="limbo__fairness-icon" aria-hidden>▾</span>
-            </button>
-            {showFairness && (
-              <div className="limbo__fairness-body">
-                <p>
-                  <span className="limbo__fairness-k">Server seed (hash)</span>
-                  <code className="limbo__hash">{pfHash ?? "…"}</code>
-                </p>
-                <p>
-                  <span className="limbo__fairness-k">Next nonce</span>
-                  <code className="limbo__hash">{pfNonce}</code>
-                </p>
-                <label className="limbo__seed-label">
-                  <span className="limbo__fairness-k">Client seed</span>
-                  <input
-                    type="text"
-                    className="limbo__seed-input"
-                    value={clientSeed}
-                    maxLength={64}
-                    onChange={(e) => setClientSeed(e.target.value)}
-                    disabled={rolling}
-                  />
-                </label>
-                <button type="button" className="limbo__tool-btn" onClick={saveClientSeed} disabled={rolling}>
-                  Save client seed
-                </button>
-                <p className="limbo__fairness-note">
-                  HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — 94.5% RTP via win odds.
-                </p>
+          <details className="game-page__fairness">
+            <summary>Provably Fair</summary>
+            <div className="game-page__fairness-body">
+              <div className="game-page__fairness-row">
+                <span className="game-page__fairness-k">Server seed (hash)</span>
+                <code className="game-page__fairness-code">{pfHash ?? "…"}</code>
               </div>
-            )}
-          </div>
+              <div className="game-page__fairness-row">
+                <span className="game-page__fairness-k">Next nonce</span>
+                <code className="game-page__fairness-code">{pfNonce}</code>
+              </div>
+              <div className="game-page__fairness-row">
+                <span className="game-page__fairness-k">Client seed</span>
+                <input
+                  type="text"
+                  className="game-page__fairness-input"
+                  value={clientSeed}
+                  maxLength={64}
+                  onChange={(e) => setClientSeed(e.target.value)}
+                  disabled={rolling}
+                />
+              </div>
+              <button
+                type="button"
+                className="game-page__fairness-save"
+                onClick={saveClientSeed}
+                disabled={rolling}
+              >
+                Save client seed
+              </button>
+              <p className="game-page__fairness-note">
+                HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — 94.5% RTP via win odds.
+              </p>
+            </div>
+          </details>
         </aside>
       </div>
     </div>

@@ -32,7 +32,7 @@ export function Sidebar() {
         className="sidebar__mode-btn"
         onClick={toggleMode}
         aria-label={isChatMode ? "Switch to sidebar navigation" : "Switch to live chat"}
-        whileHover={{ y: -2, boxShadow: "0 6px 28px var(--lc-crimson-glow)" }}
+        whileHover={{ y: -2, boxShadow: "0 6px 28px var(--gold-glow, rgba(245, 185, 66, 0.3))" }}
         whileTap={{ scale: 0.98 }}
       >
         {isChatMode ? <PanelLeft size={16} /> : <MessageSquare size={16} />}

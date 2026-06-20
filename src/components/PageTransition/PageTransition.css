@@ -1,5 +1,5 @@
 /* ── Page transition wrapper ──
-   Clean fade — opacity only. The framer-motion variants in
+   Clean opacity-only fade (0.2s). The framer-motion variants in
    PageTransition.tsx drive the actual animation; this CSS just
    ensures the wrapper fills its parent and respects reduced motion. */
 

@@ -23,4 +23,3 @@ Thumbs.db
 # Vercel
 .vercel
 .aider*
-node_modules/ 

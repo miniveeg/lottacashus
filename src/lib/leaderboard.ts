@@ -19,13 +19,17 @@ export async function fetchBiggestWins(limit = 50): Promise<LeaderboardEntry[]> 
     .limit(limit);
 
   if (error || !data) return [];
-  return data.map((row, i) => ({
-    rank: i + 1,
-    username: (row.profiles as { username: string } | { username: string }[])?.username
-      ? ((row.profiles as { username: string }).username)
-      : "Unknown",
-    value: Number(row.amount) || 0,
-  }));
+  return data.map((row, i) => {
+    const profiles = row.profiles as { username: string } | { username: string }[] | null;
+    const username = Array.isArray(profiles)
+      ? (profiles[0]?.username ?? "Unknown")
+      : (profiles?.username ?? "Unknown");
+    return {
+      rank: i + 1,
+      username,
+      value: Number(row.amount) || 0,
+    };
+  });
 }
 
 export async function fetchMostWagered(limit = 50): Promise<LeaderboardEntry[]> {

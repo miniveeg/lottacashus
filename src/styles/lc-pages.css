@@ -11,11 +11,12 @@
 /* ── Page shell ── */
 .lc-page {
   --lc-page-pad-x: clamp(1rem, 3vw, 1.5rem);
+  --lc-page-pad-y: clamp(1.25rem, 3vw, 1.75rem);
   --lc-page-pad-b: clamp(2rem, 5vw, 3.5rem);
   width: 100%;
   max-width: var(--lc-page-max, 1120px);
   margin: 0 auto;
-  padding: 1.35rem var(--lc-page-pad-x) var(--lc-page-pad-b);
+  padding: var(--lc-page-pad-y) var(--lc-page-pad-x) var(--lc-page-pad-b);
 }
 
 .lc-page--narrow  { --lc-page-max: 720px; }
@@ -48,7 +49,9 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: var(--lc-gold);
+  /* crimson-soft (~5.4:1 on dark) instead of base crimson (~3.9:1)
+     so the small eyebrow text passes WCAG AA. */
+  color: var(--lc-crimson-soft);
 }
 
 .lc-page__title {
@@ -406,12 +409,10 @@
   animation: lc-loading-pulse 1.4s ease-in-out infinite;
 }
 
-/* ── Focus ── */
-:focus-visible {
-  outline: 2px solid var(--lc-gold-dim);
-  outline-offset: 2px;
-}
-
+/* ── Focus ──
+   The global :focus-visible rule in global.css supplies the outline;
+   here we only suppress the legacy duplicate so the higher-contrast
+   crimson-soft indicator wins everywhere. */
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) { outline: none; }
 
@@ -432,19 +433,25 @@ a:focus:not(:focus-visible) { outline: none; }
 .wallet__input:focus, .admin__input:focus, .settings__input:focus {
   outline: none;
   border-color: var(--lc-border-accent);
-  box-shadow: 0 0 0 3px var(--lc-gold-glow);
+  box-shadow: var(--lc-focus-ring);
 }
 
 /* ── Mobile ── */
 @media (max-width: 900px) {
   .lc-page {
     --lc-page-pad-x: 1rem;
+    --lc-page-pad-y: 1rem;
     --lc-page-pad-b: 2rem;
-    padding-top: 1rem;
   }
   .lc-page--auth { padding: 1.25rem 1rem; }
   .lc-game-page.keno, .lc-game-page.mines, .lc-game-page.limbo,
   .lc-game-page.roulette, .keno, .mines, .limbo, .roulette,
   .lc-game-page.bj, .bj { padding: 1rem 1rem 2.5rem; }
   .game-controls { position: static; }
+}
+
+@media (max-width: 480px) {
+  .lc-page { --lc-page-pad-x: 0.75rem; }
+  .lc-page__header { margin-bottom: 1.25rem; }
+  .lc-panel { padding: 1rem 1.1rem; }
 }

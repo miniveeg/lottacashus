@@ -10,13 +10,15 @@ import {
   cashOutCrash,
   setCrashClientSeed,
 } from "../../lib/crash";
-import { crashPointFromSeeds, truncateCrashMultiplier } from "../../lib/games/crash";
+import { truncateCrashMultiplier } from "../../lib/games/crash";
 import "../../styles/game-controls.css";
 import "./Crash.css";
 
 const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
-const ANIMATION_SPEED = 0.015;
-const CANVAS_HEIGHT = 320;
+// Animation rate — multiplier grows ~9%/frame at 60fps (exponential, crash-like).
+const ANIMATION_GROWTH = 1.009;
+const CANVAS_BASE_WIDTH = 600;
+const CANVAS_BASE_HEIGHT = 320;
 
 export function Crash() {
   const { user } = useAuth();
@@ -25,7 +27,6 @@ export function Crash() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
-  const multiplierRef = useRef(1);
   const phaseRef = useRef<CrashPhaseLocal>("idle");
   const crashPointRef = useRef(1);
 
@@ -33,7 +34,6 @@ export function Crash() {
   const [wagerInput, setWagerInput] = useState("1.00");
   const [phase, setPhase] = useState<CrashPhaseLocal>("idle");
   const [multiplier, setMultiplier] = useState(1);
-  const [crashPoint, setCrashPointState] = useState(1);
   const [lastResult, setLastResult] = useState<{
     crashedAt: number;
     won: boolean;
@@ -76,19 +76,45 @@ export function Crash() {
     [wager, multiplier]
   );
 
-  function drawGraph(ctx: CanvasRenderingContext2D, w: number, h: number, pts: { x: number; y: number }[], currentMult: number) {
+  /** Resolve theme color for the chart line so it stays consistent with the site palette. */
+  function resolveChartColor(): { line: string; fill: string; crashed: string } {
+    if (typeof window === "undefined") {
+      return { line: "#22c55e", fill: "rgba(34,197,94,0.08)", crashed: "#ef4444" };
+    }
+    const styles = getComputedStyle(document.documentElement);
+    const line = styles.getPropertyValue("--lc-emerald").trim() || "#22c55e";
+    const ruby = styles.getPropertyValue("--lc-ruby").trim() || "#ef4444";
+    // Convert hex to rgba with low alpha for the area fill.
+    const fillAlpha = "0.10";
+    const fill = line.startsWith("#") && line.length === 7
+      ? `rgba(${parseInt(line.slice(1, 3), 16)}, ${parseInt(line.slice(3, 5), 16)}, ${parseInt(line.slice(5, 7), 16)}, ${fillAlpha})`
+      : "rgba(34, 197, 94, 0.10)";
+    return { line, fill, crashed: ruby };
+  }
+
+  function drawGraph(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    pts: { x: number; y: number }[],
+    currentMult: number,
+    crashed: boolean
+  ) {
     ctx.clearRect(0, 0, w, h);
 
-    const pad = 40;
+    const pad = Math.max(28, Math.min(48, Math.floor(w * 0.07)));
     const graphW = w - pad * 2;
     const graphH = h - pad * 2;
 
     const maxY = Math.max(2, Math.ceil(Math.max(currentMult, ...pts.map((p) => p.y))));
     const maxX = pts.length > 1 ? pts[pts.length - 1].x : 1;
 
-    function mapX(x: number) { return pad + (x / maxX) * graphW; }
-    function mapY(y: number) { return pad + graphH - ((y - 1) / (maxY - 1)) * graphH; }
+    function mapX(x: number) { return pad + (x / Math.max(maxX, 0.001)) * graphW; }
+    function mapY(y: number) { return pad + graphH - ((y - 1) / Math.max(maxY - 1, 0.001)) * graphH; }
 
+    const colors = resolveChartColor();
+
+    // Horizontal grid lines + labels
     ctx.beginPath();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
     ctx.lineWidth = 1;
@@ -99,10 +125,28 @@ export function Crash() {
     }
     ctx.stroke();
 
+    if (pts.length === 0) return;
+
+    // Area fill under the line
     ctx.beginPath();
-    ctx.strokeStyle = "#22c55e";
+    for (let i = 0; i < pts.length; i++) {
+      const px = mapX(pts[i].x);
+      const py = mapY(pts[i].y);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.lineTo(mapX(pts[pts.length - 1].x), pad + graphH);
+    ctx.lineTo(mapX(pts[0].x), pad + graphH);
+    ctx.closePath();
+    ctx.fillStyle = crashed ? "rgba(239, 68, 68, 0.10)" : colors.fill;
+    ctx.fill();
+
+    // Chart line
+    ctx.beginPath();
+    ctx.strokeStyle = crashed ? colors.crashed : colors.line;
     ctx.lineWidth = 3;
     ctx.lineJoin = "round";
+    ctx.lineCap = "round";
     for (let i = 0; i < pts.length; i++) {
       const px = mapX(pts[i].x);
       const py = mapY(pts[i].y);
@@ -111,25 +155,23 @@ export function Crash() {
     }
     ctx.stroke();
 
-    ctx.fillStyle = "rgba(34, 197, 94, 0.08)";
-    ctx.lineTo(mapX(pts[pts.length - 1].x), pad + graphH);
-    ctx.lineTo(mapX(pts[0].x), pad + graphH);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-    ctx.font = "11px system-ui";
+    // Y-axis labels
+    ctx.fillStyle = "rgba(255, 255, 255, 0.32)";
+    ctx.font = "11px system-ui, sans-serif";
+    ctx.textBaseline = "middle";
     for (let i = 1; i < maxY; i++) {
       const y = mapY(i);
-      ctx.fillText(`${i}x`, 4, y + 4);
+      ctx.fillText(`${i}x`, 4, y);
     }
   }
 
   function startAnimation(crashPt: number) {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const ctxRaw = canvas.getContext("2d");
+    if (!ctxRaw) return;
+    // Capture the non-null context so closures don't re-widen the type.
+    const ctx: CanvasRenderingContext2D = ctxRaw;
 
     const w = canvas.width;
     const h = canvas.height;
@@ -142,16 +184,17 @@ export function Crash() {
     crashPointRef.current = crashPt;
 
     function tick() {
-      if (phaseRef.current === "idle") return;
+      if (phaseRef.current !== "running") return;
 
-      elapsed += ANIMATION_SPEED;
-      current = 1 + elapsed;
+      elapsed += 1 / 60; // seconds, ~60fps
+      // Exponential growth — feels like a real crash multiplier.
+      current = Math.pow(ANIMATION_GROWTH, elapsed * 60);
       const truncated = truncateCrashMultiplier(current);
 
       if (truncated >= crashPt) {
         current = crashPt;
         pts.push({ x: elapsed, y: crashPt });
-        drawGraph(ctx, w, h, pts, crashPt);
+        drawGraph(ctx, w, h, pts, crashPt, true);
         setMultiplier(crashPt);
         setPhase("crashed");
         phaseRef.current = "idle";
@@ -164,10 +207,9 @@ export function Crash() {
         return;
       }
 
-      const displayMultiplier = Math.max(1, Math.floor(truncated * 100) / 100);
-      setMultiplier(displayMultiplier);
-      pts.push({ x: elapsed, y: displayMultiplier });
-      drawGraph(ctx, w, h, pts, displayMultiplier);
+      setMultiplier(truncated);
+      pts.push({ x: elapsed, y: truncated });
+      drawGraph(ctx, w, h, pts, truncated, false);
 
       animRef.current = requestAnimationFrame(tick);
     }
@@ -181,6 +223,38 @@ export function Crash() {
       animRef.current = 0;
     }
   }
+
+  // Responsive canvas: scale the backing store to match the displayed size × DPR
+  // for crisp chart rendering on retina/mobile displays.
+  const resizeCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+    const rect = canvas.getBoundingClientRect();
+    const cssW = Math.max(1, Math.floor(rect.width));
+    const cssH = Math.max(1, Math.floor(rect.height));
+    const targetW = Math.floor(cssW * dpr);
+    const targetH = Math.floor(cssH * dpr);
+    if (canvas.width !== targetW || canvas.height !== targetH) {
+      canvas.width = targetW;
+      canvas.height = targetH;
+    }
+    const ctxRaw = canvas.getContext("2d");
+    if (!ctxRaw) return;
+    const ctx: CanvasRenderingContext2D = ctxRaw;
+    // Redraw the current history at the new resolution.
+    const crashed = phaseRef.current === "idle" && phase === "crashed";
+    drawGraph(ctx, canvas.width, canvas.height, historyRef.current, multiplier, crashed);
+  }, [multiplier, phase]);
+
+  useEffect(() => {
+    resizeCanvas();
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ro = new ResizeObserver(() => resizeCanvas());
+    ro.observe(canvas);
+    return () => ro.disconnect();
+  }, [resizeCanvas]);
 
   useEffect(() => {
     return () => stopAnimation();
@@ -270,10 +344,11 @@ export function Crash() {
             <canvas
               ref={canvasRef}
               className="crash__canvas"
-              width={600}
-              height={CANVAS_HEIGHT}
+              width={CANVAS_BASE_WIDTH}
+              height={CANVAS_BASE_HEIGHT}
+              aria-label={`Crash multiplier ${multiplier.toFixed(2)}x`}
             />
-            <div className="crash__multiplier-overlay">
+            <div className="crash__multiplier-overlay" aria-live="polite" aria-atomic="true">
               <span className={`crash__mult-value${phase === "crashed" ? " crash__mult-value--crashed" : ""}${phase === "cashed_out" ? " crash__mult-value--win" : ""}`}>
                 {multiplier.toFixed(2)}x
               </span>
@@ -292,7 +367,7 @@ export function Crash() {
           </div>
 
           {lastResult && phase === "crashed" && (
-            <div className="crash__outcome crash__outcome--loss" role="status">
+            <div className="crash__outcome crash__outcome--loss" role="status" aria-live="assertive">
               <p>
                 Crashed at <strong>{lastResult.crashedAt.toFixed(2)}x</strong> — lost{" "}
                 <strong>{formatUsd(wager)}</strong>
@@ -367,7 +442,7 @@ export function Crash() {
               type="button"
               className="crash__bet-btn"
               onClick={handleBet}
-              disabled={phase === "running" || !user}
+              disabled={!user}
             >
               {phase === "crashed" || phase === "cashed_out" ? "Bet again" : "Bet"}
             </button>

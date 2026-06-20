@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
@@ -7,6 +7,7 @@ import { ProfileProvider } from "./contexts/ProfileContext";
 import { ToastProvider } from "./contexts/ToastContext";
 import { ToastRegion } from "./components/Toast/Toast";
 import { AppShell } from "./components/AppShell/AppShell";
+import { AdminRoute } from "./components/AdminRoute/AdminRoute";
 import { Home } from "./pages/Home/Home";
 import { Login } from "./pages/Login/Login";
 import { Signup } from "./pages/Signup/Signup";
@@ -15,13 +16,17 @@ import { ForgotPassword } from "./pages/ForgotPassword/ForgotPassword";
 import { Deposit } from "./pages/Deposit/Deposit";
 import { Withdraw } from "./pages/Withdraw/Withdraw";
 import { Help } from "./pages/Help/Help";
-import { Keno } from "./pages/Keno/Keno";
-import { Mines } from "./pages/Mines/Mines";
-import { Limbo } from "./pages/Limbo/Limbo";
-import { Roulette } from "./pages/Roulette/Roulette";
-import { Blackjack } from "./pages/Blackjack/Blackjack";
-import { Crash } from "./pages/Crash/Crash";
 import { Originals } from "./pages/Originals/Originals";
+
+// Lazy-load game pages and secondary routes so the initial bundle stays small.
+// Each route is fetched on demand the first time a user navigates to it.
+const Keno = lazy(() => import("./pages/Keno/Keno").then((m) => ({ default: m.Keno })));
+const Mines = lazy(() => import("./pages/Mines/Mines").then((m) => ({ default: m.Mines })));
+const Limbo = lazy(() => import("./pages/Limbo/Limbo").then((m) => ({ default: m.Limbo })));
+const Roulette = lazy(() => import("./pages/Roulette/Roulette").then((m) => ({ default: m.Roulette })));
+const Blackjack = lazy(() => import("./pages/Blackjack/Blackjack").then((m) => ({ default: m.Blackjack })));
+const Crash = lazy(() => import("./pages/Crash/Crash").then((m) => ({ default: m.Crash })));
+const Slots = lazy(() => import("./pages/Slots/Slots"));
 const CaseBattlesCreate = lazy(() =>
   import("./pages/CaseBattles/CaseBattlesCreate").then((m) => ({ default: m.CaseBattlesCreate }))
 );
@@ -31,25 +36,34 @@ const CaseBattlesHub = lazy(() =>
 const CaseBattlesRoom = lazy(() =>
   import("./pages/CaseBattles/CaseBattlesRoom").then((m) => ({ default: m.CaseBattlesRoom }))
 );
+const Admin = lazy(() => import("./pages/Admin/Admin").then((m) => ({ default: m.Admin })));
+const Promotions = lazy(() => import("./pages/Promotions/Promotions").then((m) => ({ default: m.Promotions })));
+const Leaderboard = lazy(() => import("./pages/Leaderboard/Leaderboard").then((m) => ({ default: m.Leaderboard })));
+const ProfilePage = lazy(() => import("./pages/Profile/Profile").then((m) => ({ default: m.ProfilePage })));
+const NotFound = lazy(() => import("./pages/NotFound/NotFound").then((m) => ({ default: m.NotFound })));
+const Privacy = lazy(() => import("./pages/Privacy/Privacy").then((m) => ({ default: m.Privacy })));
+const SweepstakesRules = lazy(() =>
+  import("./pages/SweepstakesRules/SweepstakesRules").then((m) => ({ default: m.SweepstakesRules }))
+);
+const FreeEntry = lazy(() => import("./pages/FreeEntry/FreeEntry").then((m) => ({ default: m.FreeEntry })));
+const Redeem = lazy(() => import("./pages/Redeem/Redeem"));
 
-function CaseBattlesFallback() {
+function PageFallback({ label = "Loading…" }: { label?: string }) {
   return (
     <div className="lc-page" style={{ padding: "2rem", color: "var(--lc-text-muted)" }}>
-      Loading Case Battles…
+      {label}
     </div>
   );
 }
-import { Admin } from "./pages/Admin/Admin";
-import { Promotions } from "./pages/Promotions/Promotions";
-import { Leaderboard } from "./pages/Leaderboard/Leaderboard";
-import { ProfilePage } from "./pages/Profile/Profile";
-import { NotFound } from "./pages/NotFound/NotFound";
-import { AdminRoute } from "./components/AdminRoute/AdminRoute";
-import { Privacy } from "./pages/Privacy/Privacy";
-import { SweepstakesRules } from "./pages/SweepstakesRules/SweepstakesRules";
-import { FreeEntry } from "./pages/FreeEntry/FreeEntry";
-import Redeem from "./pages/Redeem/Redeem";
-import Slots from "./pages/Slots/Slots";
+
+/** Wrap a lazy-loaded page in a Suspense boundary with a consistent fallback. */
+function LazyPage({ children, label }: { children: ReactNode; label?: string }) {
+  return <Suspense fallback={<PageFallback label={label} />}>{children}</Suspense>;
+}
+
+function Shell({ children }: { children: ReactNode }) {
+  return <AppShell>{children}</AppShell>;
+}
 
 export default function App() {
   return (
@@ -57,254 +71,113 @@ export default function App() {
       <AuthProvider>
         <ProfileProvider>
           <PlayModeProvider>
-          <NotificationsProvider>
-          <ToastProvider>
-          <ToastRegion />
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <AppShell>
-                  <Home />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/login"
-              element={
-                <AppShell>
-                  <Login />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/signup"
-              element={
-                <AppShell>
-                  <Signup />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <AppShell>
-                  <Settings />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/forgot-password"
-              element={
-                <AppShell>
-                  <ForgotPassword />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/deposit"
-              element={
-                <AppShell>
-                  <Deposit />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/withdraw"
-              element={
-                <AppShell>
-                  <Withdraw />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/help"
-              element={
-                <AppShell>
-                  <Help />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/promotions"
-              element={
-                <AppShell>
-                  <Promotions />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/originals"
-              element={
-                <AppShell>
-                  <Originals />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/keno"
-              element={
-                <AppShell>
-                  <Keno />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/mines"
-              element={
-                <AppShell>
-                  <Mines />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/limbo"
-              element={
-                <AppShell>
-                  <Limbo />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/roulette"
-              element={
-                <AppShell>
-                  <Roulette />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/blackjack"
-              element={
-                <AppShell>
-                  <Blackjack />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/crash"
-              element={
-                <AppShell>
-                  <Crash />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/case-battles"
-              element={
-                <AppShell>
-                  <Suspense fallback={<CaseBattlesFallback />}>
-                    <CaseBattlesHub />
-                  </Suspense>
-                </AppShell>
-              }
-            />
-            <Route
-              path="/case-battles/create"
-              element={
-                <AppShell>
-                  <Suspense fallback={<CaseBattlesFallback />}>
-                    <CaseBattlesCreate />
-                  </Suspense>
-                </AppShell>
-              }
-            />
-            <Route
-              path="/case-battles/:battleId"
-              element={
-                <AppShell>
-                  <Suspense fallback={<CaseBattlesFallback />}>
-                    <CaseBattlesRoom />
-                  </Suspense>
-                </AppShell>
-              }
-            />
-            <Route
-              path="/leaderboard"
-              element={
-                <AppShell>
-                  <Leaderboard />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <AppShell>
-                  <ProfilePage />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/profile/:username"
-              element={
-                <AppShell>
-                  <ProfilePage />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <AppShell>
-                  <AdminRoute>
-                    <Admin />
-                  </AdminRoute>
-                </AppShell>
-              }
-            />
-            <Route
-              path="/privacy"
-              element={
-                <AppShell>
-                  <Privacy />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/sweepstakes"
-              element={
-                <AppShell>
-                  <SweepstakesRules />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/free-entry"
-              element={
-                <AppShell>
-                  <FreeEntry />
-                </AppShell>
-              }
-            />
-            <Route path="/responsible-gaming" element={<Navigate to="/settings" replace />} />
-            <Route
-              path="/slots"
-              element={
-                <AppShell>
-                  <Slots />
-                </AppShell>
-              }
-            />
-            <Route
-              path="/redeem"
-              element={
-                <AppShell>
-                  <Redeem />
-                </AppShell>
-              }
-            />
-            <Route
-              path="*"
-              element={
-                <AppShell>
-                  <NotFound />
-                </AppShell>
-              }
-            />
-          </Routes>
-          </ToastProvider>
-          </NotificationsProvider>
+            <NotificationsProvider>
+              <ToastProvider>
+                <ToastRegion />
+                <Routes>
+                  {/* Core auth & account routes — eager-loaded for instant first paint. */}
+                  <Route path="/" element={<Shell><Home /></Shell>} />
+                  <Route path="/login" element={<Shell><Login /></Shell>} />
+                  <Route path="/signup" element={<Shell><Signup /></Shell>} />
+                  <Route path="/settings" element={<Shell><Settings /></Shell>} />
+                  <Route path="/forgot-password" element={<Shell><ForgotPassword /></Shell>} />
+                  <Route path="/deposit" element={<Shell><Deposit /></Shell>} />
+                  <Route path="/withdraw" element={<Shell><Withdraw /></Shell>} />
+                  <Route path="/help" element={<Shell><Help /></Shell>} />
+                  <Route path="/originals" element={<Shell><Originals /></Shell>} />
+
+                  {/* Game & secondary routes — lazy-loaded. */}
+                  <Route
+                    path="/keno"
+                    element={<Shell><LazyPage label="Loading Keno…"><Keno /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/mines"
+                    element={<Shell><LazyPage label="Loading Mines…"><Mines /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/limbo"
+                    element={<Shell><LazyPage label="Loading Limbo…"><Limbo /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/roulette"
+                    element={<Shell><LazyPage label="Loading Roulette…"><Roulette /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/blackjack"
+                    element={<Shell><LazyPage label="Loading Blackjack…"><Blackjack /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/crash"
+                    element={<Shell><LazyPage label="Loading Crash…"><Crash /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/case-battles"
+                    element={<Shell><LazyPage label="Loading Case Battles…"><CaseBattlesHub /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/case-battles/create"
+                    element={<Shell><LazyPage label="Loading Case Battles…"><CaseBattlesCreate /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/case-battles/:battleId"
+                    element={<Shell><LazyPage label="Loading Case Battles…"><CaseBattlesRoom /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/slots"
+                    element={<Shell><LazyPage label="Loading Slots…"><Slots /></LazyPage></Shell>}
+                  />
+
+                  <Route
+                    path="/promotions"
+                    element={<Shell><LazyPage label="Loading promotions…"><Promotions /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/leaderboard"
+                    element={<Shell><LazyPage label="Loading leaderboard…"><Leaderboard /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/profile"
+                    element={<Shell><LazyPage label="Loading profile…"><ProfilePage /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/profile/:username"
+                    element={<Shell><LazyPage label="Loading profile…"><ProfilePage /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <Shell>
+                        <AdminRoute>
+                          <LazyPage label="Loading admin…"><Admin /></LazyPage>
+                        </AdminRoute>
+                      </Shell>
+                    }
+                  />
+                  <Route
+                    path="/privacy"
+                    element={<Shell><LazyPage><Privacy /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/sweepstakes"
+                    element={<Shell><LazyPage><SweepstakesRules /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="/free-entry"
+                    element={<Shell><LazyPage><FreeEntry /></LazyPage></Shell>}
+                  />
+                  <Route path="/responsible-gaming" element={<Navigate to="/settings" replace />} />
+                  <Route
+                    path="/redeem"
+                    element={<Shell><LazyPage><Redeem /></LazyPage></Shell>}
+                  />
+                  <Route
+                    path="*"
+                    element={<Shell><LazyPage><NotFound /></LazyPage></Shell>}
+                  />
+                </Routes>
+              </ToastProvider>
+            </NotificationsProvider>
           </PlayModeProvider>
         </ProfileProvider>
       </AuthProvider>

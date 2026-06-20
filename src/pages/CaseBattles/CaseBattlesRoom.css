@@ -37,6 +37,13 @@
   color: #86efac;
 }
 
+.cbr__result-pill--neutral {
+  background: rgba(148, 163, 184, 0.1);
+  border-color: rgba(148, 163, 184, 0.3);
+  color: var(--lc-text-secondary);
+  font-weight: 600;
+}
+
 .cbr__done-btn {
   max-width: 280px;
   margin: 1.5rem auto 0;
@@ -67,6 +74,124 @@
     var(--cb-panel);
   padding: 1.25rem 1.35rem 1.5rem;
   overflow: visible;
+  position: relative;
+}
+
+/* Phase accent — colored top stripe that telegraphs current battle phase. */
+.cbr__arena::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1.35rem;
+  right: 1.35rem;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: rgba(148, 163, 184, 0.35);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cbr__arena[data-phase="waiting"]::before {
+  background: rgba(245, 185, 66, 0.55);
+  box-shadow: 0 0 12px rgba(245, 185, 66, 0.35);
+}
+
+.cbr__arena[data-phase="running"]::before {
+  background: linear-gradient(90deg, var(--cb-accent), var(--cb-accent-2));
+  box-shadow: 0 0 14px var(--cb-accent-glow);
+}
+
+.cbr__arena[data-phase="completed"]::before {
+  background: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+}
+
+.cbr__arena-status-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-height: 1.2rem;
+}
+
+.cbr__arena-status-stack .cbr__arena-status {
+  margin: 0;
+}
+
+.cbr__badge--phase {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--lc-text-secondary);
+  border-color: var(--lc-border);
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 0.72rem;
+  margin-left: auto;
+}
+
+.cbr__badge--phase-waiting {
+  background: rgba(245, 185, 66, 0.12);
+  color: var(--lc-gold);
+  border-color: rgba(245, 185, 66, 0.4);
+}
+
+.cbr__badge--phase-running {
+  background: rgba(56, 189, 248, 0.12);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.45);
+}
+
+.cbr__badge--phase-running::before {
+  content: "●";
+  margin-right: 0.3rem;
+  color: #7dd3fc;
+  animation: cbr-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes cbr-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.cbr__badge--phase-done {
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.cbr__eos-progress-pending {
+  color: var(--lc-text-muted);
+  font-style: italic;
+}
+
+.cbr__eos-progress-sep {
+  margin: 0 0.15rem;
+  color: var(--lc-text-muted);
+}
+
+.cbr__eos-spinner {
+  margin: 0.65rem auto 0;
+  width: 2rem;
+  height: 2rem;
+  position: relative;
+}
+
+.cbr__eos-spinner span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(56, 189, 248, 0.15);
+  border-top-color: var(--cb-accent);
+  animation: cbr-eos-spin 0.9s linear infinite;
+}
+
+.cbr__eos-wait--jackpot .cbr__eos-spinner span {
+  border-top-color: #fde047;
+  border-color: rgba(253, 224, 71, 0.18);
+  border-top-color: #fde047;
+}
+
+@keyframes cbr-eos-spin {
+  to { transform: rotate(360deg); }
 }
 
 .cbr__arena-head {

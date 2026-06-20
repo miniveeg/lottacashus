@@ -45,6 +45,12 @@
   border-bottom-right-radius: 0;
 }
 
+.lc-select-trigger:focus-visible {
+  outline: none;
+  border-color: var(--lc-gold-dim);
+  box-shadow: 0 0 0 3px var(--lc-gold-glow);
+}
+
 .lc-select-trigger__label {
   flex: 1;
   min-width: 0;
@@ -67,7 +73,7 @@
 
 .lc-select-menu {
   position: absolute;
-  z-index: 50;
+  z-index: 200;
   top: 100%;
   left: 0;
   right: 0;
@@ -82,6 +88,8 @@
     0 0 0 3px var(--lc-gold-glow),
     var(--lc-shadow-md);
   animation: lc-select-menu-in 140ms ease;
+  max-height: min(320px, 60vh);
+  overflow-y: auto;
 }
 
 @keyframes lc-select-menu-in {
@@ -116,15 +124,31 @@
     color var(--lc-transition);
 }
 
-.lc-select-option:hover {
+.lc-select-option:hover,
+.lc-select-option--active {
   background: var(--lc-bg-hover);
   color: var(--lc-text-primary);
+}
+
+.lc-select-option--active {
+  box-shadow: inset 2px 0 0 var(--lc-gold);
+}
+
+.lc-select-option:focus-visible {
+  outline: none;
+  background: var(--lc-bg-hover);
+  color: var(--lc-text-primary);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .lc-select-option--selected,
 .lc-select-option--selected:hover {
   background: rgba(245, 185, 66, 0.12);
   color: var(--lc-gold);
+}
+
+.lc-select-option--selected.lc-select-option--active {
+  box-shadow: inset 2px 0 0 var(--lc-gold), 0 0 0 1px rgba(245, 185, 66, 0.25);
 }
 
 .lc-select-option__check {

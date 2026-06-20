@@ -14,16 +14,16 @@ type MinesAction = "start" | "reveal" | "cashout" | "active";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401);
+    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401, req);
 
     const body = await req.json();
     const action = String(body?.action ?? "") as MinesAction;
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       error: userError,
     } = await supabaseUser.auth.getUser();
 
-    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401);
+    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401, req);
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
       p_user_id: user.id,
     });
     if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403);
+      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
     }
 
     const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       const { data, error } = await supabaseAdmin.rpc("get_active_mines_game", {
         p_user_id: user.id,
       });
-      if (error) return jsonResponse({ error: error.message }, 400);
+      if (error) return jsonResponse({ error: error.message }, 400, req);
       const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | undefined;
       if (!row?.game_id) {
         return jsonResponse({ active: false });
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       const mineCount = Number(body?.mineCount ?? body?.mine_count);
 
       const validationError = validateMinesStart(mineCount, wager);
-      if (validationError) return jsonResponse({ error: validationError }, 400);
+      if (validationError) return jsonResponse({ error: validationError }, 400, req);
 
       const { data: profile } = await supabaseAdmin
         .from("profiles")
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
 
       const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
       if (balance < wager) {
-        return jsonResponse({ error: "Insufficient balance" }, 400);
+        return jsonResponse({ error: "Insufficient balance" }, 400, req);
       }
 
       const { data: seedData, error: seedError } = await supabaseAdmin.rpc(
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
 
       if (seedError) {
         console.error("consume_keno_nonce:", seedError);
-        return jsonResponse({ error: seedError.message ?? "Could not load game seeds." }, 500);
+        return jsonResponse({ error: seedError.message ?? "Could not load game seeds." }, 500, req);
       }
 
       const raw = (Array.isArray(seedData) ? seedData[0] : seedData) as
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
       const nonce = Number(raw?.nonce ?? raw?.next_nonce ?? 0);
 
       if (typeof serverSeed !== "string" || !serverSeed) {
-        return jsonResponse({ error: "Could not load game seeds." }, 500);
+        return jsonResponse({ error: "Could not load game seeds." }, 500, req);
       }
 
       const mineTiles = await generateMinesBoard({
@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
 
       if (startError) {
         console.error("start_mines_game:", startError);
-        return jsonResponse({ error: startError.message }, 400);
+        return jsonResponse({ error: startError.message }, 400, req);
       }
 
       const result = (Array.isArray(started) ? started[0] : started) as
@@ -160,8 +160,8 @@ Deno.serve(async (req) => {
       const tile = Number(body?.tile);
 
       const tileError = validateMinesTile(tile);
-      if (tileError) return jsonResponse({ error: tileError }, 400);
-      if (!gameId) return jsonResponse({ error: "Game id required." }, 400);
+      if (tileError) return jsonResponse({ error: tileError }, 400, req);
+      if (!gameId) return jsonResponse({ error: "Game id required." }, 400, req);
 
       const { data: gameRow } = await supabaseAdmin
         .from("mines_games")
@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
         .eq("status", "active")
         .maybeSingle();
 
-      if (!gameRow) return jsonResponse({ error: "Active game not found." }, 400);
+      if (!gameRow) return jsonResponse({ error: "Active game not found." }, 400, req);
 
       const mineTiles = (gameRow.mine_tiles as number[]) ?? [];
       const fairMine = mineTiles.includes(tile);
@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
 
       if (revealError) {
         console.error("mines_reveal_tile:", revealError);
-        return jsonResponse({ error: revealError.message }, 400);
+        return jsonResponse({ error: revealError.message }, 400, req);
       }
 
       const row = (Array.isArray(revealed) ? revealed[0] : revealed) as
@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
 
     if (action === "cashout") {
       const gameId = String(body?.gameId ?? body?.game_id ?? "");
-      if (!gameId) return jsonResponse({ error: "Game id required." }, 400);
+      if (!gameId) return jsonResponse({ error: "Game id required." }, 400, req);
 
       const { data: cashed, error: cashError } = await supabaseAdmin.rpc(
         "mines_cashout",
@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
 
       if (cashError) {
         console.error("mines_cashout:", cashError);
-        return jsonResponse({ error: cashError.message }, 400);
+        return jsonResponse({ error: cashError.message }, 400, req);
       }
 
       const row = (Array.isArray(cashed) ? cashed[0] : cashed) as
@@ -281,9 +281,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    return jsonResponse({ error: "Unknown action." }, 400);
+    return jsonResponse({ error: "Unknown action." }, 400, req);
   } catch (err) {
     console.error("mines-game:", err);
-    return jsonResponse({ error: "Server error." }, 500);
+    return jsonResponse({ error: "Server error." }, 500, req);
   }
 });

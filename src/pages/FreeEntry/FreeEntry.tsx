@@ -40,8 +40,8 @@ export function FreeEntry() {
         <h2 className="free-entry__section-title">Mailing address</h2>
         <div className="free-entry__address">
           <p>LottaCash Sweepstakes</p>
-          <p>[Address Line 1]</p>
-          <p>[City, State ZIP]</p>
+          <p className="free-entry__address-placeholder">[Address Line 1]</p>
+          <p className="free-entry__address-placeholder">[City, State ZIP]</p>
         </div>
         <p className="free-entry__note">
           We are currently setting up our mailing address. Check back soon or contact us at{" "}
@@ -56,7 +56,7 @@ export function FreeEntry() {
           we will credit the SC to your account.
         </p>
         <p className="free-entry__text">
-          Dont have an account yet?{" "}
+          Don&apos;t have an account yet?{" "}
           <Link to={signupUrl("/free-entry")} className="free-entry__link">
             Sign up first
           </Link>{" "}

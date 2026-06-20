@@ -338,6 +338,23 @@
   margin-top: 0.15rem;
 }
 
+.admin__btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.admin__select-coin {
+  width: auto;
+  min-width: 5rem;
+  flex: 0 0 auto;
+}
+
+.admin__hint {
+  font-size: 0.85rem;
+  color: var(--lc-text-muted);
+}
+
 .admin-route-loading {
   padding: 2rem;
   text-align: center;

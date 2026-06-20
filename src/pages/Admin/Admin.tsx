@@ -409,7 +409,7 @@ export function Admin() {
                     {new Date(r.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div style={{ display: "flex", gap: "0.35rem" }}>
+                <div className="admin__btn-group">
                   <button
                     type="button"
                     className="admin__btn admin__btn--primary"
@@ -472,11 +472,10 @@ export function Admin() {
               disabled={creditBusy}
             />
             <select
-              className="admin__input"
+              className="admin__input admin__select-coin"
               value={creditCoinType}
               onChange={(e) => setCreditCoinType(e.target.value)}
               disabled={creditBusy}
-              style={{ width: "auto", minWidth: "5rem" }}
             >
               <option value="balance">GC</option>
               <option value="sweeps_coins">SC</option>

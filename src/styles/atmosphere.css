@@ -22,6 +22,7 @@
     radial-gradient(ellipse 80% 60% at 90% 70%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
     radial-gradient(ellipse 70% 50% at 10% 80%, rgba(56, 189, 248, 0.03) 0%, transparent 45%);
   animation: lc-fog-drift 24s ease-in-out infinite alternate;
+  will-change: transform, opacity;
 }
 
 .lc-atmosphere__noise {
@@ -35,12 +36,18 @@
 .lc-atmosphere__vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(0, 0, 0, 0.65) 100%);
+  /* Subtle vignette so edges don't feel overwhelming; kept under 0.55
+     so content near the viewport edges stays legible. */
+  background: radial-gradient(ellipse 85% 75% at 50% 50%, transparent 45%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 @keyframes lc-fog-drift {
   0% { transform: translateY(0) scale(1); opacity: 0.9; }
   100% { transform: translateY(-2%) scale(1.02); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-atmosphere__fog { animation: none; }
 }
 
 /* Glass surface utility */
@@ -50,6 +57,13 @@
   -webkit-backdrop-filter: blur(var(--lc-glass-blur));
   border: 1px solid var(--lc-glass-border);
   box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
+}
+
+/* Graceful fallback when backdrop-filter is unavailable (older Firefox,
+   disabled-GPU contexts): use a more opaque surface so text stays
+   legible without the blur. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lc-glass { background: var(--lc-bg-panel); }
 }
 
 .lc-glass--crimson {

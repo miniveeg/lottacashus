@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bell, Coins, LogIn, LogOut, Menu, Search, UserPlus } from "lucide-react";
+import { Bell, LogIn, LogOut, Menu, Search, UserPlus, X } from "lucide-react";
 import { NotificationsPanel } from "../NotificationsPanel/NotificationsPanel";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
@@ -38,6 +38,7 @@ export function Topbar() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
   const searchWrapRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const searchResults = searchSite(searchQuery);
 
@@ -70,6 +71,7 @@ export function Topbar() {
   function goToSearchResult(item: SiteSearchItem) {
     setSearchQuery("");
     setSearchOpen(false);
+    setMobileSearchOpen(false);
     setHighlightIndex(0);
     navigate(item.href);
   }
@@ -104,6 +106,13 @@ export function Topbar() {
     setHighlightIndex(0);
   }, [searchQuery]);
 
+  // Close the mobile search overlay whenever the route changes.
+  useEffect(() => {
+    setMobileSearchOpen(false);
+    setSearchOpen(false);
+    setSearchQuery("");
+  }, [pathname]);
+
   useEffect(() => {
     function onPointerDown(ev: MouseEvent) {
       if (searchWrapRef.current && !searchWrapRef.current.contains(ev.target as Node)) {
@@ -113,6 +122,15 @@ export function Topbar() {
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
+
+  // Auto-focus the search input when the mobile search overlay opens so the
+  // keyboard appears immediately and the user can start typing.
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      const id = window.setTimeout(() => searchInputRef.current?.focus(), 60);
+      return () => window.clearTimeout(id);
+    }
+  }, [mobileSearchOpen]);
 
   return (
     <header className={`topbar${mobileSearchOpen ? " topbar--search-open" : ""}`}>
@@ -141,6 +159,7 @@ export function Topbar() {
         >
           <Search size={16} aria-hidden className="topbar__search-icon" />
           <input
+            ref={searchInputRef}
             type="search"
             placeholder="Search games and pages…"
             aria-label="Search games and pages"
@@ -189,14 +208,14 @@ export function Topbar() {
       <div className="topbar__actions">
         <motion.button
           type="button"
-          className="topbar__icon-btn topbar__search-toggle"
-          aria-label="Search"
+          className={`topbar__icon-btn topbar__search-toggle${mobileSearchOpen ? " topbar__icon-btn--active" : ""}`}
+          aria-label={mobileSearchOpen ? "Close search" : "Search"}
           aria-expanded={mobileSearchOpen}
           onClick={() => setMobileSearchOpen((open) => !open)}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <Search size={18} aria-hidden />
+          {mobileSearchOpen ? <X size={18} aria-hidden /> : <Search size={18} aria-hidden />}
         </motion.button>
 
         <div className="topbar__balance-group">
@@ -217,13 +236,16 @@ export function Topbar() {
           <motion.button
             type="button"
             className="topbar__coin-toggle"
-            aria-label={`Switch to ${coinType === "balance" ? "SC" : "GC"}`}
+            aria-label={`Switch to ${coinType === "balance" ? "Sweeps Coins" : "Gold Coins"} (currently ${coinType === "balance" ? "Gold Coins" : "Sweeps Coins"})`}
+            aria-pressed={coinType === "sweeps_coins"}
             onClick={() => setCoinType(coinType === "balance" ? "sweeps_coins" : "balance")}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            title={coinType === "balance" ? "Sweeps Coins" : "Gold Coins"}
+            title={coinType === "balance" ? "Showing Gold Coins — click to show Sweeps Coins" : "Showing Sweeps Coins — click to show Gold Coins"}
           >
-            <Coins size={14} aria-hidden />
+            <span className="topbar__coin-toggle-label" aria-hidden="true">
+              {coinType === "balance" ? "GC" : "SC"}
+            </span>
           </motion.button>
         </div>
 
@@ -250,13 +272,13 @@ export function Topbar() {
           </>
         ) : (
           <>
-            <Link to={loginUrl(pathname)} className="topbar__btn topbar__btn--ghost topbar__btn--login">
+            <Link to={loginUrl(pathname)} className="topbar__btn topbar__btn--ghost topbar__btn--login" aria-label="Log in">
               <LogIn size={14} aria-hidden />
-              Log in
+              <span className="topbar__btn-label">Log in</span>
             </Link>
-            <Link to={signupUrl(pathname)} className="topbar__btn topbar__btn--primary topbar__btn--signup">
+            <Link to={signupUrl(pathname)} className="topbar__btn topbar__btn--primary topbar__btn--signup" aria-label="Sign up">
               <UserPlus size={14} aria-hidden />
-              Sign up
+              <span className="topbar__btn-label">Sign up</span>
             </Link>
           </>
         )}

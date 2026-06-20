@@ -36,8 +36,9 @@ After pulling this repo, run migrations so `bypass_profile_balance_guard()` is *
 ## Edge Functions
 
 - User actions: require `Authorization: Bearer <user JWT>` and validate with `auth.getUser()`.
-- Cron / sweeps: require `x-cron-secret` matching `CRON_SECRET` in Supabase secrets (see `CRYPTO_SETUP.md`).
-- CORS is `*` for functions; auth is the gate, not origin blocking.
+- Cron / sweeps: require `x-cron-secret` matching `CRON_SECRET` in Supabase secrets (see `CRYPTO_SETUP.md`). The `assertCronAuth()` helper now throws if `CRON_SECRET` is unset, so a misconfigured deployment fails closed instead of silently allowing unauthenticated cron calls.
+- CORS is `*` for functions in dev; in production set `ALLOWED_ORIGINS=https://your-domain.com,https://www.your-domain.com` in Edge Function secrets to lock the API down to your frontend origins. Auth is always the gate, but locking CORS is defense-in-depth.
+- Treasury wallet addresses (`MAIN_SOL_WALLET` / `MAIN_LTC_WALLET` / `MAIN_ETH_WALLET`) are **required** env vars — there are no hardcoded defaults, so a misconfiguration fails loudly instead of routing deposits to an unknown address.
 
 ## Recommended before production
 

@@ -118,6 +118,7 @@ export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
 
       <div className="roulette-wheel__ball-marker" aria-hidden="true">
         <span className="roulette-wheel__ball" />
+        <span className="roulette-wheel__pointer" />
       </div>
 
       <div

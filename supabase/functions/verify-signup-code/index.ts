@@ -6,11 +6,11 @@ const MAX_ATTEMPTS = 5;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
@@ -30,15 +30,15 @@ Deno.serve(async (req) => {
       : "";
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return jsonResponse({ error: "Enter a valid email address." }, 400);
+      return jsonResponse({ error: "Enter a valid email address." }, 400, req);
     }
 
     if (!/^\d{6}$/.test(code)) {
-      return jsonResponse({ error: "Enter the 6-digit code from your email." }, 400);
+      return jsonResponse({ error: "Enter the 6-digit code from your email." }, 400, req);
     }
 
     if (password.length < 6) {
-      return jsonResponse({ error: "Password must be at least 6 characters." }, 400);
+      return jsonResponse({ error: "Password must be at least 6 characters." }, 400, req);
     }
 
     const supabase = createClient(
@@ -53,17 +53,17 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (fetchError || !row) {
-      return jsonResponse({ error: "No verification code found. Request a new code." }, 400);
+      return jsonResponse({ error: "No verification code found. Request a new code." }, 400, req);
     }
 
     if (new Date(row.expires_at).getTime() < Date.now()) {
       await supabase.from("signup_verification_codes").delete().eq("email", email);
-      return jsonResponse({ error: "This code has expired. Request a new one." }, 400);
+      return jsonResponse({ error: "This code has expired. Request a new one." }, 400, req);
     }
 
     if (row.attempts >= MAX_ATTEMPTS) {
       await supabase.from("signup_verification_codes").delete().eq("email", email);
-      return jsonResponse({ error: "Too many attempts. Request a new code." }, 400);
+      return jsonResponse({ error: "Too many attempts. Request a new code." }, 400, req);
     }
 
     const codeHash = await hashCode(code);
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
         .from("signup_verification_codes")
         .update({ attempts: row.attempts + 1 })
         .eq("email", email);
-      return jsonResponse({ error: "Incorrect code. Try again." }, 400);
+      return jsonResponse({ error: "Incorrect code. Try again." }, 400, req);
     }
 
     const displayName = username || row.username || email.split("@")[0];
@@ -88,10 +88,10 @@ Deno.serve(async (req) => {
     if (createError) {
       const msg = createError.message.toLowerCase();
       if (msg.includes("already") || msg.includes("registered")) {
-        return jsonResponse({ error: "An account with this email already exists." }, 400);
+        return jsonResponse({ error: "An account with this email already exists." }, 400, req);
       }
       console.error(createError);
-      return jsonResponse({ error: "Could not create account. Try again." }, 500);
+      return jsonResponse({ error: "Could not create account. Try again." }, 500, req);
     }
 
     if (authData.user) {
@@ -120,6 +120,6 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error(err);
     const message = err instanceof Error ? err.message : "Verification failed.";
-    return jsonResponse({ error: message }, 500);
+    return jsonResponse({ error: message }, 500, req);
   }
 });

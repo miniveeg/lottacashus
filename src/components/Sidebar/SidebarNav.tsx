@@ -1,5 +1,4 @@
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
 import { ORIGINALS_PATH, ORIGINALS_ROUTES } from "../../content/originals";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -40,20 +39,19 @@ function NavLink({ item }: { item: NavItem }) {
 
   return (
     <li>
-      <motion.div whileHover={{ x: 4 }} transition={{ type: "spring", stiffness: 400, damping: 28 }}>
-        <Link
-          to={item.href}
-          className={`sidebar__link${active ? " sidebar__link--active" : ""}`}
-          onClick={closeMobile}
-          title={collapsed ? item.label : undefined}
-        >
-          <span className="sidebar__icon" aria-hidden="true">
-            <UiIcon name={item.icon} size={18} />
-          </span>
-          <span className="sidebar__link-label">{item.label}</span>
-          {active ? <span className="sidebar__link-glow" aria-hidden="true" /> : null}
-        </Link>
-      </motion.div>
+      <Link
+        to={item.href}
+        className={`sidebar__link${active ? " sidebar__link--active" : ""}`}
+        onClick={closeMobile}
+        title={collapsed ? item.label : undefined}
+        aria-current={active ? "page" : undefined}
+      >
+        <span className="sidebar__icon" aria-hidden="true">
+          <UiIcon name={item.icon} size={18} />
+        </span>
+        <span className="sidebar__link-label">{item.label}</span>
+        {active ? <span className="sidebar__link-glow" aria-hidden="true" /> : null}
+      </Link>
     </li>
   );
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import { Inbox } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -149,7 +150,7 @@ export function Deposit() {
               <p className="wallet__hint">Your unique {chain.toUpperCase()} deposit address</p>
               <p className="wallet__address">{address}</p>
               <div className="wallet__copy-row">
-                <button type="button" className="wallet__btn" onClick={handleCopy}>
+                <button type="button" className="wallet__btn" onClick={handleCopy} aria-live="polite">
                   {copied ? "Copied!" : "Copy address"}
                 </button>
               </div>
@@ -168,8 +169,10 @@ export function Deposit() {
       <section className="wallet__section">
         <h2 className="wallet__list-title">Recent deposits</h2>
         {deposits.length === 0 ? (
-          <div className="lc-empty">
+          <div className="wallet__empty">
+            <Inbox size={28} aria-hidden="true" />
             <p>No deposits detected yet</p>
+            <p className="wallet__empty-hint">Send crypto to your address above to see it here.</p>
           </div>
         ) : (
           deposits.map((d) => (

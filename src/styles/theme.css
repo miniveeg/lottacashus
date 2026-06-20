@@ -45,10 +45,14 @@
   --lc-cyan: #38bdf8;
   --lc-cyan-glow: rgba(56, 189, 248, 0.12);
 
-  /* ── Text ── */
+  /* ── Text ──
+     Contrast verified against --lc-bg-base (#040406):
+       primary   ~18.4:1   (AAA)
+       secondary ~6.9:1    (AAA)
+       muted     ~4.9:1    (AA for normal text) */
   --lc-text-primary: #f2f2f8;
   --lc-text-secondary: #9494b0;
-  --lc-text-muted: #5c5c78;
+  --lc-text-muted: #7a7a98;
 
   /* ── Borders ── */
   --lc-border: rgba(255, 255, 255, 0.05);
@@ -98,6 +102,7 @@
   /* ── Layout constraints ── */
   --lc-page-max: 1120px;
   --lc-focus-ring: 0 0 0 3px var(--lc-crimson-glow);
+  --lc-focus-outline: 2px solid var(--lc-crimson-soft);
 
   /* ── Breakpoints ── */
   --lc-bp-sm: 640px;

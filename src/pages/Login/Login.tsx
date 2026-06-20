@@ -67,8 +67,8 @@ export function Login() {
           </p>
         )}
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          {error && <p className="auth-error" role="alert">{error}</p>}
+        <form className="auth-form" onSubmit={handleSubmit} noValidate>
+          {error && <p className="auth-error" role="alert" id="login-error">{error}</p>}
 
           <div className="auth-field">
             <label htmlFor="login-email">Email</label>
@@ -80,6 +80,8 @@ export function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              aria-invalid={Boolean(error) || undefined}
+              aria-describedby={error ? "login-error" : undefined}
             />
           </div>
 
@@ -94,6 +96,8 @@ export function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
+              aria-invalid={Boolean(error) || undefined}
+              aria-describedby={error ? "login-error" : undefined}
             />
             <p className="auth-forgot">
               <Link to="/forgot-password">Forgot password?</Link>
@@ -101,6 +105,7 @@ export function Login() {
           </div>
 
           <button type="submit" className="auth-submit" disabled={submitting || !configured}>
+            {submitting && <span className="auth-submit__spinner" aria-hidden="true" />}
             {submitting ? "Logging in…" : "Log in"}
           </button>
         </form>

@@ -57,6 +57,7 @@ function resolvePlaybackBootstrap(
   isJackpot: boolean,
   resumedReload: boolean
 ) {
+  void rounds; // Reserved for future per-round replay pacing; not currently needed for bootstrap.
   const saved = readBattlePlayback(battleId);
   const inProgress = isPlaybackInProgress(saved, isJackpot);
 
@@ -151,7 +152,7 @@ export function CaseBattleArena({
   const [pendingBotSlots, setPendingBotSlots] = useState<Set<number>>(new Set());
   const pendingBotRef = useRef<Set<number>>(new Set());
   const playbackSyncAppliedRef = useRef(false);
-  const playbackSyncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const playbackSyncTimerRef = useRef<number | null>(null);
   const forceFullRoundPlaybackRef = useRef(initialPlayback.forceFull);
   const skipPlaybackSyncRef = useRef(initialPlayback.skipPlaybackSync);
   const resumedFromSessionRef = useRef(false);
@@ -581,7 +582,16 @@ export function CaseBattleArena({
   };
 
   return (
-    <div className="cbr__arena">
+    <div
+      className="cbr__arena"
+      data-phase={
+        showStaticResults
+          ? "completed"
+          : battle.status === "waiting" || isEosPending
+            ? "waiting"
+            : "running"
+      }
+    >
       <div className="cbr__arena-head">
         <div className="cbr__arena-badges">
           <span className="cbr__badge">{battle.playerMode.toUpperCase()}</span>
@@ -590,6 +600,25 @@ export function CaseBattleArena({
           </span>
           {battle.crazyMode && <span className="cbr__badge cbr__badge--crazy">Crazy</span>}
           {battle.fastSpin && <span className="cbr__badge cbr__badge--fast">Fast</span>}
+          <span
+            className={
+              "cbr__badge cbr__badge--phase" +
+              (showStaticResults
+                ? " cbr__badge--phase-done"
+                : battle.status === "waiting" || isEosPending
+                  ? " cbr__badge--phase-waiting"
+                  : " cbr__badge--phase-running")
+            }
+            aria-live="polite"
+          >
+            {showStaticResults
+              ? "Completed"
+              : battle.status === "waiting"
+                ? "Open"
+                : isEosPending
+                  ? "Mining EOS"
+                  : "Live"}
+          </span>
         </div>
         <p className="cbr__arena-meta">
           {battle.rounds} case{battle.rounds === 1 ? "" : "s"} · Entry {formatUsd(battle.entryCost)} per seat
@@ -608,32 +637,47 @@ export function CaseBattleArena({
             </>
           ) : null}
         </p>
-        {battle.status === "waiting" && (
-          <p className="cbr__arena-status">
-            Waiting for players — {battle.players.length}/{battle.maxPlayers} filled
-            {isCreator
-              ? ` · Call bots — random pick from ${CASE_BATTLE_BOT_ROSTER.length} lucky bots`
-              : ""}
-          </p>
-        )}
-        {isEosPending && (
-          <p className="cbr__arena-status">Committing battle seed — waiting for EOS block…</p>
-        )}
-        {awaitingRoundSync && (
-          <p className="cbr__arena-status">Catching up — next round starts shortly…</p>
-        )}
-        {reelsPhase && !showStaticResults && (
-          <p className="cbr__arena-status">
-            Round {activeRound + 1} of {battle.rounds} · Opening cases…
-          </p>
-        )}
-        {showJackpotEosWait && (
-          <p className="cbr__arena-status">All cases opened — waiting for jackpot EOS block…</p>
-        )}
-        {showJackpotReel && <p className="cbr__arena-status">Jackpot block mined — rolling for winner…</p>}
+        <div className="cbr__arena-status-stack" role="status" aria-live="polite">
+          {battle.status === "waiting" && (
+            <p className="cbr__arena-status">
+              Waiting for players — {battle.players.length}/{battle.maxPlayers} filled
+              {isCreator
+                ? ` · Call bots — random pick from ${CASE_BATTLE_BOT_ROSTER.length} lucky bots`
+                : ""}
+            </p>
+          )}
+          {isEosPending && (
+            <p className="cbr__arena-status">Committing battle seed — waiting for EOS block…</p>
+          )}
+          {awaitingRoundSync && (
+            <p className="cbr__arena-status">Catching up — next round starts shortly…</p>
+          )}
+          {reelsPhase && !showStaticResults && (
+            <p className="cbr__arena-status">
+              Round {activeRound + 1} of {battle.rounds} · Opening cases…
+            </p>
+          )}
+          {showJackpotEosWait && (
+            <p className="cbr__arena-status">All cases opened — waiting for jackpot EOS block…</p>
+          )}
+          {showJackpotReel && <p className="cbr__arena-status">Jackpot block mined — rolling for winner…</p>}
+        </div>
         {showStaticResults && isWinner && (
-          <span className="cbr__result-pill cbr__result-pill--win">
+          <span
+            className="cbr__result-pill cbr__result-pill--win"
+            role="status"
+            aria-live="polite"
+          >
             You won {formatUsd(myWinPayout)}
+          </span>
+        )}
+        {showStaticResults && !isWinner && userId && userInBattle && (
+          <span
+            className="cbr__result-pill cbr__result-pill--neutral"
+            role="status"
+            aria-live="polite"
+          >
+            Battle complete — no win this time
           </span>
         )}
       </div>

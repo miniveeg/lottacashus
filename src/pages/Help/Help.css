@@ -130,6 +130,8 @@
   font-size: 0.8rem;
   color: var(--lc-text-muted);
   margin: 0;
+  white-space: pre-line;
+  line-height: 1.6;
 }
 
 .help__tos-block {
@@ -155,6 +157,7 @@
   font-size: 0.85rem;
   line-height: 1.6;
   color: var(--lc-text-secondary);
+  white-space: pre-line;
 }
 
 @media (max-width: 640px) {

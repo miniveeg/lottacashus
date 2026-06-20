@@ -77,11 +77,30 @@
 
 .limbo__display--win {
   border-color: rgba(34, 197, 94, 0.55);
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+  animation: limbo-win-pulse 0.7s ease-out;
+}
+
+@keyframes limbo-win-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 22px rgba(34, 197, 94, 0);
+  }
 }
 
 .limbo__display--loss {
   border-color: rgba(239, 68, 68, 0.45);
+  animation: limbo-loss-pulse 0.55s ease-out;
+}
+
+@keyframes limbo-loss-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 18px rgba(239, 68, 68, 0);
+  }
 }
 
 .limbo__display-label {
@@ -165,6 +184,49 @@
   border-radius: var(--lc-radius-sm);
   width: 100%;
   max-width: 24rem;
+  animation: limbo-outcome-in 0.3s ease-out;
+}
+
+@keyframes limbo-outcome-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.limbo__history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+  max-width: 24rem;
+}
+
+.limbo__history-chip {
+  min-width: 2.6rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--lc-font-mono);
+  text-align: center;
+  border: 1px solid var(--lc-border);
+  background: var(--lc-bg-elevated);
+  color: var(--lc-text-secondary);
+}
+
+.limbo__history-chip--win {
+  border-color: rgba(34, 197, 94, 0.4);
+  color: var(--lc-emerald);
+}
+
+.limbo__history-chip--loss {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }
 
 .limbo__outcome--win {
@@ -195,6 +257,12 @@
   top: calc(var(--lc-topbar-height) + 1rem);
 }
 
+@media (max-width: 900px) {
+  .limbo__controls {
+    position: static;
+  }
+}
+
 .limbo__target-presets {
   margin-top: 0.45rem;
 }
@@ -216,15 +284,44 @@
   background: var(--lc-gold);
   color: #0a0a0b;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  transition:
+    filter var(--lc-transition),
+    transform var(--lc-transition);
 }
 
 .limbo__bet-btn:hover:not(:disabled) {
   filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.limbo__bet-btn:focus-visible {
+  outline: 2px solid var(--lc-gold);
+  outline-offset: 2px;
 }
 
 .limbo__bet-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
+}
+
+.limbo__spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid rgba(10, 10, 11, 0.25);
+  border-top-color: #0a0a0b;
+  animation: limbo-spinner 0.7s linear infinite;
+}
+
+@keyframes limbo-spinner {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .limbo__hint {

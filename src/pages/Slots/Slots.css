@@ -18,6 +18,7 @@
 }
 
 .slots__reels {
+  position: relative;
   display: flex;
   gap: 0.5rem;
   perspective: 600px;
@@ -37,6 +38,7 @@
   color: var(--lc-text-primary);
   transition: border-color 0.3s, box-shadow 0.3s, transform 0.3s;
   overflow: hidden;
+  position: relative;
 }
 
 @media (min-width: 600px) {
@@ -45,15 +47,48 @@
   }
 }
 
+/* Spinning state — motion blur + subtle vibration for kinetic feel. */
 .slots__reel--rolling {
   border-color: var(--lc-gold);
   box-shadow: 0 0 20px var(--lc-gold-glow);
 }
 
+.slots__reel--rolling .slots__reel-inner {
+  animation: slots-reel-shake 0.18s linear infinite;
+  filter: blur(1.5px);
+}
+
+@keyframes slots-reel-shake {
+  0% { transform: translateY(-6%); }
+  50% { transform: translateY(6%); }
+  100% { transform: translateY(-6%); }
+}
+
+/* Landed reel — quick settle bounce. */
+.slots__reel--landed .slots__reel-inner {
+  animation: slots-reel-land 0.32s cubic-bezier(0.25, 1.5, 0.5, 1) both;
+}
+
+@keyframes slots-reel-land {
+  0% { transform: translateY(-12%); }
+  60% { transform: translateY(4%); }
+  100% { transform: translateY(0); }
+}
+
 .slots__reel--win {
   border-color: var(--lc-emerald);
-  box-shadow: 0 0 20px var(--lc-emerald-glow);
-  transform: scale(1.05);
+  box-shadow: 0 0 24px var(--lc-emerald-glow);
+  transform: scale(1.06);
+  animation: slots-win-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes slots-win-pulse {
+  0%, 100% {
+    box-shadow: 0 0 18px var(--lc-emerald-glow);
+  }
+  50% {
+    box-shadow: 0 0 32px var(--lc-emerald-glow);
+  }
 }
 
 .slots__reel--loss {
@@ -61,11 +96,30 @@
   box-shadow: 0 0 12px var(--lc-ruby-glow);
 }
 
+/* Center win-line indicator (always visible to communicate the payline). */
+.slots__win-line {
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, transparent, rgba(245, 185, 66, 0.55), transparent);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.55;
+}
+
+.slots__reels--win .slots__win-line {
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, var(--lc-emerald), transparent);
+  box-shadow: 0 0 12px var(--lc-emerald-glow);
+}
+
 .slots__reel-inner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: transform 0.15s linear;
 }
 
 .slots__symbol {

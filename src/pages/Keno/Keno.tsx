@@ -17,6 +17,7 @@ import "./Keno.css";
 const GRID_SIZE = 40;
 const MAX_PICKS = 10;
 const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+const REVEAL_STAGGER_MS = 110;
 
 function randomPick(count: number): number[] {
   const pool = Array.from({ length: GRID_SIZE }, (_, i) => i + 1);
@@ -40,6 +41,7 @@ export function Keno() {
   const [wagerInput, setWagerInput] = useState("1.00");
   const [drawing, setDrawing] = useState(false);
   const [drawn, setDrawn] = useState<number[] | null>(null);
+  const [revealCount, setRevealCount] = useState(0);
   const [lastResult, setLastResult] = useState<{
     hits: number;
     multiplier: number;
@@ -86,6 +88,7 @@ export function Keno() {
     if (drawing) return;
     setSelected([]);
     setDrawn(null);
+    setRevealCount(0);
     setLastResult(null);
     setError(null);
   };
@@ -126,6 +129,7 @@ export function Keno() {
     setError(null);
     setDrawing(true);
     setDrawn(null);
+    setRevealCount(0);
     setLastResult(null);
 
     const { data, error: betErr } = await placeKenoBet({
@@ -135,22 +139,30 @@ export function Keno() {
       coinType,
     });
 
-    setDrawing(false);
-
     if (betErr || !data) {
+      setDrawing(false);
       setError(betErr ?? "Bet failed.");
       return;
     }
 
+    // Reveal drawn numbers one-by-one for satisfying stagger.
     setDrawn(data.drawn);
-    setLastResult({
-      hits: data.hits,
-      multiplier: data.multiplier,
-      payout: data.payout,
+    data.drawn.forEach((_, i) => {
+      window.setTimeout(() => {
+        setRevealCount(i + 1);
+        if (i === data.drawn.length - 1) {
+          setLastResult({
+            hits: data.hits,
+            multiplier: data.multiplier,
+            payout: data.payout,
+          });
+          setDrawing(false);
+          setPfNonce(data.nonce + 1);
+          void refreshProfile();
+          void loadPf();
+        }
+      }, (i + 1) * REVEAL_STAGGER_MS);
     });
-    setPfNonce(data.nonce + 1);
-    await refreshProfile();
-    await loadPf();
   };
 
   const saveClientSeed = async () => {
@@ -159,8 +171,9 @@ export function Keno() {
     else await loadPf();
   };
 
-  const drawnSet = drawn ? new Set(drawn) : null;
+  const drawnSet = drawn ? new Set(drawn.slice(0, revealCount)) : null;
   const selectedSet = new Set(selected);
+  const revealComplete = drawn !== null && revealCount >= drawn.length;
 
   return (
     <div className="keno lc-game-page">
@@ -324,7 +337,11 @@ export function Keno() {
           )}
 
           {lastResult && drawn && (
-            <div className="keno__result" role="status">
+            <div
+              className={`keno__result${lastResult.payout > 0 ? " keno__result--win" : " keno__result--loss"}`}
+              role="status"
+              aria-live="polite"
+            >
               <p>
                 <strong>{lastResult.hits}</strong> hit
                 {lastResult.hits !== 1 ? "s" : ""} —{" "}
@@ -340,11 +357,19 @@ export function Keno() {
 
           <button
             type="button"
-            className="keno__bet-btn"
+            className={`keno__bet-btn${drawing ? " keno__bet-btn--busy" : ""}`}
             onClick={handleBet}
             disabled={drawing || pickCount < 1 || !user}
+            aria-busy={drawing}
           >
-            {drawing ? "Drawing…" : "Bet"}
+            {drawing ? (
+              <>
+                <span className="keno__spinner" aria-hidden="true" />
+                <span>{revealComplete ? "Done…" : "Drawing…"}</span>
+              </>
+            ) : (
+              "Bet"
+            )}
           </button>
 
           <p className="keno__hint">

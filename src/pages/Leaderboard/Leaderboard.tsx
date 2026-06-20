@@ -60,8 +60,10 @@ export function Leaderboard() {
           <p>Loading…</p>
         </div>
       ) : entries.length === 0 ? (
-        <div className="lc-empty">
-          <p className="lc-alert">No leaderboard data yet. Be the first to play!</p>
+        <div className="leaderboard-empty">
+          <Trophy size={32} aria-hidden="true" />
+          <p className="leaderboard-empty__title">No leaderboard data yet</p>
+          <p className="leaderboard-empty__hint">Be the first to play and claim the top spot!</p>
         </div>
       ) : (
         <div className="leaderboard-table-wrap">
@@ -82,7 +84,10 @@ export function Leaderboard() {
             </thead>
             <tbody>
               {entries.map((entry) => (
-                <tr key={entry.rank}>
+                <tr
+                  key={entry.rank}
+                  className={entry.rank <= 3 ? `leaderboard-table__row--top${entry.rank}` : ""}
+                >
                   <td className="leaderboard-table__rank">
                     {entry.rank <= 3 ? (
                       <span className={`leaderboard-table__medal leaderboard-table__medal--${entry.rank}`}>

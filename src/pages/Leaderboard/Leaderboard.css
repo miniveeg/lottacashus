@@ -66,6 +66,62 @@
   border-bottom: none;
 }
 
+/* Highlight top 3 rows */
+.leaderboard-table__row--top1 td {
+  background: rgba(255, 215, 0, 0.06);
+}
+
+.leaderboard-table__row--top1:hover td {
+  background: rgba(255, 215, 0, 0.1);
+}
+
+.leaderboard-table__row--top2 td {
+  background: rgba(192, 192, 192, 0.05);
+}
+
+.leaderboard-table__row--top2:hover td {
+  background: rgba(192, 192, 192, 0.09);
+}
+
+.leaderboard-table__row--top3 td {
+  background: rgba(205, 127, 50, 0.05);
+}
+
+.leaderboard-table__row--top3:hover td {
+  background: rgba(205, 127, 50, 0.09);
+}
+
+/* Empty state */
+.leaderboard-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  color: var(--lc-text-muted);
+  background: var(--lc-bg-glass);
+  border: 1px dashed var(--lc-border-strong);
+  border-radius: var(--lc-radius-xl);
+}
+
+.leaderboard-empty > svg {
+  color: var(--lc-gold);
+  opacity: 0.7;
+}
+
+.leaderboard-empty__title {
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--lc-text-primary);
+}
+
+.leaderboard-empty__hint {
+  font-size: 0.85rem;
+  color: var(--lc-text-muted);
+}
+
 .leaderboard-table__rank {
   width: 3rem;
   text-align: center;

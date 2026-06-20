@@ -126,8 +126,8 @@ export function ForgotPassword() {
         )}
 
         {step === "email" && (
-          <form className="auth-form" onSubmit={handleSendCode}>
-            {error && <p className="auth-error" role="alert">{error}</p>}
+          <form className="auth-form" onSubmit={handleSendCode} noValidate>
+            {error && <p className="auth-error" role="alert" id="reset-error">{error}</p>}
             <div className="auth-field">
               <label htmlFor="reset-email">Email</label>
               <input
@@ -138,17 +138,20 @@ export function ForgotPassword() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "reset-error" : undefined}
               />
             </div>
             <button type="submit" className="auth-submit" disabled={submitting || !configured}>
+              {submitting && <span className="auth-submit__spinner" aria-hidden="true" />}
               {submitting ? "Sending…" : "Send reset code"}
             </button>
           </form>
         )}
 
         {step === "code" && (
-          <form className="auth-form" onSubmit={handleCodeContinue}>
-            {error && <p className="auth-error" role="alert">{error}</p>}
+          <form className="auth-form" onSubmit={handleCodeContinue} noValidate>
+            {error && <p className="auth-error" role="alert" id="reset-code-error">{error}</p>}
             {info && <p className="auth-success" role="status">{info}</p>}
             <p className="auth-hint">Code expires in 10 minutes.</p>
             <div className="auth-field">
@@ -164,6 +167,8 @@ export function ForgotPassword() {
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 maxLength={6}
                 required
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "reset-code-error" : undefined}
               />
             </div>
             <button type="submit" className="auth-submit" disabled={!configured}>
@@ -179,6 +184,7 @@ export function ForgotPassword() {
                 onClick={handleResend}
                 disabled={submitting}
               >
+                {submitting && <span className="auth-submit__spinner" aria-hidden="true" />}
                 Resend code
               </button>
             </div>
@@ -186,8 +192,8 @@ export function ForgotPassword() {
         )}
 
         {step === "password" && (
-          <form className="auth-form" onSubmit={handleResetPassword}>
-            {error && <p className="auth-error" role="alert">{error}</p>}
+          <form className="auth-form" onSubmit={handleResetPassword} noValidate>
+            {error && <p className="auth-error" role="alert" id="reset-pwd-error">{error}</p>}
             <p className="auth-hint">
               For security, your old password cannot be shown. Set a new one below.
             </p>
@@ -212,6 +218,8 @@ export function ForgotPassword() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "reset-pwd-error" : undefined}
               />
             </div>
 
@@ -226,10 +234,13 @@ export function ForgotPassword() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "reset-pwd-error" : undefined}
               />
             </div>
 
             <button type="submit" className="auth-submit" disabled={submitting || !configured}>
+              {submitting && <span className="auth-submit__spinner" aria-hidden="true" />}
               {submitting ? "Updating…" : "Update password"}
             </button>
             <div className="auth-secondary-actions">

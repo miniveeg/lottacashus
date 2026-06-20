@@ -645,11 +645,11 @@ function nextOpenSlot(players: Record<string, unknown>[], maxPlayers: number): n
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
@@ -669,13 +669,13 @@ Deno.serve(async (req) => {
       const { data, error } = await admin.rpc("get_open_case_battles", {
         p_limit: Number(body?.limit ?? 20),
       });
-      if (error) return jsonResponse({ error: error.message }, 400);
+      if (error) return jsonResponse({ error: error.message }, 400, req);
       return jsonResponse({ battles: data ?? [] });
     }
 
     if (action === "view") {
       const battleId = String(body?.battleId ?? "");
-      if (!battleId) return jsonResponse({ error: "Battle id required." }, 400);
+      if (!battleId) return jsonResponse({ error: "Battle id required." }, 400, req);
       const eosFinalized = await tryFinalizeEosBattle(admin, battleId);
       if (eosFinalized) {
         return jsonResponse(eosFinalized.payload);
@@ -685,12 +685,12 @@ Deno.serve(async (req) => {
         return jsonResponse(jackpotFinalized.payload);
       }
       const loaded = await loadBattle(admin, battleId);
-      if (!loaded) return jsonResponse({ error: "Battle not found." }, 404);
+      if (!loaded) return jsonResponse({ error: "Battle not found." }, 404, req);
       return jsonResponse(battlePayload(loaded.battle, loaded.players));
     }
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401);
+    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401, req);
 
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -703,18 +703,18 @@ Deno.serve(async (req) => {
       error: userError,
     } = await supabaseUser.auth.getUser();
 
-    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401);
+    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401, req);
 
     if (action === "claim") {
       const battleId = String(body?.battleId ?? "");
-      if (!battleId) return jsonResponse({ error: "Battle id required." }, 400);
+      if (!battleId) return jsonResponse({ error: "Battle id required." }, 400, req);
 
       const { data, error } = await admin.rpc("apply_case_battle_payouts", {
         p_battle_id: battleId,
         p_user_id: user.id,
       });
 
-      if (error) return jsonResponse({ error: error.message }, 400);
+      if (error) return jsonResponse({ error: error.message }, 400, req);
 
       const row = (Array.isArray(data) ? data[0] : data) as {
         out_balance?: number;
@@ -736,7 +736,7 @@ Deno.serve(async (req) => {
       const borrowPercent = Math.min(80, Math.max(0, Math.round(Number(body?.borrowPercent) || 0)));
 
       const err = validateCreateParams({ caseIds, playerMode, gamemode, crazyMode, borrowPercent });
-      if (err) return jsonResponse({ error: err }, 400);
+      if (err) return jsonResponse({ error: err }, 400, req);
 
       const maxPlayers = maxPlayersForMode(playerMode);
       const entryCost = battleEntryCostFromCaseIds(caseIds);
@@ -751,7 +751,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (Number(profile?.balance ?? 0) < upfrontCost) {
-        return jsonResponse({ error: "Insufficient balance" }, 400);
+        return jsonResponse({ error: "Insufficient balance" }, 400, req);
       }
 
       const { data: battle, error: insErr } = await admin
@@ -773,7 +773,7 @@ Deno.serve(async (req) => {
         .select()
         .single();
 
-      if (insErr || !battle) return jsonResponse({ error: insErr?.message ?? "Create failed" }, 400);
+      if (insErr || !battle) return jsonResponse({ error: insErr?.message ?? "Create failed" }, 400, req);
 
       const { data: joined, error: joinErr } = await admin.rpc("create_case_battle_entry", {
         p_user_id: user.id,
@@ -786,7 +786,7 @@ Deno.serve(async (req) => {
 
       if (joinErr) {
         await admin.from("case_battles").delete().eq("id", battle.id);
-        return jsonResponse({ error: joinErr.message }, 400);
+        return jsonResponse({ error: joinErr.message }, 400, req);
       }
 
       const balance = rpcBalance(joined);
@@ -802,18 +802,18 @@ Deno.serve(async (req) => {
       const battleId = String(body?.battleId ?? "");
       const slotIndex = body?.slotIndex != null ? Number(body.slotIndex) : -1;
 
-      if (!battleId) return jsonResponse({ error: "Battle id required." }, 400);
+      if (!battleId) return jsonResponse({ error: "Battle id required." }, 400, req);
 
       const loaded = await loadBattle(admin, battleId);
-      if (!loaded) return jsonResponse({ error: "Battle not found." }, 404);
+      if (!loaded) return jsonResponse({ error: "Battle not found." }, 404, req);
 
       const { battle, players } = loaded;
 
       if (battle.status !== "waiting") {
-        return jsonResponse({ error: "Battle already started." }, 400);
+        return jsonResponse({ error: "Battle already started." }, 400, req);
       }
       if (battle.creator_id !== user.id) {
-        return jsonResponse({ error: "Only the battle creator can add bots." }, 403);
+        return jsonResponse({ error: "Only the battle creator can add bots." }, 403, req);
       }
 
       const maxPlayers = Number(battle.max_players);
@@ -822,7 +822,7 @@ Deno.serve(async (req) => {
           ? slotIndex
           : nextOpenSlot(players, maxPlayers);
 
-      if (slot < 0) return jsonResponse({ error: "No empty slots." }, 400);
+      if (slot < 0) return jsonResponse({ error: "No empty slots." }, 400, req);
 
       await admin.rpc("insert_case_battle_bot", {
         p_battle_id: battleId,
@@ -835,23 +835,23 @@ Deno.serve(async (req) => {
 
     if (action === "join") {
       const battleId = String(body?.battleId ?? "");
-      if (!battleId) return jsonResponse({ error: "Battle id required." }, 400);
+      if (!battleId) return jsonResponse({ error: "Battle id required." }, 400, req);
 
       const loaded = await loadBattle(admin, battleId);
-      if (!loaded) return jsonResponse({ error: "Battle not found." }, 404);
+      if (!loaded) return jsonResponse({ error: "Battle not found." }, 404, req);
 
       const { battle, players } = loaded;
 
       if (battle.status !== "waiting") {
-        return jsonResponse({ error: "Battle is no longer open." }, 400);
+        return jsonResponse({ error: "Battle is no longer open." }, 400, req);
       }
       if (players.some((p) => p.user_id === user.id)) {
-        return jsonResponse({ error: "You are already in this battle." }, 400);
+        return jsonResponse({ error: "You are already in this battle." }, 400, req);
       }
 
       const maxPlayers = Number(battle.max_players);
       const slot = nextOpenSlot(players, maxPlayers);
-      if (slot < 0) return jsonResponse({ error: "Battle is full." }, 400);
+      if (slot < 0) return jsonResponse({ error: "Battle is full." }, 400, req);
 
       const entryCost = Number(battle.entry_cost);
       const borrowPercent = Math.min(80, Math.max(0, Math.round(Number(body?.borrowPercent) || 0)));
@@ -864,7 +864,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (Number(profile?.balance ?? 0) < joinCost) {
-        return jsonResponse({ error: "Insufficient balance" }, 400);
+        return jsonResponse({ error: "Insufficient balance" }, 400, req);
       }
 
       const { data: joined, error: joinErr } = await admin.rpc("create_case_battle_entry", {
@@ -876,7 +876,7 @@ Deno.serve(async (req) => {
         p_borrow_percent: borrowPercent,
       });
 
-      if (joinErr) return jsonResponse({ error: joinErr.message }, 400);
+      if (joinErr) return jsonResponse({ error: joinErr.message }, 400, req);
 
       const balance = rpcBalance(joined);
 
@@ -884,9 +884,9 @@ Deno.serve(async (req) => {
       return jsonResponse({ ...started.payload, balance: started.balance ?? balance });
     }
 
-    return jsonResponse({ error: "Unknown action." }, 400);
+    return jsonResponse({ error: "Unknown action." }, 400, req);
   } catch (err) {
     console.error("case-battle:", err);
-    return jsonResponse({ error: err instanceof Error ? err.message : "Server error." }, 500);
+    return jsonResponse({ error: err instanceof Error ? err.message : "Server error." }, 500, req);
   }
 });

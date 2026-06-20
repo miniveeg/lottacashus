@@ -11,17 +11,17 @@ import { runHealthCheck } from "../_shared/health.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST" && req.method !== "GET") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
     assertCronAuth(req);
   } catch {
-    return jsonResponse({ error: "Unauthorized" }, 401);
+    return jsonResponse({ error: "Unauthorized" }, 401, req);
   }
 
   const url = new URL(req.url);
@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!supabaseUrl || !serviceKey) {
-      return jsonResponse({ error: "Missing Supabase env keys" }, 500);
+      return jsonResponse({ error: "Missing Supabase env keys" }, 500, req);
     }
 
     const supabase = createClient(supabaseUrl, serviceKey);

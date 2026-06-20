@@ -136,16 +136,16 @@ async function finishHand(
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401);
+    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401, req);
 
     const body = await req.json();
     const action = String(body?.action ?? "");
@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
       error: userError,
     } = await supabaseUser.auth.getUser();
 
-    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401);
+    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401, req);
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
       p_user_id: user.id,
     });
     if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403);
+      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
     }
 
     const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
@@ -190,7 +190,7 @@ Deno.serve(async (req) => {
         .limit(1)
         .maybeSingle();
 
-      if (error) return jsonResponse({ error: error.message }, 400);
+      if (error) return jsonResponse({ error: error.message }, 400, req);
       if (!row) return jsonResponse({ active: false });
 
       const state = stateFromRow({
@@ -223,7 +223,7 @@ Deno.serve(async (req) => {
     if (action === "start") {
       const wager = Number(body?.wager);
       const err = validateWager(wager);
-      if (err) return jsonResponse({ error: err }, 400);
+      if (err) return jsonResponse({ error: err }, 400, req);
 
       const { data: profile } = await admin
         .from("profiles")
@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
 
       const bal = coinType === "sweeps_coins" ? Number(profile?.sweeps_coins ?? 0) : Number(profile?.balance ?? 0);
       if (bal < wager) {
-        return jsonResponse({ error: "Insufficient balance" }, 400);
+        return jsonResponse({ error: "Insufficient balance" }, 400, req);
       }
 
       const { data: seedData, error: seedError } = await admin.rpc("consume_keno_nonce", {
@@ -241,7 +241,7 @@ Deno.serve(async (req) => {
         p_advance: 1,
       });
 
-      if (seedError) return jsonResponse({ error: seedError.message }, 500);
+      if (seedError) return jsonResponse({ error: seedError.message }, 500, req);
 
       const raw = (Array.isArray(seedData) ? seedData[0] : seedData) as
         | Record<string, unknown>
@@ -251,7 +251,7 @@ Deno.serve(async (req) => {
       const nonce = Number(raw?.nonce ?? 0);
 
       if (typeof serverSeed !== "string" || !serverSeed) {
-        return jsonResponse({ error: "Could not load game seeds." }, 500);
+        return jsonResponse({ error: "Could not load game seeds." }, 500, req);
       }
 
       const dealt = await dealNewHand(serverSeed, clientSeed, nonce, wager);
@@ -282,7 +282,7 @@ Deno.serve(async (req) => {
         p_coin_type: coinType,
       });
 
-      if (startError) return jsonResponse({ error: startError.message }, 400);
+      if (startError) return jsonResponse({ error: startError.message }, 400, req);
 
       const row = (Array.isArray(started) ? started[0] : started) as
         | Record<string, unknown>
@@ -308,10 +308,10 @@ Deno.serve(async (req) => {
     }
 
     const handId = String(body?.handId ?? body?.hand_id ?? "");
-    if (!handId) return jsonResponse({ error: "Hand id required." }, 400);
+    if (!handId) return jsonResponse({ error: "Hand id required." }, 400, req);
 
     const row = await loadHand(admin, user.id, handId);
-    if (!row) return jsonResponse({ error: "Active hand not found." }, 400);
+    if (!row) return jsonResponse({ error: "Active hand not found." }, 400, req);
 
     const state = stateFromRow(row);
 
@@ -327,7 +327,7 @@ Deno.serve(async (req) => {
           .maybeSingle();
         const insBal = coinType === "sweeps_coins" ? Number(profile?.sweeps_coins ?? 0) : Number(profile?.balance ?? 0);
         if (insBal < insCost) {
-          return jsonResponse({ error: "Insufficient balance for insurance." }, 400);
+          return jsonResponse({ error: "Insufficient balance for insurance." }, 400, req);
         }
       }
 
@@ -341,7 +341,7 @@ Deno.serve(async (req) => {
           p_coin_type: coinType,
           p_description: "Blackjack insurance",
         });
-        if (debitErr) return jsonResponse({ error: debitErr.message }, 400);
+        if (debitErr) return jsonResponse({ error: debitErr.message }, 400, req);
       }
 
       if (result.instantSettle) {
@@ -355,7 +355,7 @@ Deno.serve(async (req) => {
           0,
           coinType
         );
-        if (finErr) return jsonResponse({ error: finErr.message }, 400);
+        if (finErr) return jsonResponse({ error: finErr.message }, 400, req);
         const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
         return jsonResponse({
           handId,
@@ -370,7 +370,7 @@ Deno.serve(async (req) => {
       }
 
       const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
-      if (upErr) return jsonResponse({ error: upErr.message }, 400);
+      if (upErr) return jsonResponse({ error: upErr.message }, 400, req);
 
       const { data: prof } = await admin
         .from("profiles")
@@ -400,7 +400,7 @@ Deno.serve(async (req) => {
       const extra = state.wager;
       const splitBal = coinType === "sweeps_coins" ? Number(profile?.sweeps_coins ?? 0) : Number(profile?.balance ?? 0);
       if (splitBal < extra) {
-        return jsonResponse({ error: "Insufficient balance to split." }, 400);
+        return jsonResponse({ error: "Insufficient balance to split." }, 400, req);
       }
 
       let result;
@@ -414,7 +414,7 @@ Deno.serve(async (req) => {
         );
         result = splitHand(state, handBias);
       } catch {
-        return jsonResponse({ error: "Cannot split this hand." }, 400);
+        return jsonResponse({ error: "Cannot split this hand." }, 400, req);
       }
 
       const { error: debitErr } = await admin.rpc("blackjack_debit_extra", {
@@ -424,7 +424,7 @@ Deno.serve(async (req) => {
         p_coin_type: coinType,
         p_description: "Blackjack split",
       });
-      if (debitErr) return jsonResponse({ error: debitErr.message }, 400);
+      if (debitErr) return jsonResponse({ error: debitErr.message }, 400, req);
 
       if (result.instantSettle) {
         const { data: fin, error: finErr } = await finishHand(
@@ -437,7 +437,7 @@ Deno.serve(async (req) => {
           0,
           coinType
         );
-        if (finErr) return jsonResponse({ error: finErr.message }, 400);
+        if (finErr) return jsonResponse({ error: finErr.message }, 400, req);
         const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
         return jsonResponse({
           handId,
@@ -452,7 +452,7 @@ Deno.serve(async (req) => {
       }
 
       const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
-      if (upErr) return jsonResponse({ error: upErr.message }, 400);
+      if (upErr) return jsonResponse({ error: upErr.message }, 400, req);
 
       const { data: prof } = await admin
         .from("profiles")
@@ -487,7 +487,7 @@ Deno.serve(async (req) => {
       const result = hitCard(state, handBias);
       if (!result.done) {
         const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
-        if (upErr) return jsonResponse({ error: upErr.message }, 400);
+        if (upErr) return jsonResponse({ error: upErr.message }, 400, req);
 
         const { data: prof } = await admin
           .from("profiles")
@@ -515,7 +515,7 @@ Deno.serve(async (req) => {
         0,
         coinType
       );
-      if (finErr) return jsonResponse({ error: finErr.message }, 400);
+      if (finErr) return jsonResponse({ error: finErr.message }, 400, req);
       const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
 
       return jsonResponse({
@@ -541,7 +541,7 @@ Deno.serve(async (req) => {
       const result = standHand(state, handBias);
       if (!result.done) {
         const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
-        if (upErr) return jsonResponse({ error: upErr.message }, 400);
+        if (upErr) return jsonResponse({ error: upErr.message }, 400, req);
 
         const { data: prof } = await admin
           .from("profiles")
@@ -569,7 +569,7 @@ Deno.serve(async (req) => {
         0,
         coinType
       );
-      if (finErr) return jsonResponse({ error: finErr.message }, 400);
+      if (finErr) return jsonResponse({ error: finErr.message }, 400, req);
       const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
 
       return jsonResponse({
@@ -594,7 +594,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (getBal(profile as Record<string, unknown> | null) < extra) {
-        return jsonResponse({ error: "Insufficient balance to double." }, 400);
+        return jsonResponse({ error: "Insufficient balance to double." }, 400, req);
       }
 
       const handBias = await handRtpBiasFn(
@@ -614,10 +614,10 @@ Deno.serve(async (req) => {
           p_coin_type: coinType,
           p_description: "Blackjack double",
         });
-        if (debitErr) return jsonResponse({ error: debitErr.message }, 400);
+        if (debitErr) return jsonResponse({ error: debitErr.message }, 400, req);
 
         const { error: upErr } = await saveProgress(admin, user.id, handId, result.state);
-        if (upErr) return jsonResponse({ error: upErr.message }, 400);
+        if (upErr) return jsonResponse({ error: upErr.message }, 400, req);
 
         const { data: prof } = await admin
           .from("profiles")
@@ -645,7 +645,7 @@ Deno.serve(async (req) => {
         result.extraWager,
         coinType
       );
-      if (finErr) return jsonResponse({ error: finErr.message }, 400);
+      if (finErr) return jsonResponse({ error: finErr.message }, 400, req);
       const bal = (Array.isArray(fin) ? fin[0] : fin) as Record<string, unknown> | undefined;
 
       return jsonResponse({
@@ -660,9 +660,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    return jsonResponse({ error: "Unknown action." }, 400);
+    return jsonResponse({ error: "Unknown action." }, 400, req);
   } catch (err) {
     console.error("blackjack-game:", err);
-    return jsonResponse({ error: "Server error." }, 500);
+    return jsonResponse({ error: "Server error." }, 500, req);
   }
 });

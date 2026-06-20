@@ -16,7 +16,16 @@ export function EosBlockWait({
   const isJackpot = variant === "jackpot";
 
   return (
-    <div className={"cbr__eos-wait" + (isJackpot ? " cbr__eos-wait--jackpot" : "")} aria-live="polite">
+    <div
+      className={"cbr__eos-wait" + (isJackpot ? " cbr__eos-wait--jackpot" : "")}
+      role="status"
+      aria-live="polite"
+      aria-label={
+        isJackpot
+          ? `Mining jackpot EOS block ${targetBlockNum ?? "pending"}`
+          : `Waiting for EOS block ${targetBlockNum ?? "pending"}`
+      }
+    >
       <div className="cbr__eos-icon" aria-hidden>
         {isJackpot ? "🎰" : "⛓"}
       </div>
@@ -38,7 +47,9 @@ export function EosBlockWait({
       </p>
       {commitBlockNum != null && targetBlockNum != null && (
         <p className="cbr__eos-progress">
-          Committed at block {commitBlockNum} · target {targetBlockNum}
+          Committed at block {commitBlockNum} · target {targetBlockNum}{" "}
+          <span className="cbr__eos-progress-sep" aria-hidden>·</span>{" "}
+          <span className="cbr__eos-progress-pending">typically 1–3 seconds</span>
         </p>
       )}
       {blockId && (
@@ -52,6 +63,9 @@ export function EosBlockWait({
         </p>
       )}
       <div className="cbr__eos-pulse" aria-hidden />
+      <div className="cbr__eos-spinner" aria-hidden>
+        <span />
+      </div>
     </div>
   );
 }

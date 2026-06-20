@@ -48,6 +48,7 @@ export function Mines() {
   const [multiplier, setMultiplier] = useState(1);
   const [bustedMines, setBustedMines] = useState<number[] | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
+  const [lastOutcome, setLastOutcome] = useState<"win" | "loss" | null>(null);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
@@ -99,6 +100,7 @@ export function Mines() {
     setMultiplier(1);
     setBustedMines(null);
     setLastMessage(null);
+    setLastOutcome(null);
   };
 
   const applyWager = (value: number) => {
@@ -120,6 +122,7 @@ export function Mines() {
 
     setError(null);
     setLastMessage(null);
+    setLastOutcome(null);
     setBusy(true);
     resetRound();
 
@@ -162,6 +165,7 @@ export function Mines() {
       setBustedMines(data.mineTiles ?? []);
       setGameId(null);
       setLastMessage("Mine hit — round lost.");
+      setLastOutcome("loss");
       await refreshProfile();
       await loadPf();
       return;
@@ -197,6 +201,7 @@ export function Mines() {
         ? `All gems found! Won ${formatUsd(data.payout)}`
         : `Cashed out ${formatUsd(data.payout)} at ${data.multiplier}×`
     );
+    setLastOutcome("win");
     resetRound();
     await refreshProfile();
     await loadPf();
@@ -381,7 +386,11 @@ export function Mines() {
           )}
 
           {lastMessage && (
-            <p className="mines__message" role="status">
+            <p
+              className={`mines__message${lastOutcome === "win" ? " mines__message--win" : lastOutcome === "loss" ? " mines__message--loss" : ""}`}
+              role="status"
+              aria-live="polite"
+            >
               {lastMessage}
             </p>
           )}
@@ -392,8 +401,16 @@ export function Mines() {
               className="mines__bet-btn"
               onClick={handleStart}
               disabled={busy || !user}
+              aria-busy={busy}
             >
-              {busy ? "Starting…" : "Bet"}
+              {busy ? (
+                <>
+                  <span className="mines__spinner" aria-hidden="true" />
+                  <span>Starting…</span>
+                </>
+              ) : (
+                "Bet"
+              )}
             </button>
           ) : (
             <button
@@ -401,8 +418,16 @@ export function Mines() {
               className="mines__cashout-btn"
               onClick={() => handleCashout(false)}
               disabled={busy || gemsRevealed < 1}
+              aria-busy={busy}
             >
-              {busy ? "…" : `Cash out ${formatUsd(potentialPayout)}`}
+              {busy ? (
+                <>
+                  <span className="mines__spinner mines__spinner--light" aria-hidden="true" />
+                  <span>…</span>
+                </>
+              ) : (
+                `Cash out ${formatUsd(potentialPayout)}`
+              )}
             </button>
           )}
 

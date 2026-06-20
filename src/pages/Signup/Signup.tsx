@@ -196,9 +196,15 @@ export function Signup() {
           </p>
         )}
 
+        <div className="auth-steps" aria-hidden="true">
+          <span className={`auth-steps__dot${step === "details" ? " auth-steps__dot--active" : " auth-steps__dot--done"}`}>1</span>
+          <span className="auth-steps__sep" />
+          <span className={`auth-steps__dot${step === "verify" ? " auth-steps__dot--active" : ""}`}>2</span>
+        </div>
+
         {step === "details" ? (
-          <form className="auth-form" onSubmit={handleSendCode}>
-            {error && <p className="auth-error" role="alert">{error}</p>}
+          <form className="auth-form" onSubmit={handleSendCode} noValidate>
+            {error && <p className="auth-error" role="alert" id="signup-error">{error}</p>}
 
             <div className="auth-field">
               <label htmlFor="signup-username">Username</label>
@@ -210,8 +216,11 @@ export function Signup() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 maxLength={MAX_USERNAME_LENGTH}
+                aria-describedby="signup-username-hint"
               />
-              <p className="auth-field-hint">Up to {MAX_USERNAME_LENGTH} characters</p>
+              <p className="auth-field-hint" id="signup-username-hint">
+                {username.length}/{MAX_USERNAME_LENGTH} characters
+              </p>
             </div>
 
             <div className="auth-field">
@@ -224,6 +233,8 @@ export function Signup() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "signup-error" : undefined}
               />
             </div>
 
@@ -303,12 +314,13 @@ export function Signup() {
             </label>
 
             <button type="submit" className="auth-submit" disabled={submitting || !configured}>
+              {submitting && <span className="auth-submit__spinner" aria-hidden="true" />}
               {submitting ? "Sending code…" : "Send verification code"}
             </button>
           </form>
         ) : (
-          <form className="auth-form" onSubmit={handleVerify}>
-            {error && <p className="auth-error" role="alert">{error}</p>}
+          <form className="auth-form" onSubmit={handleVerify} noValidate>
+            {error && <p className="auth-error" role="alert" id="signup-verify-error">{error}</p>}
 
             <p className="auth-hint">Code expires in 10 minutes.</p>
 
@@ -343,10 +355,13 @@ export function Signup() {
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 maxLength={6}
                 required
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "signup-verify-error" : undefined}
               />
             </div>
 
             <button type="submit" className="auth-submit" disabled={submitting || !configured}>
+              {submitting && <span className="auth-submit__spinner" aria-hidden="true" />}
               {submitting ? "Verifying…" : "Verify & create account"}
             </button>
 

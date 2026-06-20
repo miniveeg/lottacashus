@@ -111,6 +111,7 @@
 }
 
 .auth-submit {
+  position: relative;
   margin-top: 0.5rem;
   padding: 0.8rem 1rem;
   border-radius: var(--lc-radius-md);
@@ -118,7 +119,11 @@
   font-size: 0.95rem;
   background: linear-gradient(135deg, var(--lc-gold), var(--lc-gold-dim));
   color: var(--lc-bg-base);
-  transition: filter var(--lc-transition), transform var(--lc-transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: filter var(--lc-transition), transform var(--lc-transition), opacity var(--lc-transition);
 }
 
 .auth-submit:hover:not(:disabled) {
@@ -127,13 +132,75 @@
 }
 
 .auth-submit:disabled {
-  opacity: 0.6;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
 .auth-submit:focus-visible {
   outline: none;
   box-shadow: var(--lc-focus-ring);
+}
+
+.auth-submit__spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: auth-submit-spin 0.7s linear infinite;
+}
+
+@keyframes auth-submit-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Step indicator */
+.auth-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 0 0 1.25rem;
+}
+
+.auth-steps__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--lc-font-display);
+  color: var(--lc-text-muted);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+}
+
+.auth-steps__dot--active {
+  color: var(--lc-bg-base);
+  background: linear-gradient(135deg, var(--lc-gold), var(--lc-gold-dim));
+  border-color: transparent;
+}
+
+.auth-steps__dot--done {
+  color: var(--lc-emerald);
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.auth-steps__sep {
+  width: 1.25rem;
+  height: 1px;
+  background: var(--lc-border);
+}
+
+@media (max-width: 640px) {
+  .auth-steps__sep {
+    width: 0.75rem;
+  }
 }
 
 .auth-footer {

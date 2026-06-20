@@ -84,7 +84,7 @@
   font-weight: 600;
   font-size: 0.95rem;
   letter-spacing: 0.02em;
-  transition: background var(--lc-transition), color var(--lc-transition), box-shadow var(--lc-transition);
+  transition: background var(--lc-transition), color var(--lc-transition), box-shadow var(--lc-transition), transform var(--lc-transition);
   position: relative;
   overflow: hidden;
 }
@@ -105,6 +105,7 @@
 .sidebar__link:hover {
   background: var(--lc-crimson-glow);
   color: var(--lc-text-primary);
+  transform: translateX(2px);
 }
 
 .sidebar__link:hover .sidebar__link-glow {
@@ -121,18 +122,22 @@
   width: 3px;
 }
 
+.sidebar__link--active:hover {
+  transform: none;
+}
+
 .sidebar__link-glow {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse at left center, var(--lc-crimson-glow) 0%, transparent 70%);
-  opacity: 1;
+  opacity: 0.45;
   pointer-events: none;
-  animation: sidebar-glow-pulse 2.5s ease-in-out infinite;
+  animation: sidebar-glow-pulse 3.2s ease-in-out infinite;
 }
 
 @keyframes sidebar-glow-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.55; }
 }
 
 .sidebar__icon {
@@ -148,7 +153,9 @@
 .sidebar__link-label {
   white-space: nowrap;
   overflow: hidden;
-  transition: opacity var(--lc-transition), width var(--lc-transition);
+  /* Match the sidebar's slow width transition so labels fade in/out gracefully
+     instead of vanishing instantly while the rail is still collapsing. */
+  transition: opacity var(--lc-transition-slow), width var(--lc-transition-slow);
 }
 
 /* Collapsed state */
@@ -369,4 +376,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   .sidebar__link-glow { animation: none; }
+  .sidebar__link:hover { transform: none; }
+}
+
+/* Touch devices: suppress framer-motion scale transforms on small icon
+   buttons (they feel jittery with a finger). !important overrides
+   framer-motion's inline styles. */
+@media (hover: none) and (pointer: coarse) {
+  .sidebar__collapse-btn,
+  .sidebar__mode-btn {
+    transform: none !important;
+  }
 }

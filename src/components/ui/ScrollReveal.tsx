@@ -10,12 +10,15 @@ type ScrollRevealProps = {
 };
 
 export function ScrollReveal({ children, className, delay = 0, as = "div" }: ScrollRevealProps) {
-  const ref = useRef<HTMLElement>(null);
+  // Use `any` for the ref because framer-motion's `motion[as]` produces a
+  // union of distinct element-specific ref types (HTMLDivElement, HTMLLIElement, etc.)
+  // that TypeScript cannot reconcile with a single `HTMLElement` ref.
+  const ref = useRef<any>(null);
   const inView = useInView(ref, { once: true, margin: "-8% 0px" });
-  const Component = motion[as];
+  const MotionTag = motion[as];
 
   return (
-    <Component
+    <MotionTag
       ref={ref}
       className={className}
       initial="hidden"
@@ -24,6 +27,6 @@ export function ScrollReveal({ children, className, delay = 0, as = "div" }: Scr
       custom={delay}
     >
       {children}
-    </Component>
+    </MotionTag>
   );
 }

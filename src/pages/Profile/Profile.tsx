@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
+import { Lock } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { formatUsd } from "../../lib/format";
-import { fetchProfileStats, fetchPublicProfile, fetchReferralInfo, claimAffiliateBalance, type ProfileStats, type ReferralInfo } from "../../lib/profile";
+import { fetchPublicProfile, fetchReferralInfo, claimAffiliateBalance, type ProfileStats, type ReferralInfo } from "../../lib/profile";
 import { UiIcon } from "../../components/icons";
 import "./Profile.css";
 
@@ -197,11 +198,18 @@ export function ProfilePage() {
             return (
               <div
                 key={badge.id}
-                className={`profile-badge${earned ? "" : " profile-badge--locked"}`}
-                title={`${badge.name}: ${badge.description}`}
+                className={`profile-badge${earned ? " profile-badge--earned" : " profile-badge--locked"}`}
+                title={`${badge.name}: ${badge.description}${earned ? "" : " (locked)"}`}
               >
                 <span className="profile-badge__icon" aria-hidden="true">{badge.icon}</span>
                 <span className="profile-badge__name">{badge.name}</span>
+                {!earned && (
+                  <Lock
+                    size={12}
+                    className="profile-badge__lock"
+                    aria-label="Locked"
+                  />
+                )}
               </div>
             );
           })}
@@ -217,7 +225,13 @@ export function ProfilePage() {
               <div className="profile-referral__code">
                 <span className="profile-referral__label">Your code</span>
                 <code className="profile-referral__value">{referralInfo.referralCode}</code>
-                <button type="button" className="profile-referral__copy" onClick={handleCopy}>
+                <button
+                  type="button"
+                  className="profile-referral__copy"
+                  onClick={handleCopy}
+                  aria-label="Copy referral code to clipboard"
+                  aria-live="polite"
+                >
                   {copied ? "Copied!" : "Copy"}
                 </button>
               </div>

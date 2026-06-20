@@ -19,7 +19,11 @@ import "./Limbo.css";
 
 const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
 const TARGET_PRESETS = [1.5, 2, 3, 5, 10, 25, 50, 100];
-const REVEAL_DELAY_MS = 3000;
+const REVEAL_DELAY_MS = 1500;
+const POP_DURATION_MS = 600;
+const HISTORY_MAX = 8;
+
+type HistoryEntry = { result: number; won: boolean };
 
 function formatMultiplier(n: number): string {
   if (n >= 1000) return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -43,6 +47,7 @@ export function Limbo() {
   const [showResult, setShowResult] = useState(true);
   const [popIn, setPopIn] = useState(false);
   const [displayMult, setDisplayMult] = useState(1);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [lastResult, setLastResult] = useState<{
     result: number;
     won: boolean;
@@ -126,10 +131,13 @@ export function Limbo() {
       won: data.won,
       payout: data.payout,
     });
+    setHistory((h) =>
+      [{ result: data.resultMultiplier, won: data.won }, ...h].slice(0, HISTORY_MAX)
+    );
     setPfNonce(data.nonce + 1);
     await refreshProfile();
 
-    window.setTimeout(() => setPopIn(false), 600);
+    window.setTimeout(() => setPopIn(false), POP_DURATION_MS);
   };
 
   const saveClientSeed = async () => {
@@ -178,6 +186,7 @@ export function Limbo() {
             <div
               className={`limbo__outcome${lastResult.won ? " limbo__outcome--win" : " limbo__outcome--loss"}`}
               role="status"
+              aria-live="polite"
             >
               {lastResult.won ? (
                 <p>
@@ -189,6 +198,20 @@ export function Limbo() {
                   Landed <strong>{formatMultiplier(lastResult.result)}×</strong> — below target
                 </p>
               )}
+            </div>
+          )}
+
+          {history.length > 0 && (
+            <div className="limbo__history" aria-label="Recent results">
+              {history.map((h, i) => (
+                <span
+                  key={`${h.result}-${i}`}
+                  className={`limbo__history-chip${h.won ? " limbo__history-chip--win" : " limbo__history-chip--loss"}`}
+                  title={`${formatMultiplier(h.result)}× — ${h.won ? "win" : "loss"}`}
+                >
+                  {formatMultiplier(h.result)}×
+                </span>
+              ))}
             </div>
           )}
         </section>
@@ -294,8 +317,16 @@ export function Limbo() {
             className="limbo__bet-btn"
             onClick={handleBet}
             disabled={rolling || !user}
+            aria-busy={rolling}
           >
-            {rolling ? "Rolling…" : "Bet"}
+            {rolling ? (
+              <>
+                <span className="limbo__spinner" aria-hidden="true" />
+                <span>Rolling…</span>
+              </>
+            ) : (
+              "Bet"
+            )}
           </button>
 
           <p className="limbo__hint">

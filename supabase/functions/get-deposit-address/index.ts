@@ -5,22 +5,22 @@ import { deriveWallet } from "../_shared/crypto-wallet.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401);
+    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401, req);
 
     const body = await req.json();
     const chain = String(body?.chain ?? "").toLowerCase() as Chain;
 
     if (!CHAINS.includes(chain)) {
-      return jsonResponse({ error: "Invalid chain. Use sol, ltc, or eth." }, 400);
+      return jsonResponse({ error: "Invalid chain. Use sol, ltc, or eth." }, 400, req);
     }
 
     const supabaseUser = createClient(
@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       error: userError,
     } = await supabaseUser.auth.getUser();
 
-    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401);
+    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401, req);
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
 
     if (indexError) {
       console.error(indexError);
-      return jsonResponse({ error: "Could not assign deposit index." }, 500);
+      return jsonResponse({ error: "Could not assign deposit index." }, 500, req);
     }
 
     const derived = await deriveWallet(chain, index as number);
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
 
     if (insertError) {
       console.error(insertError);
-      return jsonResponse({ error: "Could not save deposit address." }, 500);
+      return jsonResponse({ error: "Could not save deposit address." }, 500, req);
     }
 
     return jsonResponse({
@@ -88,6 +88,6 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error(err);
     const message = err instanceof Error ? err.message : "Failed to get deposit address.";
-    return jsonResponse({ error: message }, 500);
+    return jsonResponse({ error: message }, 500, req);
   }
 });

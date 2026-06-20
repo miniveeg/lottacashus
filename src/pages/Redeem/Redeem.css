@@ -89,6 +89,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   border-radius: var(--lc-radius-lg);
   font-family: var(--lc-font-display);
   font-size: 0.92rem;
@@ -98,7 +99,20 @@
   color: #080602;
   background: linear-gradient(135deg, var(--lc-emerald) 0%, var(--lc-emerald-dim) 100%);
   box-shadow: 0 2px 20px var(--lc-emerald-glow), var(--lc-shadow-inset);
-  transition: transform var(--lc-transition-spring), filter var(--lc-transition);
+  transition: transform var(--lc-transition-spring), filter var(--lc-transition), opacity var(--lc-transition);
+}
+
+.redeem__submit-spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: redeem-submit-spin 0.7s linear infinite;
+}
+
+@keyframes redeem-submit-spin {
+  to { transform: rotate(360deg); }
 }
 
 .redeem__submit:hover:not(:disabled) {

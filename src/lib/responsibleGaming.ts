@@ -54,6 +54,7 @@ export async function createSelfExclusion(
   reason?: string
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured) return { error: "Supabase is not configured." };
+  void reason; // Reason is captured client-side for future use; server RPC currently only takes days.
 
   const { error } = await supabase.rpc("self_exclude", { p_days: days });
   return { error: error?.message ?? null };

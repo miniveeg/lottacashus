@@ -5,6 +5,8 @@ import { trackSessionActivity, getSessionDuration } from "./responsibleGaming";
 
 const REMINDER_INTERVAL_MS = 60000;
 
+type ToastOptions = { duration?: number };
+
 export function useSessionReminder() {
   const { user } = useAuth();
   const toast = useToast();
@@ -21,9 +23,10 @@ export function useSessionReminder() {
 
       if (hours >= 1 && !oneHourShown.current) {
         oneHourShown.current = true;
+        const opts: ToastOptions = { duration: 8000 };
         toast.info(
           "You have been playing for 1 hour. Consider taking a break.",
-          { duration: 8000 }
+          opts.duration
         );
       }
     }, REMINDER_INTERVAL_MS);

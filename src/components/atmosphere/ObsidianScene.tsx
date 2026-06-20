@@ -1,11 +1,12 @@
 import { Suspense, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Float } from "@react-three/drei";
-import * as THREE from "three";
+// Selective import so the bundler can drop the rest of Three.js.
+import { OctahedronGeometry } from "three";
 
 function Shard({ position, rotation, scale }: { position: [number, number, number]; rotation: [number, number, number]; scale: number }) {
   const geometry = useMemo(() => {
-    const geo = new THREE.OctahedronGeometry(1, 0);
+    const geo = new OctahedronGeometry(1, 0);
     geo.scale(scale, scale * 1.4, scale * 0.6);
     return geo;
   }, [scale]);

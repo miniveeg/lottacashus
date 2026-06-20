@@ -173,6 +173,7 @@
 }
 
 .profile-badge {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -180,15 +181,22 @@
   background: var(--lc-bg-glass);
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-lg);
-  transition: border-color var(--lc-transition);
+  transition: border-color var(--lc-transition), transform var(--lc-transition);
 }
 
-.profile-badge:hover {
-  border-color: var(--lc-border-strong);
+.profile-badge--earned {
+  border-color: rgba(245, 185, 66, 0.35);
+  background: linear-gradient(135deg, rgba(245, 185, 66, 0.08), var(--lc-bg-glass));
+}
+
+.profile-badge--earned:hover {
+  border-color: var(--lc-gold-dim);
+  transform: translateY(-1px);
 }
 
 .profile-badge__icon {
   font-size: 0.9rem;
+  color: var(--lc-gold);
 }
 
 .profile-badge__name {
@@ -197,12 +205,23 @@
   color: var(--lc-text-primary);
 }
 
+.profile-badge__lock {
+  color: var(--lc-text-muted);
+  margin-left: 0.15rem;
+}
+
 .profile-badge--locked {
-  opacity: 0.4;
+  opacity: 0.55;
+  border-style: dashed;
 }
 
 .profile-badge--locked .profile-badge__icon {
   filter: grayscale(1);
+  color: var(--lc-text-muted);
+}
+
+.profile-badge--locked .profile-badge__name {
+  color: var(--lc-text-muted);
 }
 
 /* ── Referral ── */
@@ -255,11 +274,19 @@
   color: var(--lc-text-primary);
   background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
-  transition: background var(--lc-transition);
+  transition: background var(--lc-transition), border-color var(--lc-transition), color var(--lc-transition);
+  min-width: 4.5rem;
 }
 
 .profile-referral__copy:hover {
   background: var(--lc-bg-hover);
+  border-color: var(--lc-gold-dim);
+  color: var(--lc-gold);
+}
+
+.profile-referral__copy:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
 }
 
 .profile-referral__stats {

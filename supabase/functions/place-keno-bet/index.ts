@@ -4,16 +4,16 @@ import { playKenoRound, validateKenoBet, type KenoRisk } from "../_shared/keno.t
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401);
+    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401, req);
 
     const body = await req.json();
     const wager = Number(body?.wager);
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
     const validationError = validateKenoBet(picks, wager, risk);
     if (validationError) {
-      return jsonResponse({ error: validationError }, 400);
+      return jsonResponse({ error: validationError }, 400, req);
     }
 
     const supabaseUser = createClient(
@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       error: userError,
     } = await supabaseUser.auth.getUser();
 
-    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401);
+    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401, req);
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       p_user_id: user.id,
     });
     if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403);
+      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
     }
 
     const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
 
     const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
     if (balance < wager) {
-      return jsonResponse({ error: "Insufficient balance" }, 400);
+      return jsonResponse({ error: "Insufficient balance" }, 400, req);
     }
 
     const { data: seedData, error: seedError } = await supabaseAdmin.rpc(
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
           500
         );
       }
-      return jsonResponse({ error: msg }, 500);
+      return jsonResponse({ error: msg }, 500, req);
     }
 
     const raw = seedRows[0] as Record<string, unknown> | undefined;
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
 
     if (settleError) {
       console.error("settle_keno_bet:", settleError);
-      return jsonResponse({ error: settleError.message }, 400);
+      return jsonResponse({ error: settleError.message }, 400, req);
     }
 
     const result = settled?.[0] as Record<string, unknown> | undefined;
@@ -164,6 +164,6 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("place-keno-bet:", err);
-    return jsonResponse({ error: "Server error." }, 500);
+    return jsonResponse({ error: "Server error." }, 500, req);
   }
 });

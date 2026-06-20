@@ -1,14 +1,14 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { springTransition } from "../../lib/motion";
 import { cn } from "../../lib/cn";
 
-type MotionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+type MotionButtonProps = Omit<HTMLMotionProps<"button">, "children"> & {
   variant?: "primary" | "secondary" | "ghost";
   glow?: boolean;
   children: ReactNode;
   className?: string;
-};
+} & Pick<ButtonHTMLAttributes<HTMLButtonElement>, "disabled" | "form" | "formAction" | "formMethod" | "formEncType" | "formTarget" | "name" | "value" | "type">;
 
 const variantClass: Record<NonNullable<MotionButtonProps["variant"]>, string> = {
   primary: "lc-motion-btn--primary",

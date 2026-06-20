@@ -39,19 +39,44 @@
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-xl);
   overflow: hidden;
-  transition: border-color var(--lc-transition);
+  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
 .crash__canvas-wrap--running {
   border-color: var(--lc-emerald-dim);
+  box-shadow: 0 0 24px rgba(34, 197, 94, 0.08) inset;
 }
 
 .crash__canvas-wrap--crashed {
   border-color: var(--lc-ruby);
+  animation: crash-shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
 .crash__canvas-wrap--win {
   border-color: var(--lc-emerald);
+  box-shadow: 0 0 32px rgba(34, 197, 94, 0.18);
+}
+
+/* Brief red flash overlay when the multiplier crashes. */
+.crash__canvas-wrap--crashed::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(239, 68, 68, 0.32), transparent 70%);
+  pointer-events: none;
+  animation: crash-flash 0.55s ease-out;
+}
+
+@keyframes crash-flash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes crash-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
 }
 
 .crash__canvas {
@@ -73,20 +98,30 @@
 
 .crash__mult-value {
   font-family: var(--lc-font-display);
-  font-size: 3rem;
+  font-size: clamp(2.25rem, 7vw, 3.25rem);
   font-weight: 800;
   color: var(--lc-emerald);
   text-shadow: 0 0 40px var(--lc-emerald-glow);
-  transition: color var(--lc-transition);
+  transition: color var(--lc-transition), transform 0.2s ease;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
 }
 
 .crash__mult-value--crashed {
   color: var(--lc-ruby);
   text-shadow: 0 0 40px var(--lc-ruby-glow);
+  animation: crash-mult-bounce 0.4s ease-out;
 }
 
 .crash__mult-value--win {
   color: var(--lc-emerald);
+  animation: crash-mult-bounce 0.4s ease-out;
+}
+
+@keyframes crash-mult-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.18); }
+  100% { transform: scale(1); }
 }
 
 .crash__mult-label {

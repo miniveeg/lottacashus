@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useLocation } from "react-router-dom";
+import { Banknote } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -123,7 +124,7 @@ export function Withdraw() {
         {error && <p className="wallet__error" role="alert">{error}</p>}
         {success && <p className="wallet__success" role="status">{success}</p>}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="wallet__chain-picker">
             {CRYPTO_CHAINS.map((c) => (
               <button
@@ -145,6 +146,8 @@ export function Withdraw() {
               onChange={(e) => setDestination(e.target.value)}
               placeholder="Your external wallet address"
               required
+              autoComplete="off"
+              spellCheck={false}
             />
           </div>
 
@@ -163,6 +166,7 @@ export function Withdraw() {
           </div>
 
           <button type="submit" className="wallet__btn" disabled={submitting}>
+            {submitting && <span className="wallet__btn__spinner" aria-hidden="true" />}
             {submitting ? "Submitting…" : "Request withdrawal"}
           </button>
         </form>
@@ -176,8 +180,10 @@ export function Withdraw() {
       <section className="wallet__section">
         <h2 className="wallet__list-title">Recent withdrawals</h2>
         {withdrawals.length === 0 ? (
-          <div className="lc-empty">
+          <div className="wallet__empty">
+            <Banknote size={28} aria-hidden="true" />
             <p>No withdrawals yet</p>
+            <p className="wallet__empty-hint">Your withdrawal history will appear here once you cash out.</p>
           </div>
         ) : (
           withdrawals.map((w) => (

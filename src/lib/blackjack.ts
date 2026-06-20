@@ -90,6 +90,7 @@ function mapHand(data: Record<string, unknown>): BlackjackActionResult {
     outcome: (data.outcome as string | null) ?? null,
     payout: data.payout != null ? Number(data.payout) : undefined,
     nonce: data.nonce != null ? Number(data.nonce) : undefined,
+    coinType: String(data.coinType ?? "balance"),
     wager: Number(data.wager ?? 0),
     totalWager: Number(data.totalWager ?? 0),
     doubled: Boolean(data.doubled),

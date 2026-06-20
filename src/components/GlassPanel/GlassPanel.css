@@ -13,6 +13,15 @@
   overflow: hidden;
 }
 
+/* When backdrop-filter is unavailable (older Firefox, locked-down GPUs),
+   fall back to a more opaque surface so foreground text stays legible
+   instead of showing a thin 55% veil over the page. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-panel {
+    background: var(--lc-bg-panel);
+  }
+}
+
 .glass-panel::before {
   content: "";
   position: absolute;
@@ -47,3 +56,8 @@
 .glass-panel--sm { padding: 0.75rem 1rem; }
 .glass-panel--md { padding: 1.25rem 1.5rem; }
 .glass-panel--lg { padding: 1.75rem 2rem; }
+
+@media (max-width: 480px) {
+  .glass-panel--md { padding: 1rem 1.15rem; }
+  .glass-panel--lg { padding: 1.25rem 1.35rem; }
+}

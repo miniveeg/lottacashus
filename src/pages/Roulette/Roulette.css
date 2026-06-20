@@ -223,6 +223,12 @@
   top: calc(var(--lc-topbar-height) + 1rem);
 }
 
+@media (max-width: 900px) {
+  .roulette__controls {
+    position: static;
+  }
+}
+
 .roulette__error {
   margin: 0;
   color: var(--lc-ruby);
@@ -231,16 +237,48 @@
 
 .roulette__result {
   padding: 0.75rem;
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.25);
+  border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-sm);
   font-size: 0.9rem;
+  animation: roulette-result-in 0.3s ease-out;
+}
+
+@keyframes roulette-result-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.roulette__result--win {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.roulette__result--loss {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.roulette__result p {
+  margin: 0;
 }
 
 .roulette__result-payout {
   margin: 0.25rem 0 0;
-  color: var(--lc-emerald);
   font-weight: 600;
+}
+
+.roulette__result--win .roulette__result-payout {
+  color: var(--lc-emerald);
+}
+
+.roulette__result--loss .roulette__result-payout {
+  color: #fca5a5;
 }
 
 .roulette__bet-btn {
@@ -254,16 +292,48 @@
   border: none;
   border-radius: var(--lc-radius-md);
   cursor: pointer;
-  transition: filter var(--lc-transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition:
+    filter var(--lc-transition),
+    transform var(--lc-transition);
 }
 
 .roulette__bet-btn:hover:not(:disabled) {
-  filter: brightness(1.05);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.roulette__bet-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.roulette__bet-btn:focus-visible {
+  outline: 2px solid var(--lc-gold);
+  outline-offset: 2px;
 }
 
 .roulette__bet-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
+}
+
+.roulette__spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid rgba(10, 10, 10, 0.25);
+  border-top-color: #0a0a0a;
+  animation: roulette-spinner 0.7s linear infinite;
+}
+
+@keyframes roulette-spinner {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .roulette__hint {
@@ -356,7 +426,7 @@
 /* Wheel (inside board panel — matches site tokens) */
 .roulette-wheel {
   position: relative;
-  width: min(300px, 82vw);
+  width: min(320px, 84vw);
   aspect-ratio: 1;
 }
 
@@ -383,7 +453,7 @@
 }
 
 .roulette-wheel__disc-wrap--settling .roulette-wheel__disc {
-  transition: transform 1.1s cubic-bezier(0.2, 0.85, 0.25, 1);
+  transition: transform 1.2s cubic-bezier(0.15, 0.85, 0.25, 1);
 }
 
 @keyframes roulette-disc-spin {
@@ -406,19 +476,48 @@
 
 .roulette-wheel__ball-marker {
   position: absolute;
-  top: 3%;
+  top: -2%;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 3;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
 }
 
 .roulette-wheel__ball {
   display: block;
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #f8fafc;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #fef3c7 70%, #d4a017 100%);
+  box-shadow:
+    0 0 10px rgba(254, 243, 199, 0.85),
+    0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.roulette-wheel__pointer {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 9px solid var(--lc-gold);
+  margin-top: -2px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+
+.roulette-wheel__disc-wrap--spinning ~ .roulette-wheel__ball-marker .roulette-wheel__ball {
+  animation: roulette-ball-bounce 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes roulette-ball-bounce {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(3px);
+  }
 }
 
 .roulette-wheel__hub {

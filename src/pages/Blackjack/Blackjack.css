@@ -223,17 +223,29 @@
   border-radius: 10px;
   background: linear-gradient(145deg, #ffffff 0%, #f0f0f2 100%);
   color: #111;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: clamp(1.1rem, 2.5vw, 1.45rem);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 0.35rem 0.4rem;
+  box-sizing: border-box;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.8) inset,
     0 6px 16px rgba(0, 0, 0, 0.4),
     0 2px 4px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
+  animation: bj-card-deal 0.35s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  animation-delay: var(--card-deal-delay, 0s);
+}
+
+@keyframes bj-card-deal {
+  from {
+    opacity: 0;
+    transform: translateY(-1.5rem) rotate(-6deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
 }
 
 .bj__card + .bj__card {
@@ -247,6 +259,41 @@
 
 .bj__card--red {
   color: #c41e3a;
+}
+
+.bj__card-corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  font-weight: 800;
+  font-size: clamp(0.7rem, 1.6vw, 0.95rem);
+}
+
+.bj__card-corner--tl {
+  justify-self: start;
+}
+
+.bj__card-corner--br {
+  justify-self: end;
+  transform: rotate(180deg);
+}
+
+.bj__card-rank {
+  letter-spacing: -0.04em;
+}
+
+.bj__card-suit {
+  font-size: 0.85em;
+  margin-top: 0.05rem;
+}
+
+.bj__card-center {
+  align-self: center;
+  justify-self: center;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  line-height: 1;
+  opacity: 0.92;
 }
 
 .bj__card--hidden {
@@ -476,6 +523,14 @@
 
   .bj__card + .bj__card {
     margin-left: -1rem;
+  }
+
+  .bj__card-corner {
+    font-size: 0.7rem;
+  }
+
+  .bj__card-center {
+    font-size: 1.5rem;
   }
 
   .bj__player-zone--split {

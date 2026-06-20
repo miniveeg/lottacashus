@@ -13,8 +13,11 @@ import "../../styles/game-controls.css";
 import "./Slots.css";
 
 const REVEAL_DELAY_MS = 1200;
-const ROLL_DURATION_MS = 600;
-const SPIN_COUNT = 8;
+// Per-reel landing stagger — each reel stops shortly after the previous one
+// for a satisfying left-to-right settle effect.
+const REEL_STOP_STAGGER_MS = 180;
+// Symbol cycle rate during the spin animation. Lower = faster visual flicker.
+const SYMBOL_CYCLE_MS = 55;
 
 const SYMBOL_GLYPH: Record<number, string> = {
   0: "\u{1F352}",
@@ -26,17 +29,9 @@ const SYMBOL_GLYPH: Record<number, string> = {
   6: "\u{1F451}",
 };
 
-const SYMBOL_NAME: Record<number, string> = {
-  0: "Cherry",
-  1: "Bell",
-  2: "Seven",
-  3: "Bar",
-  4: "Watermelon",
-  5: "Star",
-  6: "Crown",
-};
-
 const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+
+type ReelState = "idle" | "spinning" | "landed";
 
 export default function Slots() {
   const { user } = useAuth();
@@ -48,7 +43,9 @@ export default function Slots() {
   const [wagerInput, setWagerInput] = useState("1");
   const [rolling, setRolling] = useState(false);
   const [reels, setReels] = useState<number[]>([-1, -1, -1]);
-  const [rollingReels, setRollingReels] = useState(false);
+  // Per-reel spin state — each reel moves through spinning → landed independently
+  // so we can stagger the visual landing for a more authentic slot feel.
+  const [reelStates, setReelStates] = useState<ReelState[]>(["idle", "idle", "idle"]);
   const [lastResult, setLastResult] = useState<SlotsBetResult | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +55,20 @@ export default function Slots() {
   const [clientSeed, setClientSeed] = useState("");
   const [showFairness, setShowFairness] = useState(false);
 
-  const intervalRef = useRef<number | null>(null);
-  const applyRef = useRef(false);
+  const rafRef = useRef<number>(0);
+  const lastCycleRef = useRef<number>(0);
+  const reelStatesRef = useRef<ReelState[]>(["idle", "idle", "idle"]);
+  const landingTimersRef = useRef<number[]>([]);
+
+  // Keep ref in sync so the rAF closure always sees the latest reel states.
+  useEffect(() => {
+    reelStatesRef.current = reelStates;
+  }, [reelStates]);
+
+  const clearLandingTimers = useCallback(() => {
+    for (const t of landingTimersRef.current) window.clearTimeout(t);
+    landingTimersRef.current = [];
+  }, []);
 
   const activeBalance = useMemo(() => {
     if (!user) return 0;
@@ -92,22 +101,45 @@ export default function Slots() {
   );
 
   function startRollAnimation() {
-    setRollingReels(true);
-    let frame = 0;
-    intervalRef.current = window.setInterval(() => {
-      frame++;
-      setReels([
-        Math.floor(Math.random() * 7),
-        Math.floor(Math.random() * 7),
-        Math.floor(Math.random() * 7),
-      ]);
-      if (frame >= SPIN_COUNT) {
-        if (intervalRef.current !== null) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
+    setReelStates(["spinning", "spinning", "spinning"]);
+    reelStatesRef.current = ["spinning", "spinning", "spinning"];
+    lastCycleRef.current = performance.now();
+
+    const tick = (now: number) => {
+      // Only update visuals while at least one reel is still spinning.
+      if (!reelStatesRef.current.some((s) => s === "spinning")) return;
+      if (now - lastCycleRef.current >= SYMBOL_CYCLE_MS) {
+        lastCycleRef.current = now;
+        setReels((prev) =>
+          prev.map((s, i) =>
+            reelStatesRef.current[i] === "spinning"
+              ? Math.floor(Math.random() * 7)
+              : s
+          )
+        );
       }
-    }, ROLL_DURATION_MS / SPIN_COUNT);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }
+
+  function stopRollAnimation(finalReels: number[]) {
+    // Land each reel in sequence so the user sees a satisfying left-to-right settle.
+    finalReels.forEach((sym, i) => {
+      const t = window.setTimeout(() => {
+        setReels((prev) => {
+          const next = [...prev];
+          next[i] = sym;
+          return next;
+        });
+        setReelStates((prev) => {
+          const next = [...prev];
+          next[i] = "landed";
+          return next;
+        });
+      }, i * REEL_STOP_STAGGER_MS);
+      landingTimersRef.current.push(t);
+    });
   }
 
   async function handleSpin() {
@@ -136,29 +168,24 @@ export default function Slots() {
 
     await new Promise((r) => setTimeout(r, remaining));
 
-    if (intervalRef.current !== null) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-
-    if (apiError) {
+    if (apiError || !data) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      clearLandingTimers();
       setRolling(false);
-      setRollingReels(false);
-      setError(apiError);
+      setReelStates(["idle", "idle", "idle"]);
+      setError(apiError ?? "No response from server.");
       setReels([-1, -1, -1]);
       return;
     }
 
-    if (!data) {
-      setRolling(false);
-      setRollingReels(false);
-      setError("No response from server.");
-      setReels([-1, -1, -1]);
-      return;
-    }
+    // Stop the free-running spin rAF; reel landing timers will settle each reel.
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    stopRollAnimation(data.reels);
 
-    setReels(data.reels);
-    setRollingReels(false);
+    // Wait for the final reel to land before showing the outcome.
+    const lastReelDelay = (data.reels.length - 1) * REEL_STOP_STAGGER_MS + 220;
+    await new Promise((r) => setTimeout(r, lastReelDelay));
+
     setLastResult(data);
     setShowResult(true);
     setRolling(false);
@@ -182,6 +209,14 @@ export default function Slots() {
     });
   }
 
+  // Cleanup any pending rAF / landing timers when the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      clearLandingTimers();
+    };
+  }, [clearLandingTimers]);
+
   return (
     <div className="slots lc-game-page">
       <div className="slots__header">
@@ -191,34 +226,44 @@ export default function Slots() {
 
       <div className="slots__layout">
         <section className="slots__stage">
-          <div className="slots__reels" role="img" aria-label="Slot machine reels">
-            {reels.map((symbol, i) => (
-              <div
-                key={i}
-                className={`slots__reel${
-                  rollingReels ? " slots__reel--rolling" : ""
-                }${!rollingReels && showResult && lastResult?.won ? " slots__reel--win" : ""}${
-                  !rollingReels && showResult && lastResult && !lastResult.won
-                    ? " slots__reel--loss"
-                    : ""
-                }`}
-              >
-                {symbol >= 0 ? (
-                  <span
-                    className="slots__reel-inner"
-                    style={{ transform: rollingReels ? "translateY(-10%)" : "translateY(0)" }}
-                  >
-                    <span className="slots__symbol">
-                      {SYMBOL_GLYPH[symbol] ?? symbol}
+          <div
+            className={`slots__reels${
+              !rolling && showResult && lastResult?.won ? " slots__reels--win" : ""
+            }`}
+            role="img"
+            aria-label="Slot machine reels"
+          >
+            {reels.map((symbol, i) => {
+              const state = reelStates[i];
+              const isWinning =
+                !rolling && showResult && lastResult?.won && state === "landed";
+              const isLoss =
+                !rolling && showResult && lastResult && !lastResult.won && state === "landed";
+              return (
+                <div
+                  key={i}
+                  className={`slots__reel${
+                    state === "spinning" ? " slots__reel--rolling" : ""
+                  }${isWinning ? " slots__reel--win" : ""}${isLoss ? " slots__reel--loss" : ""}${
+                    state === "landed" ? " slots__reel--landed" : ""
+                  }`}
+                >
+                  {symbol >= 0 ? (
+                    <span className="slots__reel-inner">
+                      <span className="slots__symbol">
+                        {SYMBOL_GLYPH[symbol] ?? symbol}
+                      </span>
                     </span>
-                  </span>
-                ) : (
-                  <span className="slots__symbol" aria-label="Empty">
-                    —
-                  </span>
-                )}
-              </div>
-            ))}
+                  ) : (
+                    <span className="slots__symbol" aria-label="Empty">
+                      —
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+            {/* Horizontal win-line indicator across the center row */}
+            <div className="slots__win-line" aria-hidden="true" />
           </div>
 
           {showResult && lastResult && (
@@ -227,9 +272,7 @@ export default function Slots() {
                 <>
                   <p className="slots__outcome-multiplier">
                     {lastResult.multiplier}x &mdash;{" "}
-                    {lastResult.symbols
-                      .map((s) => SYMBOL_NAME[lastResult.reels[s]] ?? s)
-                      .join(" ")}{" "}
+                    {lastResult.symbols.join(" ")}{" "}
                     win!
                   </p>
                   <p className="slots__outcome-payout">

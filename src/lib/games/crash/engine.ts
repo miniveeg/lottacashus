@@ -1,4 +1,4 @@
-import { CRASH_RTP } from "./constants";
+import { CRASH_HOUSE_EDGE, TWO_POW_24 } from "./constants";
 
 function bytesToFloat(bytes: Uint8Array, offset = 0): number {
   let value = 0;
@@ -37,8 +37,8 @@ export async function crashPointFromSeeds(
   const msg = `${clientSeed}:${nonce}:0`;
   const hash = await hmacSha256(serverSeed, msg);
   const float = bytesToFloat(hash, 0);
-  const scaled = float * 16777216;
-  const raw = (16777216 / (scaled + 1)) * 0.99;
+  const scaled = float * TWO_POW_24;
+  const raw = (TWO_POW_24 / (scaled + 1)) * (1 - CRASH_HOUSE_EDGE);
   return truncateCrashMultiplier(Math.max(1, raw));
 }
 

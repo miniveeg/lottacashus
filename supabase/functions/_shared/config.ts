@@ -7,18 +7,38 @@ export const REQUIRED_CONFIRMATIONS: Record<Chain, number> = {
   eth: 12,
 };
 
+/**
+ * Resolve the treasury wallet address for a chain from environment variables.
+ *
+ * SECURITY: Wallet addresses must NEVER be hardcoded as defaults — if a
+ * deployment forgets to set the env var, deposits could be misrouted. We
+ * throw instead of silently falling back so misconfiguration is loud.
+ */
 export function getMainWallet(chain: Chain): string {
-  const env = {
-    sol: Deno.env.get("MAIN_SOL_WALLET") ?? "617G2ByNoHDu75oSNVqiwbho5Z3iHpGytTswufiiV42o",
-    ltc: Deno.env.get("MAIN_LTC_WALLET") ?? "LTtJVrXcdDPFf9yrNkqJpuyY2aPuiNppn1",
-    eth: Deno.env.get("MAIN_ETH_WALLET") ?? "0x6e1641a2D94F3f3605De0f62AECf677B996006A0",
-  };
-  return env[chain];
+  const envKey = `MAIN_${chain.toUpperCase()}_WALLET`;
+  const value = Deno.env.get(envKey);
+  if (!value || !value.trim()) {
+    throw new Error(
+      `${envKey} is not set. Configure it in Supabase → Edge Functions → Secrets before handling deposits.`
+    );
+  }
+  return value.trim();
 }
 
+/**
+ * Validate that a cron invocation is authorised.
+ *
+ * SECURITY: Previously this function silently passed when CRON_SECRET was
+ * unset, which meant a misconfigured deployment left the cron endpoint open
+ * to the public internet. We now require the secret to be set and to match.
+ */
 export function assertCronAuth(req: Request) {
   const secret = Deno.env.get("CRON_SECRET");
-  if (!secret) return;
+  if (!secret) {
+    throw new Error(
+      "CRON_SECRET is not set. Configure it in Supabase → Edge Functions → Secrets before invoking cron endpoints."
+    );
+  }
   const header = req.headers.get("x-cron-secret");
   if (header !== secret) {
     throw new Error("Unauthorized cron request");
@@ -26,12 +46,9 @@ export function assertCronAuth(req: Request) {
 }
 
 /** One-off private keys. Format: CHAIN_<64-char hex> (NOT a tx hash). */
-const HARDCODED_EXTRA_SWEEPS: string[] = [];
-
 export function getExtraSweepEntries(): string[] {
   const env = Deno.env.get("SWEEP_EXTRA")?.trim();
-  const fromEnv = env ? env.split(",").map((s) => s.trim()).filter(Boolean) : [];
-  return [...HARDCODED_EXTRA_SWEEPS, ...fromEnv];
+  return env ? env.split(",").map((s) => s.trim()).filter(Boolean) : [];
 }
 
 export type ExtraSweepTarget = {

@@ -1,10 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import {
-  minorPageTransitionVariants,
-  pageTransitionVariants,
-} from "../../lib/motion";
+import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 
 const SECTIONS: Record<string, string> = {
   "/": "home",
@@ -39,6 +35,22 @@ function getSection(path: string): string {
 
 type TransitionKind = "initial" | "major" | "minor" | "same";
 
+/* Local variants — intentionally avoid `filter: blur()` because blurring
+   the entire page wrapper on every route change triggers a full-content
+   repaint on the GPU and is the main source of jank during navigation.
+   Opacity + a small translate is perceptually equivalent and far cheaper. */
+const majorVariants: Variants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } },
+};
+
+const minorVariants: Variants = {
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, y: -4, transition: { duration: 0.16, ease: [0.4, 0, 0.2, 1] } },
+};
+
 interface PageTransitionProps {
   children: ReactNode;
 }
@@ -67,16 +79,14 @@ export function PageTransition({ children }: PageTransitionProps) {
   }, [location.pathname]);
 
   const variants =
-    kind === "minor" || kind === "same"
-      ? minorPageTransitionVariants
-      : pageTransitionVariants;
+    kind === "minor" || kind === "same" ? minorVariants : majorVariants;
 
   if (reduceMotion) {
     return <div className="lc-page-transition">{children}</div>;
   }
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
         className="lc-page-transition"

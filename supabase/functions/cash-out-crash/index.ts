@@ -3,16 +3,16 @@ import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401);
+    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401, req);
 
     const body = await req.json();
     const betId = String(body?.betId ?? "");
@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     const coinType = String(body?.coinType ?? "balance");
 
     if (!betId || !Number.isFinite(cashedAtMultiplier) || cashedAtMultiplier < 1) {
-      return jsonResponse({ error: "Invalid cash-out params." }, 400);
+      return jsonResponse({ error: "Invalid cash-out params." }, 400, req);
     }
 
     const supabaseUser = createClient(
@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       error: userError,
     } = await supabaseUser.auth.getUser();
 
-    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401);
+    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401, req);
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       p_user_id: user.id,
     });
     if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403);
+      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
     }
 
     const { data: result, error: cashError } = await supabaseAdmin.rpc(
@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
 
     if (cashError) {
       console.error("cash_out_crash:", cashError);
-      return jsonResponse({ error: cashError.message }, 400);
+      return jsonResponse({ error: cashError.message }, 400, req);
     }
 
     const row = (Array.isArray(result) ? result[0] : result) as
@@ -77,6 +77,6 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("cash-out-crash:", err);
-    return jsonResponse({ error: "Server error." }, 500);
+    return jsonResponse({ error: "Server error." }, 500, req);
   }
 });

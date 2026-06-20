@@ -97,7 +97,7 @@ export default function Redeem() {
             </p>
           </div>
 
-          {error && <p className="redeem__error">{error}</p>}
+          {error && <p className="redeem__error" role="alert">{error}</p>}
 
           <div className="redeem__field">
             <label className="redeem__label" htmlFor="sc-amount">
@@ -146,6 +146,7 @@ export default function Redeem() {
             disabled={!isValid || submitting}
             onClick={handleRedeem}
           >
+            {submitting && <span className="redeem__submit-spinner" aria-hidden="true" />}
             {submitting ? "Submitting\u2026" : `Redeem SC for $${(parsedAmount * SC_USD_RATE).toFixed(2)}`}
           </button>
         </div>

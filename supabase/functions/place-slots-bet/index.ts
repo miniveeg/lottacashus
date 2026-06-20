@@ -57,23 +57,23 @@ function determineMultiplier(reels: number[]): { won: boolean; multiplier: numbe
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401);
+    if (!authHeader) return jsonResponse({ error: "Log in required." }, 401, req);
 
     const body = await req.json();
     const wager = Number(body?.wager);
     const coinType = String(body?.coinType ?? "balance");
 
     if (!Number.isFinite(wager) || wager <= 0) {
-      return jsonResponse({ error: "Invalid wager." }, 400);
+      return jsonResponse({ error: "Invalid wager." }, 400, req);
     }
 
     const supabaseUser = createClient(
@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
       error: userError,
     } = await supabaseUser.auth.getUser();
 
-    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401);
+    if (userError || !user) return jsonResponse({ error: "Invalid session." }, 401, req);
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
       p_user_id: user.id,
     });
     if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403);
+      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
     }
 
     const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
 
     const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
     if (balance < wager) {
-      return jsonResponse({ error: "Insufficient balance" }, 400);
+      return jsonResponse({ error: "Insufficient balance" }, 400, req);
     }
 
     const { data: seedData, error: seedError } = await supabaseAdmin.rpc(
@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
 
     if (seedError) {
       console.error("consume_keno_nonce:", seedError);
-      return jsonResponse({ error: seedError.message ?? "Could not load game seeds." }, 500);
+      return jsonResponse({ error: seedError.message ?? "Could not load game seeds." }, 500, req);
     }
 
     const raw = (Array.isArray(seedData) ? seedData[0] : seedData) as
@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
     const nonce = Number(raw?.nonce ?? raw?.next_nonce ?? 0);
 
     if (typeof serverSeed !== "string" || !serverSeed) {
-      return jsonResponse({ error: "Could not load game seeds." }, 500);
+      return jsonResponse({ error: "Could not load game seeds." }, 500, req);
     }
 
     const msg = `${String(clientSeed)}:${nonce}:0,1,2`;
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
 
     if (settleError) {
       console.error("settle_slots_bet:", settleError);
-      return jsonResponse({ error: settleError.message }, 400);
+      return jsonResponse({ error: settleError.message }, 400, req);
     }
 
     const settleRow = (Array.isArray(settled) ? settled[0] : settled) as
@@ -183,6 +183,6 @@ Deno.serve(async (req) => {
     });
   } catch (err) {
     console.error("place-slots-bet:", err);
-    return jsonResponse({ error: "Server error." }, 500);
+    return jsonResponse({ error: "Server error." }, 500, req);
   }
 });

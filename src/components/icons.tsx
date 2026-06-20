@@ -14,6 +14,7 @@ import {
   Check,
   Diamond,
   Wallet,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -34,6 +35,10 @@ const ICONS = {
   check: Check,
   slots: Diamond,
   redeem: Wallet,
+  // Aliases used by other pages (Profile, SidebarNav, etc.)
+  gift: Gift,
+  trophy: Trophy,
+  document: FileText,
 } as const;
 
 export type UiIconName = keyof typeof ICONS;

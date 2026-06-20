@@ -44,7 +44,7 @@ function AppShellInner({ children }: AppShellProps) {
       <div className="app-shell__sidebar">
         <Sidebar />
       </div>
-      <SmoothScroll targetRef={mainRef}>
+      <SmoothScroll targetRef={mainRef} scrollKey={pathname}>
         <main ref={mainRef} className="app-shell__main">
           <PageTransition>
             {showGuestBanner ? <GameGuestBanner /> : null}

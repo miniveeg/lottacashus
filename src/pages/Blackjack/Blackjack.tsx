@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
-import { cardLabel, handValue, isRedCard } from "../../lib/games/blackjack";
+import { cardRank, cardSuit, handValue, isRedCard } from "../../lib/games/blackjack";
 import { formatUsd } from "../../lib/format";
 import {
   doubleBlackjack,
@@ -22,14 +22,31 @@ import "./Blackjack.css";
 
 const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
 
-function CardView({ card, hidden }: { card?: number; hidden?: boolean }) {
+function CardView({ card, hidden, index = 0 }: { card?: number; hidden?: boolean; index?: number }) {
   if (hidden) {
-    return <div className="bj__card bj__card--hidden" aria-hidden="true" />;
+    return <div className="bj__card bj__card--hidden" aria-hidden="true" style={{ ["--card-deal-delay" as string]: `${index * 0.12}s` }} />;
   }
   if (card === undefined) return null;
+  const rank = cardRank(card);
+  const suit = cardSuit(card);
+  const red = isRedCard(card);
   return (
-    <div className={`bj__card${isRedCard(card) ? " bj__card--red" : ""}`}>
-      <span>{cardLabel(card)}</span>
+    <div
+      className={`bj__card${red ? " bj__card--red" : ""}`}
+      style={{ ["--card-deal-delay" as string]: `${index * 0.12}s` }}
+      aria-label={`${rank} of ${suit === "♦" ? "diamonds" : suit === "♥" ? "hearts" : suit === "♠" ? "spades" : "clubs"}`}
+    >
+      <span className="bj__card-corner bj__card-corner--tl" aria-hidden="true">
+        <span className="bj__card-rank">{rank}</span>
+        <span className="bj__card-suit">{suit}</span>
+      </span>
+      <span className="bj__card-center" aria-hidden="true">
+        {suit}
+      </span>
+      <span className="bj__card-corner bj__card-corner--br" aria-hidden="true">
+        <span className="bj__card-rank">{rank}</span>
+        <span className="bj__card-suit">{suit}</span>
+      </span>
     </div>
   );
 }
@@ -213,7 +230,7 @@ export function Blackjack() {
         <section className={`bj__table-panel${tableOutcomeClass}`}>
           <div className="bj__table-inner">
             {settled && lastMessage && (
-              <div className="bj__result-banner" role="status">
+              <div className="bj__result-banner" role="status" aria-live="polite">
                 <span className="bj__result-text">{lastMessage}</span>
               </div>
             )}
@@ -226,9 +243,9 @@ export function Blackjack() {
                   </p>
                   <div className="bj__cards">
                     {hand?.dealerCards.map((c, i) => (
-                      <CardView key={`d-${i}`} card={c} />
+                      <CardView key={`d-${i}`} card={c} index={i} />
                     ))}
-                    {hiddenDealerSlots > 0 && <CardView hidden />}
+                    {hiddenDealerSlots > 0 && <CardView hidden index={(hand?.dealerCards.length ?? 0)} />}
                   </div>
                 </div>
 
@@ -253,7 +270,7 @@ export function Blackjack() {
                         </p>
                         <div className="bj__cards">
                           {line.cards.map((c, i) => (
-                            <CardView key={`p-${index}-${i}`} card={c} />
+                            <CardView key={`p-${index}-${i}`} card={c} index={i} />
                           ))}
                         </div>
                       </div>

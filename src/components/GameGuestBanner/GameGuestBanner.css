@@ -4,7 +4,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem 1rem;
-  margin: 0 0 1rem;
+  /* Match the page's horizontal padding so the banner aligns with the page
+     content instead of touching the viewport edges. The page uses
+     clamp(1rem, 3vw, 1.5rem); we mirror that here. */
+  margin: 0 clamp(1rem, 3vw, 1.5rem) 1rem;
   padding: 0.75rem 1rem;
   background: rgba(220, 20, 60, 0.06);
   border: 1px solid var(--lc-gold-dim);
@@ -16,7 +19,7 @@
   font-size: 0.875rem;
   color: var(--lc-text-secondary);
   flex: 1;
-  min-width: 12rem;
+  min-width: 0;
 }
 
 .game-guest-banner__actions {
@@ -26,11 +29,13 @@
 }
 
 .game-guest-banner__btn {
-  padding: 0.45rem 0.9rem;
+  padding: 0.5rem 0.9rem;
+  min-height: 36px;
   border-radius: var(--lc-radius-sm);
   font-size: 0.85rem;
   font-weight: 600;
   transition: background var(--lc-transition), color var(--lc-transition);
+  white-space: nowrap;
 }
 
 .game-guest-banner__btn--primary {
@@ -50,4 +55,23 @@
 .game-guest-banner__btn--ghost:hover {
   background: var(--lc-bg-hover);
   color: var(--lc-text-primary);
+}
+
+@media (max-width: 480px) {
+  .game-guest-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    padding: 0.7rem 0.85rem;
+  }
+  .game-guest-banner__text {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+  .game-guest-banner__actions {
+    justify-content: flex-end;
+  }
+  .game-guest-banner__btn {
+    flex: 0 0 auto;
+  }
 }

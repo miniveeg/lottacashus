@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { Inbox } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -285,7 +286,7 @@ export function Settings() {
           </p>
         </div>
 
-        <form onSubmit={handleSaveUsername} className="settings__username-form">
+        <form onSubmit={handleSaveUsername} className="settings__username-form" noValidate>
           <div className="settings__field">
             <label htmlFor="settings-username">Change username</label>
             <input
@@ -293,11 +294,15 @@ export function Settings() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-                maxLength={MAX_USERNAME_LENGTH}
-              />
-              <p className="settings__hint">Maximum {MAX_USERNAME_LENGTH} characters</p>
-            </div>
-            <button type="submit" className="settings__btn" disabled={saving || profileLoading}>
+              maxLength={MAX_USERNAME_LENGTH}
+              aria-describedby="settings-username-hint"
+            />
+            <p className="settings__hint" id="settings-username-hint">
+              {username.length}/{MAX_USERNAME_LENGTH} characters
+            </p>
+          </div>
+          <button type="submit" className="settings__btn" disabled={saving || profileLoading}>
+            {saving && <span className="settings__btn__spinner" aria-hidden="true" />}
             {saving ? "Saving…" : "Save username"}
           </button>
         </form>
@@ -424,12 +429,79 @@ export function Settings() {
             if (limitError) setError(limitError);
             else {
               setSuccess("Deposit limits updated.");
-              fetchDepositLimits().then(setDepositLimitsState);
+              fetchDepositLimits().then((limits) => {
+                setDepositLimitsState(limits);
+                if (limits) {
+                  setDlDaily(limits.daily != null ? String(limits.daily) : "");
+                  setDlWeekly(limits.weekly != null ? String(limits.weekly) : "");
+                }
+              });
             }
           }}
         >
+          {dlBusy && <span className="settings__btn__spinner" aria-hidden="true" />}
           {dlBusy ? "Saving…" : "Save limits"}
         </button>
+
+        {depositLimits && (depositLimits.daily != null || depositLimits.weekly != null) && (
+          <div className="settings__limit-usage" aria-live="polite">
+            <p className="settings__hint" style={{ margin: 0 }}>
+              Current period usage:
+            </p>
+            <ul className="settings__limit-usage-list">
+              {depositLimits.daily != null && (
+                <li>
+                  <span>
+                    <strong>Today:</strong> {formatUsd(depositLimits.dailyUsed)} / {depositLimits.daily === 0 ? "blocked" : formatUsd(depositLimits.daily)}
+                  </span>
+                  {depositLimits.daily > 0 && (() => {
+                    const pct = Math.min(100, (depositLimits.dailyUsed / depositLimits.daily) * 100);
+                    const over = depositLimits.dailyUsed >= depositLimits.daily;
+                    return (
+                      <span
+                        className={`settings__limit-bar${over ? " settings__limit-bar--over" : ""}`}
+                        role="progressbar"
+                        aria-valuenow={Math.round(pct)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <span
+                          className={`settings__limit-bar-fill${over ? " settings__limit-bar-fill--over" : ""}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </span>
+                    );
+                  })()}
+                </li>
+              )}
+              {depositLimits.weekly != null && (
+                <li>
+                  <span>
+                    <strong>This week:</strong> {formatUsd(depositLimits.weeklyUsed)} / {depositLimits.weekly === 0 ? "blocked" : formatUsd(depositLimits.weekly)}
+                  </span>
+                  {depositLimits.weekly > 0 && (() => {
+                    const pct = Math.min(100, (depositLimits.weeklyUsed / depositLimits.weekly) * 100);
+                    const over = depositLimits.weeklyUsed >= depositLimits.weekly;
+                    return (
+                      <span
+                        className={`settings__limit-bar${over ? " settings__limit-bar--over" : ""}`}
+                        role="progressbar"
+                        aria-valuenow={Math.round(pct)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <span
+                          className={`settings__limit-bar-fill${over ? " settings__limit-bar-fill--over" : ""}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </span>
+                    );
+                  })()}
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
 
         <h3 className="settings__subsection-title settings__subsection-title--top">
           Self-exclusion
@@ -500,7 +572,7 @@ export function Settings() {
                   seReason.trim() || undefined
                 );
                 setSeBusy(false);
-                if (seError) setError(seError.message);
+                if (seError) setError(seError);
                 else {
                   setSuccess(
                     `Self-exclusion activated for ${seDuration} days.`
@@ -509,6 +581,7 @@ export function Settings() {
                 }
               }}
             >
+              {seBusy && <span className="settings__btn__spinner" aria-hidden="true" />}
               {seBusy ? "Activating…" : "Activate self-exclusion"}
             </button>
           </>
@@ -529,6 +602,7 @@ export function Settings() {
           </div>
         ) : transactions.length === 0 ? (
           <div className="settings__tx-empty">
+            <Inbox size={28} aria-hidden="true" />
             <p>No transactions yet.</p>
             <p className="settings__tx-empty-hint">
               Your activity history will show up here automatically.

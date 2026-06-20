@@ -53,6 +53,18 @@
   font-weight: 700;
   color: var(--lc-text-secondary);
   cursor: pointer;
+  transition: border-color var(--lc-transition), color var(--lc-transition), background var(--lc-transition);
+}
+
+.wallet__chain-btn:hover:not(.wallet__chain-btn--active) {
+  border-color: var(--lc-border-strong);
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-hover);
+}
+
+.wallet__chain-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
 }
 
 .wallet__chain-btn--active {
@@ -85,6 +97,7 @@
 }
 
 .wallet__btn {
+  position: relative;
   padding: 0.65rem 1.1rem;
   border-radius: var(--lc-radius-md);
   font-weight: 600;
@@ -93,6 +106,34 @@
   border: none;
   background: linear-gradient(135deg, var(--lc-gold), var(--lc-gold-dim));
   color: var(--lc-bg-base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: filter var(--lc-transition), transform var(--lc-transition), opacity var(--lc-transition);
+}
+
+.wallet__btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.wallet__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
+}
+
+.wallet__btn__spinner {
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: wallet-btn-spin 0.7s linear infinite;
+}
+
+@keyframes wallet-btn-spin {
+  to { transform: rotate(360deg); }
 }
 
 .wallet__btn:disabled {
@@ -149,6 +190,14 @@
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-md);
   color: var(--lc-text-primary);
+  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.wallet__field input:focus,
+.wallet__field input:focus-visible {
+  outline: none;
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .wallet__error {
@@ -175,6 +224,13 @@
   font-weight: 700;
   font-size: 0.95rem;
   margin: 1.25rem 0 0.75rem;
+}
+
+.wallet__list-title-icon {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 0.35rem;
+  color: var(--lc-gold);
 }
 
 .wallet__deposit-item {

@@ -15,7 +15,7 @@ function dbSetupError(detail: string): string {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method === "GET") {
@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
     const username = usernameRaw || null;
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return jsonResponse({ error: "Enter a valid email address." }, 400);
+      return jsonResponse({ error: "Enter a valid email address." }, 400, req);
     }
 
     const supabase = createClient(
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     }
 
     if (alreadyRegistered) {
-      return jsonResponse({ error: "An account with this email already exists." }, 400);
+      return jsonResponse({ error: "An account with this email already exists." }, 400, req);
     }
 
     const { data: existing, error: selectError } = await supabase
@@ -72,13 +72,13 @@ Deno.serve(async (req) => {
 
     if (selectError) {
       console.error("select verification code:", selectError);
-      return jsonResponse({ error: dbSetupError(selectError.message) }, 500);
+      return jsonResponse({ error: dbSetupError(selectError.message) }, 500, req);
     }
 
     if (existing?.created_at) {
       const created = new Date(existing.created_at).getTime();
       if (Date.now() - created < RESEND_COOLDOWN_MS) {
-        return jsonResponse({ error: "Please wait a minute before requesting another code." }, 429);
+        return jsonResponse({ error: "Please wait a minute before requesting another code." }, 429, req);
       }
     }
 
@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
 
     if (upsertError) {
       console.error(upsertError);
-      return jsonResponse({ error: dbSetupError(upsertError.message) }, 500);
+      return jsonResponse({ error: dbSetupError(upsertError.message) }, 500, req);
     }
 
     await sendVerificationEmail(email, code);
@@ -109,6 +109,6 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error(err);
     const message = err instanceof Error ? err.message : "Failed to send verification code.";
-    return jsonResponse({ error: message }, 500);
+    return jsonResponse({ error: message }, 500, req);
   }
 });

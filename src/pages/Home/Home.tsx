@@ -1,13 +1,20 @@
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Wallet, Zap, TrendingUp, Dices } from "lucide-react";
-import { ObsidianScene } from "../../components/atmosphere/ObsidianScene";
 import { MotionLink } from "../../components/ui/MotionLink";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
 import { TiltCard } from "../../components/ui/TiltCard";
 import { useAuth } from "../../contexts/AuthContext";
 import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Home.css";
+
+// Lazy-load the 3D scene so Three.js is split into its own chunk and only
+// fetched on the home page. This must match the lazy import used by
+// AtmosphericLayer to avoid duplicate copies of the module.
+const ObsidianScene = lazy(() =>
+  import("../../components/atmosphere/ObsidianScene").then((m) => ({ default: m.ObsidianScene }))
+);
 
 const pillars = [
   {
@@ -39,7 +46,9 @@ export function Home() {
     <div className="home lc-page">
       <section className="home__hero lc-glass lc-glass--crimson">
         <div className="home__hero-3d" aria-hidden="true">
-          <ObsidianScene className="home__hero-canvas" />
+          <Suspense fallback={null}>
+            <ObsidianScene className="home__hero-canvas" />
+          </Suspense>
         </div>
         <div className="home__hero-fog" aria-hidden="true" />
 

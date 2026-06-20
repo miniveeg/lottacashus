@@ -20,7 +20,7 @@ import "../../styles/game-controls.css";
 import "./Roulette.css";
 
 const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
-const SPIN_DELAY_MS = 2800;
+const SPIN_DELAY_MS = 1600;
 const HISTORY_MAX = 8;
 
 const BET_OPTIONS: {
@@ -295,7 +295,11 @@ export function Roulette() {
           )}
 
           {lastResult && !spinning && (
-            <div className="roulette__result" role="status">
+            <div
+              className={`roulette__result${lastResult.won ? " roulette__result--win" : " roulette__result--loss"}`}
+              role="status"
+              aria-live="polite"
+            >
               <p>
                 Landed <strong>{lastResult.pocket}</strong> ({lastResult.color}) — your{" "}
                 <strong>{lastResult.betType}</strong> bet
@@ -313,8 +317,16 @@ export function Roulette() {
             className="roulette__bet-btn"
             onClick={handleBet}
             disabled={spinning || !user}
+            aria-busy={spinning}
           >
-            {spinning ? "Spinning…" : "Bet"}
+            {spinning ? (
+              <>
+                <span className="roulette__spinner" aria-hidden="true" />
+                <span>Spinning…</span>
+              </>
+            ) : (
+              "Bet"
+            )}
           </button>
 
           <p className="roulette__hint">

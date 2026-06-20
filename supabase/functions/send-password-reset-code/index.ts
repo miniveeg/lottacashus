@@ -8,7 +8,7 @@ const RESEND_COOLDOWN_MS = 60 * 1000;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders(req) });
   }
 
   if (req.method === "GET") {
@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return jsonResponse({ error: "Method not allowed" }, 405);
+    return jsonResponse({ error: "Method not allowed" }, 405, req);
   }
 
   try {
@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     const email = normalizeEmail(body?.email ?? "");
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return jsonResponse({ error: "Enter a valid email address." }, 400);
+      return jsonResponse({ error: "Enter a valid email address." }, 400, req);
     }
 
     const supabase = createClient(
@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       if (existing?.created_at) {
         const created = new Date(existing.created_at).getTime();
         if (Date.now() - created < RESEND_COOLDOWN_MS) {
-          return jsonResponse({ error: "Please wait a minute before requesting another code." }, 429);
+          return jsonResponse({ error: "Please wait a minute before requesting another code." }, 429, req);
         }
       }
 
@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
 
       if (upsertError) {
         console.error(upsertError);
-        return jsonResponse({ error: "Could not save reset code." }, 500);
+        return jsonResponse({ error: "Could not save reset code." }, 500, req);
       }
 
       await sendPasswordResetEmail(email, code);
@@ -80,6 +80,6 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error(err);
     const message = err instanceof Error ? err.message : "Failed to send reset code.";
-    return jsonResponse({ error: message }, 500);
+    return jsonResponse({ error: message }, 500, req);
   }
 });

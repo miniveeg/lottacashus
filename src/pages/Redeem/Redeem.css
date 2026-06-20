@@ -1,114 +1,155 @@
+/* ── Redeem Sweeps Coins ────────────────────────────────────────────────
+   Premium fintech feel matching Deposit/Withdraw. SC balance panel,
+   pill chain picker, summary preview, success state with checkmark. */
+
 .redeem {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+  /* layout via .lc-page */
 }
 
 .redeem__card {
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border-strong);
-  border-radius: var(--lc-radius-lg);
   padding: 1.5rem;
+  background: var(--lc-bg-glass);
+  backdrop-filter: var(--lc-glass-blur);
+  -webkit-backdrop-filter: var(--lc-glass-blur);
+  border: 1px solid var(--lc-glass-border);
+  border-radius: var(--lc-radius-xl);
+  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
 }
 
+/* ── SC balance panel ── */
 .redeem__balance {
   text-align: center;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.25rem;
+  padding: 0.5rem 0 1.5rem;
+  margin-bottom: 1.5rem;
   border-bottom: 1px solid var(--lc-border);
 }
 
 .redeem__balance-label {
-  font-size: 0.75rem;
+  margin: 0;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--lc-text-muted);
 }
 
 .redeem__balance-value {
+  margin: 0.3rem 0 0.25rem;
   font-family: var(--lc-font-mono);
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 700;
   color: var(--lc-emerald);
-  margin-top: 0.25rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
 }
 
 .redeem__rate {
+  margin: 0.25rem 0 0;
+  font-family: var(--lc-font-mono);
   font-size: 0.82rem;
+  font-weight: 500;
   color: var(--lc-text-muted);
-  margin-top: 0.25rem;
+  letter-spacing: 0.01em;
 }
 
+/* ── Field ── */
 .redeem__field {
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
 }
 
 .redeem__label {
   display: block;
   font-size: 0.78rem;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--lc-text-secondary);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
 }
 
 .redeem__input {
   width: 100%;
-  min-height: 2.6rem;
-  padding: 0.5rem 0.75rem;
+  min-height: 44px;
+  padding: 0.65rem 0.95rem;
   font-family: var(--lc-font-mono);
-  font-size: 1.05rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--lc-text-primary);
-  background: var(--lc-bg);
+  background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-md);
   box-sizing: border-box;
+  transition: border-color var(--lc-transition),
+    box-shadow var(--lc-transition);
 }
 
-.redeem__input:focus {
+.redeem__input::placeholder {
+  color: var(--lc-text-muted);
+  font-weight: 500;
+}
+
+.redeem__input:focus,
+.redeem__input:focus-visible {
   outline: none;
-  border-color: var(--lc-border-accent);
+  border-color: var(--lc-crimson-soft);
   box-shadow: var(--lc-focus-ring);
+}
+
+.redeem__input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .redeem__info {
   font-size: 0.78rem;
   color: var(--lc-text-muted);
-  margin-top: 0.35rem;
+  margin: 0.4rem 0 0;
+  line-height: 1.45;
 }
 
 .redeem__info--payout {
   margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  background: rgba(0, 232, 122, 0.08);
+  border: 1px solid rgba(0, 232, 122, 0.22);
+  border-radius: var(--lc-radius-md);
   color: var(--lc-emerald);
   word-break: break-all;
   line-height: 1.5;
+  font-weight: 500;
 }
 
+/* ── Chain picker ── */
 .redeem__chain-picker {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
+  padding: 0.3rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
 }
 
 .redeem__chain-btn {
   flex: 1;
-  padding: 0.75rem 0.5rem;
+  min-height: 44px;
+  padding: 0.6rem 0.5rem;
   border-radius: var(--lc-radius-md);
-  border: 1px solid var(--lc-border-strong);
-  background: var(--lc-bg);
+  border: 1px solid transparent;
+  background: transparent;
   font-family: var(--lc-font-display);
   font-weight: 700;
   font-size: 0.92rem;
   letter-spacing: 0.04em;
   color: var(--lc-text-secondary);
   cursor: pointer;
-  transition: border-color var(--lc-transition), color var(--lc-transition), background var(--lc-transition);
+  transition: background var(--lc-transition),
+    color var(--lc-transition),
+    border-color var(--lc-transition);
 }
 
 .redeem__chain-btn:hover:not(.redeem__chain-btn--active):not(:disabled) {
-  border-color: var(--lc-border-accent);
   color: var(--lc-text-primary);
-  background: var(--lc-bg-elevated);
+  background: var(--lc-bg-hover);
 }
 
 .redeem__chain-btn:focus-visible {
@@ -117,9 +158,14 @@
 }
 
 .redeem__chain-btn--active {
-  border-color: var(--lc-emerald-dim);
-  color: var(--lc-emerald);
-  background: rgba(16, 185, 129, 0.1);
+  color: #fff;
+  background: linear-gradient(
+    135deg,
+    var(--lc-crimson-soft),
+    var(--lc-crimson-dim)
+  );
+  border-color: transparent;
+  box-shadow: 0 2px 12px var(--lc-crimson-glow);
 }
 
 .redeem__chain-btn:disabled {
@@ -127,23 +173,31 @@
   cursor: not-allowed;
 }
 
+/* ── Submit ── */
 .redeem__submit {
   width: 100%;
-  min-height: 3rem;
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: var(--lc-radius-lg);
+  border-radius: var(--lc-radius-md);
   font-family: var(--lc-font-display);
   font-size: 0.92rem;
   font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: #080602;
-  background: linear-gradient(135deg, var(--lc-emerald) 0%, var(--lc-emerald-dim) 100%);
-  box-shadow: 0 2px 20px var(--lc-emerald-glow), var(--lc-shadow-inset);
-  transition: transform var(--lc-transition-spring), filter var(--lc-transition), opacity var(--lc-transition);
+  background: linear-gradient(
+    135deg,
+    var(--lc-emerald) 0%,
+    var(--lc-emerald-dim) 100%
+  );
+  border: none;
+  box-shadow: 0 2px 16px var(--lc-emerald-glow),
+    var(--lc-shadow-inset);
+  cursor: pointer;
+  transition: transform var(--lc-transition-spring),
+    filter var(--lc-transition), opacity var(--lc-transition);
 }
 
 .redeem__submit-spinner {
@@ -156,7 +210,9 @@
 }
 
 @keyframes redeem-submit-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .redeem__submit:hover:not(:disabled) {
@@ -169,56 +225,99 @@
   cursor: not-allowed;
 }
 
-.redeem__error {
-  color: var(--lc-ruby);
-  font-size: 0.85rem;
-  font-weight: 600;
-  margin-bottom: 0.75rem;
+.redeem__submit:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
 }
 
+/* ── Error ── */
+.redeem__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.75rem 0.95rem;
+  color: #ff8fa3;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.45;
+  margin-bottom: 1rem;
+  background: rgba(255, 59, 92, 0.1);
+  border: 1px solid rgba(255, 59, 92, 0.3);
+  border-radius: var(--lc-radius-md);
+}
+
+/* ── Success state ── */
 .redeem__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 2.5rem 1.5rem;
+  background: var(--lc-bg-glass);
+  backdrop-filter: var(--lc-glass-blur);
+  -webkit-backdrop-filter: var(--lc-glass-blur);
+  border: 1px solid rgba(0, 232, 122, 0.32);
+  border-radius: var(--lc-radius-xl);
+  box-shadow: var(--lc-shadow-sm),
+    0 0 32px rgba(0, 232, 122, 0.08);
 }
 
 .redeem__success-icon {
   display: flex;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  align-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: rgba(0, 232, 122, 0.12);
+  border: 1px solid rgba(0, 232, 122, 0.32);
   color: var(--lc-emerald);
+  margin-bottom: 1.25rem;
+  animation: redeem-success-pop 0.5s var(--lc-transition-spring);
+}
+
+@keyframes redeem-success-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .redeem__success-title {
   font-family: var(--lc-font-display);
-  font-size: 1.2rem;
+  font-size: 1.35rem;
   font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--lc-emerald);
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.65rem;
 }
 
 .redeem__success-desc {
-  font-size: 0.9rem;
-  color: var(--lc-text-muted);
-  line-height: 1.5;
+  font-size: 0.92rem;
+  color: var(--lc-text-secondary);
+  line-height: 1.6;
+  max-width: 42ch;
+  margin: 0;
   word-break: break-word;
 }
 
+/* ── Mobile ── */
 @media (max-width: 640px) {
-  .redeem {
-    padding: 1.25rem 0.75rem;
-  }
-
   .redeem__card {
-    padding: 1.1rem;
+    padding: 1.15rem 1rem;
   }
 
   .redeem__balance-value {
-    font-size: 1.55rem;
+    font-size: 1.75rem;
   }
 
   .redeem__rate {
     font-size: 0.76rem;
-    line-height: 1.45;
+    line-height: 1.5;
     word-break: break-word;
   }
 
@@ -228,17 +327,28 @@
 
   .redeem__submit {
     font-size: 0.85rem;
-    min-height: 2.85rem;
+    min-height: 52px;
     line-height: 1.2;
+  }
+
+  .redeem__success {
+    padding: 2rem 1.25rem;
+  }
+
+  .redeem__success-icon {
+    width: 4rem;
+    height: 4rem;
   }
 }
 
 @media (max-width: 360px) {
   .redeem__balance-value {
-    font-size: 1.35rem;
+    font-size: 1.5rem;
   }
+}
 
-  .redeem__card {
-    padding: 0.9rem;
+@media (prefers-reduced-motion: reduce) {
+  .redeem__success-icon {
+    animation: none;
   }
 }

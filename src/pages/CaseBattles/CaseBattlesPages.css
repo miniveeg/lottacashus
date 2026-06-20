@@ -29,8 +29,8 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(56, 189, 248, 0.11), transparent 58%),
-    radial-gradient(ellipse 50% 45% at 0% 80%, rgba(59, 130, 246, 0.07), transparent 50%),
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(56, 189, 248, 0.1), transparent 58%),
+    radial-gradient(ellipse 50% 45% at 0% 80%, rgba(225, 29, 72, 0.06), transparent 50%),
     radial-gradient(ellipse 40% 35% at 100% 60%, rgba(168, 85, 247, 0.05), transparent 45%);
 }
 
@@ -104,24 +104,29 @@
 }
 
 .cb-page__btn-primary {
-  padding: 0.6rem 1.15rem;
+  padding: 0.65rem 1.25rem;
   font-family: var(--lc-font-display);
-  font-weight: 700;
+  font-weight: 800;
   font-size: 0.88rem;
+  letter-spacing: 0.02em;
   border: none;
   border-radius: var(--lc-radius-md);
-  background: linear-gradient(180deg, var(--cb-accent), var(--cb-accent-2));
+  background: linear-gradient(135deg, var(--cb-accent) 0%, var(--cb-accent-2) 100%);
   color: #fff;
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 4px 24px var(--cb-accent-glow);
-  transition: filter 0.15s, transform 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-shadow: 0 4px 20px var(--cb-accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: filter var(--lc-transition), transform var(--lc-transition-spring), box-shadow var(--lc-transition);
 }
 
 .cb-page__btn-primary:hover:not(:disabled) {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px var(--cb-accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .cb-page__btn-primary:disabled {
@@ -160,11 +165,13 @@
   justify-content: space-between;
   gap: 1rem 1.5rem;
   margin-bottom: 1.75rem;
-  padding: 1.25rem 1.35rem;
-  border-radius: var(--lc-radius-lg);
+  padding: 1.5rem 1.65rem;
+  border-radius: var(--lc-radius-xl);
   border: 1px solid var(--cb-panel-border);
-  background: linear-gradient(135deg, var(--cb-panel), rgba(22, 28, 42, 0.6));
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  background:
+    radial-gradient(ellipse 60% 80% at 0% 0%, rgba(56, 189, 248, 0.08), transparent 60%),
+    linear-gradient(135deg, var(--cb-panel), rgba(22, 28, 42, 0.6));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .cb-page__hero-text {
@@ -174,9 +181,10 @@
 .cb-page__hero-title {
   margin: 0 0 0.4rem;
   font-family: var(--lc-font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: linear-gradient(90deg, #e2e8f0, #7dd3fc);
+  font-size: clamp(1.5rem, 1.2rem + 1.5vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(120deg, #ffffff 0%, #7dd3fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -184,9 +192,9 @@
 
 .cb-page__hero-lead {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--lc-text-secondary);
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 .cb-page__stats {
@@ -196,37 +204,46 @@
 }
 
 .cb-page__stat {
-  min-width: 5.5rem;
-  padding: 0.65rem 0.85rem;
-  border-radius: var(--lc-radius-md);
+  min-width: 6rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--lc-radius-lg);
   border: 1px solid var(--lc-border);
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.28);
   text-align: center;
+  backdrop-filter: blur(8px);
+  transition: border-color var(--lc-transition), transform var(--lc-transition);
+}
+
+.cb-page__stat:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
 }
 
 .cb-page__stat-value {
   display: block;
-  font-family: var(--lc-font-display);
-  font-size: 1.15rem;
+  font-family: var(--lc-font-mono);
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--lc-text-primary);
 }
 
 .cb-page__stat-label {
   display: block;
-  margin-top: 0.15rem;
+  margin-top: 0.2rem;
+  font-family: var(--lc-font-display);
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--lc-text-muted);
 }
 
 .cb-page__panel {
-  border-radius: var(--lc-radius-lg);
+  border-radius: var(--lc-radius-xl);
   border: 1px solid var(--cb-panel-border);
   background: var(--cb-panel);
   overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
 .cb-page__panel-head {

@@ -63,6 +63,9 @@ export function Mines() {
     [wager, multiplier]
   );
 
+  const activeBalance =
+    coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+
   const loadPf = useCallback(async () => {
     const { data } = await fetchMinesPfState();
     if (data) {
@@ -114,7 +117,6 @@ export function Mines() {
       setError("Log in to play.");
       return;
     }
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (wager > activeBalance) {
       setError("Insufficient balance.");
       return;
@@ -237,11 +239,13 @@ export function Mines() {
   return (
     <div className="mines lc-game-page">
       <header className="mines__header">
-        <h1 className="mines__title">Mines</h1>
-        <p className="mines__subtitle">
-          5×5 grid, 1–24 mines. Reveal gems to raise your multiplier — cash out anytime or risk it all.
-          Provably fair — 94.5% RTP.
-        </p>
+        <div className="mines__header-main">
+          <h1 className="mines__title">Mines</h1>
+          <p className="mines__subtitle">
+            5×5 grid. Reveal gems, avoid mines. Cash out anytime.
+          </p>
+        </div>
+        <span className="mines__rtp-badge">94.5% RTP</span>
       </header>
 
       <div className="mines__layout">
@@ -288,13 +292,16 @@ export function Mines() {
           {playing && (
             <div className="mines__live-stats">
               <span>
-                Multiplier: <strong>{multiplier.toFixed(2)}×</strong>
+                <span>Multiplier</span>
+                <strong>{multiplier.toFixed(2)}×</strong>
               </span>
               <span>
-                Cashout: <strong>{formatCoins(potentialPayout, coinType)}</strong>
+                <span>Gems</span>
+                <strong>{gemsRevealed}/{maxGems}</strong>
               </span>
               <span>
-                Gems: <strong>{gemsRevealed}</strong> / {maxGems}
+                <span>Cashout</span>
+                <strong>{formatCoins(potentialPayout, coinType)}</strong>
               </span>
             </div>
           )}
@@ -329,7 +336,7 @@ export function Mines() {
 
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="mines-wager">
-              Bet amount ({coinLabel})
+              Bet amount · {coinLabel}
             </label>
             <div className="game-controls__wager-row">
               <input
@@ -373,7 +380,7 @@ export function Mines() {
                   onClick={() => applyWager(p)}
                   disabled={playing || busy}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>
@@ -426,10 +433,24 @@ export function Mines() {
                   <span>…</span>
                 </>
               ) : (
-                `Cash out ${formatCoins(potentialPayout, coinType)}`
+                <>
+                  <span>Cash out</span>
+                  <span>{formatCoins(potentialPayout, coinType)}</span>
+                </>
               )}
             </button>
           )}
+
+          <div className="keno__stats">
+            <div className="keno__stat">
+              <span className="keno__stat-label">Balance</span>
+              <span className="keno__stat-value">{formatCoins(activeBalance, coinType)}</span>
+            </div>
+            <div className="keno__stat">
+              <span className="keno__stat-label">Next pick</span>
+              <span className="keno__stat-value">{nextMult.toFixed(2)}×</span>
+            </div>
+          </div>
 
           <p className="mines__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
@@ -439,9 +460,11 @@ export function Mines() {
             <button
               type="button"
               className="mines__fairness-toggle"
+              aria-expanded={showFairness}
               onClick={() => setShowFairness((v) => !v)}
             >
-              {showFairness ? "Hide" : "Show"} provably fair
+              <span>Provably fair</span>
+              <span className="mines__fairness-icon" aria-hidden>▾</span>
             </button>
             {showFairness && (
               <div className="mines__fairness-body">
@@ -451,10 +474,10 @@ export function Mines() {
                 </p>
                 <p>
                   <span className="mines__fairness-k">Next nonce</span>
-                  <code>{pfNonce}</code>
+                  <code className="mines__hash">{pfNonce}</code>
                 </p>
                 <label className="mines__seed-label">
-                  Client seed
+                  <span className="mines__fairness-k">Client seed</span>
                   <input
                     type="text"
                     className="mines__seed-input"

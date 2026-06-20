@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -90,6 +90,11 @@ export function Blackjack() {
   const settled = hand?.status === "settled";
   const showTable = Boolean(hand);
 
+  const activeBalance = useMemo(
+    () => (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)),
+    [coinType, profile]
+  );
+
   const loadPf = useCallback(async () => {
     const { data } = await fetchBlackjackPfState();
     if (data) {
@@ -130,7 +135,7 @@ export function Blackjack() {
 
   const finishSettled = (data: BlackjackActionResult) => {
     setLastMessage(
-      `${outcomeLabel(data.outcome)}${data.payout ? ` — ${formatCoins(data.payout, coinType)}` : ""}`
+      `${outcomeLabel(data.outcome)}${data.payout ? ` · ${formatCoins(data.payout, coinType)}` : ""}`
     );
     applyHand({ ...data, status: "settled" });
   };
@@ -140,7 +145,6 @@ export function Blackjack() {
       setError("Log in to play.");
       return;
     }
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
@@ -220,10 +224,13 @@ export function Blackjack() {
   return (
     <div className="bj lc-game-page">
       <header className="bj__header">
-        <h1 className="bj__title">Blackjack</h1>
-        <p className="bj__subtitle">
-          Dealer hits soft 17. Blackjack pays 3:2. Split pairs and insurance — 94.5% RTP.
-        </p>
+        <div className="bj__header-main">
+          <h1 className="bj__title">Blackjack</h1>
+          <p className="bj__subtitle">
+            Classic blackjack with split, double, and insurance. Blackjack pays 3:2.
+          </p>
+        </div>
+        <span className="bj__rtp-badge">99.5% RTP</span>
       </header>
 
       <div className="bj__layout">
@@ -287,7 +294,7 @@ export function Blackjack() {
         <aside className="bj__controls game-controls">
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="bj-wager">
-              Bet amount ({coinLabel})
+              Bet amount · {coinLabel}
             </label>
             <div className="game-controls__wager-row">
               <input
@@ -331,7 +338,7 @@ export function Blackjack() {
                   onClick={() => applyWager(p)}
                   disabled={playing || busy}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>
@@ -362,9 +369,7 @@ export function Blackjack() {
                   type="button"
                   className="bj__action-btn bj__action-btn--insurance"
                   onClick={() => runAction("insurance", true)}
-                  disabled={
-                    busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.insuranceAmount ?? 0)
-                  }
+                  disabled={busy || activeBalance < (hand?.insuranceAmount ?? 0)}
                 >
                   Insurance
                 </button>
@@ -401,7 +406,7 @@ export function Blackjack() {
                   type="button"
                   className="bj__action-btn bj__action-btn--double"
                   onClick={() => runAction("double")}
-                  disabled={busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.wager ?? 0)}
+                  disabled={busy || activeBalance < (hand?.wager ?? 0)}
                 >
                   Double
                 </button>
@@ -411,13 +416,24 @@ export function Blackjack() {
                   type="button"
                   className="bj__action-btn bj__action-btn--split"
                   onClick={() => runAction("split")}
-                  disabled={busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.wager ?? 0)}
+                  disabled={busy || activeBalance < (hand?.wager ?? 0)}
                 >
                   Split
                 </button>
               )}
             </div>
           )}
+
+          <div className="bj__stats">
+            <div className="keno__stat">
+              <span className="bj__stats-label">Balance</span>
+              <span className="bj__stats-value">{formatCoins(activeBalance, coinType)}</span>
+            </div>
+            <div className="keno__stat">
+              <span className="bj__stats-label">Wager</span>
+              <span className="bj__stats-value">{formatCoins(wager, coinType)}</span>
+            </div>
+          </div>
 
           <p className="bj__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
@@ -427,9 +443,11 @@ export function Blackjack() {
             <button
               type="button"
               className="bj__fairness-toggle"
+              aria-expanded={showFairness}
               onClick={() => setShowFairness((v) => !v)}
             >
-              {showFairness ? "Hide" : "Show"} provably fair
+              <span>Provably fair</span>
+              <span className="bj__fairness-icon" aria-hidden>▾</span>
             </button>
             {showFairness && (
               <div className="bj__fairness-body">
@@ -439,10 +457,10 @@ export function Blackjack() {
                 </p>
                 <p>
                   <span className="bj__fairness-k">Next nonce</span>
-                  <code>{pfNonce}</code>
+                  <code className="bj__hash">{pfNonce}</code>
                 </p>
                 <label className="bj__seed-label">
-                  Client seed
+                  <span className="bj__fairness-k">Client seed</span>
                   <input
                     type="text"
                     className="bj__seed-input"

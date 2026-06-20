@@ -1,28 +1,49 @@
-import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Compass } from "lucide-react";
+import { MotionLink } from "../../components/ui/MotionLink";
 import { ORIGINALS_PATH } from "../../content/originals";
 import "./NotFound.css";
 
 export function NotFound() {
   return (
-    <div className="not-found lc-page">
-      <div className="not-found__card">
-        <p className="not-found__code" aria-hidden="true">
+    <div className="not-found">
+      <motion.div
+        className="not-found__card"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <motion.div
+          className="not-found__code"
+          aria-hidden="true"
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.55, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+        >
           404
-        </p>
+        </motion.div>
+
+        <span className="not-found__eyebrow">
+          <Compass size={11} strokeWidth={2.4} />
+          Lost in the lobby
+        </span>
+
         <h1 className="not-found__title">Page not found</h1>
+
         <p className="not-found__text">
-          That link doesn&apos;t exist or may have moved. Head back home or jump straight into
-          Originals.
+          That link doesn&apos;t exist or may have moved. Head back home or jump straight into the
+          house originals.
         </p>
+
         <div className="not-found__actions">
-          <Link to="/" className="not-found__btn not-found__btn--gold">
+          <MotionLink to="/" variant="primary" glow>
             Back to home
-          </Link>
-          <Link to={ORIGINALS_PATH} className="not-found__btn not-found__btn--outline">
+          </MotionLink>
+          <MotionLink to={ORIGINALS_PATH} variant="secondary">
             Browse originals
-          </Link>
+          </MotionLink>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -94,10 +94,13 @@
 }
 
 .cbc__summary-card {
-  padding: 0.75rem 0.85rem;
-  border-radius: var(--lc-radius-lg);
+  padding: 1rem 1.1rem;
+  border-radius: var(--lc-radius-xl);
   border: 1px solid var(--cb-panel-border);
-  background: var(--cb-panel);
+  background:
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(56, 189, 248, 0.08), transparent 60%),
+    var(--cb-panel);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.3);
 }
 
 .cbc__summary-title {
@@ -137,13 +140,14 @@
 }
 
 .cbc__summary-row--total dd {
-  font-family: var(--lc-font-display);
+  font-family: var(--lc-font-mono);
   font-size: 1.1rem;
   color: var(--cb-accent);
 }
 
 .cbc__summary-row--pot dd {
-  color: var(--lc-gold);
+  color: #7dd3fc;
+  font-family: var(--lc-font-mono);
 }
 
 .cbc__summary-create {
@@ -901,7 +905,7 @@
 
 .cbc-modal__case-count {
   font-size: 0.68rem;
-  color: var(--lc-gold);
+  color: #7dd3fc;
   margin-bottom: 0.35rem;
 }
 

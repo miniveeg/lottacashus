@@ -13,12 +13,9 @@ import {
 } from "../../lib/discord";
 import { createUserNotification } from "../../lib/notifications";
 import {
-  formatCoins,
   formatCoinsWithUsd,
   formatUsd,
-  GC_USD_RATE,
   getCashFlowTally,
-  SC_USD_RATE,
 } from "../../lib/format";
 import { supabase } from "../../lib/supabase";
 import {
@@ -223,15 +220,20 @@ export function Settings() {
     <div className="settings lc-page lc-page--medium">
       <header className="lc-page__header">
         <h1 className="lc-page__title settings__title">Settings</h1>
-        <p className="lc-page__subtitle settings__subtitle">Your LottaCash account overview</p>
+        <p className="lc-page__subtitle settings__subtitle">
+          Manage your account, balances, limits, and transaction history.
+        </p>
       </header>
 
       {error && <p className="settings__error" role="alert">{error}</p>}
       {success && <p className="settings__success" role="status">{success}</p>}
 
-      {/* 1. Account & stats */}
+      {/* 1. Account */}
       <section className="settings__section">
         <h2 className="settings__section-title">Account</h2>
+        <p className="settings__section-desc">
+          Your sign-in details and current balances.
+        </p>
 
         <div className="settings__account-header">
           <div className="settings__account-item">
@@ -258,39 +260,61 @@ export function Settings() {
           </div>
         </div>
 
+        <form onSubmit={handleSaveUsername} className="settings__username-form" noValidate>
+          <div className="settings__field">
+            <label htmlFor="settings-username">Change username</label>
+            <input
+              id="settings-username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              maxLength={MAX_USERNAME_LENGTH}
+              aria-describedby="settings-username-hint"
+            />
+            <p className="settings__hint" id="settings-username-hint">
+              {username.length}/{MAX_USERNAME_LENGTH} characters
+            </p>
+          </div>
+          <button type="submit" className="settings__btn" disabled={saving || profileLoading}>
+            {saving && <span className="settings__btn__spinner" aria-hidden="true" />}
+            {saving ? "Saving…" : "Save username"}
+          </button>
+        </form>
+      </section>
+
+      {/* 2. Player Level */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">Player Level</h2>
+        <p className="settings__section-desc">
+          Progress through tiers by wagering. Higher tiers unlock perks and rewards.
+        </p>
+
         <div className="settings__level-wrap">
-          <h3 className="settings__level-heading">Player level</h3>
+          <h3 className="settings__level-heading">Level & XP</h3>
           <SettingsLevelSection
             totalWagered={profile?.totalWagered ?? 0}
             loading={profileLoading}
           />
         </div>
 
-        <div className="settings__stats-grid">
-          <div className="settings__stat">
-            <p className="settings__stat-label">Gold Coins (GC)</p>
-            <p className="settings__stat-value">
-              {profileLoading ? "…" : formatCoins(profile?.balance ?? 0, "balance")}
-            </p>
-            <p className="settings__stat-sub">
-              ≈ {formatUsd((profile?.balance ?? 0) * GC_USD_RATE)} · Play money
-            </p>
-          </div>
-          <div className="settings__stat">
-            <p className="settings__stat-label">Sweeps Coins (SC)</p>
-            <p className="settings__stat-value settings__stat-value--win">
-              {profileLoading ? "…" : formatCoins(profile?.sweepsCoins ?? 0, "sweeps_coins")}
-            </p>
-            <p className="settings__stat-sub">
-              ≈ {formatUsd((profile?.sweepsCoins ?? 0) * SC_USD_RATE)} · Redeemable
-            </p>
-          </div>
+        <div className="settings__stats-grid" style={{ marginBottom: 0 }}>
           <div className="settings__stat">
             <p className="settings__stat-label">Total wagered</p>
             <p className="settings__stat-value">
               {profileLoading ? "…" : formatUsd(profile?.totalWagered ?? 0)}
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* 3. Stats */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">Stats</h2>
+        <p className="settings__section-desc">
+          Lifetime totals across deposits, withdrawals, wins, and losses.
+        </p>
+
+        <div className="settings__stats-grid">
           <div className="settings__stat">
             <p className="settings__stat-label">Total deposited</p>
             <p className="settings__stat-value">
@@ -317,8 +341,8 @@ export function Settings() {
           </div>
         </div>
 
-        <div className="settings__tally">
-          <p className="settings__tally-label">Deposit / withdraw tally</p>
+        <div className="settings__tally" style={{ marginBottom: 0 }}>
+          <p className="settings__tally-label">Net P/L (withdrawn − deposited)</p>
           <p className={`settings__tally-value ${tallyClass}`}>
             {profileLoading ? "…" : cashFlow.formatted}
           </p>
@@ -327,30 +351,9 @@ export function Settings() {
             Positive means you withdrew more than you deposited; negative means you deposited more.
           </p>
         </div>
-
-        <form onSubmit={handleSaveUsername} className="settings__username-form" noValidate>
-          <div className="settings__field">
-            <label htmlFor="settings-username">Change username</label>
-            <input
-              id="settings-username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              maxLength={MAX_USERNAME_LENGTH}
-              aria-describedby="settings-username-hint"
-            />
-            <p className="settings__hint" id="settings-username-hint">
-              {username.length}/{MAX_USERNAME_LENGTH} characters
-            </p>
-          </div>
-          <button type="submit" className="settings__btn" disabled={saving || profileLoading}>
-            {saving && <span className="settings__btn__spinner" aria-hidden="true" />}
-            {saving ? "Saving…" : "Save username"}
-          </button>
-        </form>
       </section>
 
-      {/* 2. Discord */}
+      {/* 4. Discord */}
       <section className="settings__section">
         <h2 className="settings__section-title">Discord</h2>
         <p className="settings__section-desc">

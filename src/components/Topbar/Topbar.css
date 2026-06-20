@@ -1,20 +1,29 @@
-/* ── Topbar — glass luxury bar ── */
+/* ───────────────────────────────────────────────────────────────
+   Topbar — spacious, premium, clean
+   ─ 64px tall, glass over elevated surface
+   ─ Left: hamburger (mobile) + brand + name
+   ─ Center: search (desktop) / icon toggle (mobile)
+   ─ Right: balance group (label + value + USD), coin toggle,
+            notifications, login/signup OR logout
+   ─────────────────────────────────────────────────────────────── */
+
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-4, 1rem);
   height: var(--lc-topbar-height);
-  padding: 0 1.15rem 0 0.85rem;
-  background: var(--lc-bg-elevated);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  padding: 0 var(--space-6, 1.5rem);
+  background: rgba(10, 10, 16, 0.85);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
   border-bottom: 1px solid var(--lc-border);
   box-shadow: var(--lc-shadow-sm);
   position: relative;
   z-index: 50;
 }
 
+/* Subtle bottom accent line that fades crimson → transparent */
 .topbar::after {
   content: '';
   position: absolute;
@@ -25,17 +34,23 @@
   background: linear-gradient(
     90deg,
     transparent,
-    var(--lc-crimson-glow) 25%,
-    rgba(139, 92, 246, 0.1) 75%,
+    rgba(220, 20, 60, 0.22) 25%,
+    rgba(139, 92, 246, 0.10) 75%,
     transparent
   );
   pointer-events: none;
 }
 
+/* Solid fallback when backdrop-filter isn't available */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .topbar { background: var(--lc-bg-elevated); }
+}
+
+/* ── Left cluster ── */
 .topbar__start {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-3, 0.75rem);
   flex-shrink: 0;
   min-width: 0;
 }
@@ -56,17 +71,21 @@
   color: var(--lc-crimson-soft);
 }
 
+.topbar__menu-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
+}
+
 .topbar__brand {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   flex-shrink: 0;
   min-width: 0;
+  text-decoration: none;
 }
 
 .topbar__logo {
-  height: 36px;
-  width: auto;
   flex-shrink: 0;
   background: transparent;
   filter: drop-shadow(0 0 12px var(--lc-crimson-glow));
@@ -75,15 +94,17 @@
 .topbar__name {
   font-family: var(--lc-font-display);
   font-weight: 800;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   letter-spacing: -0.02em;
-  background: linear-gradient(105deg, var(--lc-crimson-soft) 0%, var(--lc-text-primary) 50%, var(--lc-text-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--lc-text-primary);
+  white-space: nowrap;
 }
 
-/* Search */
+.topbar__name::first-letter {
+  color: var(--lc-crimson-soft);
+}
+
+/* ── Search (desktop) ── */
 .topbar__search-wrap {
   position: relative;
   flex: 1;
@@ -95,10 +116,10 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: rgba(255, 255, 255, 0.03);
+  padding: 0.55rem 0.95rem;
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-xl);
+  border-radius: var(--lc-radius-md);
   color: var(--lc-text-muted);
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition), background var(--lc-transition);
 }
@@ -107,7 +128,7 @@
 
 .topbar__search:focus-within {
   border-color: var(--lc-border-accent);
-  background: var(--lc-crimson-glow);
+  background: rgba(220, 20, 60, 0.06);
   box-shadow: var(--lc-focus-ring);
   color: var(--lc-text-secondary);
 }
@@ -120,7 +141,7 @@
   color: var(--lc-text-primary);
   font-family: var(--lc-font-body);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   min-width: 0;
 }
 
@@ -128,7 +149,7 @@
 
 .topbar__search-results {
   position: absolute;
-  top: calc(100% + 0.4rem);
+  top: calc(100% + 0.5rem);
   left: 0;
   right: 0;
   margin: 0;
@@ -136,11 +157,12 @@
   list-style: none;
   background: var(--lc-bg-glass);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-lg);
   box-shadow: var(--lc-shadow-md);
   z-index: 100;
-  max-height: 300px;
+  max-height: 320px;
   overflow-y: auto;
 }
 
@@ -172,10 +194,10 @@
   box-shadow: var(--lc-focus-ring);
 }
 
-.topbar__search-result-label { font-weight: 700; font-size: 0.875rem; }
+.topbar__search-result-label { font-weight: 600; font-size: 0.875rem; }
 
 .topbar__search-result-meta {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -185,7 +207,7 @@
 
 .topbar__search-empty {
   position: absolute;
-  top: calc(100% + 0.4rem);
+  top: calc(100% + 0.5rem);
   left: 0;
   right: 0;
   margin: 0;
@@ -198,26 +220,81 @@
   z-index: 100;
 }
 
-/* Actions */
+/* ── Right cluster ── */
 .topbar__actions {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
 .topbar__icon-btn.topbar__search-toggle { display: none; }
 
+/* Balance group: label + value + USD */
 .topbar__balance-group {
   display: flex;
   align-items: center;
-  gap: 0.2rem;
+  gap: 0.25rem;
 }
 
+.topbar__balance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  padding: 0.3rem 0.85rem 0.3rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-md);
+  text-decoration: none;
+  min-height: 40px;
+  justify-content: center;
+  transition: border-color var(--lc-transition), background var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+a.topbar__balance:hover {
+  border-color: var(--lc-border-accent);
+  background: var(--lc-crimson-glow);
+  box-shadow: 0 0 16px rgba(220, 20, 60, 0.18);
+}
+
+.topbar__balance-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.topbar__balance-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--lc-text-muted);
+}
+
+.topbar__balance-value {
+  font-family: var(--lc-font-mono);
+  font-weight: 500;
+  color: var(--lc-emerald);
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
+.topbar__balance-usd {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--lc-text-muted);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  font-family: var(--lc-font-mono);
+}
+
+/* Coin toggle: pill button, clear active state */
 .topbar__coin-toggle {
   min-width: 44px;
-  height: 36px;
-  padding: 0 0.5rem;
+  min-height: 40px;
+  padding: 0 0.6rem;
   display: grid;
   place-items: center;
   border-radius: var(--lc-radius-md);
@@ -227,7 +304,7 @@
   transition: border-color var(--lc-transition), color var(--lc-transition), background var(--lc-transition);
   font-family: var(--lc-font-display);
   font-weight: 800;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
 }
 
@@ -242,7 +319,12 @@
   background: var(--lc-crimson-glow);
 }
 
-/* Clear active state so users can tell which coin is selected */
+.topbar__coin-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
+}
+
+/* Clear active state — users can tell which coin is selected */
 .topbar__coin-toggle[aria-pressed="true"] {
   color: #fff;
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
@@ -254,61 +336,26 @@
   filter: brightness(1.08);
 }
 
-.topbar__balance {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.38rem 1rem 0.38rem 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--lc-border-strong);
-  border-radius: var(--lc-radius-xl);
-  transition: border-color var(--lc-transition), background var(--lc-transition), box-shadow var(--lc-transition);
-}
-
-a.topbar__balance:hover {
-  border-color: var(--lc-border-accent);
-  background: var(--lc-crimson-glow);
-  box-shadow: 0 0 16px var(--lc-crimson-glow);
-}
-
-.topbar__balance-label {
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--lc-text-muted);
-}
-
-.topbar__balance-value {
-  font-family: var(--lc-font-mono);
-  font-weight: 500;
-  color: var(--lc-emerald);
-  font-size: 0.9rem;
-  letter-spacing: -0.01em;
-}
-
-.topbar__balance-usd {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--lc-text-muted);
-  letter-spacing: 0.02em;
-}
-
-@media (max-width: 480px) {
-  .topbar__balance-usd { display: none; }
-}
-
+/* ── Buttons (login/signup/logout) ── */
 .topbar__btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.48rem 1rem;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0 1rem;
   border-radius: var(--lc-radius-md);
   font-family: var(--lc-font-display);
   font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.03em;
-  transition: background var(--lc-transition), color var(--lc-transition), transform var(--lc-transition), box-shadow var(--lc-transition);
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: background var(--lc-transition), color var(--lc-transition), transform var(--lc-transition), box-shadow var(--lc-transition), filter var(--lc-transition);
+}
+
+.topbar__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
 }
 
 .topbar__btn--ghost { color: var(--lc-text-secondary); }
@@ -329,8 +376,14 @@ a.topbar__balance:hover {
   box-shadow: 0 4px 24px var(--lc-crimson-glow-strong);
 }
 
-.topbar__loading { color: var(--lc-text-muted); font-size: 1.25rem; }
+.topbar__loading {
+  color: var(--lc-text-muted);
+  font-size: 1.25rem;
+  min-width: 32px;
+  text-align: center;
+}
 
+/* ── Notifications ── */
 .topbar__notif-wrap { position: relative; }
 
 .topbar__icon-btn {
@@ -354,6 +407,11 @@ a.topbar__balance:hover {
   box-shadow: 0 0 0 1px var(--lc-border-accent);
 }
 
+.topbar__icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
+}
+
 .topbar__notif-badge {
   position: absolute;
   top: 6px;
@@ -372,14 +430,17 @@ a.topbar__balance:hover {
   box-shadow: 0 0 10px var(--lc-crimson-glow);
 }
 
+/* ── Mobile ≤ 900px ── */
 @media (max-width: 900px) {
+  .topbar {
+    gap: 0.6rem;
+    padding: 0 0.85rem;
+  }
   .topbar__menu-btn { display: flex; }
   .topbar__search-wrap { display: none; }
   .topbar__icon-btn.topbar__search-toggle { display: grid; }
 
-  /* On mobile the search bar slides down as an absolute overlay below the
-     topbar instead of wrapping the bar (which would overflow the fixed
-     app-shell grid row and cover the sidebar/main content). */
+  /* Search slides down as an absolute overlay below the topbar */
   .topbar--search-open .topbar__search-wrap {
     display: block;
     position: absolute;
@@ -388,7 +449,7 @@ a.topbar__balance:hover {
     right: 0;
     flex: none;
     max-width: none;
-    padding: 0.55rem 0.75rem calc(0.55rem + var(--lc-safe-bottom));
+    padding: 0.6rem 0.85rem calc(0.6rem + var(--lc-safe-bottom));
     background: var(--lc-bg-elevated);
     border-bottom: 1px solid var(--lc-border);
     box-shadow: var(--lc-shadow-md);
@@ -407,34 +468,37 @@ a.topbar__balance:hover {
   }
 
   .topbar__balance-label { display: none; }
-  .topbar__balance { padding: 0.4rem 0.75rem; }
-  .topbar__name { font-size: 1.05rem; }
+  .topbar__balance { padding: 0.35rem 0.75rem; }
   .topbar-level:not(.topbar-level--compact) { display: none; }
 }
 
+/* ── Very small phones ≤ 480px ── */
 @media (max-width: 480px) {
-  .topbar { gap: 0.25rem; padding: 0 0.5rem 0 0.35rem; }
+  .topbar {
+    gap: 0.35rem;
+    padding: 0 0.6rem;
+  }
   .topbar__name { display: none; }
-  /* Keep "Log in" visible on mobile (icon-only) so existing users can sign in.
-     Only hide the text label, not the button itself. Log out stays accessible
-     via the sidebar drawer. */
-  .topbar__btn--login { padding: 0.5rem 0.6rem; }
+  .topbar__balance-usd { display: none; }
+  .topbar__balance { padding: 0.3rem 0.55rem; }
+  .topbar__balance-value { font-size: 0.82rem; }
+  /* Keep login button visible (icon only) — just trim the label */
+  .topbar__btn--login { padding: 0 0.6rem; }
   .topbar__btn--login .topbar__btn-label { display: none; }
   .topbar__btn--logout { display: none; }
-  .topbar__balance-value { font-size: 0.82rem; }
-  .topbar__actions { gap: 0.15rem; }
+  .topbar__actions { gap: 0.2rem; }
 }
 
+/* ── Tiny phones ≤ 360px ── */
 @media (max-width: 360px) {
-  /* Very small phones (iPhone SE 1st gen, older Androids): compact the
-     signup button so its text isn't truncated. */
-  .topbar__btn--signup { padding: 0.5rem 0.65rem; font-size: 0.72rem; }
-  .topbar__balance { padding: 0.35rem 0.5rem; }
+  .topbar__btn--signup { padding: 0 0.65rem; font-size: 0.72rem; }
+  .topbar__balance { padding: 0.3rem 0.45rem; }
   .topbar__balance-value { font-size: 0.75rem; }
+  .topbar__coin-toggle { min-width: 40px; padding: 0 0.4rem; }
 }
 
 /* Touch devices: kill framer-motion scale transforms that feel jittery.
-   !important is required to override framer-motion's inline styles. */
+   !important overrides framer-motion's inline styles. */
 @media (hover: none) and (pointer: coarse) {
   .topbar__menu-btn,
   .topbar__icon-btn,
@@ -446,7 +510,5 @@ a.topbar__balance:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .topbar--search-open .topbar__search-wrap {
-    animation: none;
-  }
+  .topbar--search-open .topbar__search-wrap { animation: none; }
 }

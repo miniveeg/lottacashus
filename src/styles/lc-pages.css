@@ -1,27 +1,33 @@
-/* LottaCash — Redesigned shared page layout, panels, buttons, tabs, game chrome */
+/* ════════════════════════════════════════════════════════════════
+   LottaCash — Shared page layout, panels, buttons, tabs, alerts, stats
+   The most impactful file: defines the visual rhythm of every page.
+   Premium, spacious, cohesive. Think Stripe / Linear / Vercel.
+   ════════════════════════════════════════════════════════════════ */
 
-/* ── Main scroll area ── */
+/* ── Main scroll area background ── */
 .app-shell__main {
   background:
-    radial-gradient(ellipse 100% 55% at 50% -5%, rgba(220, 20, 60, 0.04) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 45% at 85% 85%, rgba(139, 92, 246, 0.025) 0%, transparent 50%),
+    radial-gradient(ellipse 100% 55% at 50% -5%,
+      rgba(225, 29, 72, 0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 45% at 85% 95%,
+      rgba(139, 92, 246, 0.025) 0%, transparent 50%),
     var(--lc-bg-base);
 }
 
-/* ── Page shell ── */
+/* ════════════════════════════════════════════════════════════════
+   Page shell
+   ════════════════════════════════════════════════════════════════ */
 .lc-page {
-  --lc-page-pad-x: clamp(1rem, 3vw, 1.5rem);
-  --lc-page-pad-y: clamp(1.25rem, 3vw, 1.75rem);
-  --lc-page-pad-b: clamp(2rem, 5vw, 3.5rem);
+  --lc-page-pad-x: clamp(var(--space-4), 3vw, var(--space-6));
   width: 100%;
-  max-width: var(--lc-page-max, 1120px);
+  max-width: var(--lc-page-max, 1200px);
   margin: 0 auto;
-  padding: var(--lc-page-pad-y) var(--lc-page-pad-x) var(--lc-page-pad-b);
+  padding: var(--space-8) var(--lc-page-pad-x) var(--space-16);
 }
 
-.lc-page--narrow  { --lc-page-max: 720px; }
-.lc-page--medium  { --lc-page-max: 900px; }
-.lc-page--wide    { --lc-page-max: 1180px; }
+.lc-page--narrow { --lc-page-max: 640px; }
+.lc-page--medium { --lc-page-max: 900px; }
+.lc-page--wide   { --lc-page-max: 1200px; }
 
 .lc-page--auth {
   max-width: none;
@@ -29,102 +35,108 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem var(--lc-page-pad-x);
+  padding: var(--space-8) var(--lc-page-pad-x);
 }
 
 /* ── Page header ── */
-.lc-page__header { margin-bottom: 1.85rem; }
+.lc-page__header {
+  margin-bottom: var(--space-8);
+}
 
 .lc-page__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.55rem;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
-  background: rgba(220, 20, 60, 0.08);
-  border: 1px solid rgba(220, 20, 60, 0.2);
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: rgba(225, 29, 72, 0.08);
+  border: 1px solid rgba(225, 29, 72, 0.22);
   font-family: var(--lc-font-display);
-  font-size: 0.62rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  /* crimson-soft (~5.4:1 on dark) instead of base crimson (~3.9:1)
-     so the small eyebrow text passes WCAG AA. */
+  letter-spacing: 0.08em;
   color: var(--lc-crimson-soft);
 }
 
 .lc-page__title {
   font-family: var(--lc-font-display);
   font-weight: 800;
-  font-size: clamp(1.5rem, 3vw, 1.9rem);
-  letter-spacing: -0.03em;
-  line-height: 1.12;
-  margin: 0 0 0.4rem;
+  font-size: clamp(1.5rem, 1rem + 2vw, 2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 0 var(--space-2);
 }
 
 .lc-page__subtitle {
   margin: 0;
-  font-size: 0.97rem;
-  font-weight: 500;
+  font-size: 1rem;
+  font-weight: 400;
   line-height: 1.6;
   color: var(--lc-text-secondary);
-  max-width: 52ch;
+  max-width: 60ch;
 }
 
-/* ── Panels ── */
+/* ════════════════════════════════════════════════════════════════
+   Panels
+   ════════════════════════════════════════════════════════════════ */
 .lc-panel {
-  padding: 1.4rem 1.5rem;
-  background: var(--lc-bg-glass);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: var(--space-6);
+  background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-xl);
-  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--lc-shadow-sm);
 }
 
-.lc-panel + .lc-panel { margin-top: 1rem; }
+.lc-panel + .lc-panel { margin-top: var(--space-4); }
 
 .lc-panel__title {
   font-family: var(--lc-font-display);
   font-weight: 700;
   font-size: 1.05rem;
   letter-spacing: -0.01em;
-  margin: 0 0 0.8rem;
+  margin: 0 0 var(--space-4);
 }
 
 .lc-panel__desc {
-  margin: -0.35rem 0 1rem;
-  font-size: 0.87rem;
-  font-weight: 500;
-  line-height: 1.55;
+  margin: calc(var(--space-3) * -1) 0 var(--space-4);
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.6;
   color: var(--lc-text-muted);
 }
 
-/* ── Buttons ── */
+/* ════════════════════════════════════════════════════════════════
+   Buttons (shared variants — also used by per-page classes)
+   ════════════════════════════════════════════════════════════════ */
 .lc-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.68rem 1.3rem;
-  border-radius: var(--lc-radius-md);
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-sm);
   font-family: var(--lc-font-display);
-  font-weight: 700;
-  font-size: 0.88rem;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0;
   line-height: 1.2;
   border: 1px solid transparent;
-  transition: transform var(--lc-transition-spring), filter var(--lc-transition), background var(--lc-transition), border-color var(--lc-transition), box-shadow var(--lc-transition);
+  transition: transform var(--lc-transition), filter var(--lc-transition),
+              background var(--lc-transition), border-color var(--lc-transition),
+              color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
 .lc-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none !important;
+  filter: none !important;
 }
 
-/* Primary gold */
+/* Primary: crimson gradient + glow on hover */
 .lc-btn--primary,
 .home__btn--gold,
 .wallet__btn:not(.wallet__btn--ghost),
@@ -139,9 +151,11 @@
 .cb-page__btn-primary,
 .cb-page__primary-btn,
 .cbh__join-btn {
-  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
+  background: linear-gradient(135deg, var(--lc-crimson) 0%, var(--lc-crimson-dim) 100%);
   color: #fff;
-  box-shadow: 0 2px 16px var(--lc-crimson-glow), var(--lc-shadow-inset);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset,
+              0 2px 14px var(--lc-crimson-glow),
+              var(--lc-shadow-inset);
 }
 
 .lc-btn--primary:hover:not(:disabled),
@@ -158,71 +172,79 @@
 .bj__deal-btn:hover:not(:disabled),
 .cb-page__btn-primary:hover,
 .cb-page__primary-btn:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.08);
-  box-shadow: 0 6px 28px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset,
+              0 6px 24px var(--lc-crimson-glow-strong),
+              var(--lc-shadow-inset);
 }
 
-/* Secondary outline */
+/* Secondary: subtle border + light bg on hover */
 .lc-btn--secondary,
 .home__btn--outline,
 .wallet__btn--ghost,
 .lc-btn--outline {
   border: 1px solid var(--lc-border-strong);
   color: var(--lc-text-primary);
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .lc-btn--secondary:hover:not(:disabled),
 .home__btn--outline:hover,
 .wallet__btn--ghost:hover:not(:disabled) {
-  background: var(--lc-bg-hover);
+  background: rgba(255, 255, 255, 0.05);
   border-color: var(--lc-border-accent);
   transform: translateY(-1px);
 }
 
-/* Ghost */
+/* Ghost: transparent, text-color change on hover */
 .lc-btn--ghost,
 .home__btn--ghost {
   color: var(--lc-text-secondary);
   background: transparent;
   border-color: transparent;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
 }
 
 .lc-btn--ghost:hover:not(:disabled),
-.home__btn--ghost:hover { color: var(--lc-crimson-soft); }
+.home__btn--ghost:hover {
+  color: var(--lc-text-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
 
-/* ── Tabs ── */
+/* ════════════════════════════════════════════════════════════════
+   Tabs
+   ════════════════════════════════════════════════════════════════ */
 .lc-tabs,
 .wallet__tabs,
 .help__tabs {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 0.25rem;
+  gap: var(--space-1);
+  padding: var(--space-1);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  margin-bottom: 1.35rem;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-6);
 }
 
 .lc-tab,
 .wallet__tab,
 .help__tab,
 .wallet__chain-btn {
-  padding: 0.5rem 1rem;
-  border-radius: var(--lc-radius-md);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
   font-family: var(--lc-font-display);
-  font-weight: 700;
-  font-size: 0.82rem;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0;
   color: var(--lc-text-secondary);
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+  transition: background var(--lc-transition), color var(--lc-transition),
+              border-color var(--lc-transition);
 }
 
 .lc-tab:hover,
@@ -237,95 +259,133 @@
 .help__tab--active,
 .wallet__chain-btn--active {
   color: #fff !important;
-  background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim)) !important;
+  background: linear-gradient(135deg, var(--lc-crimson), var(--lc-crimson-dim)) !important;
   border-color: transparent !important;
-  box-shadow: 0 2px 12px var(--lc-crimson-glow);
+  box-shadow: 0 2px 10px var(--lc-crimson-glow);
 }
 
 .wallet__chain-picker {
-  padding: 0.25rem;
+  padding: var(--space-1);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
+  border-radius: var(--radius-md);
 }
 
-/* ── Alerts ── */
+/* ════════════════════════════════════════════════════════════════
+   Alerts
+   ════════════════════════════════════════════════════════════════ */
 .lc-alert {
-  padding: 0.75rem 1rem;
-  border-radius: var(--lc-radius-md);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.5;
 }
 
-.lc-alert--error, .auth-error, .admin__banner--error, .cb-page__error, .cb__error,
-.keno__error, .mines__error, .limbo__error, .bj__error, .wallet__error,
-.sidebar-chat__error, .settings__error {
-  background: rgba(255,59,92,0.1);
-  border: 1px solid rgba(255,59,92,0.3);
-  color: #ff8fa3;
+.lc-alert--error,
+.auth-error,
+.admin__banner--error,
+.cb-page__error,
+.cb__error,
+.keno__error,
+.mines__error,
+.limbo__error,
+.bj__error,
+.wallet__error,
+.sidebar-chat__error,
+.settings__error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }
 
-.lc-alert--success, .auth-success, .admin__banner--success, .settings__success {
-  background: rgba(0,232,122,0.1);
-  border: 1px solid rgba(0,232,122,0.3);
-  color: #4dffa0;
+.lc-alert--success,
+.auth-success,
+.admin__banner--success,
+.settings__success {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #6ee7b7;
 }
 
-.lc-alert--warn, .auth-config-warning {
-  background: rgba(220, 20, 60, 0.08);
-  border: 1px solid rgba(220, 20, 60, 0.25);
-  color: var(--lc-crimson-soft);
+.lc-alert--warn,
+.auth-config-warning {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  color: #fcd34d;
 }
 
-/* ── Stat cards ── */
+/* ════════════════════════════════════════════════════════════════
+   Stat grid
+   ════════════════════════════════════════════════════════════════ */
 .lc-stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
 }
 
-.lc-stat, .admin__stat {
-  padding: 1.1rem 1.2rem;
+.lc-stat,
+.admin__stat {
+  padding: var(--space-4) var(--space-5);
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  transition: border-color var(--lc-transition);
+  border-radius: var(--radius-md);
+  transition: border-color var(--lc-transition), transform var(--lc-transition);
 }
 
-.lc-stat:hover, .admin__stat:hover {
+.lc-stat:hover,
+.admin__stat:hover {
   border-color: var(--lc-border-strong);
+  transform: translateY(-1px);
 }
 
-/* ── Game pages ── */
-.lc-game-page.keno, .lc-game-page.mines, .lc-game-page.limbo,
-.lc-game-page.roulette, .keno, .mines, .limbo, .roulette {
-  max-width: 1100px;
+/* ════════════════════════════════════════════════════════════════
+   Game pages
+   ════════════════════════════════════════════════════════════════ */
+.lc-game-page,
+.lc-game-page.keno,
+.lc-game-page.mines,
+.lc-game-page.limbo,
+.lc-game-page.roulette,
+.keno,
+.mines,
+.limbo,
+.roulette {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 1.35rem clamp(1rem, 3vw, 1.5rem) 3rem;
+  padding: var(--space-6) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12);
 }
 
-.lc-game-page.bj, .bj {
+.lc-game-page.bj,
+.bj {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 1.35rem clamp(1rem, 3vw, 1.5rem) 3rem;
+  padding: var(--space-6) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12);
 }
 
-.keno__board-panel, .mines__panel, .limbo__panel,
-.roulette__board-panel, .bj__table-area, .game-controls {
-  border-radius: var(--lc-radius-xl);
+.keno__board-panel,
+.mines__panel,
+.limbo__panel,
+.roulette__board-panel,
+.bj__table-area,
+.game-controls {
+  border-radius: var(--radius-lg);
 }
 
-.keno__cell, .mines__tile {
-  border-radius: var(--lc-radius-sm);
-  transition: transform var(--lc-transition), border-color var(--lc-transition), background var(--lc-transition), box-shadow var(--lc-transition);
+.keno__cell,
+.mines__tile {
+  border-radius: var(--radius-sm);
+  transition: transform var(--lc-transition), border-color var(--lc-transition),
+              background var(--lc-transition), box-shadow var(--lc-transition);
 }
 
-/* ── Auth ── */
+/* ════════════════════════════════════════════════════════════════
+   Auth
+   ════════════════════════════════════════════════════════════════ */
 .auth-page {
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,204,68,0.07), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(155,114,255,0.04), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(225, 29, 72, 0.06), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(139, 92, 246, 0.04), transparent 50%),
     var(--lc-bg-base);
 }
 
@@ -338,120 +398,160 @@
   font-family: var(--lc-font-mono);
   font-size: 0.82em;
   padding: 0.1em 0.35em;
-  border-radius: var(--lc-radius-sm);
+  border-radius: var(--radius-sm);
   background: var(--lc-bg-elevated);
-  color: var(--lc-gold);
+  color: var(--lc-crimson-soft);
 }
 
-/* ── Section cards ── */
-.settings__section, .wallet__section, .help__panel, .admin__section {
-  border-radius: var(--lc-radius-xl);
+/* ════════════════════════════════════════════════════════════════
+   Section cards (settings, wallet, help, admin)
+   ════════════════════════════════════════════════════════════════ */
+.settings__section,
+.wallet__section,
+.help__panel,
+.admin__section {
+  border-radius: var(--radius-lg);
   box-shadow: var(--lc-shadow-sm);
 }
 
-.settings__section, .wallet__section {
+.settings__section,
+.wallet__section {
   transition: border-color var(--lc-transition);
 }
 
-.settings__section:hover, .wallet__section:hover {
+.settings__section:hover,
+.wallet__section:hover {
   border-color: var(--lc-border-strong);
 }
 
-/* ── Tables ── */
-.settings__tx-table th, .admin__table th {
+/* ════════════════════════════════════════════════════════════════
+   Tables
+   ════════════════════════════════════════════════════════════════ */
+.settings__tx-table th,
+.admin__table th {
   font-family: var(--lc-font-display);
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--lc-text-muted);
 }
 
-.settings__tx-row, .admin__table tr {
+.settings__tx-row,
+.admin__table tr {
   transition: background var(--lc-transition);
 }
 
-.settings__tx-row:hover, .admin__table tbody tr:hover {
+.settings__tx-row:hover,
+.admin__table tbody tr:hover {
   background: var(--lc-bg-hover);
 }
 
-/* ── Originals ── */
-.originals__card, .home__pillar {
-  border-radius: var(--lc-radius-xl);
+/* ════════════════════════════════════════════════════════════════
+   Originals & Home
+   ════════════════════════════════════════════════════════════════ */
+.originals__card,
+.home__pillar {
+  border-radius: var(--radius-lg);
 }
 
 .home__hero {
-  border-radius: var(--lc-radius-2xl);
+  border-radius: var(--radius-xl);
   box-shadow: var(--lc-shadow-md);
 }
 
-/* ── Empty states ── */
+/* ════════════════════════════════════════════════════════════════
+   Empty & loading states
+   ════════════════════════════════════════════════════════════════ */
 .lc-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.85rem;
-  padding: 2rem 1rem 2.5rem;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-4) var(--space-16);
   text-align: center;
 }
 
-.lc-empty .lc-alert, .lc-empty .cb-page__error {
+.lc-empty .lc-alert,
+.lc-empty .cb-page__error {
   margin: 0;
   max-width: 40ch;
 }
 
-.admin-route-loading, .cbr__loading { min-height: 14rem; }
+.admin-route-loading,
+.cbr__loading { min-height: 14rem; }
 
 .cbr__loading-pulse {
-  border-radius: var(--lc-radius-md);
+  border-radius: var(--radius-md);
   border: none;
-  background: linear-gradient(135deg, rgba(255,204,68,0.2), rgba(0,212,255,0.1));
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.2), rgba(56, 189, 248, 0.1));
   animation: lc-loading-pulse 1.4s ease-in-out infinite;
 }
 
-/* ── Focus ──
-   The global :focus-visible rule in global.css supplies the outline;
-   here we only suppress the legacy duplicate so the higher-contrast
-   crimson-soft indicator wins everywhere. */
-button:focus:not(:focus-visible),
-a:focus:not(:focus-visible) { outline: none; }
-
-/* ── Text inputs ── */
-.wallet__input, .admin__input, .settings__input {
-  min-height: 2.6rem;
-  padding: 0.55rem 0.9rem;
+/* ════════════════════════════════════════════════════════════════
+   Text inputs
+   ════════════════════════════════════════════════════════════════ */
+.wallet__input,
+.admin__input,
+.settings__input {
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
   font-family: var(--lc-font-body);
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--lc-text-primary);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
-  border-radius: var(--lc-radius-md);
+  border-radius: var(--radius-sm);
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
-.wallet__input:focus, .admin__input:focus, .settings__input:focus {
+.wallet__input:focus,
+.admin__input:focus,
+.settings__input:focus {
   outline: none;
-  border-color: var(--lc-border-accent);
+  border-color: var(--lc-crimson);
   box-shadow: var(--lc-focus-ring);
 }
 
-/* ── Mobile ── */
-@media (max-width: 900px) {
+/* ════════════════════════════════════════════════════════════════
+   Focus management — legacy duplicate suppression
+   The global :focus-visible rule in global.css supplies the outline.
+   ════════════════════════════════════════════════════════════════ */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   Mobile breakpoints
+   ════════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
   .lc-page {
-    --lc-page-pad-x: 1rem;
-    --lc-page-pad-y: 1rem;
-    --lc-page-pad-b: 2rem;
+    padding: var(--space-4) var(--space-4) var(--space-12);
   }
-  .lc-page--auth { padding: 1.25rem 1rem; }
-  .lc-game-page.keno, .lc-game-page.mines, .lc-game-page.limbo,
-  .lc-game-page.roulette, .keno, .mines, .limbo, .roulette,
-  .lc-game-page.bj, .bj { padding: 1rem 1rem 2.5rem; }
+  .lc-page--auth { padding: var(--space-5) var(--space-4); }
+  .lc-page__header { margin-bottom: var(--space-6); }
+  .lc-panel { padding: var(--space-5); }
+  .lc-game-page,
+  .lc-game-page.keno,
+  .lc-game-page.mines,
+  .lc-game-page.limbo,
+  .lc-game-page.roulette,
+  .keno, .mines, .limbo, .roulette,
+  .lc-game-page.bj, .bj {
+    padding: var(--space-4) var(--space-4) var(--space-10);
+  }
   .game-controls { position: static; }
 }
 
 @media (max-width: 480px) {
-  .lc-page { --lc-page-pad-x: 0.75rem; }
-  .lc-page__header { margin-bottom: 1.25rem; }
-  .lc-panel { padding: 1rem 1.1rem; }
+  .lc-page {
+    padding: var(--space-3) var(--space-3) var(--space-10);
+  }
+  .lc-page__header { margin-bottom: var(--space-5); }
+  .lc-panel { padding: var(--space-4); }
+  .lc-tabs,
+  .wallet__tabs,
+  .help__tabs { margin-bottom: var(--space-4); }
 }

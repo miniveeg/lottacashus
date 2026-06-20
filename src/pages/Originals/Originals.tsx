@@ -1,9 +1,8 @@
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Dices, Grid3X3, Bomb, TrendingUp, CircleDot, Spade, Swords, Zap } from "lucide-react";
+import { Dices, Grid3X3, Bomb, TrendingUp, CircleDot, Spade, Swords, Zap, Coins } from "lucide-react";
 import { ORIGINAL_GAMES } from "../../content/originals";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
-import { TiltCard } from "../../components/ui/TiltCard";
+import { MotionLink } from "../../components/ui/MotionLink";
 import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Originals.css";
 
@@ -15,20 +14,21 @@ const GAME_ICONS: Record<string, typeof Dices> = {
   blackjack: Spade,
   "case-battles": Swords,
   crash: Zap,
+  slots: Coins,
 };
 
 export function Originals() {
   return (
-    <div className="originals lc-page">
+    <div className="originals lc-page lc-page--wide">
       <motion.header
         className="lc-page__header originals__header"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
-        <motion.p className="lc-page__eyebrow originals__eyebrow" variants={fadeUpVariants}>
+        <motion.span className="lc-page__eyebrow" variants={fadeUpVariants}>
           House originals
-        </motion.p>
+        </motion.span>
         <motion.h1 className="lc-page__title originals__title" variants={fadeUpVariants}>
           LottaCash Originals
         </motion.h1>
@@ -42,30 +42,46 @@ export function Originals() {
         {ORIGINAL_GAMES.map((game, i) => {
           const Icon = GAME_ICONS[game.id] ?? Dices;
           return (
-            <ScrollReveal key={game.id} delay={i * 0.3}>
-              <TiltCard className="originals__card">
+            <ScrollReveal key={game.id} delay={i} as="article" className="originals__card">
+              <div className="originals__card-art" aria-hidden="true">
+                <div className="originals__card-art-glow" />
+                <Icon size={34} strokeWidth={1.6} />
+              </div>
+
+              <div className="originals__card-body">
                 <div className="originals__card-top">
-                  <span className="originals__card-icon" aria-hidden="true">
-                    <Icon size={22} strokeWidth={1.75} />
-                  </span>
+                  <h2 className="originals__card-title">{game.name}</h2>
                   {game.live && game.tag ? (
                     <span className="originals__badge">{game.tag}</span>
                   ) : (
                     <span className="originals__badge originals__badge--soon">Soon</span>
                   )}
                 </div>
-                <h2 className="originals__card-title">{game.name}</h2>
+
                 <p className="originals__card-desc">{game.description}</p>
-                {game.live ? (
-                  <Link to={game.href} className="originals__card-btn originals__card-btn--play">
-                    Play now
-                  </Link>
-                ) : (
-                  <span className="originals__card-btn originals__card-btn--disabled">
-                    Coming soon
-                  </span>
-                )}
-              </TiltCard>
+
+                <div className="originals__card-meta">
+                  {game.rtp ? (
+                    <span className="originals__rtp">
+                      <span className="originals__rtp-dot" aria-hidden="true" />
+                      {game.rtp}
+                    </span>
+                  ) : null}
+                  <span className="originals__fair">Provably fair</span>
+                </div>
+
+                <div className="originals__card-cta">
+                  {game.live ? (
+                    <MotionLink to={game.href} variant="primary" className="originals__card-btn">
+                      Play now
+                    </MotionLink>
+                  ) : (
+                    <span className="originals__card-btn originals__card-btn--disabled">
+                      Coming soon
+                    </span>
+                  )}
+                </div>
+              </div>
             </ScrollReveal>
           );
         })}

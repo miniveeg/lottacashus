@@ -1,3 +1,7 @@
+/* ───────────────────────────────────────────────────────────────
+   Topbar level progress — spacious, premium chip
+   ─────────────────────────────────────────────────────────────── */
+
 .topbar-level-wrap {
   position: relative;
   flex-shrink: 0;
@@ -12,8 +16,18 @@
   flex-direction: column;
   align-items: stretch;
   min-width: 180px;
-  max-width: 260px;
-  gap: 0.3rem;
+  max-width: 240px;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: rgba(255, 255, 255, 0.025);
+  transition: border-color var(--lc-transition), background var(--lc-transition);
+}
+
+.topbar-level--full:hover {
+  border-color: var(--lc-border-accent);
+  background: var(--lc-crimson-glow);
 }
 
 .topbar-level__header {
@@ -46,8 +60,14 @@
   opacity: 0.9;
 }
 
+.topbar-level__level-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
+  border-radius: var(--lc-radius-sm);
+}
+
 .topbar-level__level-label {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   color: var(--lc-text-muted);
   letter-spacing: 0.02em;
@@ -60,6 +80,7 @@
   color: var(--lc-text-muted);
   line-height: 1;
   user-select: none;
+  opacity: 0.6;
 }
 
 .topbar-level__name {
@@ -68,8 +89,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--lc-text-secondary);
+  text-decoration: none;
   transition: color var(--lc-transition);
 }
 
@@ -83,7 +105,7 @@
 
 .topbar-level__detail-anchor {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 110;
@@ -100,22 +122,25 @@
   width: 44px;
   height: 44px;
   border-radius: var(--lc-radius-md);
-  background: var(--lc-bg-panel);
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid var(--lc-border);
   cursor: pointer;
-  transition:
-    border-color var(--lc-transition),
-    background var(--lc-transition);
+  transition: border-color var(--lc-transition), background var(--lc-transition);
 }
 
 .topbar-level__compact-btn:hover:not(:disabled) {
-  border-color: var(--lc-gold-dim);
-  background: var(--lc-bg-hover);
+  border-color: var(--lc-crimson-dim);
+  background: var(--lc-crimson-glow);
 }
 
 .topbar-level__compact-btn:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.topbar-level__compact-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
 }
 
 .topbar-level__detail-anchor--compact {
@@ -125,11 +150,6 @@
 }
 
 @media (max-width: 900px) {
-  .topbar-level--full {
-    display: none;
-  }
-
-  .topbar-level--compact {
-    display: block;
-  }
+  .topbar-level--full { display: none; }
+  .topbar-level--compact { display: block; }
 }

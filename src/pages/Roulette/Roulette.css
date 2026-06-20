@@ -1,57 +1,112 @@
-/* Aligned with Keno originals layout (see Keno.css) */
+/* ───────────────────────────────────────────────────────────
+   Roulette — premium redesign
+   ─────────────────────────────────────────────────────────── */
 
 .roulette {
-  /* layout via .lc-game-page */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
+/* ── Header ── */
 .roulette__header {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
 }
+
+.roulette__header-main { min-width: 0; max-width: 46rem; }
 
 .roulette__title {
+  margin: 0 0 0.35rem;
   font-family: var(--lc-font-display);
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
+  font-size: clamp(1.85rem, 1.4rem + 2vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  background: linear-gradient(120deg, #fff 0%, var(--lc-crimson-soft) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .roulette__subtitle {
   margin: 0;
   color: var(--lc-text-secondary);
-  font-size: 0.9rem;
-  max-width: 36rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
 }
 
+.roulette__rtp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(225, 29, 72, 0.1);
+  border: 1px solid rgba(225, 29, 72, 0.28);
+  font-family: var(--lc-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lc-crimson-soft);
+}
+
+.roulette__rtp-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lc-crimson-soft);
+  box-shadow: 0 0 8px var(--lc-crimson-soft);
+}
+
+/* ── Layout ── */
 .roulette__layout {
   display: grid;
-  grid-template-columns: 1fr minmax(300px, 340px);
-  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 32%, 360px);
+  gap: 1.5rem;
   align-items: start;
 }
 
-@media (max-width: 900px) {
-  .roulette__layout {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 980px) {
+  .roulette__layout { grid-template-columns: 1fr; }
 }
 
+/* ── Board panel ── */
 .roulette__board-panel {
-  background: var(--lc-bg-panel);
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 0%, rgba(225, 29, 72, 0.06), transparent 60%),
+    var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  padding: 1rem;
+  border-radius: var(--lc-radius-xl);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
+}
+
+@media (max-width: 520px) {
+  .roulette__board-panel { padding: 1rem; }
 }
 
 .roulette__board-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: 0.6rem;
 }
 
 .roulette__toolbar-label {
-  font-size: 0.85rem;
+  font-family: var(--lc-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--lc-text-muted);
   margin-right: auto;
 }
@@ -63,379 +118,63 @@
 }
 
 .roulette__history-chip {
-  min-width: 1.75rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 6px;
-  font-size: 0.7rem;
+  min-width: 2rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.78rem;
   font-weight: 700;
   text-align: center;
   border: 1px solid var(--lc-border);
   background: var(--lc-bg-elevated);
   color: var(--lc-text-primary);
+  transition: transform var(--lc-transition);
 }
 
+.roulette__history-chip:hover { transform: translateY(-1px); }
+
 .roulette__history-chip--red {
-  border-color: rgba(239, 68, 68, 0.45);
-  color: #f87171;
+  border-color: rgba(255, 59, 92, 0.45);
+  color: #ff8fa3;
+  background: rgba(255, 59, 92, 0.08);
 }
 
 .roulette__history-chip--black {
   color: var(--lc-text-secondary);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .roulette__history-chip--green {
-  border-color: rgba(34, 197, 94, 0.45);
+  border-color: rgba(0, 232, 122, 0.45);
   color: var(--lc-emerald);
+  background: rgba(0, 232, 122, 0.08);
 }
 
+/* ── Wheel zone ── */
 .roulette__wheel-zone {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 0 1rem;
+  padding: 1rem 0;
   min-height: 280px;
 }
 
-.roulette__paytable-wrap {
-  margin-top: 0.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--lc-border);
-}
-
-.roulette__paytable-title {
-  margin: 0 0 0.5rem;
-  font-size: 0.8rem;
-  color: var(--lc-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.roulette__paytable {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.roulette__paytable-cell {
-  flex: 1 1 4.5rem;
-  min-width: 4rem;
-  text-align: center;
-  padding: 0.35rem 0.25rem;
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  border-radius: 6px;
-  opacity: 0.55;
-}
-
-.roulette__paytable-cell--pays {
-  opacity: 1;
-}
-
-.roulette__paytable-hits {
-  display: block;
-  font-size: 0.65rem;
-  color: var(--lc-text-muted);
-}
-
-.roulette__paytable-mult {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--lc-text-primary);
-}
-
-/* Bet color cells — Keno cell pattern */
-.roulette__bet-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-}
-
-.roulette__bet-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.15rem;
-  min-height: 3.25rem;
-  padding: 0.5rem 0.35rem;
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-sm);
-  cursor: pointer;
-  transition:
-    border-color var(--lc-transition),
-    background var(--lc-transition),
-    color var(--lc-transition);
-}
-
-.roulette__bet-cell:hover:not(:disabled) {
-  border-color: var(--lc-border-strong);
-}
-
-.roulette__bet-cell:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.roulette__bet-cell--red .roulette__bet-cell-label {
-  color: #f87171;
-}
-
-.roulette__bet-cell--black .roulette__bet-cell-label {
-  color: var(--lc-text-primary);
-}
-
-.roulette__bet-cell--green .roulette__bet-cell-label {
-  color: var(--lc-emerald);
-}
-
-.roulette__bet-cell--selected {
-  border-color: var(--lc-gold-dim);
-  background: rgba(245, 185, 66, 0.12);
-  box-shadow: 0 0 0 1px var(--lc-gold-dim);
-}
-
-.roulette__bet-cell--selected .roulette__bet-cell-label {
-  color: var(--lc-gold);
-}
-
-.roulette__bet-cell-label {
-  font-family: var(--lc-font-display);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.roulette__bet-cell-meta {
-  font-size: 0.65rem;
-  color: var(--lc-text-muted);
-}
-
-.roulette__controls {
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  position: sticky;
-  top: calc(var(--lc-topbar-height) + 1rem);
-}
-
-@media (max-width: 900px) {
-  .roulette__controls {
-    position: static;
-  }
-}
-
-.roulette__error {
-  margin: 0;
-  color: var(--lc-ruby);
-  font-size: 0.85rem;
-}
-
-.roulette__result {
-  padding: 0.75rem;
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-sm);
-  font-size: 0.9rem;
-  animation: roulette-result-in 0.3s ease-out;
-}
-
-@keyframes roulette-result-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.roulette__result--win {
-  background: rgba(34, 197, 94, 0.08);
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-.roulette__result--loss {
-  background: rgba(239, 68, 68, 0.06);
-  border-color: rgba(239, 68, 68, 0.25);
-}
-
-.roulette__result p {
-  margin: 0;
-}
-
-.roulette__result-payout {
-  margin: 0.25rem 0 0;
-  font-weight: 600;
-}
-
-.roulette__result--win .roulette__result-payout {
-  color: var(--lc-emerald);
-}
-
-.roulette__result--loss .roulette__result-payout {
-  color: #fca5a5;
-}
-
-.roulette__bet-btn {
-  width: 100%;
-  padding: 0.85rem 1rem;
-  font-family: var(--lc-font-display);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #0a0a0a;
-  background: linear-gradient(180deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
-  border: none;
-  border-radius: var(--lc-radius-md);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.6rem;
-  transition:
-    filter var(--lc-transition),
-    transform var(--lc-transition);
-}
-
-.roulette__bet-btn:hover:not(:disabled) {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-}
-
-.roulette__bet-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.roulette__bet-btn:focus-visible {
-  outline: 2px solid var(--lc-gold);
-  outline-offset: 2px;
-}
-
-.roulette__bet-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.roulette__spinner {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  border: 2px solid rgba(10, 10, 10, 0.25);
-  border-top-color: #0a0a0a;
-  animation: roulette-spinner 0.7s linear infinite;
-}
-
-@keyframes roulette-spinner {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.roulette__hint {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--lc-text-muted);
-  text-align: center;
-}
-
-.roulette__hint a {
-  color: var(--lc-gold);
-}
-
-.roulette__fairness-toggle {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--lc-text-muted);
-  font-size: 0.8rem;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 0;
-}
-
-.roulette__fairness-body {
-  margin-top: 0.75rem;
-  font-size: 0.75rem;
-  color: var(--lc-text-secondary);
-}
-
-.roulette__fairness-body p {
-  margin: 0 0 0.5rem;
-}
-
-.roulette__fairness-k {
-  display: block;
-  color: var(--lc-text-muted);
-  margin-bottom: 0.15rem;
-}
-
-.roulette__hash {
-  display: block;
-  word-break: break-all;
-  font-size: 0.65rem;
-  color: var(--lc-text-primary);
-}
-
-.roulette__seed-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin: 0.5rem 0;
-}
-
-.roulette__seed-input {
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-sm);
-  color: var(--lc-text-primary);
-  padding: 0.4rem 0.5rem;
-  font-size: 0.8rem;
-}
-
-.roulette__tool-btn {
-  background: var(--lc-bg-hover);
-  border: 1px solid var(--lc-border);
-  color: var(--lc-text-primary);
-  border-radius: var(--lc-radius-sm);
-  padding: 0.4rem 0.75rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: background var(--lc-transition);
-}
-
-.roulette__tool-btn:hover:not(:disabled) {
-  background: var(--lc-bg-active);
-}
-
-.roulette__tool-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.roulette__fairness-note {
-  margin-top: 0.5rem !important;
-  color: var(--lc-text-muted);
-  line-height: 1.4;
-}
-
-/* Wheel (inside board panel — matches site tokens) */
+/* ── Wheel ── */
 .roulette-wheel {
   position: relative;
-  width: min(320px, 84vw);
+  width: min(340px, 84vw);
   aspect-ratio: 1;
 }
 
 .roulette-wheel__rim {
   position: absolute;
-  inset: -4px;
+  inset: -6px;
   border-radius: 50%;
-  border: 3px solid var(--lc-border);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.4));
+  box-shadow:
+    0 0 40px rgba(225, 29, 72, 0.18),
+    0 12px 40px rgba(0, 0, 0, 0.6),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
   pointer-events: none;
   z-index: 0;
 }
@@ -453,13 +192,11 @@
 }
 
 .roulette-wheel__disc-wrap--settling .roulette-wheel__disc {
-  transition: transform 1.2s cubic-bezier(0.15, 0.85, 0.25, 1);
+  transition: transform 1.4s cubic-bezier(0.13, 0.85, 0.22, 1);
 }
 
 @keyframes roulette-disc-spin {
-  to {
-    transform: rotate(calc(var(--spin-from, 0deg) + 360deg));
-  }
+  to { transform: rotate(calc(var(--spin-from, 0deg) + 360deg)); }
 }
 
 .roulette-wheel__disc {
@@ -472,11 +209,12 @@
   width: 100%;
   height: 100%;
   display: block;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
 }
 
 .roulette-wheel__ball-marker {
   position: absolute;
-  top: -2%;
+  top: -3%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 5;
@@ -493,16 +231,16 @@
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #ffffff 0%, #fef3c7 70%, #d4a017 100%);
   box-shadow:
-    0 0 10px rgba(254, 243, 199, 0.85),
+    0 0 12px rgba(254, 243, 199, 0.9),
     0 2px 4px rgba(0, 0, 0, 0.6);
 }
 
 .roulette-wheel__pointer {
   width: 0;
   height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 9px solid var(--lc-gold);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 11px solid var(--lc-crimson-soft);
   margin-top: -2px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
@@ -512,12 +250,8 @@
 }
 
 @keyframes roulette-ball-bounce {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(3px);
-  }
+  from { transform: translateY(0); }
+  to   { transform: translateY(3px); }
 }
 
 .roulette-wheel__hub {
@@ -525,62 +259,51 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 30%;
+  width: 32%;
   aspect-ratio: 1;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.1rem;
-  background: var(--lc-bg-elevated);
-  border: 2px solid var(--lc-border);
+  gap: 0.15rem;
+  background: radial-gradient(circle at 35% 30%, var(--lc-bg-elevated) 0%, var(--lc-bg-base) 100%);
+  border: 2px solid var(--lc-border-strong);
+  box-shadow:
+    inset 0 2px 8px rgba(0, 0, 0, 0.6),
+    0 0 20px rgba(225, 29, 72, 0.12);
   z-index: 4;
 }
 
-.roulette-wheel__hub--red {
-  border-color: rgba(239, 68, 68, 0.5);
-}
+.roulette-wheel__hub--red   { border-color: rgba(255, 59, 92, 0.6); box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 20px rgba(255, 59, 92, 0.25); }
+.roulette-wheel__hub--black { border-color: var(--lc-border-strong); }
+.roulette-wheel__hub--green { border-color: rgba(0, 232, 122, 0.6); box-shadow: inset 0 2px 8px rgba(0,0,0,0.6), 0 0 20px rgba(0, 232, 122, 0.25); }
 
-.roulette-wheel__hub--black {
-  border-color: var(--lc-border-strong);
-}
-
-.roulette-wheel__hub--green {
-  border-color: rgba(34, 197, 94, 0.5);
-}
-
-.roulette-wheel__hub--red .roulette-wheel__hub-number {
-  color: #f87171;
-}
-
-.roulette-wheel__hub--black .roulette-wheel__hub-number {
-  color: var(--lc-text-primary);
-}
-
-.roulette-wheel__hub--green .roulette-wheel__hub-number {
-  color: var(--lc-emerald);
-}
+.roulette-wheel__hub--red .roulette-wheel__hub-number   { color: #ff8fa3; }
+.roulette-wheel__hub--black .roulette-wheel__hub-number { color: var(--lc-text-primary); }
+.roulette-wheel__hub--green .roulette-wheel__hub-number { color: var(--lc-emerald); }
 
 .roulette-wheel__hub-number {
   font-family: var(--lc-font-display);
-  font-size: clamp(1.5rem, 5vw, 2.25rem);
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
   font-weight: 800;
   line-height: 1;
-  color: var(--lc-gold);
+  color: var(--lc-crimson-soft);
 }
 
 .roulette-wheel__hub-color {
+  font-family: var(--lc-font-display);
   font-size: 0.6rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   color: var(--lc-text-muted);
 }
 
 .roulette-wheel__hub-label {
+  font-family: var(--lc-font-display);
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--lc-text-muted);
@@ -596,25 +319,408 @@
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: var(--lc-gold);
+  background: var(--lc-crimson-soft);
   animation: roulette-hub-dot 0.9s ease-in-out infinite;
 }
 
-.roulette-wheel__hub-dots span:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.roulette-wheel__hub-dots span:nth-child(3) {
-  animation-delay: 0.3s;
-}
+.roulette-wheel__hub-dots span:nth-child(2) { animation-delay: 0.15s; }
+.roulette-wheel__hub-dots span:nth-child(3) { animation-delay: 0.3s; }
 
 @keyframes roulette-hub-dot {
-  0%,
-  80%,
-  100% {
-    opacity: 0.25;
-  }
-  40% {
-    opacity: 1;
-  }
+  0%, 80%, 100% { opacity: 0.25; }
+  40%           { opacity: 1; }
+}
+
+/* ── Result display under wheel ── */
+.roulette__result-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-md);
+  font-size: 0.9rem;
+  color: var(--lc-text-secondary);
+  flex-wrap: wrap;
+}
+
+.roulette__result-strip strong {
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+  color: var(--lc-text-primary);
+}
+
+.roulette__result-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.roulette__result-dot--red   { background: rgba(255, 59, 92, 0.18); color: #ff8fa3; border: 1px solid rgba(255, 59, 92, 0.45); }
+.roulette__result-dot--black { background: rgba(255, 255, 255, 0.05); color: var(--lc-text-primary); border: 1px solid var(--lc-border-strong); }
+.roulette__result-dot--green { background: rgba(0, 232, 122, 0.18); color: var(--lc-emerald); border: 1px solid rgba(0, 232, 122, 0.45); }
+
+.roulette__result-payout {
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+}
+
+.roulette__result-payout--win  { color: var(--lc-emerald); }
+.roulette__result-payout--loss { color: #fca5a5; }
+
+/* ── Bet selector in panel ── */
+.roulette__paytable-wrap {
+  border-top: 1px solid var(--lc-border);
+  padding-top: 1rem;
+}
+
+.roulette__paytable-title {
+  margin: 0 0 0.5rem;
+  font-family: var(--lc-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lc-text-muted);
+}
+
+.roulette__paytable {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.roulette__paytable-cell {
+  flex: 1 1 5rem;
+  text-align: center;
+  padding: 0.5rem 0.4rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+}
+
+.roulette__paytable-hits {
+  display: block;
+  font-family: var(--lc-font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--lc-text-muted);
+}
+
+.roulette__paytable-mult {
+  display: block;
+  margin-top: 0.2rem;
+  font-family: var(--lc-font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--lc-crimson-soft);
+}
+
+/* ── Bet type selector (in controls) ── */
+.roulette__bet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.roulette__bet-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.35rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-md);
+  cursor: pointer;
+  transition:
+    border-color var(--lc-transition),
+    background var(--lc-transition),
+    box-shadow var(--lc-transition),
+    transform 0.12s ease;
+}
+
+.roulette__bet-cell:hover:not(:disabled) {
+  border-color: var(--lc-border-accent);
+  transform: translateY(-1px);
+}
+
+.roulette__bet-cell:focus-visible {
+  outline: 2px solid var(--lc-crimson-soft);
+  outline-offset: 2px;
+}
+
+.roulette__bet-cell:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.roulette__bet-cell--red {
+  background: linear-gradient(180deg, rgba(255, 59, 92, 0.18), rgba(255, 59, 92, 0.04));
+  border-color: rgba(255, 59, 92, 0.35);
+}
+
+.roulette__bet-cell--red .roulette__bet-cell-label { color: #ff8fa3; }
+
+.roulette__bet-cell--black {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.2));
+}
+
+.roulette__bet-cell--black .roulette__bet-cell-label { color: var(--lc-text-primary); }
+
+.roulette__bet-cell--green {
+  background: linear-gradient(180deg, rgba(0, 232, 122, 0.16), rgba(0, 232, 122, 0.04));
+  border-color: rgba(0, 232, 122, 0.35);
+}
+
+.roulette__bet-cell--green .roulette__bet-cell-label { color: var(--lc-emerald); }
+
+.roulette__bet-cell--selected {
+  border-color: var(--lc-crimson) !important;
+  box-shadow: 0 0 0 1px var(--lc-crimson), 0 0 18px var(--lc-crimson-glow);
+}
+
+.roulette__bet-cell-label {
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.roulette__bet-cell-meta {
+  font-family: var(--lc-font-mono);
+  font-size: 0.65rem;
+  color: var(--lc-text-muted);
+}
+
+/* ── Controls ── */
+.roulette__controls {
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-xl);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: sticky;
+  top: calc(var(--lc-topbar-height) + 1rem);
+  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
+}
+
+@media (max-width: 980px) {
+  .roulette__controls { position: static; }
+}
+
+.roulette__controls .game-controls__presets {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+/* ── Error ── */
+.roulette__error {
+  margin: 0;
+  color: #ff8fa3;
+  font-size: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  background: rgba(255, 59, 92, 0.1);
+  border: 1px solid rgba(255, 59, 92, 0.3);
+  border-radius: var(--lc-radius-sm);
+}
+
+/* ── Bet button ── */
+.roulette__bet-btn {
+  width: 100%;
+  margin-top: 0.25rem;
+  min-height: 3rem;
+  padding: 0.85rem 1rem;
+  font-family: var(--lc-font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
+  border: none;
+  border-radius: var(--lc-radius-lg);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  box-shadow: 0 4px 20px var(--lc-crimson-glow), var(--lc-shadow-inset);
+  transition:
+    transform var(--lc-transition-spring),
+    filter var(--lc-transition),
+    box-shadow var(--lc-transition);
+}
+
+.roulette__bet-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 8px 32px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
+}
+
+.roulette__bet-btn:focus-visible {
+  outline: 2px solid var(--lc-crimson-soft);
+  outline-offset: 2px;
+}
+
+.roulette__bet-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.roulette__spinner {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  animation: roulette-spinner 0.7s linear infinite;
+}
+
+@keyframes roulette-spinner { to { transform: rotate(360deg); } }
+
+.roulette__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--lc-text-muted);
+  text-align: center;
+}
+
+.roulette__hint a { color: var(--lc-crimson-soft); font-weight: 600; }
+
+/* ── Fairness ── */
+.roulette__fairness {
+  border-top: 1px solid var(--lc-border);
+  padding-top: 0.75rem;
+}
+
+.roulette__fairness-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--lc-text-muted);
+  font-family: var(--lc-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+}
+
+.roulette__fairness-toggle:hover { color: var(--lc-text-primary); }
+
+.roulette__fairness-toggle[aria-expanded="true"] .roulette__fairness-icon {
+  transform: rotate(180deg);
+}
+
+.roulette__fairness-icon {
+  font-size: 0.7rem;
+  transition: transform var(--lc-transition);
+}
+
+.roulette__fairness-body {
+  margin-top: 0.75rem;
+  padding: 0.85rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  font-size: 0.78rem;
+  color: var(--lc-text-secondary);
+}
+
+.roulette__fairness-body p { margin: 0; }
+
+.roulette__fairness-k {
+  display: block;
+  font-family: var(--lc-font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lc-text-muted);
+  margin-bottom: 0.2rem;
+}
+
+.roulette__hash {
+  display: block;
+  word-break: break-all;
+  font-family: var(--lc-font-mono);
+  font-size: 0.7rem;
+  color: var(--lc-text-primary);
+}
+
+.roulette__seed-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.roulette__seed-input {
+  background: var(--lc-bg-base);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-sm);
+  color: var(--lc-text-primary);
+  padding: 0.45rem 0.6rem;
+  font-family: var(--lc-font-mono);
+  font-size: 0.8rem;
+  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.roulette__seed-input:focus {
+  outline: none;
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
+}
+
+.roulette__tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 36px;
+  padding: 0.35rem 0.85rem;
+  background: var(--lc-bg-hover);
+  border: 1px solid var(--lc-border-strong);
+  color: var(--lc-text-primary);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background var(--lc-transition), border-color var(--lc-transition);
+}
+
+.roulette__tool-btn:hover:not(:disabled) {
+  background: var(--lc-bg-active);
+  border-color: var(--lc-border-accent);
+}
+
+.roulette__tool-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.roulette__fairness-note {
+  color: var(--lc-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
 }

@@ -1,4 +1,9 @@
-/* App shell: full-width topbar + fixed sidebar + scrollable main */
+/* ───────────────────────────────────────────────────────────────
+   App shell grid — premium, spacious, cohesive
+   ─ topbar row (fixed height) + sidebar/main row (fills viewport)
+   ─ sidebar becomes an off-canvas drawer ≤ 900px
+   ─ main scrolls vertically; sidebar/sidebar drawer never scroll the page
+   ─────────────────────────────────────────────────────────────── */
 
 .app-shell {
   --app-sidebar-w: var(--lc-sidebar-width);
@@ -12,6 +17,7 @@
   min-height: 100dvh;
   overflow: hidden;
   position: relative;
+  /* Sidebar width animates smoothly when collapsing / expanding. */
   transition: grid-template-columns var(--lc-transition-slow);
 }
 
@@ -21,8 +27,8 @@
 
 .app-shell__topbar {
   grid-area: topbar;
-  z-index: 100;
   position: relative;
+  z-index: 100;
 }
 
 .app-shell__sidebar {
@@ -30,9 +36,9 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  z-index: 50;
-  overflow: hidden;
   position: relative;
+  overflow: hidden;
+  z-index: 50;
 }
 
 .app-shell__main {
@@ -44,13 +50,17 @@
   -webkit-overflow-scrolling: touch;
   position: relative;
   z-index: 1;
+  /* Generous, consistent breathing room around page content.
+     Pages can still set their own inner gutters; this just keeps
+     the shell from feeling cramped at the edges. */
+  scroll-behavior: auto; /* SmoothScroll handles inertia via Lenis */
 }
 
 .app-shell__backdrop {
   display: none;
 }
 
-/* Mobile: off-canvas drawer, full-width main */
+/* ── Mobile ≤ 900px: off-canvas drawer, full-width main ──────── */
 @media (max-width: 900px) {
   .app-shell,
   .app-shell--sidebar-collapsed {
@@ -59,6 +69,7 @@
     grid-template-areas:
       "topbar"
       "main";
+    transition: none; /* no grid animation on mobile */
   }
 
   .app-shell__sidebar {
@@ -72,6 +83,7 @@
     transform: translateX(-100%);
     transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
     box-shadow: var(--lc-shadow-lg);
+    will-change: transform;
   }
 
   .app-shell--sidebar-open .app-shell__sidebar {
@@ -86,16 +98,28 @@
     border: none;
     padding: 0;
     margin: 0;
-    background: rgba(0, 0, 0, 0.65);
-    backdrop-filter: blur(4px);
+    /* Subtle blur + dark overlay: lets the drawer stand out without
+       fully blacking out the page (keeps context visible). */
+    background: rgba(2, 2, 6, 0.72);
+    backdrop-filter: blur(6px) saturate(0.8);
+    -webkit-backdrop-filter: blur(6px) saturate(0.8);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 320ms ease;
+    transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1);
     cursor: pointer;
   }
 
   .app-shell--sidebar-open .app-shell__backdrop {
     opacity: 1;
     pointer-events: auto;
+  }
+}
+
+/* Reduced motion: kill the slow grid + drawer transitions. */
+@media (prefers-reduced-motion: reduce) {
+  .app-shell,
+  .app-shell__sidebar,
+  .app-shell__backdrop {
+    transition: none;
   }
 }

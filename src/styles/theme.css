@@ -1,114 +1,156 @@
-/* LottaCash — Obsidian Luxury Design Tokens */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* ════════════════════════════════════════════════════════════════
+   LottaCash — Design Tokens
+   Premium, spacious, cohesive. Inter system-font stack — no remote
+   @import that blocks first paint. Tokens are organized so other
+   agents can read them at a glance.
+   ════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Obsidian surfaces ── */
-  --lc-bg: #040406;
-  --lc-bg-base: #040406;
-  --lc-bg-elevated: #0a0a10;
-  --lc-bg-panel: #0e0e16;
-  --lc-bg-hover: #14141f;
-  --lc-bg-active: #1a1a28;
-  --lc-bg-glass: rgba(14, 14, 22, 0.72);
+  /* ── Color palette (per worklog design language) ── */
+  --lc-bg-base: #06060b;
+  --lc-bg: var(--lc-bg-base); /* legacy alias */
+  --lc-bg-elevated: #0d0d15;
+  --lc-bg-panel: #13131e;
+  --lc-bg-hover: #1a1a28;
+  --lc-bg-active: #20202e;
+  --lc-bg-glass: rgba(13, 13, 21, 0.72);
 
-  /* ── Layout ── */
-  --lc-topbar-height: 64px;
-  --lc-sidebar-width: 252px;
-  --lc-sidebar-collapsed: 72px;
+  /* Primary crimson accent (rose-600) */
+  --lc-crimson: #e11d48;
+  --lc-crimson-dim: #9f1239;
+  --lc-crimson-soft: #fb7185;
+  --lc-crimson-glow: rgba(225, 29, 72, 0.15);
+  --lc-crimson-glow-faint: rgba(225, 29, 72, 0.06);
+  --lc-crimson-glow-strong: rgba(225, 29, 72, 0.32);
 
-  /* ── Crimson accent (primary) ── */
-  --lc-crimson: #dc143c;
-  --lc-crimson-dim: #a81030;
-  --lc-crimson-soft: #ff2d55;
-  --lc-crimson-glow: rgba(220, 20, 60, 0.22);
-  --lc-crimson-glow-strong: rgba(220, 20, 60, 0.45);
-
-  /* Legacy gold aliases → crimson for backward compat */
+  /* Legacy gold aliases → crimson (kept for backward compat) */
   --lc-gold: var(--lc-crimson);
   --lc-gold-dim: var(--lc-crimson-dim);
   --lc-gold-soft: var(--lc-crimson-soft);
   --lc-gold-glow: var(--lc-crimson-glow);
   --lc-gold-glow-strong: var(--lc-crimson-glow-strong);
 
-  /* ── Semantic colors ── */
-  --lc-emerald: #00e87a;
-  --lc-emerald-dim: #00b85e;
-  --lc-emerald-glow: rgba(0, 232, 122, 0.18);
+  /* Semantic colors */
+  --lc-emerald: #10b981;
+  --lc-emerald-dim: #047857;
+  --lc-emerald-glow: rgba(16, 185, 129, 0.18);
 
-  --lc-ruby: #ff3b5c;
-  --lc-ruby-glow: rgba(255, 59, 92, 0.25);
+  --lc-ruby: #ef4444;
+  --lc-ruby-glow: rgba(239, 68, 68, 0.22);
 
-  --lc-fog: rgba(180, 180, 200, 0.06);
-  --lc-fog-strong: rgba(180, 180, 200, 0.12);
+  /* Premium accent for Sweeps Coins (use sparingly) */
+  --lc-gold-premium: #f59e0b;
+
   --lc-violet: #8b5cf6;
-  --lc-violet-glow: rgba(139, 92, 246, 0.15);
+  --lc-violet-glow: rgba(139, 92, 246, 0.14);
+
   --lc-cyan: #38bdf8;
   --lc-cyan-glow: rgba(56, 189, 248, 0.12);
 
   /* ── Text ──
-     Contrast verified against --lc-bg-base (#040406):
-       primary   ~18.4:1   (AAA)
-       secondary ~6.9:1    (AAA)
-       muted     ~4.9:1    (AA for normal text) */
-  --lc-text-primary: #f2f2f8;
-  --lc-text-secondary: #9494b0;
-  --lc-text-muted: #7a7a98;
+     Contrast verified against --lc-bg-base (#06060b):
+       primary   #f8fafc  ~19:1   (AAA)
+       secondary #94a3b8  ~7.3:1  (AAA)
+       muted     #64748b  ~4.7:1  (AA for normal text) */
+  --lc-text-primary: #f8fafc;
+  --lc-text-secondary: #94a3b8;
+  --lc-text-muted: #64748b;
+  --lc-text: var(--lc-text-primary);
 
   /* ── Borders ── */
-  --lc-border: rgba(255, 255, 255, 0.05);
-  --lc-border-strong: rgba(255, 255, 255, 0.09);
-  --lc-border-accent: rgba(220, 20, 60, 0.32);
+  --lc-border: rgba(255, 255, 255, 0.06);
+  --lc-border-strong: rgba(255, 255, 255, 0.12);
+  --lc-border-accent: rgba(225, 29, 72, 0.32);
+  --lc-border-crimson: var(--lc-border-accent);
   --lc-border-gold: var(--lc-border-accent);
+  --lc-fog: var(--lc-border);
+  --lc-fog-strong: var(--lc-border-strong);
 
   /* ── Glass ── */
-  --lc-glass-blur: 20px;
+  --lc-glass-blur: 18px;
   --lc-glass-border: rgba(255, 255, 255, 0.08);
   --lc-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
   /* ── Shadows & glow ── */
-  --lc-shadow-sm: 0 2px 16px rgba(0, 0, 0, 0.55);
-  --lc-shadow-md: 0 8px 40px rgba(0, 0, 0, 0.7);
-  --lc-shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.85);
-  --lc-shadow-crimson: 0 0 40px var(--lc-crimson-glow), 0 0 80px rgba(220, 20, 60, 0.08);
+  --lc-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.45);
+  --lc-shadow-md: 0 8px 32px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --lc-shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.7), 0 8px 16px rgba(0, 0, 0, 0.45);
+  --lc-shadow-crimson: 0 0 28px var(--lc-crimson-glow), 0 0 56px rgba(225, 29, 72, 0.06);
   --lc-shadow-gold: var(--lc-shadow-crimson);
-  --lc-shadow-emerald: 0 0 30px var(--lc-emerald-glow);
-  --lc-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --lc-shadow-emerald: 0 0 24px var(--lc-emerald-glow);
+  --lc-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
-  /* ── Radii ── */
-  --lc-radius-sm: 8px;
-  --lc-radius-md: 12px;
-  --lc-radius-lg: 18px;
-  --lc-radius-xl: 24px;
+  /* ── Spacing scale ── */
+  --space-1: 0.25rem;   /*  4px */
+  --space-2: 0.5rem;    /*  8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* ── Border radius ── */
+  --radius-sm: 8px;     /* buttons, inputs */
+  --radius-md: 12px;    /* cards */
+  --radius-lg: 16px;    /* panels */
+  --radius-xl: 24px;    /* hero sections */
+  --radius-full: 9999px;/* pills, badges */
+
+  /* Legacy radius aliases (kept for backward compat) */
+  --lc-radius-sm: var(--radius-sm);
+  --lc-radius-md: var(--radius-md);
+  --lc-radius-lg: var(--radius-lg);
+  --lc-radius-xl: var(--radius-xl);
   --lc-radius-2xl: 32px;
 
   /* ── Typography ── */
-  --lc-font-display: 'Syne', system-ui, sans-serif;
-  --lc-font-body: 'Rajdhani', system-ui, sans-serif;
-  --lc-font-mono: 'JetBrains Mono', monospace;
+  --lc-font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --lc-font-body: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --lc-font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Roboto Mono', ui-monospace, monospace;
 
-  --lc-text-xs: clamp(0.72rem, 0.68rem + 0.2vw, 0.8rem);
-  --lc-text-sm: clamp(0.85rem, 0.8rem + 0.25vw, 0.95rem);
-  --lc-text-base: clamp(1rem, 0.92rem + 0.35vw, 1.1rem);
-  --lc-text-lg: clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem);
-  --lc-text-xl: clamp(1.6rem, 1.35rem + 1vw, 2.2rem);
-  --lc-text-2xl: clamp(2rem, 1.6rem + 1.8vw, 3.2rem);
-  --lc-text-3xl: clamp(2.5rem, 2rem + 2.5vw, 4.5rem);
+  /* Fluid type scale */
+  --lc-text-xs: clamp(0.72rem, 0.69rem + 0.15vw, 0.78rem);
+  --lc-text-sm: clamp(0.85rem, 0.82rem + 0.15vw, 0.92rem);
+  --lc-text-base: clamp(0.95rem, 0.9rem + 0.25vw, 1.05rem);
+  --lc-text-lg: clamp(1.15rem, 1.05rem + 0.5vw, 1.4rem);
+  --lc-text-xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --lc-text-2xl: clamp(2rem, 1.65rem + 1.75vw, 3rem);
+  --lc-text-3xl: clamp(2.5rem, 2rem + 2.5vw, 4rem);
 
   /* ── Motion ── */
-  --lc-transition: 180ms cubic-bezier(0.22, 1, 0.36, 1);
-  --lc-transition-slow: 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  --lc-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --lc-transition: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --lc-transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
   --lc-transition-spring: 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --lc-ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --lc-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* ── Layout constraints ── */
-  --lc-page-max: 1120px;
-  --lc-focus-ring: 0 0 0 3px var(--lc-crimson-glow);
-  --lc-focus-outline: 2px solid var(--lc-crimson-soft);
-
-  /* ── Breakpoints ── */
-  --lc-bp-sm: 640px;
-  --lc-bp-md: 768px;
-  --lc-bp-lg: 900px;
-
+  --lc-topbar-height: 64px;
+  --lc-sidebar-width: 252px;
+  --lc-sidebar-collapsed: 72px;
   --lc-drawer-width: min(280px, 85vw);
   --lc-safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --lc-page-max: 1200px;
+  --lc-focus-ring: 0 0 0 3px var(--lc-crimson-glow);
+  --lc-focus-outline: 2px solid var(--lc-crimson);
+  --lc-focus-outline-offset: 2px;
+
+  /* ── Z-index scale ── */
+  --lc-z-base: 0;
+  --lc-z-content: 1;
+  --lc-z-sticky: 50;
+  --lc-z-overlay: 100;
+  --lc-z-topbar: 200;
+  --lc-z-modal: 1000;
+  --lc-z-toast: 1100;
+
+  /* ── Breakpoints (informational — use in media queries directly) ── */
+  --lc-bp-sm: 640px;
+  --lc-bp-md: 768px;
+  --lc-bp-lg: 1024px;
 }

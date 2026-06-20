@@ -1,7 +1,16 @@
+/* BrandLogo — inline SVG, sized via the `size` prop.
+   The subtle glow is applied as a CSS filter so it sits outside the SVG
+   and stays sharp at any zoom level. */
+
 .brand-logo {
-  display: block;
   width: auto;
   height: auto;
-  object-fit: contain;
   background: transparent;
+  filter: drop-shadow(0 0 10px rgba(220, 20, 60, 0.35));
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo { filter: none; }
 }

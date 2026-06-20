@@ -34,28 +34,46 @@
   grid-template-columns: 1fr auto;
   gap: 1rem 1.25rem;
   align-items: center;
-  padding: 1rem 1.15rem;
-  border-radius: var(--lc-radius-md);
+  padding: 1.15rem 1.3rem;
+  border-radius: var(--lc-radius-lg);
   border: 1px solid var(--lc-border);
-  background: rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, rgba(20, 24, 36, 0.6) 0%, rgba(10, 12, 20, 0.6) 100%);
   cursor: pointer;
   text-align: left;
   width: 100%;
   font: inherit;
   color: inherit;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  transition: border-color var(--lc-transition), box-shadow var(--lc-transition), transform var(--lc-transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.cbh__card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--cb-accent), transparent);
+  opacity: 0;
+  transition: opacity var(--lc-transition);
 }
 
 .cbh__card:hover {
-  border-color: rgba(56, 189, 248, 0.45);
-  box-shadow: 0 4px 24px rgba(37, 99, 235, 0.12);
-  transform: translateY(-1px);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 8px 32px rgba(56, 189, 248, 0.12), 0 2px 8px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
 }
 
+.cbh__card:hover::before { opacity: 1; }
+
 .cbh__card--yours {
-  border-color: rgba(56, 189, 248, 0.35);
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(0, 0, 0, 0.2));
+  border-color: rgba(56, 189, 248, 0.45);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(10, 12, 20, 0.7));
 }
+
+.cbh__card--yours::before { opacity: 1; }
 
 .cbh__card-main {
   min-width: 0;
@@ -70,12 +88,13 @@
 }
 
 .cbh__badge {
+  font-family: var(--lc-font-display);
   font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.22rem 0.5rem;
-  border-radius: 4px;
+  letter-spacing: 0.06em;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
   background: var(--cb-accent-dim);
   color: #7dd3fc;
   border: 1px solid rgba(56, 189, 248, 0.28);
@@ -195,7 +214,8 @@
 }
 
 .cbh__metric--pot strong {
-  color: var(--lc-gold);
+  color: #7dd3fc;
+  font-family: var(--lc-font-mono);
 }
 
 .cbh__fill {
@@ -261,20 +281,24 @@
 }
 
 .cbh__join-btn {
-  min-width: 6.25rem;
-  padding: 0.6rem 1.1rem;
-  font-weight: 700;
+  min-width: 6.5rem;
+  padding: 0.65rem 1.2rem;
+  font-family: var(--lc-font-display);
+  font-weight: 800;
   font-size: 0.85rem;
+  letter-spacing: 0.02em;
   border: none;
   border-radius: var(--lc-radius-md);
-  background: linear-gradient(180deg, var(--cb-accent), var(--cb-accent-2));
+  background: linear-gradient(135deg, var(--cb-accent) 0%, var(--cb-accent-2) 100%);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 4px 16px var(--cb-accent-glow);
+  box-shadow: 0 4px 16px var(--cb-accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: filter var(--lc-transition), transform var(--lc-transition-spring);
 }
 
 .cbh__join-btn:hover:not(:disabled) {
-  filter: brightness(1.06);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
 }
 
 .cbh__join-btn:disabled {
@@ -284,20 +308,24 @@
 }
 
 .cbh__view-btn {
-  min-width: 6.25rem;
-  padding: 0.55rem 1rem;
-  font-weight: 600;
+  min-width: 6.5rem;
+  padding: 0.6rem 1.1rem;
+  font-family: var(--lc-font-display);
+  font-weight: 700;
   font-size: 0.82rem;
+  letter-spacing: 0.02em;
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-md);
-  background: transparent;
+  background: var(--lc-bg-elevated);
   color: var(--lc-text-secondary);
   cursor: pointer;
+  transition: border-color var(--lc-transition), color var(--lc-transition), background var(--lc-transition);
 }
 
 .cbh__view-btn:hover:not(:disabled) {
   border-color: var(--cb-accent);
   color: #7dd3fc;
+  background: var(--lc-bg-hover);
 }
 
 .cbh__empty {
@@ -345,13 +373,13 @@
 
 .cbh__live-dot {
   display: inline-block;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #22c55e;
-  margin-right: 0.35rem;
-  box-shadow: 0 0 8px #22c55e;
-  animation: cbh-pulse 2s ease-in-out infinite;
+  margin-right: 0.4rem;
+  box-shadow: 0 0 10px #22c55e;
+  animation: cbh-pulse 1.6s ease-in-out infinite;
 }
 
 @keyframes cbh-pulse {

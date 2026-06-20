@@ -12,8 +12,9 @@ interface ToastItemProps {
 
 function ToastItem({ toast, onDismiss }: ToastItemProps) {
   const [exiting, setExiting] = useState(false);
+  const [dragX, setDragX] = useState(0);
   const startX = useRef<number | null>(null);
-  const el = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
 
   const handleDismiss = useCallback(() => {
     setExiting(true);
@@ -21,28 +22,45 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
     setTimeout(() => onDismiss(toast.id), dur);
   }, [toast.id, onDismiss]);
 
-  // Swipe-to-dismiss (touch)
+  // Swipe-to-dismiss (touch). Visually tracks the finger horizontally so the
+  // gesture feels responsive; commits to dismiss past a small threshold.
   function onTouchStart(e: React.TouchEvent) {
     startX.current = e.touches[0].clientX;
+    dragging.current = true;
+  }
+
+  function onTouchMove(e: React.TouchEvent) {
+    if (startX.current === null || !dragging.current) return;
+    const dx = e.touches[0].clientX - startX.current;
+    // Only allow rightward drag (feels natural for toasts on the right).
+    setDragX(Math.max(0, dx));
   }
 
   function onTouchEnd(e: React.TouchEvent) {
     if (startX.current === null) return;
     const dx = e.changedTouches[0].clientX - startX.current;
-    if (Math.abs(dx) > 60) handleDismiss();
+    dragging.current = false;
     startX.current = null;
+    if (Math.abs(dx) > 60) {
+      handleDismiss();
+    } else {
+      setDragX(0); // snap back
+    }
   }
 
   const isError = toast.variant === "error";
 
+  const dragStyle = dragX !== 0 ? { transform: `translateX(${dragX}px)` } : undefined;
+
   return (
     <div
-      ref={el}
       role="status"
       aria-live={isError ? "assertive" : "polite"}
       aria-atomic="true"
       className={`lc-toast lc-toast--${toast.variant}${exiting ? " lc-toast--exiting" : ""}`}
+      style={dragStyle}
       onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
       {toast.variant === "loading" ? (
@@ -79,10 +97,7 @@ export function ToastRegion() {
   const { toasts, dismiss } = useToast();
 
   return (
-    <div
-      className="lc-toast-region"
-      aria-label="Notifications"
-    >
+    <div className="lc-toast-region" aria-label="Notifications">
       {toasts.map((t) => (
         <ToastItem key={t.id} toast={t} onDismiss={dismiss} />
       ))}

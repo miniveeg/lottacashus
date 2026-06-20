@@ -21,7 +21,7 @@ import "./Roulette.css";
 
 const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
 const SPIN_DELAY_MS = 1600;
-const HISTORY_MAX = 8;
+const HISTORY_MAX = 10;
 
 const BET_OPTIONS: {
   type: RouletteBetType;
@@ -31,7 +31,7 @@ const BET_OPTIONS: {
 }[] = [
   { type: "red", label: "Red", payout: "2×", odds: "18/37" },
   { type: "black", label: "Black", payout: "2×", odds: "18/37" },
-  { type: "green", label: "Green (0)", payout: "36×", odds: "1/37" },
+  { type: "green", label: "0", payout: "36×", odds: "1/37" },
 ];
 
 type HistoryEntry = { pocket: number; color: RouletteColor };
@@ -65,6 +65,9 @@ export function Roulette() {
   const winChance = useMemo(() => rouletteWinChance(betType), [betType]);
   const potentialWin = useMemo(() => roulettePotentialWin(wager, betType), [wager, betType]);
 
+  const activeBalance =
+    coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+
   const loadPf = useCallback(async () => {
     const { data } = await fetchRoulettePfState();
     if (data) {
@@ -91,7 +94,6 @@ export function Roulette() {
       setError("Log in to play.");
       return;
     }
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
@@ -143,10 +145,13 @@ export function Roulette() {
   return (
     <div className="roulette lc-game-page">
       <header className="roulette__header">
-        <h1 className="roulette__title">Roulette</h1>
-        <p className="roulette__subtitle">
-          European wheel — bet red, black, or zero. Provably fair — 94.5% RTP.
-        </p>
+        <div className="roulette__header-main">
+          <h1 className="roulette__title">Roulette</h1>
+          <p className="roulette__subtitle">
+            European roulette. 37 pockets. Bet color, parity, dozen, or single number.
+          </p>
+        </div>
+        <span className="roulette__rtp-badge">97.3% RTP</span>
       </header>
 
       <div className="roulette__layout">
@@ -178,19 +183,38 @@ export function Roulette() {
             />
           </div>
 
+          {lastResult && !spinning && (
+            <div className="roulette__result-strip" role="status" aria-live="polite">
+              <span>Landed</span>
+              <span
+                className={`roulette__result-dot roulette__result-dot--${lastResult.color}`}
+              >
+                {lastResult.pocket}
+              </span>
+              <span>· your <strong>{lastResult.betType}</strong> bet ·</span>
+              <span
+                className={`roulette__result-payout${lastResult.won ? " roulette__result-payout--win" : " roulette__result-payout--loss"}`}
+              >
+                {lastResult.won
+                  ? `Won ${formatCoins(lastResult.payout, coinType)}`
+                  : "No win this round"}
+              </span>
+            </div>
+          )}
+
           <div className="roulette__paytable-wrap">
             <p className="roulette__paytable-title">Payouts</p>
             <div className="roulette__paytable">
-              <div className="roulette__paytable-cell roulette__paytable-cell--pays">
+              <div className="roulette__paytable-cell">
                 <span className="roulette__paytable-hits">Red</span>
                 <span className="roulette__paytable-mult">2×</span>
               </div>
-              <div className="roulette__paytable-cell roulette__paytable-cell--pays">
+              <div className="roulette__paytable-cell">
                 <span className="roulette__paytable-hits">Black</span>
                 <span className="roulette__paytable-mult">2×</span>
               </div>
-              <div className="roulette__paytable-cell roulette__paytable-cell--pays">
-                <span className="roulette__paytable-hits">0</span>
+              <div className="roulette__paytable-cell">
+                <span className="roulette__paytable-hits">0 (Green)</span>
                 <span className="roulette__paytable-mult">36×</span>
               </div>
             </div>
@@ -238,7 +262,7 @@ export function Roulette() {
 
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="roulette-wager">
-              Bet amount ({coinLabel})
+              Bet amount · {coinLabel}
             </label>
             <div className="game-controls__wager-row">
               <input
@@ -282,7 +306,7 @@ export function Roulette() {
                   onClick={() => applyWager(p)}
                   disabled={spinning}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>
@@ -292,24 +316,6 @@ export function Roulette() {
             <p className="roulette__error" role="alert">
               {error}
             </p>
-          )}
-
-          {lastResult && !spinning && (
-            <div
-              className={`roulette__result${lastResult.won ? " roulette__result--win" : " roulette__result--loss"}`}
-              role="status"
-              aria-live="polite"
-            >
-              <p>
-                Landed <strong>{lastResult.pocket}</strong> ({lastResult.color}) — your{" "}
-                <strong>{lastResult.betType}</strong> bet
-              </p>
-              <p className="roulette__result-payout">
-                {lastResult.won
-                  ? `Won ${formatCoins(lastResult.payout, coinType)}`
-                  : "No win this round"}
-              </p>
-            </div>
           )}
 
           <button
@@ -329,6 +335,27 @@ export function Roulette() {
             )}
           </button>
 
+          <div className="keno__stats">
+            <div className="keno__stat">
+              <span className="keno__stat-label">Balance</span>
+              <span className="keno__stat-value">{formatCoins(activeBalance, coinType)}</span>
+            </div>
+            <div className="keno__stat">
+              <span className="keno__stat-label">Last payout</span>
+              <span
+                className={`keno__stat-value${
+                  lastResult
+                    ? lastResult.won
+                      ? " keno__stat-value--win"
+                      : " keno__stat-value--loss"
+                    : ""
+                }`}
+              >
+                {lastResult ? formatCoins(lastResult.payout, coinType) : "—"}
+              </span>
+            </div>
+          </div>
+
           <p className="roulette__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
           </p>
@@ -337,9 +364,11 @@ export function Roulette() {
             <button
               type="button"
               className="roulette__fairness-toggle"
+              aria-expanded={showFairness}
               onClick={() => setShowFairness((v) => !v)}
             >
-              {showFairness ? "Hide" : "Show"} provably fair
+              <span>Provably fair</span>
+              <span className="roulette__fairness-icon" aria-hidden>▾</span>
             </button>
             {showFairness && (
               <div className="roulette__fairness-body">
@@ -349,10 +378,10 @@ export function Roulette() {
                 </p>
                 <p>
                   <span className="roulette__fairness-k">Next nonce</span>
-                  <code>{pfNonce}</code>
+                  <code className="roulette__hash">{pfNonce}</code>
                 </p>
                 <label className="roulette__seed-label">
-                  Client seed
+                  <span className="roulette__fairness-k">Client seed</span>
                   <input
                     type="text"
                     className="roulette__seed-input"

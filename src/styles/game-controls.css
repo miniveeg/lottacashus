@@ -1,49 +1,60 @@
-/* Shared bet panel for Originals games */
+/* ════════════════════════════════════════════════════════════════
+   LottaCash — Shared bet panel for Originals games
+   Spacious, consistent, touch-friendly. Used by Keno, Mines, Limbo,
+   Roulette, Blackjack. Adopted as a panel by page-specific layouts.
+   ════════════════════════════════════════════════════════════════ */
 
 .game-controls {
   min-width: 0;
+  padding: var(--space-5);
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--lc-shadow-sm);
   overflow: hidden;
 }
 
+/* ── Options block (label + control rows) ── */
 .game-controls__options {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
-  padding-bottom: 1rem;
-  margin-bottom: 0.25rem;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-1);
   border-bottom: 1px solid var(--lc-border);
 }
 
 .game-controls__option {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: var(--space-2);
   width: 100%;
   min-width: 0;
 }
 
 .game-controls__option-label {
   font-family: var(--lc-font-display);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--lc-text-muted);
+  letter-spacing: 0.06em;
+  color: var(--lc-text-secondary);
 }
 
 .game-controls__option-hint {
   font-size: 0.78rem;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--lc-text-muted);
   margin: 0;
 }
 
 .game-controls__option .lc-select-root { width: 100%; }
 
+/* ── Mines slider row ── */
 .game-controls__mines-row {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: var(--space-3);
   width: 100%;
   min-width: 0;
 }
@@ -51,19 +62,20 @@
 .game-controls__mines-slider {
   flex: 1;
   min-width: 0;
-  accent-color: var(--lc-gold);
+  accent-color: var(--lc-crimson);
 }
 
 .game-controls__mines-value {
   flex-shrink: 0;
   font-family: var(--lc-font-mono);
   font-weight: 500;
-  min-width: 1.75rem;
+  min-width: var(--space-8);
   text-align: center;
-  color: var(--lc-gold);
+  color: var(--lc-crimson-soft);
   font-size: 0.95rem;
 }
 
+/* ── Wager block ── */
 .game-controls__wager-block {
   width: 100%;
   min-width: 0;
@@ -72,65 +84,68 @@
 .game-controls__wager-label {
   display: block;
   font-family: var(--lc-font-display);
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--lc-text-muted);
-  margin-bottom: 0.45rem;
+  letter-spacing: 0.06em;
+  color: var(--lc-text-secondary);
+  margin-bottom: var(--space-2);
 }
 
 .game-controls__wager-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 2.75rem 2.75rem;
-  gap: 0.4rem;
+  grid-template-columns: minmax(0, 1fr) 44px 44px;
+  gap: var(--space-2);
   width: 100%;
   align-items: stretch;
 }
 
+/* Wager input — mono for numbers, clear focus */
 .game-controls__wager-input {
   min-width: 0;
   width: 100%;
-  min-height: 2.6rem;
-  padding: 0.5rem 0.75rem;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
   font-family: var(--lc-font-mono);
   font-size: 1.05rem;
   font-weight: 500;
   color: var(--lc-text-primary);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
-  border-radius: var(--lc-radius-md);
+  border-radius: var(--radius-sm);
   box-sizing: border-box;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
 .game-controls__wager-input:focus {
   outline: none;
-  border-color: var(--lc-border-gold);
-  box-shadow: 0 0 0 3px var(--lc-gold-glow);
+  border-color: var(--lc-crimson);
+  box-shadow: var(--lc-focus-ring);
 }
 
+/* Half / double adjustment buttons — 44px square touch targets */
 .game-controls__wager-half,
 .game-controls__wager-double {
-  min-height: 2.6rem;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--lc-radius-md);
+  border-radius: var(--radius-sm);
   font-family: var(--lc-font-display);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--lc-text-secondary);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
-  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+  transition: background var(--lc-transition), color var(--lc-transition),
+              border-color var(--lc-transition);
 }
 
 .game-controls__wager-half:hover:not(:disabled),
 .game-controls__wager-double:hover:not(:disabled) {
   background: var(--lc-bg-hover);
-  color: var(--lc-gold);
-  border-color: var(--lc-border-gold);
+  color: var(--lc-crimson-soft);
+  border-color: var(--lc-border-accent);
 }
 
 .game-controls__wager-half:disabled,
@@ -139,95 +154,30 @@
   cursor: not-allowed;
 }
 
-.game-controls__play {
-  width: 100%;
-  margin-top: 0.85rem;
-  min-height: 3rem;
+/* ── Bet presets (chips) ── */
+.game-controls__presets {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border-radius: var(--lc-radius-lg);
-  font-family: var(--lc-font-display);
-  font-size: 0.92rem;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #080602;
-  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
-  box-shadow: 0 2px 20px var(--lc-gold-glow), var(--lc-shadow-inset);
-  transition: transform var(--lc-transition-spring), filter var(--lc-transition), box-shadow var(--lc-transition);
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
 }
 
-.game-controls__play:hover:not(:disabled) {
-  transform: translateY(-2px);
-  filter: brightness(1.08);
-  box-shadow: 0 6px 32px var(--lc-gold-glow-strong), var(--lc-shadow-inset);
-}
-
-.game-controls__play:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.game-controls__play--cashout {
-  background: linear-gradient(135deg, var(--lc-emerald) 0%, var(--lc-emerald-dim) 100%);
-  box-shadow: 0 2px 20px var(--lc-emerald-glow);
-  color: #02160a;
-}
-
-.game-controls__play--cashout:hover:not(:disabled) {
-  box-shadow: 0 6px 32px rgba(0,232,122,0.35);
-}
-
-.game-controls__stats {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--lc-border);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.game-controls__stat-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.82rem;
-}
-
-.game-controls__stat-label {
-  color: var(--lc-text-muted);
-  font-weight: 600;
-}
-
-.game-controls__stat-value {
-  font-family: var(--lc-font-mono);
-  font-weight: 500;
-  color: var(--lc-text-secondary);
-}
-
-.game-controls__stat-value--win  { color: var(--lc-emerald); }
-.game-controls__stat-value--loss { color: var(--lc-ruby); }
-.game-controls__stat-value--gold { color: var(--lc-gold); }
-
-/* ── Bet presets ── */
 .game-controls__preset {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2rem;
-  padding: 0.3rem 0.65rem;
-  border-radius: var(--lc-radius-sm);
+  min-height: 32px;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
   font-family: var(--lc-font-display);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--lc-text-secondary);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
   cursor: pointer;
-  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+  transition: background var(--lc-transition), color var(--lc-transition),
+              border-color var(--lc-transition);
 }
 
 .game-controls__preset:hover:not(:disabled) {
@@ -237,25 +187,31 @@
 }
 
 .game-controls__preset--active {
-  background: var(--lc-crimson-glow);
+  background: rgba(225, 29, 72, 0.12);
   border-color: var(--lc-crimson);
   color: var(--lc-crimson-soft);
 }
 
-/* ── Wager adjustment (half/double) ── */
+.game-controls__preset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Wager adjustment (half/double) — alias class ── */
 .game-controls__wager-adj {
-  min-height: 2.6rem;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--lc-radius-md);
+  border-radius: var(--radius-sm);
   font-family: var(--lc-font-display);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--lc-text-secondary);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
-  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+  transition: background var(--lc-transition), color var(--lc-transition),
+              border-color var(--lc-transition);
 }
 
 .game-controls__wager-adj:hover:not(:disabled) {
@@ -269,10 +225,106 @@
   cursor: not-allowed;
 }
 
-/* ── Error text ── */
+/* ── Play button (primary CTA) ── */
+.game-controls__play {
+  width: 100%;
+  margin-top: var(--space-4);
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-family: var(--lc-font-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, var(--lc-crimson) 0%, var(--lc-crimson-dim) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset,
+              0 2px 16px var(--lc-crimson-glow),
+              var(--lc-shadow-inset);
+  transition: transform var(--lc-transition), filter var(--lc-transition),
+              box-shadow var(--lc-transition);
+}
+
+.game-controls__play:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset,
+              0 6px 24px var(--lc-crimson-glow-strong),
+              var(--lc-shadow-inset);
+}
+
+.game-controls__play:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Cashout variant — emerald */
+.game-controls__play--cashout {
+  background: linear-gradient(135deg, var(--lc-emerald) 0%, var(--lc-emerald-dim) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset,
+              0 2px 16px var(--lc-emerald-glow),
+              var(--lc-shadow-inset);
+  color: #fff;
+}
+
+.game-controls__play--cashout:hover:not(:disabled) {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset,
+              0 6px 24px rgba(16, 185, 129, 0.35),
+              var(--lc-shadow-inset);
+}
+
+/* ── Stats rows ── */
+.game-controls__stats {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--lc-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.game-controls__stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.game-controls__stat-label {
+  color: var(--lc-text-muted);
+  font-weight: 500;
+}
+
+.game-controls__stat-value {
+  font-family: var(--lc-font-mono);
+  font-weight: 500;
+  color: var(--lc-text-secondary);
+}
+
+.game-controls__stat-value--win  { color: var(--lc-emerald); }
+.game-controls__stat-value--loss { color: var(--lc-ruby); }
+.game-controls__stat-value--gold { color: var(--lc-crimson-soft); }
+
+/* ── Error feedback ── */
 .game-controls__error {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--lc-ruby);
-  margin-top: 0.4rem;
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+/* ── Mobile — denser but still touch-friendly ── */
+@media (max-width: 480px) {
+  .game-controls { padding: var(--space-4); }
+  .game-controls__options { gap: var(--space-3); }
+  .game-controls__play { min-height: 48px; }
 }

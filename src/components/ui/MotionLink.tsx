@@ -1,6 +1,6 @@
 import { forwardRef, type ReactNode } from "react";
 import { Link, type LinkProps } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { springTransition } from "../../lib/motion";
 import { cn } from "../../lib/cn";
 
@@ -25,12 +25,19 @@ const MotionRouterLink = motion.create(Link) as unknown as React.FC<any>;
 
 export const MotionLink = forwardRef<HTMLAnchorElement, MotionLinkProps>(
   function MotionLink({ variant = "primary", glow = false, className, children, ...props }, ref) {
+    const reduceMotion = useReducedMotion();
+
     return (
       <MotionRouterLink
         ref={ref}
-        className={cn("lc-motion-btn", variantClass[variant], glow && "lc-motion-btn--glow", className)}
-        whileHover={{ scale: 1.03, y: -2 }}
-        whileTap={{ scale: 0.97, y: 0 }}
+        className={cn(
+          "lc-motion-btn",
+          variantClass[variant],
+          glow && "lc-motion-btn--glow",
+          className,
+        )}
+        whileHover={reduceMotion ? undefined : { scale: 1.02, y: -1 }}
+        whileTap={reduceMotion ? undefined : { scale: 0.98 }}
         transition={springTransition}
         {...props}
       >
@@ -38,7 +45,7 @@ export const MotionLink = forwardRef<HTMLAnchorElement, MotionLinkProps>(
         {children}
       </MotionRouterLink>
     );
-  }
+  },
 );
 
 export type { MotionLinkProps };

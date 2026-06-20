@@ -135,7 +135,7 @@ export function ProfilePage() {
   const memberSince = stats.memberSince ? new Date(stats.memberSince).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null;
 
   return (
-    <div className="lc-page profile-page">
+    <div className="lc-page lc-page--medium profile-page">
       {/* Hero */}
       <section className="profile-hero">
         <div className="profile-hero__avatar" aria-hidden="true">
@@ -145,7 +145,7 @@ export function ProfilePage() {
           <h1 className="profile-hero__name">{p.username ?? "Player"}</h1>
           {memberSince && <p className="profile-hero__since">Member since {memberSince}</p>}
           <div className="profile-hero__level">
-            <div className="profile-hero__level-bar">
+            <div className="profile-hero__level-bar" role="progressbar" aria-valuenow={xp} aria-valuemin={0} aria-valuemax={xpMax} aria-label="XP progress">
               <div className="profile-hero__level-fill" style={{ width: `${(xp / xpMax) * 100}%` }} />
             </div>
             <span className="profile-hero__level-text">Level {level} · {xp}/{xpMax} XP</span>

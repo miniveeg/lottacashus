@@ -1,93 +1,137 @@
+/* ════════════════════════════════════════════════════════════════
+   LottaCash — Global base styles & resets
+   Order matters: tokens → page chrome → forms → a11y
+   ════════════════════════════════════════════════════════════════ */
+
 @import "./theme.css";
 @import "./lc-pages.css";
 @import "./atmosphere.css";
 @import "./animations.css";
 @import "./ui-motion.css";
 
-*, *::before, *::after {
+/* ── Box model reset ── */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
   overflow: hidden;
 }
 
-/* Render native form controls, scrollbars & dialogs in dark mode */
+/* Native dark-mode UI controls, scrollbars, dialogs */
 html {
   color-scheme: dark;
+  scroll-behavior: smooth;
 }
 
 body {
   font-family: var(--lc-font-body);
   font-size: 16px;
-  font-weight: 500;
-  line-height: 1.5;
+  font-weight: 400;
+  line-height: 1.6;
   color: var(--lc-text-primary);
   background: var(--lc-bg-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-body.lc-sidebar-open { overflow: hidden; }
+body.lc-sidebar-open {
+  overflow: hidden;
+}
 
-a { color: inherit; text-decoration: none; }
+a {
+  color: inherit;
+  text-decoration: none;
+}
 
 button {
   font-family: inherit;
   cursor: pointer;
   border: none;
   background: none;
+  color: inherit;
 }
 
-ul { list-style: none; }
+input,
+textarea,
+select {
+  font-family: inherit;
+}
 
-img { max-width: 100%; display: block; }
+ul {
+  list-style: none;
+}
 
-/* ── Scrollbar ──
-   WebKit custom styling + Firefox `scrollbar-color`/`scrollbar-width`
-   so the theme works in both engines. */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Scrollbar (thin, crimson thumb — works in WebKit + Firefox) ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 ::-webkit-scrollbar-thumb {
-  background: rgba(220, 20, 60, 0.22);
-  border-radius: 3px;
+  background: rgba(225, 29, 72, 0.28);
+  border-radius: var(--radius-full);
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(220, 20, 60, 0.38);
+  background: rgba(225, 29, 72, 0.5);
+  background-clip: padding-box;
+  border: 2px solid transparent;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(220, 20, 60, 0.22) transparent;
+  scrollbar-color: rgba(225, 29, 72, 0.28) transparent;
 }
 
-/* ── Selection ── */
+/* ── Selection (crimson tint) ── */
 ::selection {
-  background: rgba(220, 20, 60, 0.3);
+  background: rgba(225, 29, 72, 0.28);
   color: var(--lc-text-primary);
 }
 
 /* ── Native selects ── */
-select, .lc-select-native {
+select,
+.lc-select-native {
   appearance: none;
   -webkit-appearance: none;
-  min-height: 2.6rem;
+  min-height: 2.75rem;
   padding: 0.5rem 2.5rem 0.5rem 0.85rem;
   font-family: var(--lc-font-body);
   font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.3;
+  font-weight: 500;
+  line-height: 1.4;
   color: var(--lc-text-primary);
   background-color: var(--lc-bg-elevated);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235c5c78' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.7rem center;
   background-size: 1rem;
   border: 1px solid var(--lc-border-strong);
-  border-radius: var(--lc-radius-sm);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition), background-color var(--lc-transition);
 }
@@ -98,14 +142,17 @@ select:hover:not(:disabled),
   background-color: var(--lc-bg-hover);
 }
 
-select:focus, select:focus-visible,
-.lc-select-native:focus, .lc-select-native:focus-visible {
+select:focus,
+select:focus-visible,
+.lc-select-native:focus,
+.lc-select-native:focus-visible {
   outline: none;
-  border-color: var(--lc-crimson-dim);
+  border-color: var(--lc-crimson);
   box-shadow: var(--lc-focus-ring);
 }
 
-select:disabled, .lc-select-native:disabled {
+select:disabled,
+.lc-select-native:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -116,28 +163,34 @@ select option {
   padding: 0.5rem;
 }
 
+/* ── Labeled field wrapper ── */
 .lc-field {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: var(--space-2);
 }
 
 .lc-field__label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--lc-text-muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  letter-spacing: 0.02em;
 }
 
-.lc-field select, .lc-field .lc-select-root { width: 100%; }
+.lc-field select,
+.lc-field .lc-select-root {
+  width: 100%;
+}
 
+/* ── Visually hidden (screen-reader only) ── */
 .visually-hidden {
   position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
-  clip: rect(0,0,0,0);
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
 }
@@ -148,27 +201,21 @@ select option {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: var(--space-4);
   min-height: 12rem;
-  padding: 2.5rem 1.5rem;
+  padding: var(--space-10) var(--space-6);
   text-align: center;
   color: var(--lc-text-muted);
   font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-weight: 500;
 }
 
 .lc-loading__pulse {
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--lc-radius-md);
-  background: linear-gradient(135deg, rgba(220, 20, 60, 0.25), rgba(139, 92, 246, 0.12));
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(225, 29, 72, 0.22), rgba(139, 92, 246, 0.12));
   animation: lc-loading-pulse 1.4s ease-in-out infinite;
-}
-
-@keyframes lc-loading-pulse {
-  0%, 100% { opacity: 0.4; transform: scale(0.9) rotate(0deg); }
-  50%       { opacity: 1;   transform: scale(1)   rotate(6deg); }
 }
 
 .lc-page-transition {
@@ -179,12 +226,11 @@ select option {
 }
 
 /* ── Global keyboard focus indicator ──
-   High-contrast crimson outline that passes WCAG 2.2 3:1 against the
-   dark surfaces. Pairs with the focus-ring box-shadow used on form
-   controls. */
+   2px crimson outline that meets WCAG 2.2 3:1 against dark surfaces.
+   Pairs with the focus-ring box-shadow on form controls. */
 :focus-visible {
   outline: var(--lc-focus-outline);
-  outline-offset: 2px;
+  outline-offset: var(--lc-focus-outline-offset);
   border-radius: 2px;
 }
 
@@ -195,13 +241,17 @@ a:focus:not(:focus-visible),
 }
 
 /* ── Reduced motion (global safety net) ──
-   Disables all CSS animations and most decorative transitions for users
-   who prefer reduced motion. Functional transitions (color/opacity on
-   hover/focus) are kept short so the UI still responds. */
+   Disables all animations and most decorative transitions for users
+   who prefer reduced motion. Functional hover/focus color transitions
+   are kept instant so the UI still responds. */
 @media (prefers-reduced-motion: reduce) {
-  .lc-atmosphere__fog { animation: none; }
+  html {
+    scroll-behavior: auto;
+  }
 
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
@@ -210,10 +260,7 @@ a:focus:not(:focus-visible),
 }
 
 /* ── Horizontal overflow safety net ──
-   Ensures long words/URLs break instead of causing horizontal scroll,
-   and prevents any stray fixed-width element from creating page-wide
-   overflow on small screens. The app-shell main already has
-   overflow-x:hidden; this covers content inside it. */
+   Long words/URLs break instead of causing horizontal scroll. */
 .lc-page,
 .lc-page-transition,
 .lc-game-page {
@@ -221,14 +268,16 @@ a:focus:not(:focus-visible),
   word-break: break-word;
 }
 
-/* Ensure pre/wide content scrolls instead of overflowing the viewport. */
-pre, .lc-hash, .crash__hash, .cb__hash {
+/* Wide content scrolls instead of pushing the viewport wider. */
+pre,
+.lc-hash,
+.crash__hash,
+.cb__hash {
   overflow-x: auto;
   max-width: 100%;
 }
 
-/* Inline <code> (e.g. `.env.example`) should break long tokens on small
-   screens instead of pushing the parent container wider. */
+/* Inline <code> tokens break on small screens. */
 code {
   overflow-wrap: anywhere;
   word-break: break-all;

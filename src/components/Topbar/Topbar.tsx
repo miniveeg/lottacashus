@@ -150,7 +150,7 @@ export function Topbar() {
           <Menu size={20} aria-hidden />
         </motion.button>
         <Link to="/" className="topbar__brand">
-          <BrandLogo className="topbar__logo" size={40} alt="" />
+          <BrandLogo className="topbar__logo" size={32} alt="" />
           <span className="topbar__name">LottaCash</span>
         </Link>
       </div>
@@ -228,13 +228,16 @@ export function Topbar() {
             className="topbar__balance"
             title={profileLoading ? "Loading…" : `${formatCoins(activeBalance, coinType as CoinType)} = ${formatUsd(balanceUsd)}`}
             aria-busy={profileLoading || undefined}
+            aria-label={profileLoading ? "Loading balance" : `${coinLabel}: ${balanceDisplay}${user ? `, equivalent to ${formatUsd(balanceUsd)}` : ""}`}
           >
-            <span className="topbar__balance-label">{coinLabel}</span>
-            <span className="topbar__balance-value">
-              {profileLoading ? (
-                <span className="visually-hidden">Loading balance</span>
-              ) : null}
-              {balanceDisplay}
+            <span className="topbar__balance-row">
+              <span className="topbar__balance-label">{coinLabel}</span>
+              <span className="topbar__balance-value">
+                {profileLoading ? (
+                  <span className="visually-hidden">Loading balance</span>
+                ) : null}
+                {balanceDisplay}
+              </span>
             </span>
             {user && !profileLoading && (
               <span className="topbar__balance-usd">{formatUsd(balanceUsd)}</span>

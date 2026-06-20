@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { useToast } from "../../contexts/ToastContext";
+import { formatCoins } from "../../lib/format";
 import {
   fetchSlotsPfState,
   placeSlotsBet,
@@ -60,6 +62,11 @@ export default function Slots() {
   const reelStatesRef = useRef<ReelState[]>(["idle", "idle", "idle"]);
   const landingTimersRef = useRef<number[]>([]);
 
+  const activeBalance = useMemo(() => {
+    if (!user) return 0;
+    return coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+  }, [user, coinType, profile]);
+
   // Keep ref in sync so the rAF closure always sees the latest reel states.
   useEffect(() => {
     reelStatesRef.current = reelStates;
@@ -69,11 +76,6 @@ export default function Slots() {
     for (const t of landingTimersRef.current) window.clearTimeout(t);
     landingTimersRef.current = [];
   }, []);
-
-  const activeBalance = useMemo(() => {
-    if (!user) return 0;
-    return coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-  }, [user, coinType, profile]);
 
   useEffect(() => {
     fetchSlotsPfState().then(({ data }) => {
@@ -219,10 +221,15 @@ export default function Slots() {
 
   return (
     <div className="slots lc-game-page">
-      <div className="slots__header">
-        <h1>Slots</h1>
-        <p>Spin the reels and match symbols to win!</p>
-      </div>
+      <header className="slots__header">
+        <div className="slots__header-main">
+          <h1 className="slots__title">Slots</h1>
+          <p className="slots__subtitle">
+            3 reels, 7 symbols. Match 3 to win.
+          </p>
+        </div>
+        <span className="slots__rtp-badge">~95% RTP</span>
+      </header>
 
       <div className="slots__layout">
         <section className="slots__stage">
@@ -271,16 +278,14 @@ export default function Slots() {
               {lastResult.won ? (
                 <>
                   <p className="slots__outcome-multiplier">
-                    {lastResult.multiplier}x &mdash;{" "}
-                    {lastResult.symbols.join(" ")}{" "}
-                    win!
+                    {lastResult.multiplier}× · {lastResult.symbols.join(" ")} win!
                   </p>
                   <p className="slots__outcome-payout">
-                    +{coinLabel} {lastResult.payout.toFixed(2)}
+                    +{formatCoins(lastResult.payout, coinType)}
                   </p>
                 </>
               ) : (
-                <p className="slots__outcome-loss">No match &mdash; try again!</p>
+                <p className="slots__outcome-loss">No match · try again!</p>
               )}
             </div>
           )}
@@ -289,7 +294,7 @@ export default function Slots() {
         <aside className="slots__controls game-controls">
           <div className="game-controls__options">
             <div className="game-controls__option">
-              <span className="game-controls__option-label">Wager ({coinLabel})</span>
+              <span className="game-controls__option-label">Wager · {coinLabel}</span>
               <div className="game-controls__wager-block">
                 <div className="game-controls__wager-row">
                   <input
@@ -315,7 +320,7 @@ export default function Slots() {
                       setWagerInput(String(clamped));
                     }}
                   >
-                    1/2
+                    ½
                   </button>
                   <button
                     type="button"
@@ -328,7 +333,7 @@ export default function Slots() {
                       setWagerInput(String(clamped));
                     }}
                   >
-                    2x
+                    2×
                   </button>
                 </div>
               </div>
@@ -336,7 +341,7 @@ export default function Slots() {
 
             <div className="game-controls__option">
               <span className="game-controls__option-label">Quick bet</span>
-              <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+              <div className="game-controls__presets">
                 {BET_PRESETS.map((preset) => (
                   <button
                     key={preset}
@@ -348,7 +353,7 @@ export default function Slots() {
                       setWagerInput(String(preset));
                     }}
                   >
-                    {coinLabel} {preset}
+                    {preset}
                   </button>
                 ))}
               </div>
@@ -367,14 +372,14 @@ export default function Slots() {
             disabled={rolling}
             onClick={handleSpin}
           >
-            {rolling ? "Spinning\u2026" : "Spin"}
+            {rolling ? "Spinning…" : "Spin"}
           </button>
 
           <div className="game-controls__stats">
             <div className="game-controls__stat-row">
-              <span className="game-controls__stat-label">Balance ({coinLabel})</span>
+              <span className="game-controls__stat-label">Balance · {coinLabel}</span>
               <span className="game-controls__stat-value">
-                {activeBalance.toFixed(2)}
+                {formatCoins(activeBalance, coinType)}
               </span>
             </div>
             {lastResult && (
@@ -385,24 +390,31 @@ export default function Slots() {
                     lastResult.won ? " game-controls__stat-value--win" : " game-controls__stat-value--loss"
                   }`}
                 >
-                  {lastResult.won ? `+${lastResult.payout.toFixed(2)}` : "0.00"}
+                  {lastResult.won ? `+${formatCoins(lastResult.payout, coinType)}` : "—"}
                 </span>
               </div>
             )}
           </div>
+
+          <p className="crash__hint">
+            Need funds? <Link to="/deposit">Deposit</Link>
+          </p>
 
           <details
             className="slots__fairness"
             open={showFairness}
             onToggle={(e) => setShowFairness((e.target as HTMLDetailsElement).open)}
           >
-            <summary>Provably Fair</summary>
+            <summary>
+              <span>Provably fair</span>
+              <span className="slots__fairness-summary-icon" aria-hidden>▾</span>
+            </summary>
             <div className="slots__fairness-body">
               <label className="slots__fairness-label">
                 Server seed hash
                 <input
                   type="text"
-                  className="game-controls__wager-input slots__fairness-input slots__fairness-input--hash"
+                  className="game-controls__wager-input slots__fairness-input"
                   readOnly
                   value={pfHash ?? "—"}
                 />
@@ -411,7 +423,7 @@ export default function Slots() {
                 Next nonce
                 <input
                   type="text"
-                  className="game-controls__wager-input slots__fairness-input slots__fairness-input--hash"
+                  className="game-controls__wager-input slots__fairness-input"
                   readOnly
                   value={pfNonce ?? "—"}
                 />

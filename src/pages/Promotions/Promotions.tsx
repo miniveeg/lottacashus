@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Gift, Handshake } from "lucide-react";
+import { Gift, Handshake, Copy, Check, Sparkles, TrendingUp, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -12,20 +13,26 @@ import {
 } from "../../lib/affiliate";
 import { buildAffiliateSignupUrl, normalizeAffiliateCode } from "../../lib/affiliateRef";
 import { formatUsd } from "../../lib/format";
+import { MotionLink } from "../../components/ui/MotionLink";
+import { ScrollReveal } from "../../components/ui/ScrollReveal";
+import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Promotions.css";
 
 const upcoming = [
   {
     title: "Wager milestones",
-    desc: "Bonus rewards tied to your level and lifetime wager volume.",
+    desc: "Bonus rewards tied to your level and lifetime wager volume — the more you play, the more you unlock.",
+    tag: "Planned",
   },
   {
     title: "Discord perks",
-    desc: "Exclusive roles and giveaways for linked LottaCash accounts.",
+    desc: "Exclusive roles and giveaways for linked LottaCash accounts when the community launches.",
+    tag: "Planned",
   },
   {
     title: "Deposit boosts",
-    desc: "Limited-time match offers on crypto deposits.",
+    desc: "Limited-time match offers on crypto deposits. Stack them with affiliate earnings for bigger rolls.",
+    tag: "Planned",
   },
 ];
 
@@ -133,25 +140,34 @@ export function Promotions() {
   }
 
   return (
-    <div className="promos lc-page">
-      <header className="lc-page__header promos__header">
-        <p className="lc-page__eyebrow">Rewards</p>
-        <h1 className="lc-page__title">Promotions</h1>
-        <p className="lc-page__subtitle">
+    <div className="promos lc-page lc-page--wide">
+      <motion.header
+        className="lc-page__header promos__header"
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+      >
+        <motion.span className="lc-page__eyebrow" variants={fadeUpVariants}>
+          <Sparkles size={11} strokeWidth={2.4} />
+          Rewards
+        </motion.span>
+        <motion.h1 className="lc-page__title" variants={fadeUpVariants}>
+          Promotions
+        </motion.h1>
+        <motion.p className="lc-page__subtitle" variants={fadeUpVariants}>
           Earn from referrals and watch for seasonal offers. Claim affiliate earnings on this page
           when you are ready.
-        </p>
-      </header>
+        </motion.p>
+      </motion.header>
 
-      <section className="promos__affiliate lc-panel" aria-labelledby="affiliate-heading">
+      {/* ── Affiliate hero ── */}
+      <ScrollReveal className="promos__affiliate lc-panel" as="section">
         <div className="promos__affiliate-head">
-          <div className="promos__hero-icon promos__affiliate-icon" aria-hidden="true">
-            <Handshake size={32} />
+          <div className="promos__affiliate-icon" aria-hidden="true">
+            <Handshake size={28} strokeWidth={1.7} />
           </div>
           <div>
-            <h2 id="affiliate-heading" className="promos__hero-title">
-              Affiliates
-            </h2>
+            <h2 className="promos__hero-title">Affiliates</h2>
             <p className="promos__hero-text promos__affiliate-intro">
               Share your link. When someone signs up and plays, you earn{" "}
               <strong>5% of every deposit</strong> they make, plus{" "}
@@ -181,17 +197,17 @@ export function Promotions() {
               <p className="promos__affiliate-referral-text">
                 Enter your friend&apos;s code when you create an account. You can only set it once.
               </p>
-              <Link to={signupUrl(pathname)} className="promos__btn promos__btn--gold">
+              <MotionLink to={signupUrl(pathname)} variant="primary">
                 Sign up with a code
-              </Link>
+              </MotionLink>
             </div>
             <div className="promos__hero-cta">
-              <Link to={signupUrl(pathname)} className="promos__btn promos__btn--gold">
+              <MotionLink to={signupUrl(pathname)} variant="primary" glow>
                 Sign up to get your link
-              </Link>
-              <Link to={loginUrl(pathname)} className="promos__btn promos__btn--ghost">
+              </MotionLink>
+              <MotionLink to={loginUrl(pathname)} variant="secondary">
                 Log in
-              </Link>
+              </MotionLink>
             </div>
           </>
         ) : affiliateLoading ? (
@@ -204,8 +220,7 @@ export function Promotions() {
           <>
             {affiliate.has_referrer ? (
               <p className="promos__affiliate-referrer-set">
-                Referred by{" "}
-                <strong>{affiliate.referrer_code ?? "a friend"}</strong>
+                Referred by <strong>{affiliate.referrer_code ?? "a friend"}</strong>
                 {" — "}this can only be set once.
               </p>
             ) : (
@@ -252,7 +267,8 @@ export function Promotions() {
                 className="promos__btn promos__btn--ghost"
                 onClick={() => copyText(affiliate.affiliate_code, "code")}
               >
-                {copied === "code" ? "Copied!" : "Copy code"}
+                {copied === "code" ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2.2} />}
+                {copied === "code" ? "Copied" : "Copy code"}
               </button>
             </div>
 
@@ -273,7 +289,8 @@ export function Promotions() {
                   className="promos__btn promos__btn--gold"
                   onClick={() => copyText(signupLink, "link")}
                 >
-                  {copied === "link" ? "Copied!" : "Copy link"}
+                  {copied === "link" ? <Check size={14} strokeWidth={2.4} /> : <Copy size={14} strokeWidth={2.2} />}
+                  {copied === "link" ? "Copied" : "Copy link"}
                 </button>
               </div>
             </div>
@@ -312,10 +329,12 @@ export function Promotions() {
 
             <div className="promos__affiliate-stats">
               <div className="promos__affiliate-stat">
+                <Users size={14} strokeWidth={2.2} />
                 <span className="promos__affiliate-stat-value">{affiliate.referred_count}</span>
                 <span className="promos__affiliate-stat-label">Referrals</span>
               </div>
               <div className="promos__affiliate-stat">
+                <TrendingUp size={14} strokeWidth={2.2} />
                 <span className="promos__affiliate-stat-value">
                   {formatUsd(affiliate.total_earned)}
                 </span>
@@ -367,11 +386,12 @@ export function Promotions() {
             )}
           </>
         ) : null}
-      </section>
+      </ScrollReveal>
 
-      <section className="promos__hero lc-panel">
+      {/* ── More rewards banner ── */}
+      <ScrollReveal className="promos__hero lc-panel" as="section">
         <div className="promos__hero-icon" aria-hidden="true">
-          <Gift size={32} />
+          <Gift size={28} strokeWidth={1.7} />
         </div>
         <div>
           <h2 className="promos__hero-title">More rewards coming</h2>
@@ -381,26 +401,33 @@ export function Promotions() {
           </p>
           {!loading && user && (
             <div className="promos__hero-cta">
-              <Link to="/settings" className="promos__btn promos__btn--gold">
+              <MotionLink to="/settings" variant="secondary">
                 View your account
-              </Link>
-              <Link to="/help" className="promos__btn promos__btn--ghost">
-                FAQ & Terms
-              </Link>
+              </MotionLink>
+              <MotionLink to="/help" variant="ghost">
+                FAQ &amp; Terms
+              </MotionLink>
             </div>
           )}
         </div>
-      </section>
+      </ScrollReveal>
 
+      {/* ── Roadmap cards ── */}
       <section className="promos__grid" aria-label="Planned promotions">
-        <h2 className="promos__section-title">On the roadmap</h2>
+        <ScrollReveal className="promos__section-head" as="div">
+          <span className="promos__kicker">On the roadmap</span>
+          <h2 className="promos__section-title">What we&apos;re building next</h2>
+        </ScrollReveal>
         <div className="promos__cards">
-          {upcoming.map((item) => (
-            <article key={item.title} className="promos__card">
+          {upcoming.map((item, i) => (
+            <ScrollReveal key={item.title} delay={i} as="article" className="promos__card">
+              <span className="promos__card-badge">{item.tag}</span>
               <h3 className="promos__card-title">{item.title}</h3>
               <p className="promos__card-desc">{item.desc}</p>
-              <span className="promos__card-badge">Planned</span>
-            </article>
+              <Link to="/sweepstakes" className="promos__card-link">
+                Sweepstakes rules
+              </Link>
+            </ScrollReveal>
           ))}
         </div>
       </section>

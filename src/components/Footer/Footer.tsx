@@ -37,7 +37,7 @@ export function Footer() {
       <div className="site-footer__inner">
         <div className="site-footer__brand">
           <Link to="/" className="site-footer__logo-link">
-            <BrandLogo className="site-footer__logo" size={32} alt="" />
+            <BrandLogo className="site-footer__logo" size={28} alt="" />
             <span className="site-footer__name">LottaCash</span>
           </Link>
           <p className="site-footer__tagline">

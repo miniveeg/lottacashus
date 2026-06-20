@@ -21,7 +21,7 @@ const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
 const TARGET_PRESETS = [1.5, 2, 3, 5, 10, 25, 50, 100];
 const REVEAL_DELAY_MS = 1500;
 const POP_DURATION_MS = 600;
-const HISTORY_MAX = 8;
+const HISTORY_MAX = 10;
 
 type HistoryEntry = { result: number; won: boolean };
 
@@ -66,6 +66,9 @@ export function Limbo() {
     [wager, target]
   );
 
+  const activeBalance =
+    coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+
   const loadPf = useCallback(async () => {
     const { data } = await fetchLimboPfState();
     if (data) {
@@ -98,7 +101,6 @@ export function Limbo() {
       setError("Log in to play.");
       return;
     }
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
@@ -152,11 +154,13 @@ export function Limbo() {
   return (
     <div className="limbo lc-game-page">
       <header className="limbo__header">
-        <h1 className="limbo__title">Limbo</h1>
-        <p className="limbo__subtitle">
-          Set a target multiplier. If the round result is equal or higher, you win bet × target.
-          Provably fair — 94.5% RTP.
-        </p>
+        <div className="limbo__header-main">
+          <h1 className="limbo__title">Limbo</h1>
+          <p className="limbo__subtitle">
+            Pick a target multiplier. Roll higher to win.
+          </p>
+        </div>
+        <span className="limbo__rtp-badge">99% RTP</span>
       </header>
 
       <div className="limbo__layout">
@@ -190,12 +194,12 @@ export function Limbo() {
             >
               {lastResult.won ? (
                 <p>
-                  Hit <strong>{formatMultiplier(lastResult.result)}×</strong> — won{" "}
+                  Hit <strong>{formatMultiplier(lastResult.result)}×</strong> · won{" "}
                   <strong>{formatCoins(lastResult.payout, coinType)}</strong>
                 </p>
               ) : (
                 <p>
-                  Landed <strong>{formatMultiplier(lastResult.result)}×</strong> — below target
+                  Landed <strong>{formatMultiplier(lastResult.result)}×</strong> · below target
                 </p>
               )}
             </div>
@@ -249,14 +253,17 @@ export function Limbo() {
                 ))}
               </div>
               <p className="game-controls__option-hint">
-                Win chance ≈ {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
+                Payout {formatCoins(potentialWin, coinType)}
               </p>
+              <span className="limbo__win-chance">
+                Win chance <strong>{(winChance * 100).toFixed(2)}%</strong>
+              </span>
             </div>
           </div>
 
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="limbo-wager">
-              Bet amount ({coinLabel})
+              Bet amount · {coinLabel}
             </label>
             <div className="game-controls__wager-row">
               <input
@@ -300,7 +307,7 @@ export function Limbo() {
                   onClick={() => applyWager(p)}
                   disabled={rolling}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>
@@ -329,6 +336,27 @@ export function Limbo() {
             )}
           </button>
 
+          <div className="keno__stats">
+            <div className="keno__stat">
+              <span className="keno__stat-label">Balance</span>
+              <span className="keno__stat-value">{formatCoins(activeBalance, coinType)}</span>
+            </div>
+            <div className="keno__stat">
+              <span className="keno__stat-label">Last payout</span>
+              <span
+                className={`keno__stat-value${
+                  lastResult
+                    ? lastResult.won
+                      ? " keno__stat-value--win"
+                      : " keno__stat-value--loss"
+                    : ""
+                }`}
+              >
+                {lastResult ? formatCoins(lastResult.payout, coinType) : "—"}
+              </span>
+            </div>
+          </div>
+
           <p className="limbo__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
           </p>
@@ -337,9 +365,11 @@ export function Limbo() {
             <button
               type="button"
               className="limbo__fairness-toggle"
+              aria-expanded={showFairness}
               onClick={() => setShowFairness((v) => !v)}
             >
-              {showFairness ? "Hide" : "Show"} provably fair
+              <span>Provably fair</span>
+              <span className="limbo__fairness-icon" aria-hidden>▾</span>
             </button>
             {showFairness && (
               <div className="limbo__fairness-body">
@@ -349,10 +379,10 @@ export function Limbo() {
                 </p>
                 <p>
                   <span className="limbo__fairness-k">Next nonce</span>
-                  <code>{pfNonce}</code>
+                  <code className="limbo__hash">{pfNonce}</code>
                 </p>
                 <label className="limbo__seed-label">
-                  Client seed
+                  <span className="limbo__fairness-k">Client seed</span>
                   <input
                     type="text"
                     className="limbo__seed-input"

@@ -48,6 +48,7 @@ export function Keno() {
     payout: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showPaytable, setShowPaytable] = useState(true);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
@@ -59,6 +60,9 @@ export function Keno() {
     () => (pickCount > 0 ? getPaytableRow(pickCount, risk) : []),
     [pickCount, risk]
   );
+
+  const activeBalance =
+    coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
 
   const loadPf = useCallback(async () => {
     const { data, error: pfErr } = await fetchKenoPfState();
@@ -120,7 +124,6 @@ export function Keno() {
       return;
     }
 
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (wager > activeBalance) {
       setError("Insufficient balance.");
       return;
@@ -178,17 +181,22 @@ export function Keno() {
   return (
     <div className="keno lc-game-page">
       <header className="keno__header">
-        <h1 className="keno__title">Keno</h1>
-        <p className="keno__subtitle">
-          Pick 1–10 numbers from 40, 10 drawn per round. Provably fair — 94.5% RTP.
-        </p>
+        <div className="keno__header-main">
+          <h1 className="keno__title">Keno</h1>
+          <p className="keno__subtitle">
+            Pick 1–10 numbers. 10 drawn per round. Provably fair lottery-style game.
+          </p>
+        </div>
+        <div className="keno__header-meta">
+          <span className="keno__rtp-badge">94.5% RTP</span>
+        </div>
       </header>
 
       <div className="keno__layout">
         <section className="keno__board-panel">
           <div className="keno__board-toolbar">
             <span className="keno__pick-count">
-              {pickCount}/{MAX_PICKS} selected
+              <strong>{pickCount}</strong>/{MAX_PICKS} selected
             </span>
             <button
               type="button"
@@ -229,7 +237,7 @@ export function Keno() {
                   disabled={drawing}
                   aria-pressed={isSelected}
                 >
-                  <span className="keno__cell-num">{n}</span>
+                  <span>{n}</span>
                   {isHit && <span className="keno__cell-gem" aria-hidden="true" />}
                 </button>
               );
@@ -238,26 +246,36 @@ export function Keno() {
 
           {pickCount > 0 && (
             <div className="keno__paytable-wrap">
-              <p className="keno__paytable-title">Payout table ({pickCount} picks)</p>
-              <div className="keno__paytable">
-                {paytable.map((mult, hits) => (
-                  <div
-                    key={hits}
-                    className={[
-                      "keno__paytable-cell",
-                      lastResult?.hits === hits && drawn && "keno__paytable-cell--active",
-                      mult > 0 && "keno__paytable-cell--pays",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    <span className="keno__paytable-hits">{hits}</span>
-                    <span className="keno__paytable-mult">
-                      {mult > 0 ? `${mult}×` : "—"}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              <button
+                type="button"
+                className="keno__paytable-toggle"
+                aria-expanded={showPaytable}
+                onClick={() => setShowPaytable((v) => !v)}
+              >
+                <span>Payout table · {pickCount} picks · {risk} risk</span>
+                <span className="keno__paytable-toggle-icon" aria-hidden>▾</span>
+              </button>
+              {showPaytable && (
+                <div className="keno__paytable">
+                  {paytable.map((mult, hits) => (
+                    <div
+                      key={hits}
+                      className={[
+                        "keno__paytable-cell",
+                        lastResult?.hits === hits && drawn && "keno__paytable-cell--active",
+                        mult > 0 && "keno__paytable-cell--pays",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                    >
+                      <span className="keno__paytable-hits">{hits}</span>
+                      <span className="keno__paytable-mult">
+                        {mult > 0 ? `${mult}×` : "—"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -280,7 +298,7 @@ export function Keno() {
 
           <div className="game-controls__wager-block">
             <label className="game-controls__wager-label" htmlFor="keno-wager">
-              Bet amount ({coinLabel})
+              Bet amount · {coinLabel}
             </label>
             <div className="game-controls__wager-row">
               <input
@@ -324,7 +342,7 @@ export function Keno() {
                   onClick={() => applyWager(p)}
                   disabled={drawing}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>
@@ -343,8 +361,7 @@ export function Keno() {
               aria-live="polite"
             >
               <p>
-                <strong>{lastResult.hits}</strong> hit
-                {lastResult.hits !== 1 ? "s" : ""} —{" "}
+                <strong>{lastResult.hits}</strong> hit{lastResult.hits !== 1 ? "s" : ""} ·{" "}
                 <strong>{lastResult.multiplier}×</strong>
               </p>
               <p className="keno__result-payout">
@@ -357,7 +374,7 @@ export function Keno() {
 
           <button
             type="button"
-            className={`keno__bet-btn${drawing ? " keno__bet-btn--busy" : ""}`}
+            className="keno__bet-btn"
             onClick={handleBet}
             disabled={drawing || pickCount < 1 || !user}
             aria-busy={drawing}
@@ -372,6 +389,27 @@ export function Keno() {
             )}
           </button>
 
+          <div className="keno__stats">
+            <div className="keno__stat">
+              <span className="keno__stat-label">Balance</span>
+              <span className="keno__stat-value">{formatCoins(activeBalance, coinType)}</span>
+            </div>
+            <div className="keno__stat">
+              <span className="keno__stat-label">Last payout</span>
+              <span
+                className={`keno__stat-value${
+                  lastResult
+                    ? lastResult.payout > 0
+                      ? " keno__stat-value--win"
+                      : " keno__stat-value--loss"
+                    : ""
+                }`}
+              >
+                {lastResult ? formatCoins(lastResult.payout, coinType) : "—"}
+              </span>
+            </div>
+          </div>
+
           <p className="keno__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
           </p>
@@ -380,9 +418,11 @@ export function Keno() {
             <button
               type="button"
               className="keno__fairness-toggle"
+              aria-expanded={showFairness}
               onClick={() => setShowFairness((v) => !v)}
             >
-              {showFairness ? "Hide" : "Show"} provably fair
+              <span>Provably fair</span>
+              <span className="keno__fairness-icon" aria-hidden>▾</span>
             </button>
             {showFairness && (
               <div className="keno__fairness-body">
@@ -392,10 +432,10 @@ export function Keno() {
                 </p>
                 <p>
                   <span className="keno__fairness-k">Next nonce</span>
-                  <code>{pfNonce}</code>
+                  <code className="keno__hash">{pfNonce}</code>
                 </p>
                 <label className="keno__seed-label">
-                  Client seed
+                  <span className="keno__fairness-k">Client seed</span>
                   <input
                     type="text"
                     className="keno__seed-input"

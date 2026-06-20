@@ -207,6 +207,21 @@ export function Signup() {
             {error && <p className="auth-error" role="alert" id="signup-error">{error}</p>}
 
             <div className="auth-field">
+              <label htmlFor="signup-email">Email</label>
+              <input
+                id="signup-email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "signup-error" : undefined}
+              />
+            </div>
+
+            <div className="auth-field">
               <label htmlFor="signup-username">Username</label>
               <input
                 id="signup-username"
@@ -224,21 +239,6 @@ export function Signup() {
             </div>
 
             <div className="auth-field">
-              <label htmlFor="signup-email">Email</label>
-              <input
-                id="signup-email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                aria-invalid={Boolean(error) || undefined}
-                aria-describedby={error ? "signup-error" : undefined}
-              />
-            </div>
-
-            <div className="auth-field">
               <label htmlFor="signup-password">Password</label>
               <input
                 id="signup-password"
@@ -250,24 +250,6 @@ export function Signup() {
                 required
                 minLength={6}
               />
-            </div>
-
-            <div className="auth-field">
-              <label htmlFor="signup-referral">Affiliate / referral code (optional)</label>
-              <input
-                id="signup-referral"
-                type="text"
-                autoComplete="off"
-                placeholder="e.g. ABC12DEF"
-                value={referralCode}
-                onChange={(e) => setReferralCode(normalizeAffiliateCode(e.target.value))}
-                maxLength={32}
-              />
-              <p className="auth-field-hint">
-                {referralCode
-                  ? "This code will be linked to your account when you finish signup."
-                  : "Have a friend's code? Enter it now — you can only set it once."}
-              </p>
             </div>
 
             <div className="auth-field">
@@ -293,6 +275,24 @@ export function Signup() {
                 onChange={(e) => setBirthDate(e.target.value)}
                 required
               />
+            </div>
+
+            <div className="auth-field">
+              <label htmlFor="signup-referral">Affiliate / referral code (optional)</label>
+              <input
+                id="signup-referral"
+                type="text"
+                autoComplete="off"
+                placeholder="e.g. ABC12DEF"
+                value={referralCode}
+                onChange={(e) => setReferralCode(normalizeAffiliateCode(e.target.value))}
+                maxLength={32}
+              />
+              <p className="auth-field-hint">
+                {referralCode
+                  ? "This code will be linked to your account when you finish signup."
+                  : "Have a friend's code? Enter it now — you can only set it once."}
+              </p>
             </div>
 
             <label className="auth-checkbox">

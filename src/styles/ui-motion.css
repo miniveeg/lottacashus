@@ -1,22 +1,33 @@
-/* Motion button system */
+/* ════════════════════════════════════════════════════════════════
+   LottaCash — Motion utility classes & motion-button system
+   Two concerns:
+     1. `.lc-motion-btn` — shared button styling used by MotionButton
+        and MotionLink components.
+     2. `.lc-motion-*` — opt-in animation utility classes.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Motion button base ── */
 .lc-motion-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0.72rem 1.35rem;
-  border-radius: var(--lc-radius-md);
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-sm);
   font-family: var(--lc-font-display);
-  font-weight: 700;
-  font-size: 0.88rem;
-  letter-spacing: 0.03em;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0;
   line-height: 1.2;
   border: 1px solid transparent;
   overflow: hidden;
   cursor: pointer;
   text-decoration: none;
-  transition: box-shadow var(--lc-transition), filter var(--lc-transition);
+  transition: box-shadow var(--lc-transition), filter var(--lc-transition),
+              background var(--lc-transition), border-color var(--lc-transition),
+              color var(--lc-transition);
 }
 
 .lc-motion-btn:disabled {
@@ -28,9 +39,14 @@
 .lc-motion-btn__shine {
   position: absolute;
   inset: 0;
-  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 60%
+  );
   transform: translateX(-120%);
-  transition: transform 0.6s ease;
+  transition: transform 0.6s var(--lc-ease-out);
   pointer-events: none;
 }
 
@@ -38,46 +54,82 @@
   transform: translateX(120%);
 }
 
+/* Primary: crimson gradient + subtle glow */
 .lc-motion-btn--primary {
-  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
+  background: linear-gradient(135deg, var(--lc-crimson) 0%, var(--lc-crimson-dim) 100%);
   color: #fff;
-  box-shadow: 0 2px 20px var(--lc-crimson-glow), var(--lc-shadow-inset);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset,
+              0 2px 16px var(--lc-crimson-glow),
+              var(--lc-shadow-inset);
 }
 
 .lc-motion-btn--primary:hover {
-  box-shadow: 0 6px 32px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
+  filter: brightness(1.06);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset,
+              0 4px 24px var(--lc-crimson-glow-strong),
+              var(--lc-shadow-inset);
 }
 
+/* Secondary: subtle border + light bg on hover */
 .lc-motion-btn--secondary {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   border-color: var(--lc-border-strong);
   color: var(--lc-text-primary);
 }
 
 .lc-motion-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
   border-color: var(--lc-border-accent);
-  background: var(--lc-bg-hover);
 }
 
+/* Ghost: transparent, text-color change on hover */
 .lc-motion-btn--ghost {
   background: transparent;
   color: var(--lc-text-secondary);
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
 }
 
 .lc-motion-btn--ghost:hover {
-  color: var(--lc-crimson-soft);
+  color: var(--lc-text-primary);
+  background: rgba(255, 255, 255, 0.03);
 }
 
+/* Glow (subtle breathing for CTAs) */
 .lc-motion-btn--glow {
-  animation: lc-btn-glow 3s ease-in-out infinite;
+  animation: lc-glow-pulse 2s ease-in-out infinite alternate;
 }
 
-@keyframes lc-btn-glow {
-  0%, 100% { box-shadow: 0 2px 20px var(--lc-crimson-glow); }
-  50% { box-shadow: 0 4px 36px var(--lc-crimson-glow-strong); }
+/* ════════════════════════════════════════════════════════════════
+   Motion utility classes (apply to any element)
+   ════════════════════════════════════════════════════════════════ */
+.lc-motion-fade-up {
+  animation: lc-fade-up 0.4s var(--lc-ease-out) both;
 }
 
+.lc-motion-scale-in {
+  animation: lc-scale-in 0.32s var(--lc-ease-out) both;
+}
+
+.lc-motion-slide-down {
+  animation: lc-slide-down 0.22s var(--lc-ease-out) both;
+}
+
+.lc-motion-glow {
+  animation: lc-glow-pulse 2s ease-in-out infinite alternate;
+}
+
+/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .lc-motion-btn--glow { animation: none; }
-  .lc-motion-btn__shine { display: none; }
+  .lc-motion-btn--glow,
+  .lc-motion-fade-up,
+  .lc-motion-scale-in,
+  .lc-motion-slide-down,
+  .lc-motion-glow {
+    animation: none !important;
+  }
+
+  .lc-motion-btn__shine {
+    display: none;
+  }
 }

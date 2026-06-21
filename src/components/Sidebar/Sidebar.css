@@ -181,12 +181,6 @@
   justify-content: center;
 }
 
-/* Admin section — sits below Legal with a distinct separator */
-.sidebar__section--admin {
-  border-top: 1px solid var(--lc-border-accent) !important;
-  margin-top: auto;
-}
-
 /* Mode button */
 .sidebar__mode-btn {
   flex-shrink: 0;
@@ -378,11 +372,6 @@
   }
   .sidebar-chat__send { min-height: 2.8rem; min-width: 2.8rem; }
   .sidebar-chat__input { min-height: 2.8rem; font-size: 1rem; }
-
-  /* Mobile: hide section labels and dividers for a flat stacked list */
-  .sidebar__label { display: none; }
-  .sidebar__section + .sidebar__section { border-top: none; }
-  .sidebar__section { padding: 0.2rem 0.55rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

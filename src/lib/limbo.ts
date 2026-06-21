@@ -65,7 +65,11 @@ export async function setLimboClientSeed(clientSeed: string): Promise<{ error: s
   return { error: error?.message ?? null };
 }
 
-export async function placeLimboBet(params: { wager: number; target: number; coinType?: string }) {
+export async function placeLimboBet(params: {
+  wager: number;
+  target: number;
+  coinType?: string;
+}): Promise<{ data: LimboBetResult | null; error: string | null }> {
   const { data, error } = await invokeEdgeFunction<LimboBetResult>("place-limbo-bet", {
     wager: params.wager,
     target: params.target,

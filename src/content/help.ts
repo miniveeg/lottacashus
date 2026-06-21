@@ -4,17 +4,17 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "What is LottaCash?",
     answer:
-      "LottaCash is an online sweepstakes entertainment platform with a dual-currency wallet: Gold Coins (GC) for fun play and Sweeps Coins (SC) that can be redeemed for real money. House originals (Keno, Mines, Limbo, Roulette, Blackjack, Crash, and Slots) are live now — your account, currencies, stats, and level carry across every game.",
+      "LottaCash is an online sweepstakes entertainment platform with a dual-currency wallet: Gold Coins (GC) for fun play and Sweeps Coins (SC) that can be redeemed for real money. House originals (Keno, Mines, Limbo, Roulette, Blackjack, Case Battles, Crash, and Slots) are live now — your account, currencies, stats, and level carry across every game.",
   },
   {
     question: "What are Gold Coins (GC) and Sweeps Coins (SC)?",
     answer:
-      "Gold Coins (GC) are play-only currency with no redeemable value — use them to enjoy all games. Sweeps Coins (SC) are redeemable for real money at a rate of 1 SC = $0.10 USD, with a minimum redemption of 100 SC ($10). You can earn SC through promotional bonuses on deposits, mail-in free entry requests, and special promotions. Toggle between GC and SC using the coin button next to your balance in the top bar.",
+      "Gold Coins (GC) are play-only currency with no redeemable value — use them to enjoy all games. Sweeps Coins (SC) are redeemable for real money at a rate of 1 SC = $0.01 USD (100 SC = $1), with a minimum redemption of 100 SC ($1). You can earn SC through promotional bonuses on deposits, mail-in free entry requests, and special promotions. Toggle between GC and SC using the coin button next to your balance in the top bar.",
   },
   {
     question: "How do I create an account?",
     answer:
-      "Click Sign up, choose a username (up to 16 characters), enter your email, and set a password. We send a 6-digit verification code to your email; enter it within 10 minutes to activate your account. New accounts receive 10,000 GC and 1 SC as a welcome bonus — no purchase necessary. You can reset your password from the forgot-password page if needed.",
+      "Click Sign up, choose a username (up to 16 characters), enter your email, and set a password. We send a 6-digit verification code to your email; enter it within 10 minutes to activate your account. New accounts receive 10,000 GC and 100 SC (a $1 redeemable value) as a welcome bonus — no purchase necessary. You can reset your password from the forgot-password page if needed.",
   },
   {
     question: "How do deposits work?",
@@ -24,12 +24,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "How do withdrawals work?",
     answer:
-      "Crypto withdrawals: Open Withdraw, choose a chain, enter a valid destination address, and request at least $10. The amount is reserved from your balance while the withdrawal is pending. Payouts are sent from our treasury wallets after review. Sweeps Coins redemption: Visit the Redeem page to cash out SC for real money via PayPal — minimum 100 SC ($10). Redemption requests are processed within 3–5 business days.",
+      "Crypto withdrawals: Open Withdraw, choose a chain, enter a valid destination address, and request at least $10. The amount is reserved from your balance while the withdrawal is pending. Payouts are sent from our treasury wallets after review. Sweeps Coins redemption: Visit the Redeem page to cash out SC for real money via PayPal — minimum 100 SC ($1). Redemption requests are processed within 3–5 business days.",
   },
   {
     question: "How do I redeem Sweeps Coins (SC)?",
     answer:
-      "Go to the Redeem page, enter the amount of SC you want to cash out (minimum 100 SC), provide your PayPal email, and submit. Your request will be reviewed and processed within 3–5 business days. The exchange rate is fixed at 1 SC = $0.10 USD.",
+      "Go to the Redeem page, enter the amount of SC you want to cash out (minimum 100 SC, equivalent to $1 USD), provide your PayPal email, and submit. Your request will be reviewed and processed within 3–5 business days. The exchange rate is fixed at 1 SC = $0.01 USD (100 SC = $1).",
   },
   {
     question: "How does leveling work?",
@@ -49,7 +49,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Is there a minimum withdrawal / redemption?",
     answer:
-      "Crypto withdrawals: minimum $10 USD. SC redemptions: minimum 100 SC ($10 USD equivalent). Both are subject to review and processing times.",
+      "Crypto withdrawals: minimum $10 USD. SC redemptions: minimum 100 SC ($1 USD equivalent). Both are subject to review and processing times.",
   },
   {
     question: "Who can use LottaCash?",
@@ -59,7 +59,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "How do house originals work?",
     answer:
-      "Each game settles on the server using provably fair seeds (server hash, client seed, and nonce). Open any original while logged in to play. Keno, Mines, Limbo, Roulette, and Blackjack use your personal PF settings; Case Battles use EOS block hashes for battle randomness. Fairness details are shown in each game.",
+      "Each game settles on the server using provably fair seeds (server hash, client seed, and nonce). Open any original while logged in to play. Keno, Mines, Limbo, Roulette, Blackjack, Crash, and Slots use your personal PF settings; Case Battles use EOS block hashes for battle randomness. Fairness details are shown in each game.",
   },
   {
     question: "How do I get support?",
@@ -81,7 +81,7 @@ You must be at least 18 years old or the minimum legal age in your jurisdiction,
 You must provide accurate information when registering. You are responsible for safeguarding your login credentials and for all activity under your account. Usernames may not exceed 16 characters. One account per person unless we approve otherwise in writing.
 
 4. Dual-currency sweepstakes model
-The Service operates on a sweepstakes model with two currencies: Gold Coins (GC) for free play with no redeemable value, and Sweeps Coins (SC) which are redeemable for real money at the rate of 1 SC = $0.10 USD, subject to a minimum redemption of 100 SC ($10). No purchase is necessary to obtain SC — see our Sweepstakes Rules for free entry options. Balances of both currencies are displayed in your account.
+The Service operates on a sweepstakes model with two currencies: Gold Coins (GC) for free play with no redeemable value, and Sweeps Coins (SC) which are redeemable for real money at the rate of 1 SC = $0.01 USD (100 SC = $1), subject to a minimum redemption of 100 SC ($1). No purchase is necessary to obtain SC — see our Sweepstakes Rules for free entry options. Balances of both currencies are displayed in your account.
 
 5. Wallet and balances
 Gold Coin balances are displayed in USD for convenience. Sweeps Coin balances are displayed as SC units. Deposits are credited after blockchain confirmations at rates determined at the time of credit. Withdrawals and SC redemptions are subject to minimum amounts, review, and processing times. We may delay or refuse transactions suspected of fraud, error, or legal risk.

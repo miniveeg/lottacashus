@@ -39,10 +39,18 @@ export function ForgotPassword() {
 
   async function handleSendCode(e: FormEvent) {
     e.preventDefault();
+    if (!configured) return;
     setError(null);
     setInfo(null);
+
+    const trimmedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+
     setSubmitting(true);
-    const { error: sendError } = await requestPasswordResetCode(email.trim());
+    const { error: sendError } = await requestPasswordResetCode(trimmedEmail);
     setSubmitting(false);
     if (sendError) {
       setError(sendError);
@@ -67,6 +75,7 @@ export function ForgotPassword() {
 
   async function handleResetPassword(e: FormEvent) {
     e.preventDefault();
+    if (!configured) return;
     setError(null);
 
     if (password !== confirmPassword) {
@@ -99,6 +108,7 @@ export function ForgotPassword() {
   }
 
   async function handleResend() {
+    if (!configured) return;
     setError(null);
     setSubmitting(true);
     const { error: sendError } = await requestPasswordResetCode(email.trim());
@@ -120,8 +130,9 @@ export function ForgotPassword() {
         </p>
 
         {!configured && (
-          <p className="auth-config-warning">
-            Supabase keys are missing. Copy <code>.env.example</code> to <code>.env</code>.
+          <p className="auth-config-warning" role="note">
+            Supabase is not configured. Add your project URL and anon key to the{" "}
+            <code>.env</code> file to enable authentication.
           </p>
         )}
 
@@ -171,7 +182,7 @@ export function ForgotPassword() {
                 aria-describedby={error ? "reset-code-error" : undefined}
               />
             </div>
-            <button type="submit" className="auth-submit" disabled={!configured}>
+            <button type="submit" className="auth-submit" disabled={submitting || !configured}>
               Continue
             </button>
             <div className="auth-secondary-actions">

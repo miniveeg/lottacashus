@@ -65,6 +65,21 @@
   margin: 0;
 }
 
+.free-entry__checklist {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  color: var(--lc-text-secondary);
+  line-height: 1.7;
+}
+
+.free-entry__checklist li {
+  margin-bottom: 0.2rem;
+}
+
+.free-entry__checklist li::marker {
+  color: var(--lc-gold);
+}
+
 .free-entry__address {
   background: var(--lc-bg-hover);
   border: 1px solid var(--lc-border);

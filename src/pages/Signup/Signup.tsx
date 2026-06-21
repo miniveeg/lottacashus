@@ -63,7 +63,14 @@ export function Signup() {
 
   async function handleSendCode(e: FormEvent) {
     e.preventDefault();
+    if (!configured) return;
     setError(null);
+
+    const trimmedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError("Enter a valid email address.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
@@ -109,7 +116,7 @@ export function Signup() {
     setSubmitting(true);
     analytics.signup.started();
     const { error: sendError } = await sendSignupCode(
-      email.trim(),
+      trimmedEmail,
       trimmedUsername ? normalizeUsername(trimmedUsername) : undefined,
       birthDate || undefined
     );
@@ -126,6 +133,7 @@ export function Signup() {
 
   async function handleVerify(e: FormEvent) {
     e.preventDefault();
+    if (!configured) return;
     setError(null);
 
     if (!/^\d{6}$/.test(code)) {
@@ -160,13 +168,14 @@ export function Signup() {
       return;
     }
 
-    analytics.signup.completed(username);
+    analytics.signup.completed(trimmedUsername || undefined);
     toast.success("Account created — welcome to LottaCash!");
     clearStoredAffiliateRef();
     navigate(redirectTo, { replace: true });
   }
 
   async function handleResend() {
+    if (!configured) return;
     setError(null);
     setSubmitting(true);
     const trimmedUsername = username.trim();
@@ -176,6 +185,7 @@ export function Signup() {
     );
     setSubmitting(false);
     if (sendError) setError(sendError);
+    else toast.success("A new code has been sent to your email.");
   }
 
   return (
@@ -190,9 +200,9 @@ export function Signup() {
         </p>
 
         {!configured && (
-          <p className="auth-config-warning">
-            Supabase keys are missing. Copy <code>.env.example</code> to <code>.env</code> and add
-            your project URL and anon key.
+          <p className="auth-config-warning" role="note">
+            Supabase is not configured. Add your project URL and anon key to the{" "}
+            <code>.env</code> file to enable authentication.
           </p>
         )}
 
@@ -249,6 +259,8 @@ export function Signup() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "signup-error" : undefined}
               />
             </div>
 
@@ -281,6 +293,8 @@ export function Signup() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={6}
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "signup-error" : undefined}
               />
             </div>
 
@@ -292,6 +306,8 @@ export function Signup() {
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
                 required
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "signup-error" : undefined}
               />
             </div>
 
@@ -301,6 +317,7 @@ export function Signup() {
                 checked={ageConfirmed}
                 onChange={(e) => setAgeConfirmed(e.target.checked)}
                 required
+                aria-invalid={Boolean(error) || undefined}
               />
               <span>I confirm that I am 18 years or older and agree to the{" "}
                 <Link to="/sweepstakes" target="_blank" className="auth-checkbox-link">

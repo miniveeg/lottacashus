@@ -1,11 +1,17 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Link, Navigate, useLocation } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Banknote } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
 import { useToast } from "../../contexts/ToastContext";
-import { fetchMyWithdrawals, requestWithdrawal, validateCryptoAddress } from "../../lib/crypto";
+import { isSupabaseConfigured } from "../../lib/supabase";
+import {
+  fetchMyWithdrawals,
+  requestWithdrawal,
+  validateCryptoAddress,
+  type CryptoWithdrawalRow,
+} from "../../lib/crypto";
 import {
   coinsToUsd,
   formatCoins,
@@ -21,8 +27,7 @@ import "../Wallet/Wallet.css";
 const MIN_WITHDRAW_SC = 10;
 
 export function Withdraw() {
-  const { user, loading: authLoading } = useAuth();
-  const { pathname } = useLocation();
+  const { user, loading: authLoading, configured } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const toast = useToast();
   const [chain, setChain] = useState<CryptoChain>("sol");
@@ -31,18 +36,10 @@ export function Withdraw() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [withdrawals, setWithdrawals] = useState<
-    {
-      id: string;
-      chain: string;
-      destination_address: string;
-      usd_amount: number;
-      status: string;
-      created_at: string;
-    }[]
-  >([]);
+  const [withdrawals, setWithdrawals] = useState<CryptoWithdrawalRow[]>([]);
 
   const loadWithdrawals = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
     const { data } = await fetchMyWithdrawals();
     if (data) setWithdrawals(data);
   }, []);
@@ -51,14 +48,16 @@ export function Withdraw() {
     if (user) loadWithdrawals();
   }, [user, loadWithdrawals]);
 
+  // 🔴 Same redirect-to-self bug as Settings.tsx (ACCOUNT agent's finding #9):
+  // hardcode the redirect path instead of reading `useLocation().pathname`.
   if (!authLoading && !user) {
-    return <Navigate to={loginUrl(pathname)} replace />;
+    return <Navigate to={loginUrl("/withdraw")} replace />;
   }
 
   if (authLoading) {
     return (
       <div className="wallet lc-page lc-page--medium">
-        <div className="lc-loading">
+        <div className="lc-loading" role="status" aria-live="polite">
           <div className="lc-loading__pulse" aria-hidden />
           <p>Loading…</p>
         </div>
@@ -73,6 +72,12 @@ export function Withdraw() {
     setError(null);
     setSuccess(null);
 
+    if (!isSupabaseConfigured) {
+      setError("Supabase is not configured. Add your keys to .env.");
+      return;
+    }
+
+    const trimmedDestination = destination.trim();
     const scValue = parseFloat(scAmount);
     if (!Number.isFinite(scValue) || scValue < MIN_WITHDRAW_SC) {
       setError(
@@ -86,7 +91,7 @@ export function Withdraw() {
       return;
     }
 
-    if (!validateCryptoAddress(chain, destination)) {
+    if (!validateCryptoAddress(chain, trimmedDestination)) {
       setError(`Enter a valid ${chain.toUpperCase()} address.`);
       return;
     }
@@ -96,7 +101,7 @@ export function Withdraw() {
     const usdAmount = coinsToUsd(scValue, "sweeps_coins");
 
     setSubmitting(true);
-    const { error: reqError } = await requestWithdrawal(chain, destination, usdAmount);
+    const { error: reqError } = await requestWithdrawal(chain, trimmedDestination, usdAmount);
     setSubmitting(false);
 
     if (reqError) {
@@ -151,18 +156,27 @@ export function Withdraw() {
         <strong>{formatCoinsWithUsd(profile?.balance ?? 0, "balance")}</strong>.
       </p>
 
+      {!configured && (
+        <p className="wallet__error" role="note">
+          Supabase is not configured. Add your project URL and anon key to the <code>.env</code> file
+          to enable withdrawals. The form below is non-functional until keys are provided.
+        </p>
+      )}
+
       <section className="wallet__section">
-        {error && <p className="wallet__error" role="alert">{error}</p>}
-        {success && <p className="wallet__success" role="status">{success}</p>}
+        {error && <p className="wallet__error" role="alert" id="withdraw-error">{error}</p>}
+        {success && <p className="wallet__success" role="status" id="withdraw-success">{success}</p>}
 
         <form onSubmit={handleSubmit} noValidate>
-          <div className="wallet__chain-picker">
+          <div className="wallet__chain-picker" role="group" aria-label="Select withdrawal chain">
             {CRYPTO_CHAINS.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 className={`wallet__chain-btn${chain === c.id ? " wallet__chain-btn--active" : ""}`}
                 onClick={() => setChain(c.id)}
+                aria-pressed={chain === c.id}
+                aria-label={`Withdraw to ${c.label} (${c.symbol})`}
               >
                 {c.symbol}
               </button>
@@ -174,11 +188,17 @@ export function Withdraw() {
             <input
               id="withdraw-address"
               value={destination}
-              onChange={(e) => setDestination(e.target.value)}
+              onChange={(e) => {
+                setDestination(e.target.value);
+                if (error) setError(null);
+                if (success) setSuccess(null);
+              }}
               placeholder="Your external wallet address"
               required
               autoComplete="off"
               spellCheck={false}
+              aria-invalid={Boolean(error) || undefined}
+              aria-describedby={error ? "withdraw-error" : undefined}
             />
           </div>
 
@@ -190,9 +210,16 @@ export function Withdraw() {
               min={MIN_WITHDRAW_SC}
               step="0.01"
               value={scAmount}
-              onChange={(e) => setScAmount(e.target.value)}
+              onChange={(e) => {
+                setScAmount(e.target.value);
+                if (error) setError(null);
+                if (success) setSuccess(null);
+              }}
               placeholder={`Min ${MIN_WITHDRAW_SC} SC`}
               required
+              inputMode="decimal"
+              aria-invalid={Boolean(error) || undefined}
+              aria-describedby={error ? "withdraw-error" : undefined}
             />
             <p className="wallet__hint wallet__hint--meta">
               {Number.isFinite(parsedSc) && parsedSc > 0
@@ -201,7 +228,12 @@ export function Withdraw() {
             </p>
           </div>
 
-          <button type="submit" className="wallet__btn" disabled={submitting}>
+          <button
+            type="submit"
+            className="wallet__btn"
+            disabled={submitting || !configured}
+            aria-disabled={submitting || !configured}
+          >
             {submitting && <span className="wallet__btn__spinner" aria-hidden="true" />}
             {submitting ? "Submitting…" : "Request withdrawal"}
           </button>
@@ -213,7 +245,7 @@ export function Withdraw() {
         </p>
       </section>
 
-      <section className="wallet__section">
+      <section className="wallet__section" aria-label="Recent withdrawals">
         <h2 className="wallet__list-title">Recent withdrawals</h2>
         {withdrawals.length === 0 ? (
           <div className="wallet__empty">
@@ -230,7 +262,7 @@ export function Withdraw() {
                 </span>
                 <span className={`wallet__status wallet__status--${w.status}`}>{w.status}</span>
               </div>
-              <p className="wallet__hint wallet__hint--meta">
+              <p className="wallet__hint wallet__hint--meta" title={w.destination_address}>
                 {w.destination_address}
               </p>
             </div>

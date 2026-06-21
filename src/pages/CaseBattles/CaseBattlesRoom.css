@@ -1928,3 +1928,36 @@
   border-radius: 999px;
   border: 1px solid rgba(245, 185, 66, 0.4);
 }
+
+/* Reduced-motion: suppress decorative spinners (loading, EOS wait), pulses,
+   rounds-window slide, drop-settle bounce, and the arena phase-stripe
+   transition. The reels' JS-driven transforms are NOT suppressed here —
+   the case-open reel animation is core gameplay (the user must watch the
+   reel land on their item) and is preserved. The reels do declare
+   `will-change: transform` but that's a no-op when no animation runs.
+   The jackpot reel is also preserved (it determines the winner). */
+@media (prefers-reduced-motion: reduce) {
+  .cbr__loading-pulse {
+    animation: none;
+  }
+
+  .cbr__badge--phase-running::before {
+    animation: none;
+  }
+
+  .cbr__eos-spinner span {
+    animation: none;
+  }
+
+  .cbr__rounds-window {
+    animation: none;
+  }
+
+  .cbr__p-col-last-drop {
+    animation: none;
+  }
+
+  .cbr__arena::before {
+    transition: none;
+  }
+}

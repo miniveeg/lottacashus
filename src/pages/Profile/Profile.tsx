@@ -5,7 +5,14 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { formatCoinsWithUsd, formatUsd } from "../../lib/format";
-import { fetchPublicProfile, fetchReferralInfo, claimAffiliateBalance, type ProfileStats, type ReferralInfo } from "../../lib/profile";
+import {
+  fetchPublicProfile,
+  fetchReferralInfo,
+  claimAffiliateBalance,
+  type ProfileStats,
+  type ReferralInfo,
+} from "../../lib/profile";
+import { isSupabaseConfigured } from "../../lib/supabase";
 import { UiIcon } from "../../components/icons";
 import "./Profile.css";
 
@@ -29,7 +36,7 @@ function calcLevel(totalWagered: number): { level: number; xp: number; xpMax: nu
 export function ProfilePage() {
   const { username: routeUsername } = useParams<{ username?: string }>();
   const { user, loading: authLoading } = useAuth();
-  const { profile: authProfile } = useProfile();
+  const { profile: authProfile, profileLoading } = useProfile();
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [referralInfo, setReferralInfo] = useState<ReferralInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +47,12 @@ export function ProfilePage() {
   const isOwnProfile = !routeUsername;
   const displayProfile = isOwnProfile ? authProfile : null;
 
+  // For own-profile view, `stats` is derived from `authProfile` purely so the
+  // empty-state check has something to read. The render path uses
+  // `displayProfile || stats`, so when `authProfile` is loaded the derived
+  // stats are shadowed. We only depend on the specific fields we copy so the
+  // 1.5s ProfileContext balance-poll doesn't re-run this effect (and re-set
+  // state) every cycle.
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -68,7 +81,17 @@ export function ProfilePage() {
     }
     load();
     return () => { cancelled = true; };
-  }, [isOwnProfile, routeUsername, authProfile]);
+  }, [
+    isOwnProfile,
+    routeUsername,
+    authProfile?.username,
+    authProfile?.balance,
+    authProfile?.totalWagered,
+    authProfile?.totalDeposited,
+    authProfile?.totalWithdrawn,
+    authProfile?.totalWins,
+    authProfile?.totalLosses,
+  ]);
 
   useEffect(() => {
     if (!isOwnProfile) return;
@@ -95,16 +118,48 @@ export function ProfilePage() {
 
   const handleCopy = useCallback(() => {
     if (!referralInfo?.referralCode) return;
-    navigator.clipboard.writeText(referralInfo.referralCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // navigator.clipboard can be undefined in non-secure contexts (HTTP) or
+    // when the Permissions API denies write access. Fall back to a transient
+    // textarea + execCommand so the copy action never throws an uncaught error.
+    const code = referralInfo.referralCode;
+    const confirmCopied = () => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+    try {
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(code).then(confirmCopied, () => {
+          /* clipboard rejected; silently skip confirmation */
+        });
+        return;
+      }
+    } catch {
+      /* fall through to legacy path */
+    }
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = code;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "absolute";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      confirmCopied();
+    } catch {
+      /* clipboard unavailable; no confirmation */
+    }
   }, [referralInfo]);
 
   if (!routeUsername && !authLoading && !user) {
     return <Navigate to={loginUrl("/profile")} replace />;
   }
 
-  if (loading || (isOwnProfile && authLoading)) {
+  // Own-profile view waits on both auth and profile loading so we don't flash
+  // "Profile not found" during the brief window between the session resolving
+  // and ProfileContext finishing its initial fetch.
+  if (loading || (isOwnProfile && (authLoading || profileLoading))) {
     return (
       <div className="lc-page">
         <div className="lc-loading">
@@ -115,24 +170,48 @@ export function ProfilePage() {
     );
   }
 
-  if (!stats) {
+  const p = displayProfile || stats;
+  if (!p) {
+    const message = !isSupabaseConfigured
+      ? "Profile lookup is unavailable — the database is not configured."
+      : routeUsername
+        ? `No player named “${routeUsername}” was found.`
+        : "Profile not found.";
     return (
       <div className="lc-page">
         <div className="lc-empty">
-          <p className="lc-alert lc-alert--error">Profile not found.</p>
+          <p className="lc-alert lc-alert--error" role="alert">{message}</p>
         </div>
       </div>
     );
   }
 
-  const p = displayProfile || stats;
   const { level, xp, xpMax } = calcLevel(p.totalWagered);
   const wins = p.totalWins;
   const losses = p.totalLosses;
   const totalGames = wins + losses;
-  const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : "—";
+  const winRate = totalGames > 0 ? `${((wins / totalGames) * 100).toFixed(1)}%` : "—";
   const netPL = wins - losses;
-  const memberSince = stats.memberSince ? new Date(stats.memberSince).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null;
+  const memberSince = stats?.memberSince
+    ? new Date(stats.memberSince).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    : null;
+
+  // Badges only inspect `totalWagered` and `memberSince`. Build a minimal
+  // ProfileStats-like input so the badge predicates don't need to know about
+  // the UserProfile | ProfileStats union (UserProfile doesn't expose
+  // memberSince, which is fine — veteran badge just won't unlock for the
+  // own-profile view until ProfileContext exposes `created_at`).
+  const badgeInput: ProfileStats = {
+    username: p.username ?? null,
+    balance: 0,
+    totalWagered: p.totalWagered,
+    totalDeposited: p.totalDeposited,
+    totalWithdrawn: p.totalWithdrawn,
+    totalWins: p.totalWins,
+    totalLosses: p.totalLosses,
+    memberSince: stats?.memberSince ?? null,
+    referralCode: null,
+  };
 
   return (
     <div className="lc-page profile-page">
@@ -197,7 +276,7 @@ export function ProfilePage() {
         <div className="profile-stat">
           <UiIcon name="check" size={18} />
           <span className="profile-stat__label">Win Rate</span>
-          <span className="profile-stat__value">{winRate}%</span>
+          <span className="profile-stat__value">{winRate}</span>
         </div>
       </section>
 
@@ -206,7 +285,7 @@ export function ProfilePage() {
         <h2 className="profile-section__title">Badges</h2>
         <div className="profile-badges">
           {BADGES.map((badge) => {
-            const earned = badge.check(stats);
+            const earned = badge.check(badgeInput);
             return (
               <div
                 key={badge.id}
@@ -241,7 +320,7 @@ export function ProfilePage() {
                   type="button"
                   className="profile-referral__copy"
                   onClick={handleCopy}
-                  aria-label="Copy referral code to clipboard"
+                  aria-label={copied ? "Referral code copied" : "Copy referral code to clipboard"}
                   aria-live="polite"
                 >
                   {copied ? "Copied!" : "Copy"}
@@ -269,7 +348,10 @@ export function ProfilePage() {
               </button>
             )}
             {claimMsg && (
-              <p className={`profile-referral__msg${claimMsg.includes("error") || claimMsg.includes("Error") ? " profile-referral__msg--error" : ""}`}>
+              <p
+                className={`profile-referral__msg${claimMsg.includes("error") || claimMsg.includes("Error") ? " profile-referral__msg--error" : ""}`}
+                role="status"
+              >
                 {claimMsg}
               </p>
             )}

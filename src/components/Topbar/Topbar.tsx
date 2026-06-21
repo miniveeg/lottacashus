@@ -10,9 +10,10 @@ import { usePlayMode } from "../../contexts/PlayModeContext";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { useToast } from "../../contexts/ToastContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
-import { formatUsd, formatCoins, coinsToUsd, type CoinType } from "../../lib/format";
+import { formatUsd, formatCoins, coinsToUsd } from "../../lib/format";
 import { analytics } from "../../lib/analytics";
 import { BrandLogo } from "../BrandLogo/BrandLogo";
+import { PRIMARY_SIDEBAR_ID } from "../AppShell/AppShell";
 import { TopbarLevelProgress } from "./TopbarLevelProgress";
 import "../BrandLogo/BrandLogo.css";
 import "./Topbar.css";
@@ -24,7 +25,7 @@ export function Topbar() {
   const { coinType, setCoinType, label: coinLabel } = usePlayMode();
   const { pathname } = useLocation();
   const { unreadCount } = useNotifications();
-  const { toggleMobile } = useSidebar();
+  const { toggleMobile, mobileOpen } = useSidebar();
   const toast = useToast();
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
@@ -42,12 +43,12 @@ export function Topbar() {
       : (profile?.balance ?? 0);
 
   const balanceDisplay = !user
-    ? formatCoins(0, coinType as CoinType)
+    ? formatCoins(0, coinType)
     : profileLoading
       ? "…"
-      : formatCoins(activeBalance, coinType as CoinType);
+      : formatCoins(activeBalance, coinType);
 
-  const balanceUsd = coinsToUsd(activeBalance, coinType as CoinType);
+  const balanceUsd = coinsToUsd(activeBalance, coinType);
 
   async function handleSignOut() {
     await signOut();
@@ -63,7 +64,9 @@ export function Topbar() {
         <motion.button
           type="button"
           className="topbar__menu-btn"
-          aria-label="Open menu"
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
+          aria-controls={PRIMARY_SIDEBAR_ID}
           onClick={toggleMobile}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -81,7 +84,7 @@ export function Topbar() {
           <Link
             to={user ? "/settings" : loginUrl(pathname)}
             className="topbar__balance"
-            title={profileLoading ? "Loading…" : `${formatCoins(activeBalance, coinType as CoinType)} = ${formatUsd(balanceUsd)}`}
+            title={profileLoading ? "Loading…" : `${formatCoins(activeBalance, coinType)} = ${formatUsd(balanceUsd)}`}
             aria-busy={profileLoading || undefined}
           >
             <span className="topbar__balance-label">{coinLabel}</span>

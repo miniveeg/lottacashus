@@ -57,7 +57,9 @@ export async function fetchRoulettePfState(): Promise<{
   return { data: parsed, error: null };
 }
 
-export async function setRouletteClientSeed(clientSeed: string): Promise<{ error: string | null }> {
+export async function setRouletteClientSeed(
+  clientSeed: string
+): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured) {
     return { error: "Supabase is not configured." };
   }
@@ -68,7 +70,11 @@ export async function setRouletteClientSeed(clientSeed: string): Promise<{ error
   return { error: error?.message ?? null };
 }
 
-export async function placeRouletteBet(params: { wager: number; betType: RouletteBetType; coinType?: string }) {
+export async function placeRouletteBet(params: {
+  wager: number;
+  betType: RouletteBetType;
+  coinType?: string;
+}): Promise<{ data: RouletteBetResult | null; error: string | null }> {
   const { data, error } = await invokeEdgeFunction<RouletteBetResult>("place-roulette-bet", {
     wager: params.wager,
     betType: params.betType,

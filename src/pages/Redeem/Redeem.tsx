@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
+import { loginUrl } from "../../lib/authRedirect";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import {
   formatCoins,
@@ -17,7 +19,7 @@ import "./Redeem.css";
 const MIN_REDEMPTION_SC = 100;
 
 export default function Redeem() {
-  const { user } = useAuth();
+  const { user, loading: authLoading, configured } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const [scAmount, setScAmount] = useState("");
   const [chain, setChain] = useState<CryptoChain>("sol");
@@ -55,7 +57,7 @@ export default function Redeem() {
     }
 
     if (!isSupabaseConfigured) {
-      setError("Supabase is not configured.");
+      setError("Supabase is not configured. Add your keys to .env.");
       return;
     }
 
@@ -78,13 +80,36 @@ export default function Redeem() {
     refreshProfile();
   }
 
+  if (authLoading) {
+    return (
+      <div className="redeem lc-page lc-page--medium">
+        <div className="lc-loading" role="status" aria-live="polite">
+          <div className="lc-loading__pulse" aria-hidden />
+          <p>Loading…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="redeem lc-page lc-page--medium">
         <header className="lc-page__header">
           <h1 className="lc-page__title">Redeem</h1>
-          <p className="lc-page__subtitle">Log in to cash out your Sweeps Coins.</p>
+          <p className="lc-page__subtitle">
+            Log in to cash out your Sweeps Coins for cryptocurrency.
+          </p>
         </header>
+        <p className="redeem__login-hint">
+          <Link to={loginUrl("/redeem")} className="redeem__login-link">
+            Log in
+          </Link>{" "}
+          or{" "}
+          <Link to="/signup" className="redeem__login-link">
+            sign up
+          </Link>{" "}
+          to continue.
+        </p>
       </div>
     );
   }
@@ -98,8 +123,15 @@ export default function Redeem() {
         </p>
       </header>
 
+      {!configured && (
+        <p className="redeem__error" role="note">
+          Supabase is not configured. Add your project URL and anon key to the <code>.env</code> file
+          to enable redemptions. The form below is non-functional until keys are provided.
+        </p>
+      )}
+
       {success ? (
-        <div className="redeem__success">
+        <div className="redeem__success" role="status" aria-live="polite">
           <div className="redeem__success-icon" aria-hidden><CheckCircle size={48} /></div>
           <p className="redeem__success-title">Redemption Requested!</p>
           <p className="redeem__success-desc">
@@ -120,7 +152,7 @@ export default function Redeem() {
             </p>
           </div>
 
-          {error && <p className="redeem__error" role="alert">{error}</p>}
+          {error && <p className="redeem__error" role="alert" id="redeem-error">{error}</p>}
 
           <div className="redeem__field">
             <label className="redeem__label" htmlFor="sc-amount">
@@ -134,18 +166,24 @@ export default function Redeem() {
               max={sweepsCoins}
               step="1"
               value={scAmount}
-              onChange={(e) => setScAmount(e.target.value)}
+              onChange={(e) => {
+                setScAmount(e.target.value);
+                if (error) setError(null);
+              }}
               disabled={submitting}
               placeholder="100"
+              inputMode="numeric"
+              aria-invalid={Boolean(error) || undefined}
+              aria-describedby={error ? "redeem-error" : undefined}
             />
             <p className="redeem__info">
               Minimum {MIN_REDEMPTION_SC} SC ({formatUsd(minUsd)}).
             </p>
           </div>
 
-          <div className="redeem__field">
-            <span className="redeem__label">Payout chain</span>
-            <div className="redeem__chain-picker">
+          <fieldset className="redeem__field redeem__chain-fieldset">
+            <legend className="redeem__label">Payout chain</legend>
+            <div className="redeem__chain-picker" role="group" aria-label="Select payout chain">
               {CRYPTO_CHAINS.map((c) => (
                 <button
                   key={c.id}
@@ -153,12 +191,14 @@ export default function Redeem() {
                   className={`redeem__chain-btn${chain === c.id ? " redeem__chain-btn--active" : ""}`}
                   onClick={() => setChain(c.id)}
                   disabled={submitting}
+                  aria-pressed={chain === c.id}
+                  aria-label={`Redeem to ${c.label} (${c.symbol})`}
                 >
                   {c.symbol}
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
 
           <div className="redeem__field">
             <label className="redeem__label" htmlFor="redeem-destination">
@@ -169,11 +209,16 @@ export default function Redeem() {
               className="redeem__input"
               type="text"
               value={destination}
-              onChange={(e) => setDestination(e.target.value)}
+              onChange={(e) => {
+                setDestination(e.target.value);
+                if (error) setError(null);
+              }}
               disabled={submitting}
               placeholder={`Your ${chain.toUpperCase()} wallet address`}
               autoComplete="off"
               spellCheck={false}
+              aria-invalid={Boolean(error) || undefined}
+              aria-describedby={error ? "redeem-error" : undefined}
             />
             <p className="redeem__info">
               Enter the external wallet address that will receive your payout.
@@ -190,7 +235,7 @@ export default function Redeem() {
           <button
             type="button"
             className="redeem__submit"
-            disabled={!isValid || submitting}
+            disabled={!isValid || submitting || !configured}
             onClick={handleRedeem}
           >
             {submitting && <span className="redeem__submit-spinner" aria-hidden="true" />}

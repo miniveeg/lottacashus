@@ -11,6 +11,7 @@ export function Sidebar() {
   return (
     <aside
       className={`sidebar${isChatMode ? " sidebar--chat" : ""}${collapsed ? " sidebar--collapsed" : ""}`}
+      aria-label={isChatMode ? "Live chat" : undefined}
     >
       <div className="sidebar__header">
         <motion.button

@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
   type ReactNode,
@@ -54,8 +55,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const timers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const dismiss = useCallback((id: string) => {
-    clearTimeout(timers.current.get(id));
-    timers.current.delete(id);
+    const timer = timers.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      timers.current.delete(id);
+    }
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
@@ -83,6 +87,28 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     },
     [dismiss]
   );
+
+  // Reconcile timers with the active toast list: when toasts are evicted by the
+  // 5-item cap (or removed by other means), clear any lingering timers so we
+  // don't hold timer closures in memory after the toast is gone.
+  useEffect(() => {
+    const activeIds = new Set(toasts.map((t) => t.id));
+    for (const [id, timer] of timers.current) {
+      if (!activeIds.has(id)) {
+        clearTimeout(timer);
+        timers.current.delete(id);
+      }
+    }
+  }, [toasts]);
+
+  // Clear all pending timers on unmount to prevent the timers map from leaking.
+  useEffect(() => {
+    const map = timers.current;
+    return () => {
+      map.forEach((t) => clearTimeout(t));
+      map.clear();
+    };
+  }, []);
 
   const success = useCallback(
     (message: string, duration?: number) => toast(message, "success", duration),

@@ -77,7 +77,14 @@ function rowToProfile(row: Record<string, unknown>, isAdminOverride?: boolean): 
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user, session } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
+  // Start `true` so that consumers (e.g. AdminRoute, ProtectedRoute) don't
+  // briefly see `profileLoading=false` + `profile=null` on the very first
+  // render after a user becomes available — that combination would cause a
+  // flash-of-wrong-redirect (the route guard treats "no profile + not loading"
+  // as "definitely not an admin" and bounces to `/`). The bootstrap effect
+  // below will flip this to `false` once the profile fetch settles, or
+  // immediately if there is no user.
+  const [profileLoading, setProfileLoading] = useState(true);
   const profileRef = useRef<UserProfile | null>(null);
   profileRef.current = profile;
 
@@ -165,6 +172,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     let channel: RealtimeChannel | null = null;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
+
+    // Synchronously mark loading as soon as we know we have a user — this
+    // closes the gap between the auth state flipping to "logged in" and the
+    // async `start()` function reaching `fetchProfile({ showLoading: true })`.
+    // Without this, route guards like AdminRoute see `profileLoading=false` +
+    // `profile=null` for one render and bounce to `/`.
+    setProfileLoading(true);
 
     async function start() {
       await supabase.realtime.setAuth(accessToken);

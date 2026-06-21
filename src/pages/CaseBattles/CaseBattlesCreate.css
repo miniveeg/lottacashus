@@ -935,3 +935,48 @@
   color: var(--lc-text-muted);
   padding: 2.5rem;
 }
+
+/* Reduced-motion: suppress decorative rounds-window slide, modal fade-in,
+   and modal slide-up. The case grid, toggles, summary, and modal contents
+   remain fully interactive. */
+@media (prefers-reduced-motion: reduce) {
+  .cbc__rounds-window {
+    animation: none;
+  }
+
+  .cbc-modal {
+    animation: none;
+  }
+
+  .cbc-modal__panel {
+    animation: none;
+  }
+
+  .cbc__case-slot {
+    transition: none;
+  }
+
+  .cbc__case-slot:hover {
+    transform: none;
+  }
+
+  .cbc-modal__case:hover {
+    transform: none;
+  }
+
+  .cbc__mode-card {
+    transition: none;
+  }
+
+  .cbc__player-btn {
+    transition: none;
+  }
+
+  .cbc__summary-create {
+    transition: none;
+  }
+
+  .cbc__summary-create:hover:not(:disabled) {
+    transform: none;
+  }
+}

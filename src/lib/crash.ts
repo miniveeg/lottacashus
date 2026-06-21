@@ -64,7 +64,10 @@ export async function setCrashClientSeed(clientSeed: string): Promise<{ error: s
   return { error: error?.message ?? null };
 }
 
-export async function placeCrashBet(params: { wager: number; coinType?: string }) {
+export async function placeCrashBet(params: {
+  wager: number;
+  coinType?: string;
+}): Promise<{ data: CrashBetResult | null; error: string | null }> {
   const { data, error } = await invokeEdgeFunction<CrashBetResult>("place-crash-bet", {
     wager: params.wager,
     coinType: params.coinType ?? "balance",

@@ -395,3 +395,35 @@
     padding-right: 0;
   }
 }
+
+/* Reduced-motion: suppress decorative shimmer (skeleton) and the live-dot
+   pulse. Skeleton blocks still render as static faded bars; the live dot
+   still shows (just doesn't pulse). The lobby list, badges, and metrics
+   remain fully readable. */
+@media (prefers-reduced-motion: reduce) {
+  .cbh__skeleton {
+    animation: none;
+  }
+
+  .cbh__live-dot {
+    animation: none;
+  }
+
+  .cbh__card {
+    transition: none;
+  }
+
+  .cbh__card:hover {
+    transform: none;
+  }
+
+  .cbh__cases-stack .cb-page__case-chip,
+  .cbh__card:hover .cb-page__case-chip {
+    transition: none;
+    transform: none;
+  }
+
+  .cbh__fill-bar span {
+    transition: none;
+  }
+}

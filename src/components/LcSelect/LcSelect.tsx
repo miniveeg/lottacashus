@@ -174,6 +174,7 @@ export function LcSelect<T extends string>({
     >
       <button
         type="button"
+        role="combobox"
         className="lc-select-trigger"
         aria-label={ariaLabel}
         aria-haspopup="listbox"

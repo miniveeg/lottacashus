@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -19,6 +19,12 @@ export function CaseBattlesRoom() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Shared cancelled flag for the initial fetch + Retry button. The polling
+  // effect below has its OWN local `stale` flag (not this ref) so that an
+  // in-flight poll from the previous battleId doesn't accidentally overwrite
+  // the new battle's state when the user navigates between battles.
+  const cancelledRef = useRef(false);
+
   const loadBattle = useCallback(async (id: string, cancelled?: () => boolean) => {
     const { data, error: viewErr } = await viewCaseBattle(id);
     if (cancelled?.()) return;
@@ -34,12 +40,12 @@ export function CaseBattlesRoom() {
 
   useEffect(() => {
     if (!battleId) return;
-    let stale = false;
+    cancelledRef.current = false;
     setLoading(true);
     setBattle(null);
-    void loadBattle(battleId, () => stale);
+    void loadBattle(battleId, () => cancelledRef.current);
     return () => {
-      stale = true;
+      cancelledRef.current = true;
     };
   }, [battleId, loadBattle]);
 
@@ -51,8 +57,10 @@ export function CaseBattlesRoom() {
       return;
     const pollMs =
       battle.status === "pending_eos" || battle.status === "pending_jackpot_eos" ? 600 : 1500;
+    let stale = false;
     const id = window.setInterval(async () => {
       const { data } = await viewCaseBattle(battle.battleId);
+      if (stale) return;
       if (!data) return;
       setBattle(data);
       if (data.status === "completed") {
@@ -63,7 +71,10 @@ export function CaseBattlesRoom() {
         setError(null);
       }
     }, pollMs);
-    return () => window.clearInterval(id);
+    return () => {
+      stale = true;
+      window.clearInterval(id);
+    };
   }, [battle?.battleId, battle?.status]);
 
   if (!battleId) {
@@ -96,7 +107,7 @@ export function CaseBattlesRoom() {
             onClick={() => {
               setLoading(true);
               setError(null);
-              void loadBattle(battleId);
+              void loadBattle(battleId, () => cancelledRef.current);
             }}
           >
             Retry

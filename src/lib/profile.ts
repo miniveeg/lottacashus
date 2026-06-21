@@ -87,7 +87,7 @@ export async function fetchReferralInfo(): Promise<ReferralInfo | null> {
 }
 
 export async function claimAffiliateBalance(): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured) return { error: "Supabase not configured." };
+  if (!isSupabaseConfigured) return { error: "Supabase is not configured. Add your keys to .env." };
   const { error } = await supabase.rpc("claim_affiliate_balance");
   if (error) return { error: error.message };
   return { error: null };

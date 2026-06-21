@@ -36,10 +36,21 @@ export function Login() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!configured) return;
     setError(null);
-    setSubmitting(true);
 
-    const { error: authError } = await signIn(email.trim(), password);
+    const trimmedEmail = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (!password) {
+      setError("Enter your password.");
+      return;
+    }
+
+    setSubmitting(true);
+    const { error: authError } = await signIn(trimmedEmail, password);
     setSubmitting(false);
 
     if (authError) {
@@ -61,9 +72,9 @@ export function Login() {
         <p className="auth-card__subtitle">Log in to your LottaCash account</p>
 
         {!configured && (
-          <p className="auth-config-warning">
-            Supabase keys are missing. Copy <code>.env.example</code> to <code>.env</code> and add
-            your project URL and anon key.
+          <p className="auth-config-warning" role="note">
+            Supabase is not configured. Add your project URL and anon key to the{" "}
+            <code>.env</code> file to enable authentication.
           </p>
         )}
 

@@ -238,3 +238,31 @@
   width: auto;
   padding: 0 0.75rem;
 }
+
+/* Reduced-motion: suppress decorative reel shake / land bounce / win pulse.
+   The rAF spin animation is also skipped in JS (see Slots.tsx). The reels
+   still snap to their final landed position and the outcome text is still
+   announced — only the motion is suppressed. */
+@media (prefers-reduced-motion: reduce) {
+  .slots__reel {
+    transition: border-color 0s, box-shadow 0s, transform 0s;
+  }
+
+  .slots__reel--rolling .slots__reel-inner {
+    animation: none;
+    filter: none;
+  }
+
+  .slots__reel--landed .slots__reel-inner {
+    animation: none;
+  }
+
+  .slots__reel--win {
+    transform: none;
+    animation: none;
+  }
+
+  .slots__reels--win .slots__win-line {
+    transition: none;
+  }
+}

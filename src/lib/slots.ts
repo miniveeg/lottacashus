@@ -62,13 +62,16 @@ export async function setSlotsClientSeed(clientSeed: string): Promise<{ error: s
   return { error: error?.message ?? null };
 }
 
-export async function placeSlotsBet(params: { wager: number; coinType?: string }) {
+export async function placeSlotsBet(params: {
+  wager: number;
+  coinType?: string;
+}): Promise<{ data: SlotsBetResult | null; error: string | null }> {
   const { data, error } = await invokeEdgeFunction<SlotsBetResult>("place-slots-bet", {
     wager: params.wager,
     coinType: params.coinType ?? "balance",
   });
 
-  if (error) return { data: null as SlotsBetResult | null, error };
+  if (error) return { data: null, error };
   if (!data) return { data: null, error: "No response from server." };
   return { data, error: null };
 }

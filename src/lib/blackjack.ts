@@ -54,9 +54,12 @@ function parsePf(data: unknown): BlackjackPfState | null {
   };
 }
 
-export async function fetchBlackjackPfState() {
+export async function fetchBlackjackPfState(): Promise<{
+  data: BlackjackPfState | null;
+  error: string | null;
+}> {
   if (!isSupabaseConfigured) {
-    return { data: null as BlackjackPfState | null, error: "Supabase is not configured." };
+    return { data: null, error: "Supabase is not configured." };
   }
   const { data, error } = await supabase.rpc("get_blackjack_pf_state");
   if (error) {
@@ -74,15 +77,35 @@ export async function fetchBlackjackPfState() {
   return { data: parsed, error: null };
 }
 
-export async function setBlackjackClientSeed(clientSeed: string) {
+export async function setBlackjackClientSeed(
+  clientSeed: string
+): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured) {
+    return { error: "Supabase is not configured." };
+  }
   const { error } = await supabase.rpc("set_blackjack_client_seed", {
     p_client_seed: clientSeed,
   });
   return { error: error?.message ?? null };
 }
 
+function asNumberArray(value: unknown): number[] {
+  return Array.isArray(value) ? (value as number[]) : [];
+}
+
+function asPlayerHands(value: unknown): BlackjackPlayerHandView[] {
+  if (!Array.isArray(value)) return [];
+  return (value as BlackjackPlayerHandView[]).map((h) => ({
+    cards: asNumberArray(h?.cards),
+    total: Number(h?.total ?? 0),
+    wager: Number(h?.wager ?? 0),
+    doubled: Boolean(h?.doubled),
+    finished: Boolean(h?.finished),
+  }));
+}
+
 function mapHand(data: Record<string, unknown>): BlackjackActionResult {
-  const playerHands = (data.playerHands as BlackjackPlayerHandView[] | undefined) ?? [];
+  const playerHands = asPlayerHands(data.playerHands);
   return {
     handId: String(data.handId ?? ""),
     balance: Number(data.balance ?? 0),
@@ -94,8 +117,8 @@ function mapHand(data: Record<string, unknown>): BlackjackActionResult {
     wager: Number(data.wager ?? 0),
     totalWager: Number(data.totalWager ?? 0),
     doubled: Boolean(data.doubled),
-    playerCards: (data.playerCards as number[]) ?? [],
-    dealerCards: (data.dealerCards as number[]) ?? [],
+    playerCards: asNumberArray(data.playerCards),
+    dealerCards: asNumberArray(data.dealerCards),
     dealerRevealed: Boolean(data.dealerRevealed),
     playerTotal: Number(data.playerTotal ?? 0),
     dealerTotal: Number(data.dealerTotal ?? 0),
@@ -123,30 +146,75 @@ export async function blackjackAction(
   return { data: mapHand(data), error: null };
 }
 
-export function startBlackjack(wager: number, coinType?: string) {
+export function startBlackjack(
+  wager: number,
+  coinType?: string
+): Promise<
+  | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
+  | { data: null; error: string; active?: boolean }
+> {
   return blackjackAction({ action: "start", wager, coinType: coinType ?? "balance" });
 }
 
-export function hitBlackjack(handId: string, coinType?: string) {
+export function hitBlackjack(
+  handId: string,
+  coinType?: string
+): Promise<
+  | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
+  | { data: null; error: string; active?: boolean }
+> {
   return blackjackAction({ action: "hit", handId, coinType: coinType ?? "balance" });
 }
 
-export function standBlackjack(handId: string, coinType?: string) {
+export function standBlackjack(
+  handId: string,
+  coinType?: string
+): Promise<
+  | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
+  | { data: null; error: string; active?: boolean }
+> {
   return blackjackAction({ action: "stand", handId, coinType: coinType ?? "balance" });
 }
 
-export function doubleBlackjack(handId: string, coinType?: string) {
+export function doubleBlackjack(
+  handId: string,
+  coinType?: string
+): Promise<
+  | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
+  | { data: null; error: string; active?: boolean }
+> {
   return blackjackAction({ action: "double", handId, coinType: coinType ?? "balance" });
 }
 
-export function splitBlackjack(handId: string, coinType?: string) {
+export function splitBlackjack(
+  handId: string,
+  coinType?: string
+): Promise<
+  | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
+  | { data: null; error: string; active?: boolean }
+> {
   return blackjackAction({ action: "split", handId, coinType: coinType ?? "balance" });
 }
 
-export function insuranceBlackjack(handId: string, take: boolean, coinType?: string) {
-  return blackjackAction({ action: "insurance", handId, take, coinType: coinType ?? "balance" });
+export function insuranceBlackjack(
+  handId: string,
+  take: boolean,
+  coinType?: string
+): Promise<
+  | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
+  | { data: null; error: string; active?: boolean }
+> {
+  return blackjackAction({
+    action: "insurance",
+    handId,
+    take,
+    coinType: coinType ?? "balance",
+  });
 }
 
-export function fetchActiveBlackjack() {
+export function fetchActiveBlackjack(): Promise<
+  | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
+  | { data: null; error: string; active?: boolean }
+> {
   return blackjackAction({ action: "active" });
 }

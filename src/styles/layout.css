@@ -99,3 +99,33 @@
     pointer-events: auto;
   }
 }
+
+/* ── Skip link (keyboard accessibility) ──
+   Visually hidden until focused, then appears at top-left of the viewport
+   so keyboard users can bypass the topbar/sidebar and jump straight to the
+   main content. */
+.app-shell__skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.6rem 1rem;
+  background: var(--lc-crimson);
+  color: #fff;
+  font-family: var(--lc-font-body);
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: var(--lc-radius-sm);
+  text-decoration: none;
+  transform: translateY(-150%);
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.app-shell__skip-link:focus-visible {
+  transform: translateY(0);
+  pointer-events: auto;
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  box-shadow: var(--lc-shadow-crimson);
+}

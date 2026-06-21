@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -43,7 +43,7 @@ export function Limbo() {
   const [target, setTarget] = useState(2);
   const [targetInput, setTargetInput] = useState("2.00");
   const [rolling, setRolling] = useState(false);
-  const [showResult, setShowResult] = useState(true);
+  const [showResult, setShowResult] = useState(false);
   const [popIn, setPopIn] = useState(false);
   const [displayMult, setDisplayMult] = useState(1);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -58,6 +58,12 @@ export function Limbo() {
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
+
+  // Refs for race-safety (rollingRef) and async cleanup (cancelledRef,
+  // popInTimeoutRef). Mirrors the KENO_MINES agent's busyRef/cancelledRef pattern.
+  const rollingRef = useRef(false);
+  const cancelledRef = useRef(false);
+  const popInTimeoutRef = useRef<number | null>(null);
 
   const winChance = useMemo(() => limboWinChance(target), [target]);
   const potentialWin = useMemo(
@@ -78,6 +84,21 @@ export function Limbo() {
     if (user) loadPf();
   }, [user, loadPf]);
 
+  // Unmount cleanup: cancel any pending popIn timeout and mark the component
+  // cancelled so in-flight bet/reveal awaits don't fire setState on a dead
+  // component (React 19 silently no-ops, but this prevents the leak).
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => {
+      cancelledRef.current = true;
+      rollingRef.current = false;
+      if (popInTimeoutRef.current !== null) {
+        window.clearTimeout(popInTimeoutRef.current);
+        popInTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   const applyWager = (value: number) => {
     const v = Math.max(1, Math.min(100_000, value));
     setWager(v);
@@ -93,6 +114,10 @@ export function Limbo() {
   const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
   const handleBet = async () => {
+    // Synchronous re-entrancy guard — the Bet button's `disabled={rolling}`
+    // prop relies on a re-render cycle that leaves a sub-ms race window
+    // between the first click's setRolling(true) commit and a second click.
+    if (rollingRef.current) return;
     if (!user) {
       setError("Log in to play.");
       return;
@@ -103,28 +128,43 @@ export function Limbo() {
       return;
     }
 
+    rollingRef.current = true;
     setError(null);
     setLastResult(null);
     setRolling(true);
     setShowResult(false);
     setPopIn(false);
+    if (popInTimeoutRef.current !== null) {
+      window.clearTimeout(popInTimeoutRef.current);
+      popInTimeoutRef.current = null;
+    }
 
     const startedAt = Date.now();
     const { data, error: betErr } = await placeLimboBet({ wager, target, coinType });
     if (betErr || !data) {
+      if (cancelledRef.current) return;
+      rollingRef.current = false;
       setRolling(false);
       setShowResult(true);
       setError(betErr ?? "Bet failed.");
+      // Server may have debited before failing — refresh to stay accurate.
+      void refreshProfile();
       return;
     }
 
     const remaining = Math.max(0, REVEAL_DELAY_MS - (Date.now() - startedAt));
     await wait(remaining);
 
+    if (cancelledRef.current) {
+      rollingRef.current = false;
+      return;
+    }
+
     setDisplayMult(data.resultMultiplier);
     setShowResult(true);
     setPopIn(true);
     setRolling(false);
+    rollingRef.current = false;
     setLastResult({
       result: data.resultMultiplier,
       won: data.won,
@@ -134,9 +174,15 @@ export function Limbo() {
       [{ result: data.resultMultiplier, won: data.won }, ...h].slice(0, HISTORY_MAX)
     );
     setPfNonce(data.nonce + 1);
-    await refreshProfile();
 
-    window.setTimeout(() => setPopIn(false), POP_DURATION_MS);
+    // Schedule the popIn reset immediately so the animation duration is fixed,
+    // independent of how long refreshProfile takes. Cleared on unmount.
+    popInTimeoutRef.current = window.setTimeout(() => {
+      popInTimeoutRef.current = null;
+      if (!cancelledRef.current) setPopIn(false);
+    }, POP_DURATION_MS);
+
+    void refreshProfile();
   };
 
   const saveClientSeed = async () => {

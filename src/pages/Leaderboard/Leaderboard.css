@@ -91,6 +91,28 @@
   background: rgba(205, 127, 50, 0.09);
 }
 
+/* Highlight the current signed-in user's row (overrides top-N tint). */
+.leaderboard-table__row--me td {
+  background: rgba(220, 20, 60, 0.12);
+  box-shadow: inset 3px 0 0 var(--lc-crimson, #dc143c);
+}
+
+.leaderboard-table__row--me:hover td {
+  background: rgba(220, 20, 60, 0.18);
+}
+
+.leaderboard-table__you {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: var(--lc-crimson, #dc143c);
+}
+
 /* Empty state */
 .leaderboard-empty {
   display: flex;

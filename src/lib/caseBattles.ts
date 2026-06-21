@@ -118,13 +118,54 @@ function parseCaseIdsField(raw: unknown, fallback?: string): string[] {
   return fallback ? [fallback] : [];
 }
 
+function asNumberArray(raw: unknown): number[] {
+  return Array.isArray(raw) ? raw.map((v) => Number(v)).filter((n) => Number.isFinite(n)) : [];
+}
+
+function asCaseBattlePlayers(raw: unknown): CaseBattlePlayer[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((p) => {
+      if (!p || typeof p !== "object") return null;
+      const row = p as Record<string, unknown>;
+      const dropsRaw = row.drops;
+      const drops: CaseBattleDrop[] = Array.isArray(dropsRaw)
+        ? dropsRaw
+            .map((d) => {
+              if (!d || typeof d !== "object") return null;
+              const dr = d as Record<string, unknown>;
+              return {
+                round: Number(dr.round ?? 0),
+                caseId: dr.caseId != null ? String(dr.caseId) : undefined,
+                itemId: String(dr.itemId ?? ""),
+                name: String(dr.name ?? ""),
+                value: Number(dr.value ?? 0),
+                rarity: String(dr.rarity ?? ""),
+              } as CaseBattleDrop;
+            })
+            .filter((d): d is CaseBattleDrop => d !== null)
+        : [];
+      return {
+        slot: Number(row.slot ?? 0),
+        userId: row.userId != null ? String(row.userId) : null,
+        isBot: Boolean(row.isBot),
+        displayName: String(row.displayName ?? ""),
+        totalValue: Number(row.totalValue ?? 0),
+        drops,
+        borrowPercent: row.borrowPercent != null ? Number(row.borrowPercent) : undefined,
+        entryPaid: row.entryPaid != null ? Number(row.entryPaid) : undefined,
+      } as CaseBattlePlayer;
+    })
+    .filter((p): p is CaseBattlePlayer => p !== null);
+}
+
 function mapBattle(data: Record<string, unknown>): CaseBattleView {
   const caseIds = parseCaseIdsField(data.caseIds, data.caseId ? String(data.caseId) : undefined);
   const results = data.results as Record<string, unknown> | null;
   const winningSlots = Array.isArray(data.winningSlots)
-    ? (data.winningSlots as number[])
+    ? asNumberArray(data.winningSlots)
     : Array.isArray(results?.winningSlots)
-      ? (results!.winningSlots as number[])
+      ? asNumberArray(results!.winningSlots)
       : data.winnerSlot != null
         ? [Number(data.winnerSlot)]
         : [];
@@ -161,7 +202,7 @@ function mapBattle(data: Record<string, unknown>): CaseBattleView {
     jackpotEosBlockNum: data.jackpotEosBlockNum != null ? Number(data.jackpotEosBlockNum) : null,
     jackpotEosBlockId: (data.jackpotEosBlockId as string | null) ?? null,
     results: data.results ?? null,
-    players: (data.players as CaseBattlePlayer[]) ?? [],
+    players: asCaseBattlePlayers(data.players),
     balance: data.balance != null ? Number(data.balance) : undefined,
   };
 }
@@ -175,7 +216,9 @@ export async function caseBattleAction(
   return { data: mapBattle(data), error: null };
 }
 
-export async function listOpenCaseBattles(limit = 20) {
+export async function listOpenCaseBattles(
+  limit = 20
+): Promise<{ battles: OpenBattleRow[]; error: string | null }> {
   const { data, error } = await invokeEdgeFunction<Record<string, unknown>>("case-battle", {
     action: "list",
     limit,
@@ -197,11 +240,15 @@ export async function listOpenCaseBattles(limit = 20) {
   return { battles, error: null };
 }
 
-export function viewCaseBattle(battleId: string) {
+export function viewCaseBattle(
+  battleId: string
+): Promise<{ data: CaseBattleView | null; error: string | null }> {
   return caseBattleAction({ action: "view", battleId });
 }
 
-export async function claimCaseBattlePayout(battleId: string) {
+export async function claimCaseBattlePayout(
+  battleId: string
+): Promise<{ data: { balance?: number; credited: boolean } | null; error: string | null }> {
   const { data, error } = await invokeEdgeFunction<{
     balance?: number;
     credited?: boolean;
@@ -223,11 +270,14 @@ export function createCaseBattle(params: {
   crazyMode?: boolean;
   fastSpin?: boolean;
   borrowPercent?: number;
-}) {
+}): Promise<{ data: CaseBattleView | null; error: string | null }> {
   return caseBattleAction({ action: "create", ...params });
 }
 
-export function joinCaseBattle(battleId: string, borrowPercent = 0) {
+export function joinCaseBattle(
+  battleId: string,
+  borrowPercent = 0
+): Promise<{ data: CaseBattleView | null; error: string | null }> {
   return caseBattleAction({
     action: "join",
     battleId,
@@ -235,7 +285,10 @@ export function joinCaseBattle(battleId: string, borrowPercent = 0) {
   });
 }
 
-export function addBotToCaseBattle(battleId: string, slotIndex?: number) {
+export function addBotToCaseBattle(
+  battleId: string,
+  slotIndex?: number
+): Promise<{ data: CaseBattleView | null; error: string | null }> {
   return caseBattleAction({
     action: "add_bot",
     battleId,
@@ -243,9 +296,12 @@ export function addBotToCaseBattle(battleId: string, slotIndex?: number) {
   });
 }
 
-export async function fetchCaseBattlePfState() {
+export async function fetchCaseBattlePfState(): Promise<{
+  data: CaseBattlePfState | null;
+  error: string | null;
+}> {
   if (!isSupabaseConfigured) {
-    return { data: null as CaseBattlePfState | null, error: "Supabase is not configured." };
+    return { data: null, error: "Supabase is not configured." };
   }
   const { data, error } = await supabase.rpc("get_case_battle_pf_state");
   if (error) {
@@ -270,7 +326,12 @@ export async function fetchCaseBattlePfState() {
   };
 }
 
-export async function setCaseBattleClientSeed(clientSeed: string) {
+export async function setCaseBattleClientSeed(
+  clientSeed: string
+): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured) {
+    return { error: "Supabase is not configured." };
+  }
   const { error } = await supabase.rpc("set_case_battle_client_seed", {
     p_client_seed: clientSeed,
   });

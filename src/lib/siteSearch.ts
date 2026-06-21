@@ -91,14 +91,6 @@ const PAGE_ITEMS: SiteSearchItem[] = [
     keywords: ["redeem", "cash out", "sc", "sweeps", "paypal", "real money"],
   },
   {
-    id: "slots",
-    label: "Slots",
-    description: "Spin the reels on classic 3-reel slots",
-    href: "/slots",
-    category: "game",
-    keywords: ["slots", "slot", "reel", "spin", "original", "game"],
-  },
-  {
     id: "leaderboard",
     label: "Leaderboard",
     description: "Top players and rankings",
@@ -113,14 +105,6 @@ const PAGE_ITEMS: SiteSearchItem[] = [
     href: "/profile",
     category: "page",
     keywords: ["profile", "stats", "avatar", "username"],
-  },
-  {
-    id: "case-battles",
-    label: "Case Battles",
-    description: "Battle cases against other players",
-    href: "/case-battles",
-    category: "page",
-    keywords: ["case", "battles", "battle", "multiplayer"],
   },
   {
     id: "admin",
@@ -139,6 +123,10 @@ const PAGE_ITEMS: SiteSearchItem[] = [
     keywords: ["promotions", "promo", "bonus", "rewards"],
   },
 ];
+
+// NOTE: `slots` and `case-battles` are intentionally NOT in PAGE_ITEMS — they
+// are live games and are auto-generated in GAME_ITEMS below from ORIGINAL_GAMES.
+// Duplicating them here would cause double entries in search results.
 
 const GAME_ITEMS: SiteSearchItem[] = ORIGINAL_GAMES.filter((g) => g.live).map((g) => ({
   id: g.id,

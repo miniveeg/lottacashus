@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
@@ -20,7 +20,7 @@ import {
   getCashFlowTally,
   SC_USD_RATE,
 } from "../../lib/format";
-import { supabase } from "../../lib/supabase";
+import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import {
   fetchTransactionsPage,
   TRANSACTIONS_PAGE_SIZE,
@@ -28,7 +28,7 @@ import {
 import type { Transaction } from "../../types/transaction";
 import { TRANSACTION_LABELS } from "../../types/transaction";
 import { SettingsLevelSection } from "../../components/Level/SettingsLevelSection";
-import { MAX_USERNAME_LENGTH } from "../../lib/username";
+import { MAX_USERNAME_LENGTH, validateUsername } from "../../lib/username";
 import {
   fetchSelfExclusion,
   createSelfExclusion,
@@ -63,11 +63,11 @@ function txCoinType(type: Transaction["type"]): "balance" | "sweeps_coins" {
 
 export function Settings() {
   const { user, loading: authLoading, session } = useAuth();
-  const { pathname } = useLocation();
   const { profile, profileLoading, updateUsername, refreshProfile } = useProfile();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [username, setUsername] = useState("");
+  const [initialUsername, setInitialUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -85,6 +85,8 @@ export function Settings() {
   const [depositLimits, setDepositLimitsState] = useState<DepositLimits | null>(null);
   const [dlDaily, setDlDaily] = useState("");
   const [dlWeekly, setDlWeekly] = useState("");
+  const [initialDlDaily, setInitialDlDaily] = useState("");
+  const [initialDlWeekly, setInitialDlWeekly] = useState("");
   const [dlBusy, setDlBusy] = useState(false);
 
   const txPageCount = Math.max(1, Math.ceil(txTotal / TRANSACTIONS_PAGE_SIZE));
@@ -104,7 +106,44 @@ export function Settings() {
     const name =
       profile?.username ?? user?.user_metadata?.username ?? user?.email?.split("@")[0] ?? "";
     setUsername(name);
+    setInitialUsername(name);
   }, [profile?.username, user?.user_metadata?.username, user?.email]);
+
+  useEffect(() => {
+    if (!user) return;
+    fetchSelfExclusion().then(setSelfExclusion);
+    fetchDepositLimits().then((limits) => {
+      setDepositLimitsState(limits);
+      const daily = limits?.daily != null ? String(limits.daily) : "";
+      const weekly = limits?.weekly != null ? String(limits.weekly) : "";
+      setDlDaily(daily);
+      setDlWeekly(weekly);
+      setInitialDlDaily(daily);
+      setInitialDlWeekly(weekly);
+    });
+  }, [user]);
+
+  const usernameDirty = username !== initialUsername;
+  const limitsDirty = dlDaily !== initialDlDaily || dlWeekly !== initialDlWeekly;
+  const hasUnsavedChanges = usernameDirty || limitsDirty;
+
+  // Warn before unloading the tab / navigating away to a different site when
+  // the user has unsaved edits in either the username form or the deposit-
+  // limits form. BrowserRouter (component routes) doesn't support `useBlocker`,
+  // so we can't intercept in-app navigation — but `beforeunload` covers the
+  // most-lossy case (closing the tab while a half-typed username is present).
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  hasUnsavedChangesRef.current = hasUnsavedChanges;
+  useEffect(() => {
+    const handler = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedChangesRef.current) return;
+      event.preventDefault();
+      // Browsers ignore custom text but require returnValue to be set.
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, []);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -128,18 +167,6 @@ export function Settings() {
       supabase.removeChannel(channel);
     };
   }, [user?.id, loadTransactions]);
-
-  useEffect(() => {
-    if (!user) return;
-    fetchSelfExclusion().then(setSelfExclusion);
-    fetchDepositLimits().then((limits) => {
-      setDepositLimitsState(limits);
-      if (limits) {
-        setDlDaily(limits.daily != null ? String(limits.daily) : "");
-        setDlWeekly(limits.weekly != null ? String(limits.weekly) : "");
-      }
-    });
-  }, [user]);
 
   useEffect(() => {
     const code = searchParams.get("code");
@@ -172,18 +199,37 @@ export function Settings() {
   }, [searchParams, session, setSearchParams, refreshProfile]);
 
   if (!authLoading && !user) {
-    return <Navigate to={loginUrl(pathname)} replace />;
+    // Hardcode the redirect path (don't use `pathname` from useLocation).
+    // When Settings returns <Navigate>, React Router updates the location, but
+    // Settings stays mounted for one more render before Login takes over — so
+    // useLocation() would return the NEW pathname ("/login") on that second
+    // render, causing a second Navigate to `/login?redirect=%2Flogin` (clobbering
+    // the original `?redirect=%2Fsettings` param and breaking the post-login
+    // deep link back to /settings).
+    return <Navigate to={loginUrl("/settings")} replace />;
   }
 
   async function handleSaveUsername(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+    const validationError = validateUsername(username);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    if (!isSupabaseConfigured) {
+      setError("Supabase is not configured. Add your project URL and anon key to the .env file.");
+      return;
+    }
     setSaving(true);
     const { error: saveError } = await updateUsername(username);
     setSaving(false);
     if (saveError) setError(saveError);
-    else setSuccess("Username updated.");
+    else {
+      setInitialUsername(username);
+      setSuccess("Username updated.");
+    }
   }
 
   function handleLinkDiscord() {
@@ -335,15 +381,25 @@ export function Settings() {
               id="settings-username"
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                if (success) setSuccess(null);
+              }}
               maxLength={MAX_USERNAME_LENGTH}
               aria-describedby="settings-username-hint"
+              aria-invalid={Boolean(error) || undefined}
+              autoComplete="nickname"
             />
             <p className="settings__hint" id="settings-username-hint">
               {username.length}/{MAX_USERNAME_LENGTH} characters
+              {usernameDirty && <span className="settings__dirty-flag"> · unsaved</span>}
             </p>
           </div>
-          <button type="submit" className="settings__btn" disabled={saving || profileLoading}>
+          <button
+            type="submit"
+            className="settings__btn"
+            disabled={saving || profileLoading || !usernameDirty}
+          >
             {saving && <span className="settings__btn__spinner" aria-hidden="true" />}
             {saving ? "Saving…" : "Save username"}
           </button>
@@ -402,7 +458,7 @@ export function Settings() {
         )}
         {!isDiscordConfigured && (
           <p className="settings__hint settings__hint--top">
-            Add <code>VITE_DISCORD_CLIENT_ID</code> and deploy the <code>link-discord</code> Edge Function with Discord secrets.
+            Add <code>VITE_DISCORD_CLIENT_ID</code> to your <code>.env</code> and deploy the <code>link-discord</code> Edge Function with Discord secrets.
           </p>
         )}
       </section>
@@ -436,10 +492,15 @@ export function Settings() {
               type="number"
               min="0"
               step="10"
+              inputMode="decimal"
               placeholder="No limit"
               value={dlDaily}
-              onChange={(e) => setDlDaily(e.target.value)}
+              onChange={(e) => {
+                setDlDaily(e.target.value);
+                if (success) setSuccess(null);
+              }}
               disabled={dlBusy}
+              aria-describedby={limitsDirty ? "dl-dirty-hint" : undefined}
             />
           </div>
           <div className="settings__field settings__field--small">
@@ -449,33 +510,65 @@ export function Settings() {
               type="number"
               min="0"
               step="10"
+              inputMode="decimal"
               placeholder="No limit"
               value={dlWeekly}
-              onChange={(e) => setDlWeekly(e.target.value)}
+              onChange={(e) => {
+                setDlWeekly(e.target.value);
+                if (success) setSuccess(null);
+              }}
               disabled={dlBusy}
+              aria-describedby={limitsDirty ? "dl-dirty-hint" : undefined}
             />
           </div>
         </div>
+        {limitsDirty && (
+          <p className="settings__hint" id="dl-dirty-hint" role="status">
+            You have unsaved deposit-limit changes.
+          </p>
+        )}
         <button
           type="button"
           className="settings__btn"
-          disabled={dlBusy}
+          disabled={dlBusy || !limitsDirty}
           onClick={async () => {
             setError(null);
             setSuccess(null);
+            const dailyRaw = dlDaily.trim();
+            const weeklyRaw = dlWeekly.trim();
+            const daily = dailyRaw ? Number(dailyRaw) : null;
+            const weekly = weeklyRaw ? Number(weeklyRaw) : null;
+            if (
+              (daily !== null && !Number.isFinite(daily)) ||
+              (weekly !== null && !Number.isFinite(weekly))
+            ) {
+              setError("Deposit limits must be numeric values.");
+              return;
+            }
+            if (
+              (daily !== null && daily < 0) ||
+              (weekly !== null && weekly < 0)
+            ) {
+              setError("Deposit limits cannot be negative.");
+              return;
+            }
             setDlBusy(true);
-            const daily = dlDaily.trim() ? parseFloat(dlDaily) : null;
-            const weekly = dlWeekly.trim() ? parseFloat(dlWeekly) : null;
             const { error: limitError } = await setDepositLimits(daily, weekly);
             setDlBusy(false);
             if (limitError) setError(limitError);
             else {
               setSuccess("Deposit limits updated.");
+              setInitialDlDaily(dlDaily);
+              setInitialDlWeekly(dlWeekly);
               fetchDepositLimits().then((limits) => {
                 setDepositLimitsState(limits);
                 if (limits) {
-                  setDlDaily(limits.daily != null ? String(limits.daily) : "");
-                  setDlWeekly(limits.weekly != null ? String(limits.weekly) : "");
+                  const d = limits.daily != null ? String(limits.daily) : "";
+                  const w = limits.weekly != null ? String(limits.weekly) : "";
+                  setDlDaily(d);
+                  setDlWeekly(w);
+                  setInitialDlDaily(d);
+                  setInitialDlWeekly(w);
                 }
               });
             }

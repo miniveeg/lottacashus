@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
@@ -59,6 +59,18 @@ export function CaseBattlesCreate() {
   const [crazy, setCrazy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const busyRef = useRef(false);
+  const cancelledRef = useRef(false);
+
+  // Signal in-flight async work to stop touching state on unmount.
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => {
+      cancelledRef.current = true;
+      busyRef.current = false;
+    };
+  }, []);
 
   const createTotal = useMemo(
     () => battleEntryCostFromCaseIds(selectedCaseIds),
@@ -145,6 +157,13 @@ export function CaseBattlesCreate() {
   };
 
   const handleCreate = async () => {
+    // Double-click race guard: the Create button's `disabled={!canCreate}`
+    // (where canCreate includes `!busy`) prevents most double-clicks, but
+    // there's a sub-ms window between the first click's setBusy(true) state
+    // commit and the second click's handler execution. The ref closes that
+    // window synchronously.
+    if (busyRef.current) return;
+
     if (!user) {
       setError("Log in to create a battle.");
       return;
@@ -157,6 +176,7 @@ export function CaseBattlesCreate() {
       setError("Insufficient balance for your entry.");
       return;
     }
+    busyRef.current = true;
     setBusy(true);
     setError(null);
     const { data, error: createErr } = await createCaseBattle({
@@ -167,12 +187,18 @@ export function CaseBattlesCreate() {
       fastSpin,
       borrowPercent: effectiveBorrow,
     });
+    if (cancelledRef.current) return;
+    busyRef.current = false;
     setBusy(false);
     if (createErr || !data) {
       setError(createErr ?? "Could not create battle.");
+      // Server may have debited the entry before failing — refresh to get the
+      // authoritative balance.
+      void refreshProfile();
       return;
     }
     await refreshProfile();
+    if (cancelledRef.current) return;
     navigate(`/case-battles/${data.battleId}`);
   };
 

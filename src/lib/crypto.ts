@@ -1,12 +1,21 @@
 import { invokeEdgeFunction } from "./edgeFunctions";
-import { supabase } from "./supabase";
-import type { CryptoChain, DepositAddressResponse } from "../types/crypto";
+import { isSupabaseConfigured, supabase } from "./supabase";
+import type { CryptoChain, CryptoDepositRow, DepositAddressResponse } from "../types/crypto";
 
-export async function fetchDepositAddress(chain: CryptoChain) {
+const NOT_CONFIGURED_ERROR = "Supabase is not configured. Add your keys to .env.";
+
+export async function fetchDepositAddress(
+  chain: CryptoChain
+): Promise<{ data: DepositAddressResponse | null; error: string | null }> {
   return invokeEdgeFunction<DepositAddressResponse>("get-deposit-address", { chain });
 }
 
-export async function fetchMyDeposits() {
+export async function fetchMyDeposits(): Promise<{
+  data: CryptoDepositRow[] | null;
+  error: string | null;
+}> {
+  if (!isSupabaseConfigured) return { data: null, error: NOT_CONFIGURED_ERROR };
+
   const { data, error } = await supabase
     .from("crypto_deposits")
     .select(
@@ -16,21 +25,42 @@ export async function fetchMyDeposits() {
     .limit(20);
 
   if (error) return { data: null, error: error.message };
-  return { data, error: null };
+  return { data: (data ?? []) as CryptoDepositRow[], error: null };
 }
 
-export async function requestWithdrawal(chain: CryptoChain, destination: string, usdAmount: number) {
+export async function requestWithdrawal(
+  chain: CryptoChain,
+  destination: string,
+  usdAmount: number
+): Promise<{ data: string | null; error: string | null }> {
+  if (!isSupabaseConfigured) return { data: null, error: NOT_CONFIGURED_ERROR };
+
   const { data, error } = await supabase.rpc("request_crypto_withdrawal", {
     p_chain: chain,
     p_destination: destination.trim(),
     p_usd_amount: usdAmount,
   });
 
-  if (error) return { error: error.message };
+  if (error) return { data: null, error: error.message };
   return { data: data as string, error: null };
 }
 
-export async function fetchMyWithdrawals() {
+export type CryptoWithdrawalRow = {
+  id: string;
+  chain: string;
+  destination_address: string;
+  usd_amount: number;
+  status: string;
+  created_at: string;
+  completed_at: string | null;
+};
+
+export async function fetchMyWithdrawals(): Promise<{
+  data: CryptoWithdrawalRow[] | null;
+  error: string | null;
+}> {
+  if (!isSupabaseConfigured) return { data: null, error: NOT_CONFIGURED_ERROR };
+
   const { data, error } = await supabase
     .from("crypto_withdrawals")
     .select("id, chain, destination_address, usd_amount, status, created_at, completed_at")
@@ -38,7 +68,7 @@ export async function fetchMyWithdrawals() {
     .limit(20);
 
   if (error) return { data: null, error: error.message };
-  return { data, error: null };
+  return { data: (data ?? []) as CryptoWithdrawalRow[], error: null };
 }
 
 export function validateCryptoAddress(chain: CryptoChain, address: string): boolean {

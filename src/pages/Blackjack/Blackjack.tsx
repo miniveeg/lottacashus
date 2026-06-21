@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -83,6 +83,11 @@ export function Blackjack() {
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
 
+  // Refs for race-safety (busyRef) and async cleanup (cancelledRef).
+  // Mirrors the KENO_MINES / LIMBO_CRASH agents' busyRef/cancelledRef pattern.
+  const busyRef = useRef(false);
+  const cancelledRef = useRef(false);
+
   const insuranceOffer = hand?.status === "insurance_offer";
   const playing = hand?.status === "player_turn" || insuranceOffer;
   const settled = hand?.status === "settled";
@@ -107,6 +112,7 @@ export function Blackjack() {
 
   const resume = useCallback(async () => {
     const res = await fetchActiveBlackjack();
+    if (cancelledRef.current) return;
     if (res.error || !res.data) return;
     if (res.data.status === "player_turn" || res.data.status === "insurance_offer") {
       applyHand(res.data);
@@ -119,6 +125,17 @@ export function Blackjack() {
       resume();
     }
   }, [user, loadPf, resume]);
+
+  // Unmount cleanup: mark the component cancelled so in-flight action awaits
+  // don't fire setState on a dead component (React 19 silently no-ops, but
+  // this prevents the leak and clears the busy flag for any queued click).
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => {
+      cancelledRef.current = true;
+      busyRef.current = false;
+    };
+  }, []);
 
   const applyWager = (value: number) => {
     const v = Math.max(1, Math.min(100_000, value));
@@ -134,6 +151,10 @@ export function Blackjack() {
   };
 
   const handleStart = async () => {
+    // Synchronous re-entrancy guard — the Deal button's `disabled={busy}`
+    // prop relies on a re-render cycle that leaves a sub-ms race window
+    // between the first click's setBusy(true) commit and a second click.
+    if (busyRef.current) return;
     if (!user) {
       setError("Log in to play.");
       return;
@@ -143,27 +164,38 @@ export function Blackjack() {
       setError("Insufficient balance.");
       return;
     }
+    busyRef.current = true;
     setError(null);
     setLastMessage(null);
     setHand(null);
     setBusy(true);
     const { data, error: err } = await startBlackjack(wager, coinType);
+    if (cancelledRef.current) {
+      busyRef.current = false;
+      return;
+    }
     setBusy(false);
+    busyRef.current = false;
     if (err || !data) {
       setError(err ?? "Could not start hand.");
+      // Server may have debited before failing — refresh to stay accurate.
+      void refreshProfile();
       return;
     }
     applyHand(data);
     if (data.status === "settled") finishSettled(data);
     if (data.nonce != null) setPfNonce(data.nonce + 1);
-    await refreshProfile();
+    void refreshProfile();
   };
 
   const runAction = async (
     action: "hit" | "stand" | "double" | "split" | "insurance",
     insuranceTake?: boolean
   ) => {
+    // Synchronous re-entrancy guard — same sub-ms race window as handleStart.
+    if (busyRef.current) return;
     if (!hand?.handId) return;
+    busyRef.current = true;
     setBusy(true);
     setError(null);
     const fn =
@@ -175,11 +207,18 @@ export function Blackjack() {
             ? doubleBlackjack
             : action === "split"
               ? splitBlackjack
-              : (id: string) => insuranceBlackjack(id, Boolean(insuranceTake));
+              : (id: string, ct?: string) => insuranceBlackjack(id, Boolean(insuranceTake), ct);
     const { data, error: err } = await fn(hand.handId, coinType);
+    if (cancelledRef.current) {
+      busyRef.current = false;
+      return;
+    }
     setBusy(false);
+    busyRef.current = false;
     if (err || !data) {
       setError(err ?? "Action failed.");
+      // Server may have debited before failing — refresh to stay accurate.
+      void refreshProfile();
       return;
     }
     if (data.status === "settled") {
@@ -187,7 +226,7 @@ export function Blackjack() {
     } else {
       applyHand(data);
     }
-    await refreshProfile();
+    void refreshProfile();
   };
 
   const dealerTotal =

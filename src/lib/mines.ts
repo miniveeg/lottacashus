@@ -126,7 +126,11 @@ export async function fetchActiveMinesGame(): Promise<{
   };
 }
 
-export async function startMinesGame(params: { wager: number; mineCount: number; coinType?: string }) {
+export async function startMinesGame(params: {
+  wager: number;
+  mineCount: number;
+  coinType?: string;
+}): Promise<{ data: MinesStartResult | null; error: string | null }> {
   return invokeEdgeFunction<MinesStartResult>("mines-game", {
     action: "start",
     wager: params.wager,
@@ -140,7 +144,7 @@ export async function revealMinesTile(params: {
   tile: number;
   mineCount?: number;
   coinType?: string;
-}) {
+}): Promise<{ data: MinesRevealResult | null; error: string | null }> {
   return invokeEdgeFunction<MinesRevealResult>("mines-game", {
     action: "reveal",
     gameId: params.gameId,
@@ -150,7 +154,9 @@ export async function revealMinesTile(params: {
   });
 }
 
-export async function cashoutMinesGame(params: { gameId: string; coinType?: string }) {
+export async function cashoutMinesGame(
+  params: { gameId: string; coinType?: string }
+): Promise<{ data: MinesCashoutResult | null; error: string | null }> {
   return invokeEdgeFunction<MinesCashoutResult>("mines-game", {
     action: "cashout",
     gameId: params.gameId,

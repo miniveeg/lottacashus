@@ -46,6 +46,7 @@
   overflow: hidden;
 }
 
+/* (legacy `.lc-stat` / `.lc-stat-grid` aliases removed — never referenced from any .tsx file; only `.admin__stat` is used.) */
 .lc-page__eyebrow {
   display: inline-flex;
   align-items: center;
@@ -148,7 +149,6 @@
 .limbo__bet-btn,
 .bj__deal-btn,
 .cb-page__btn-primary,
-.cb-page__primary-btn,
 .cbh__join-btn {
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
   color: #fff;
@@ -169,8 +169,7 @@
 .bj__deal-btn:hover:not(:disabled),
 .crash__bet-btn:hover:not(:disabled),
 .crash__cashout-btn:hover:not(:disabled),
-.cb-page__btn-primary:hover,
-.cb-page__primary-btn:hover {
+.cb-page__btn-primary:hover {
   transform: translateY(-2px);
   filter: brightness(1.08);
   box-shadow: 0 6px 28px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
@@ -292,13 +291,7 @@
 }
 
 /* ── Stat cards ── */
-.lc-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
-}
-
-.lc-stat, .admin__stat {
+.admin__stat {
   padding: 1.1rem 1.2rem;
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
@@ -306,7 +299,7 @@
   transition: border-color var(--lc-transition);
 }
 
-.lc-stat:hover, .admin__stat:hover {
+.admin__stat:hover {
   border-color: var(--lc-border-strong);
 }
 
@@ -477,11 +470,11 @@
 }
 
 /* ── Focus ──
-   The global :focus-visible rule in global.css supplies the outline;
-   here we only suppress the legacy duplicate so the higher-contrast
-   crimson-soft indicator wins everywhere. */
-button:focus:not(:focus-visible),
-a:focus:not(:focus-visible) { outline: none; }
+   The global `:focus-visible` rule in global.css supplies the crimson
+   outline (and suppresses the legacy non-focus-visible outline for
+   buttons / links / `[role="button"]`). The per-component `:focus`
+   override that used to live here was a duplicate of the global rule
+   and has been removed. */
 
 /* ── Text inputs ── */
 .wallet__input, .admin__input, .settings__input {
@@ -521,6 +514,24 @@ a:focus:not(:focus-visible) { outline: none; }
   .mines__layout, .limbo__layout, .keno__layout,
   .roulette__layout, .crash__layout, .slots__layout {
     grid-template-columns: 1fr;
+  }
+
+  /* ── Touch targets ≥44px (WCAG 2.5.5 AAA / 2.5.8 AA-extended) ──
+     Buttons, tabs, selects and inputs are tappable on touch devices.
+     The desktop sizes (e.g. `.lc-btn` ≈ 39px, `.lc-tab` ≈ 36px,
+     `select` min-height 2.6rem ≈ 42px) are slightly under the 44px
+     guidance, so bump them on mobile where pointers are imprecise. */
+  .lc-btn,
+  .lc-tab,
+  .wallet__tab,
+  .help__tab,
+  .wallet__chain-btn,
+  select,
+  .lc-select-native,
+  .wallet__input,
+  .admin__input,
+  .settings__input {
+    min-height: 44px;
   }
 }
 

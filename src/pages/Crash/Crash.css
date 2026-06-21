@@ -340,3 +340,30 @@
 .crash__controls {
   /* unified via lc-pages.css */
 }
+
+/* Visually-hidden SR-only live region for screen-reader status updates. */
+.crash__sr-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Reduced-motion: disable decorative CSS animations (shake/flash/bounce).
+   The rAF multiplier curve is core gameplay and is preserved. */
+@media (prefers-reduced-motion: reduce) {
+  .crash__canvas-wrap,
+  .crash__canvas-wrap--crashed,
+  .crash__canvas-wrap--crashed::after,
+  .crash__mult-value,
+  .crash__mult-value--crashed,
+  .crash__mult-value--win {
+    animation: none !important;
+    transition: none !important;
+  }
+}

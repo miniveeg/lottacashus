@@ -3,6 +3,12 @@
   inset: 0;
   z-index: 90;
   background: rgba(0, 0, 0, 0.45);
+  animation: lc-notif-backdrop-in 180ms ease both;
+}
+
+@keyframes lc-notif-backdrop-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .notifications-panel {
@@ -19,6 +25,47 @@
   border-radius: var(--lc-radius-lg);
   box-shadow: var(--lc-shadow-md);
   overflow: hidden;
+  /* Focus can land on the panel itself (TabIndex=-1) when there are no
+     focusable children — show a focus ring in that case. */
+  outline: none;
+  animation: lc-notif-dropdown-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.notifications-panel:focus-visible {
+  box-shadow: var(--lc-focus-ring);
+}
+
+@keyframes lc-notif-dropdown-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* Mobile: full-width bottom-sheet drawer instead of a top-right dropdown. */
+@media (max-width: 900px) {
+  .notifications-panel {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 75vh;
+    border-radius: var(--lc-radius-lg) var(--lc-radius-lg) 0 0;
+    border-bottom: none;
+    animation: lc-notif-drawer-in 280ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+@keyframes lc-notif-drawer-in {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notifications-panel,
+  .notifications-panel__backdrop {
+    animation: none;
+  }
 }
 
 .notifications-panel__header {
@@ -48,12 +95,20 @@
   font-size: 1.35rem;
   line-height: 1;
   color: var(--lc-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
   transition: background var(--lc-transition), color var(--lc-transition);
 }
 
 .notifications-panel__close:hover {
   background: var(--lc-bg-hover);
   color: var(--lc-text-primary);
+}
+
+.notifications-panel__close:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
 }
 
 .notifications-panel__body {
@@ -82,19 +137,42 @@
 }
 
 .notifications-panel__item {
-  display: flex;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--lc-border);
-  transition: background var(--lc-transition);
+  /* padding moved to the inner button so the whole row is the click target. */
 }
 
 .notifications-panel__item:last-child {
   border-bottom: none;
 }
 
-.notifications-panel__item--unread {
+.notifications-panel__item--unread .notifications-panel__item-btn {
   background: rgba(245, 185, 66, 0.06);
+}
+
+/* The whole list item is a button (so Enter/Space activates it and it's
+   reachable via Tab). Spans inside render as block via the rules below. */
+.notifications-panel__item-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: background var(--lc-transition);
+}
+
+.notifications-panel__item-btn:hover {
+  background: var(--lc-bg-hover);
+}
+
+.notifications-panel__item-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
 }
 
 .notifications-panel__icon {
@@ -121,12 +199,15 @@
   color: var(--lc-ruby);
 }
 
+/* Spans render as block to preserve the original (div/p) visual layout. */
 .notifications-panel__content {
+  display: block;
   min-width: 0;
   flex: 1;
 }
 
 .notifications-panel__item-title {
+  display: block;
   margin: 0 0 0.2rem;
   font-weight: 600;
   font-size: 0.875rem;
@@ -134,6 +215,7 @@
 }
 
 .notifications-panel__item-body {
+  display: block;
   margin: 0 0 0.35rem;
   font-size: 0.8rem;
   line-height: 1.4;
@@ -141,6 +223,7 @@
 }
 
 .notifications-panel__time {
+  display: block;
   font-size: 0.7rem;
   color: var(--lc-text-muted);
 }

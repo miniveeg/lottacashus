@@ -394,6 +394,13 @@
   margin-top: 0.75rem;
 }
 
+/* Inline "unsaved" indicator shown next to the character-count hint when the
+   user has typed a new username but not yet hit Save. */
+.settings__dirty-flag {
+  color: var(--lc-gold-soft, var(--lc-gold, #f5b942));
+  font-weight: 600;
+}
+
 .settings__error {
   padding: 0.65rem 0.85rem;
   margin-bottom: 1rem;

@@ -18,8 +18,17 @@ export function LevelDetailPanel({ totalWagered, variant = "popover" }: Props) {
   const className =
     variant === "inline" ? "level-detail level-detail--inline" : "level-detail level-detail--popover";
 
+  // The popover variant only mounts after the user explicitly toggles the
+  // level button, so `role="status"` is appropriate — it queues a polite
+  // announcement of the level info that just appeared. The inline variant
+  // (SettingsLevelSection) is always present on the Settings page; giving it
+  // `role="status"` would force a redundant announcement on every Settings
+  // mount, so we omit the role there and let the surrounding heading convey
+  // context.
+  const role = variant === "popover" ? "status" : undefined;
+
   return (
-    <div className={className} role="status">
+    <div className={className} role={role}>
       <p className="level-detail__headline">
         {progress.isMaxLevel
           ? `Level ${progress.level} — max level`

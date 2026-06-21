@@ -70,11 +70,12 @@ export function CaseBattlesHub() {
     setOpenBattles(filterListedBattles(res.battles));
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    void loadLobby();
-  }, [loadLobby]);
-
+  // The lobby poll hook (useCaseBattlesLobbyPoll) fires `loadLobby()` once on
+  // mount and then every POLL_MS. We do NOT additionally call loadLobby here —
+  // doing so caused a duplicate fetch on every mount (one from a manual
+  // useEffect, one from the poll hook's initial tick).
+  // `loading` is initialized to `true` in useState, so the skeleton shows on
+  // first render before the poll hook's initial tick resolves.
   useCaseBattlesLobbyPoll(true, loadLobby);
 
   useEffect(() => {
@@ -163,6 +164,10 @@ export function CaseBattlesHub() {
               <div key={i} className="cbh__skeleton" aria-hidden />
             ))}
           </div>
+        ) : error ? (
+          // Suppress the empty-state when there's an error — showing both
+          // "Supabase is not configured" AND "No open battles" was confusing.
+          <></>
         ) : sortedBattles.length === 0 ? (
           <div className="cbh__empty">
             <div className="cbh__empty-icon" aria-hidden>

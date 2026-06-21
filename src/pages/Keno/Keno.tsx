@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -53,6 +53,14 @@ export function Keno() {
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
 
+  // Ref mirror of `drawing` so handleBet can guard against re-entrant
+  // clicks without waiting for a state-commit + re-render cycle.
+  const drawingRef = useRef(false);
+  // Reveal-animation timeout IDs — cleared on unmount or new bet so they
+  // can't fire setState on an unmounted component or interleave with a
+  // new round's reveal.
+  const revealTimeoutsRef = useRef<number[]>([]);
+
   const pickCount = selected.length;
   const paytable = useMemo(
     () => (pickCount > 0 ? getPaytableRow(pickCount, risk) : []),
@@ -73,9 +81,28 @@ export function Keno() {
     if (user) loadPf();
   }, [user, loadPf]);
 
+  // Clear any pending reveal-animation timeouts on unmount so they can't
+  // fire setState on an unmounted component.
+  useEffect(() => {
+    return () => {
+      for (const id of revealTimeoutsRef.current) {
+        window.clearTimeout(id);
+      }
+      revealTimeoutsRef.current = [];
+      drawingRef.current = false;
+    };
+  }, []);
+
   const toggleNumber = (n: number) => {
-    if (drawing) return;
+    if (drawingRef.current) return;
     setError(null);
+    // If a previous round's drawn numbers are still on screen, clear them
+    // so the user sees only their new selection (not stale drawn/hit state).
+    if (drawn !== null) {
+      setDrawn(null);
+      setRevealCount(0);
+      setLastResult(null);
+    }
     setSelected((prev) => {
       if (prev.includes(n)) return prev.filter((x) => x !== n);
       if (prev.length >= MAX_PICKS) return prev;
@@ -84,7 +111,7 @@ export function Keno() {
   };
 
   const clearTable = () => {
-    if (drawing) return;
+    if (drawingRef.current) return;
     setSelected([]);
     setDrawn(null);
     setRevealCount(0);
@@ -93,10 +120,11 @@ export function Keno() {
   };
 
   const autoPick = () => {
-    if (drawing) return;
+    if (drawingRef.current) return;
     const count = pickCount > 0 ? pickCount : 10;
     setSelected(randomPick(Math.min(count, MAX_PICKS)));
     setDrawn(null);
+    setRevealCount(0);
     setLastResult(null);
   };
 
@@ -109,6 +137,7 @@ export function Keno() {
   const halfWager = () => applyWager(wager / 2);
 
   const handleBet = async () => {
+    if (drawingRef.current) return;
     if (!user) {
       setError("Log in to play.");
       return;
@@ -125,10 +154,16 @@ export function Keno() {
     }
 
     setError(null);
+    drawingRef.current = true;
     setDrawing(true);
     setDrawn(null);
     setRevealCount(0);
     setLastResult(null);
+    // Cancel any still-pending reveal timeouts from a prior round.
+    for (const id of revealTimeoutsRef.current) {
+      window.clearTimeout(id);
+    }
+    revealTimeoutsRef.current = [];
 
     const { data, error: betErr } = await placeKenoBet({
       wager,
@@ -138,14 +173,17 @@ export function Keno() {
     });
 
     if (betErr || !data) {
+      drawingRef.current = false;
       setDrawing(false);
       setError(betErr ?? "Bet failed.");
+      // Server may have debited before the error — refresh to get truth.
+      void refreshProfile();
       return;
     }
 
     // Reveal drawn numbers one-by-one for satisfying stagger.
     setDrawn(data.drawn);
-    data.drawn.forEach((_, i) => {
+    revealTimeoutsRef.current = data.drawn.map((_, i) =>
       window.setTimeout(() => {
         setRevealCount(i + 1);
         if (i === data.drawn.length - 1) {
@@ -154,13 +192,15 @@ export function Keno() {
             multiplier: data.multiplier,
             payout: data.payout,
           });
+          drawingRef.current = false;
           setDrawing(false);
           setPfNonce(data.nonce + 1);
+          revealTimeoutsRef.current = [];
           void refreshProfile();
           void loadPf();
         }
-      }, (i + 1) * REVEAL_STAGGER_MS);
-    });
+      }, (i + 1) * REVEAL_STAGGER_MS)
+    );
   };
 
   const saveClientSeed = async () => {
@@ -211,6 +251,14 @@ export function Keno() {
               const isSelected = selectedSet.has(n);
               const isDrawn = drawnSet?.has(n);
               const isHit = isSelected && isDrawn;
+              const cellAriaLabel = [
+                `Number ${n}`,
+                isSelected ? "selected" : "not selected",
+                isDrawn ? "drawn" : null,
+                isHit ? "hit" : null,
+              ]
+                .filter(Boolean)
+                .join(", ");
               return (
                 <button
                   key={n}
@@ -226,6 +274,7 @@ export function Keno() {
                   onClick={() => toggleNumber(n)}
                   disabled={drawing}
                   aria-pressed={isSelected}
+                  aria-label={cellAriaLabel}
                 >
                   <span className="keno__cell-num">{n}</span>
                   {isHit && <span className="keno__cell-gem" aria-hidden="true" />}
@@ -402,12 +451,14 @@ export function Keno() {
                     value={clientSeed}
                     maxLength={64}
                     onChange={(e) => setClientSeed(e.target.value)}
+                    disabled={drawing}
                   />
                 </label>
                 <button
                   type="button"
                   className="keno__tool-btn"
                   onClick={saveClientSeed}
+                  disabled={drawing}
                 >
                   Save client seed
                 </button>

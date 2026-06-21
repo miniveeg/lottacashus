@@ -219,6 +219,7 @@ export function Promotions() {
                     className="promos__affiliate-link-input"
                     type="text"
                     autoComplete="off"
+                    aria-label="Referral code"
                     placeholder="Friend's code"
                     value={referralInput}
                     onChange={(e) => setReferralInput(normalizeAffiliateCode(e.target.value))}

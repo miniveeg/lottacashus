@@ -126,8 +126,10 @@
   font-size: var(--lc-text-xs);
 }
 
-/* ── Mobile ── */
-@media (max-width: 768px) {
+/* ── Mobile ──
+   Use 900px to match layout.css and lc-pages.css so the footer transitions
+   to its mobile layout in lockstep with the rest of the app shell. */
+@media (max-width: 900px) {
   .site-footer {
     padding: 2.25rem 1.25rem 1.25rem;
   }

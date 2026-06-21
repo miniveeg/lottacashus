@@ -111,4 +111,20 @@
 
   --lc-drawer-width: min(280px, 85vw);
   --lc-safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* ── Z-index stacking ──
+     Documented order so future components don't pick ad-hoc values that
+     collide. The values mirror the actual z-index usage in layout.css,
+     Topbar.css, Sidebar.css, NotificationsPanel.css, GameAuthOverlay.css,
+     GameFeedback.css and Toast.css. Keep this list in sync with those
+     files; the variables are referenced via `var(--lc-z-*)` (with a
+     sensible fallback) by overlay-style components. */
+  --lc-z-base: 1;            /* .app-shell__main */
+  --lc-z-sidebar: 50;        /* desktop sidebar */
+  --lc-z-topbar: 100;        /* .app-shell__topbar */
+  --lc-z-notifications: 110; /* TopbarLevelProgress dropdown */
+  --lc-z-backdrop: 150;      /* mobile drawer backdrop */
+  --lc-z-drawer: 200;        /* mobile drawer, LcSelect dropdown */
+  --lc-z-overlay: 1000;      /* modal-style overlays (GameAuthOverlay, GameFeedback) */
+  --lc-z-toast: 9999;        /* Toast notifications (always on top) */
 }

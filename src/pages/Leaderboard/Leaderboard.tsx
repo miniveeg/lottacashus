@@ -1,30 +1,35 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
 import { formatUsd } from "../../lib/format";
 import { fetchBiggestWins, fetchMostWagered, type LeaderboardTab, type LeaderboardEntry } from "../../lib/leaderboard";
+import { useProfile } from "../../contexts/ProfileContext";
 import "./Leaderboard.css";
 
 export function Leaderboard() {
   const [tab, setTab] = useState<LeaderboardTab>("wins");
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const { profile } = useProfile();
+  const currentUsername = profile?.username ?? null;
 
-  const load = useCallback(async () => {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    try {
+    (async () => {
       let data: LeaderboardEntry[];
       if (tab === "wins") {
         data = await fetchBiggestWins(50);
       } else {
         data = await fetchMostWagered(50);
       }
+      if (cancelled) return;
       setEntries(data);
-    } finally {
       setLoading(false);
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [tab]);
-
-  useEffect(() => { load(); }, [load]);
 
   return (
     <div className="lc-page leaderboard-page">
@@ -83,38 +88,72 @@ export function Leaderboard() {
               </tr>
             </thead>
             <tbody>
-              {entries.map((entry) => (
-                <tr
-                  key={entry.rank}
-                  className={entry.rank <= 3 ? `leaderboard-table__row--top${entry.rank}` : ""}
-                >
-                  <td className="leaderboard-table__rank">
-                    {entry.rank <= 3 ? (
-                      <span className={`leaderboard-table__medal leaderboard-table__medal--${entry.rank}`}>
-                        {entry.rank === 1 ? <Trophy size={20} className="leaderboard-table__medal-icon--gold" /> : entry.rank === 2 ? <Trophy size={20} className="leaderboard-table__medal-icon--silver" /> : <Trophy size={20} className="leaderboard-table__medal-icon--bronze" />}
+              {entries.map((entry) => {
+                const isCurrentUser =
+                  currentUsername != null &&
+                  entry.username.toLowerCase() === currentUsername.toLowerCase();
+                const rowClass = [
+                  entry.rank <= 3 ? `leaderboard-table__row--top${entry.rank}` : "",
+                  isCurrentUser ? "leaderboard-table__row--me" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+                return (
+                  <tr key={entry.rank} className={rowClass}>
+                    <td className="leaderboard-table__rank">
+                      {entry.rank <= 3 ? (
+                        <span
+                          className={`leaderboard-table__medal leaderboard-table__medal--${entry.rank}`}
+                          aria-label={`Rank ${entry.rank}`}
+                        >
+                          {entry.rank === 1 ? (
+                            <Trophy
+                              size={20}
+                              className="leaderboard-table__medal-icon--gold"
+                              aria-hidden="true"
+                            />
+                          ) : entry.rank === 2 ? (
+                            <Trophy
+                              size={20}
+                              className="leaderboard-table__medal-icon--silver"
+                              aria-hidden="true"
+                            />
+                          ) : (
+                            <Trophy
+                              size={20}
+                              className="leaderboard-table__medal-icon--bronze"
+                              aria-hidden="true"
+                            />
+                          )}
+                        </span>
+                      ) : (
+                        entry.rank
+                      )}
+                    </td>
+                    <td className="leaderboard-table__user">
+                      <span className="leaderboard-table__avatar" aria-hidden="true">
+                        {entry.username[0]?.toUpperCase() ?? "?"}
                       </span>
-                    ) : (
-                      entry.rank
-                    )}
-                  </td>
-                  <td className="leaderboard-table__user">
-                    <span className="leaderboard-table__avatar" aria-hidden="true">
-                      {entry.username[0]?.toUpperCase() ?? "?"}
-                    </span>
-                    {entry.username}
-                  </td>
-                  {tab === "wins" ? (
-                    <td className="leaderboard-table__amount">{formatUsd(entry.value)}</td>
-                  ) : (
-                    <>
+                      {entry.username}
+                      {isCurrentUser ? (
+                        <span className="leaderboard-table__you" aria-label="(you)">
+                          you
+                        </span>
+                      ) : null}
+                    </td>
+                    {tab === "wins" ? (
                       <td className="leaderboard-table__amount">{formatUsd(entry.value)}</td>
-                      <td className="leaderboard-table__secondary">
-                        {entry.secondary != null ? `${entry.secondary.toFixed(1)}%` : "—"}
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
+                    ) : (
+                      <>
+                        <td className="leaderboard-table__amount">{formatUsd(entry.value)}</td>
+                        <td className="leaderboard-table__secondary">
+                          {entry.secondary != null ? `${entry.secondary.toFixed(1)}%` : "—"}
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

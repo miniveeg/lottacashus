@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -61,6 +61,11 @@ export function Roulette() {
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
 
+  // Refs for race-safety (spinningRef) and async cleanup (cancelledRef).
+  // Mirrors the KENO_MINES / LIMBO_CRASH agents' busyRef/cancelledRef pattern.
+  const spinningRef = useRef(false);
+  const cancelledRef = useRef(false);
+
   const winChance = useMemo(() => rouletteWinChance(betType), [betType]);
   const potentialWin = useMemo(() => roulettePotentialWin(wager, betType), [wager, betType]);
 
@@ -77,6 +82,17 @@ export function Roulette() {
     if (user) loadPf();
   }, [user, loadPf]);
 
+  // Unmount cleanup: mark the component cancelled so in-flight spin awaits
+  // don't fire setState on a dead component (React 19 silently no-ops, but
+  // this prevents the leak and clears the spinning flag for any queued click).
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => {
+      cancelledRef.current = true;
+      spinningRef.current = false;
+    };
+  }, []);
+
   const applyWager = (value: number) => {
     const v = Math.max(1, Math.min(100_000, value));
     setWager(v);
@@ -86,6 +102,10 @@ export function Roulette() {
   const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
   const handleBet = async () => {
+    // Synchronous re-entrancy guard — the Bet button's `disabled={spinning}`
+    // prop relies on a re-render cycle that leaves a sub-ms race window
+    // between the first click's setSpinning(true) commit and a second click.
+    if (spinningRef.current) return;
     if (!user) {
       setError("Log in to play.");
       return;
@@ -96,6 +116,7 @@ export function Roulette() {
       return;
     }
 
+    spinningRef.current = true;
     setError(null);
     setLastResult(null);
     setSpinning(true);
@@ -105,17 +126,27 @@ export function Roulette() {
     const startedAt = Date.now();
     const { data, error: betErr } = await placeRouletteBet({ wager, betType, coinType });
     if (betErr || !data) {
+      if (cancelledRef.current) return;
+      spinningRef.current = false;
       setSpinning(false);
       setError(betErr ?? "Bet failed.");
+      // Server may have debited before failing — refresh to stay accurate.
+      void refreshProfile();
       return;
     }
 
     const remaining = Math.max(0, SPIN_DELAY_MS - (Date.now() - startedAt));
     await wait(remaining);
 
+    if (cancelledRef.current) {
+      spinningRef.current = false;
+      return;
+    }
+
     setDisplayPocket(data.resultPocket);
     setDisplayColor(data.resultColor);
     setSpinning(false);
+    spinningRef.current = false;
     setHistory((h) =>
       [{ pocket: data.resultPocket, color: data.resultColor }, ...h].slice(0, HISTORY_MAX)
     );
@@ -127,7 +158,7 @@ export function Roulette() {
       betType: data.betType,
     });
     setPfNonce(data.nonce + 1);
-    await refreshProfile();
+    void refreshProfile();
   };
 
   const saveClientSeed = async () => {

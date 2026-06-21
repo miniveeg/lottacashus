@@ -233,3 +233,141 @@ code {
   overflow-wrap: anywhere;
   word-break: break-all;
 }
+
+/* ── Print styles ──
+   Legal pages (Privacy, SweepstakesRules, FreeEntry) and any other
+   long-form document should print cleanly on paper. The default app
+   shell uses `html, body, #root { overflow: hidden }` + a scrollable
+   inner `<main>` (see layout.css) so the browser can't print the full
+   document unaided — these rules override that for `@media print`:
+   unroll the grid, drop the dark theme to a high-contrast black-on-white
+   palette, hide the chrome (topbar/sidebar/atmosphere/footer-nav), and
+   let the page text flow naturally across printed pages. */
+@media print {
+  html, body, #root {
+    overflow: visible !important;
+    height: auto !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Unroll the app-shell grid so content flows top-to-bottom on paper. */
+  .app-shell {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+    grid-template-areas: none !important;
+    background: #fff !important;
+  }
+
+  /* Hide interactive chrome that doesn't belong on paper. */
+  .app-shell__topbar,
+  .app-shell__sidebar,
+  .app-shell__backdrop,
+  .lc-atmosphere,
+  .lc-atmosphere__fog,
+  .site-footer__inner,
+  .lc-loading,
+  .lc-loading__pulse { display: none !important; }
+
+  .app-shell__main {
+    overflow: visible !important;
+    height: auto !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  /* The page-transition wrapper is a `display:flex; height:100%` column
+     on screen (for sticky-footer). On paper we want plain block flow. */
+  .lc-page-transition {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  /* Reset page padding & width for paper margins. */
+  .lc-page,
+  .lc-page--narrow,
+  .lc-page--medium,
+  .lc-page--wide,
+  .lc-page--auth,
+  .lc-game-page {
+    max-width: none !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Print-friendly panels: drop the glass / dark backgrounds. */
+  .lc-panel,
+  .help__panel,
+  .help__panel--tos,
+  .settings__section,
+  .wallet__section,
+  .admin__section {
+    background: #fff !important;
+    border: 1px solid #999 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0.5rem 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* Black-on-white typography for the body of legal docs. */
+  h1, h2, h3, h4, h5, h6,
+  .lc-page__title, .help__title,
+  .lc-page__subtitle, .help__subtitle,
+  .help__tos-heading, .help__tos-meta,
+  p, li, blockquote {
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* External links: print the URL after the link text so the reader can
+     follow up. In-page / hash-router / relative links are not expanded. */
+  a[href^="http"]::after,
+  a[href^="mailto:"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #444 !important;
+    text-decoration: none;
+  }
+  a[href^="#"]::after,
+  a[href^="/"]::after { content: ""; }
+
+  /* Keep copyright + responsible-gaming notice at the end of the printout. */
+  .site-footer {
+    margin-top: 1.5rem !important;
+    padding: 0.75rem 0 0 !important;
+    background: #fff !important;
+    border-top: 1px solid #999 !important;
+  }
+  .site-footer__bottom {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+  .site-footer__copyright,
+  .site-footer__responsible,
+  .site-footer__responsible span,
+  .site-footer__ncpg-link {
+    color: #333 !important;
+    background: #fff !important;
+    text-align: center;
+  }
+
+  /* Avoid breaking inside legal-doc blocks; allow breaks between them. */
+  .help__tos-block,
+  .help__panel,
+  .lc-panel,
+  tr { page-break-inside: avoid; }
+  h1, h2, h3 { page-break-after: avoid; }
+}

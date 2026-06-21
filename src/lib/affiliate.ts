@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { isSupabaseConfigured, supabase } from "./supabase";
 
 export type AffiliateCommissionRow = {
   id: string;
@@ -26,6 +26,8 @@ export type ClaimAffiliateResult = {
   claimable_balance: number;
   balance: number;
 };
+
+const NOT_CONFIGURED_ERROR = "Supabase is not configured. Add your keys to .env.";
 
 function mapStats(raw: Record<string, unknown>): AffiliateStats {
   const recent = Array.isArray(raw.recent_commissions)
@@ -58,6 +60,8 @@ export async function fetchAffiliateStats(): Promise<{
   stats: AffiliateStats | null;
   error: string | null;
 }> {
+  if (!isSupabaseConfigured) return { stats: null, error: NOT_CONFIGURED_ERROR };
+
   const { data, error } = await supabase.rpc("get_affiliate_stats");
 
   if (error) {
@@ -76,6 +80,8 @@ export async function submitAffiliateReferralCode(code: string): Promise<{
   referrer_code: string | null;
   error: string | null;
 }> {
+  if (!isSupabaseConfigured) return { success: false, referrer_code: null, error: NOT_CONFIGURED_ERROR };
+
   const { data, error } = await supabase.rpc("submit_affiliate_referral_code", {
     p_code: code.trim(),
   });
@@ -110,6 +116,8 @@ export async function claimAffiliateEarnings(): Promise<{
   result: ClaimAffiliateResult | null;
   error: string | null;
 }> {
+  if (!isSupabaseConfigured) return { result: null, error: NOT_CONFIGURED_ERROR };
+
   const { data, error } = await supabase.rpc("claim_affiliate_earnings");
 
   if (error) {

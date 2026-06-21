@@ -1,10 +1,27 @@
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef, memo, type ForwardRefExoticComponent, type ReactNode, type RefAttributes } from "react";
 import { Link, type LinkProps } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, type MotionProps } from "framer-motion";
 import { springTransition } from "../../lib/motion";
 import { cn } from "../../lib/cn";
 
-type MotionLinkProps = LinkProps & {
+// framer-motion's `MotionProps` and react-router's `LinkProps` both define
+// several event handlers with incompatible payloads: the drag handlers
+// (PanInfo vs. DOM DragEvent) and the CSS animation handlers
+// (AnimationDefinition vs. DOM AnimationEvent). Omit the conflicting keys
+// from both sides so the intersection typechecks without an `any` escape
+// hatch. Runtime behaviour is unaffected — `<a>` elements never emit drag
+// events unless the caller explicitly wires them up, and framer-motion's
+// animation callbacks fire from its own rAF loop, not from the DOM
+// `animationstart` event.
+type ConflictKeys =
+  | "onDrag"
+  | "onDragStart"
+  | "onDragEnd"
+  | "onAnimationStart"
+  | "onAnimationEnd"
+  | "onAnimationIteration";
+
+type MotionLinkProps = Omit<LinkProps, ConflictKeys> & {
   variant?: "primary" | "secondary" | "ghost";
   glow?: boolean;
   children?: ReactNode;
@@ -17,13 +34,18 @@ const variantClass: Record<NonNullable<MotionLinkProps["variant"]>, string> = {
   ghost: "lc-motion-btn--ghost",
 };
 
-// `motion.create(Link)` returns a component whose props blend framer-motion
-// and react-router types. The two libraries disagree on `onDrag` typing
-// (framer-motion uses PanInfo, react-router uses the DOM DragEvent), so we
-// cast through `any` to satisfy TS while preserving runtime behaviour.
-const MotionRouterLink = motion.create(Link) as unknown as React.FC<any>;
+// `motion.create(Link)` returns a ForwardRefComponent whose prop type is the
+// intersection of `MotionProps & LinkProps`. We re-cast it through `unknown`
+// to the same intersection with the conflicting handlers omitted — this
+// preserves type safety for `to`, `replace`, `state`, etc. while staying
+// assignable from the underlying framer-motion component.
+type MotionRouterLinkType = ForwardRefExoticComponent<
+  Omit<LinkProps & MotionProps, ConflictKeys> & RefAttributes<HTMLAnchorElement>
+>;
 
-export const MotionLink = forwardRef<HTMLAnchorElement, MotionLinkProps>(
+const MotionRouterLink = motion.create(Link) as unknown as MotionRouterLinkType;
+
+const MotionLinkBase = forwardRef<HTMLAnchorElement, MotionLinkProps>(
   function MotionLink({ variant = "primary", glow = false, className, children, ...props }, ref) {
     return (
       <MotionRouterLink
@@ -40,5 +62,8 @@ export const MotionLink = forwardRef<HTMLAnchorElement, MotionLinkProps>(
     );
   }
 );
+
+export const MotionLink = memo(MotionLinkBase);
+MotionLink.displayName = "MotionLink";
 
 export type { MotionLinkProps };

@@ -176,6 +176,35 @@
   margin-bottom: 0.75rem;
 }
 
+.redeem__login-hint {
+  margin: 1.5rem 0 0;
+  font-size: 0.95rem;
+  color: var(--lc-text-secondary);
+  text-align: center;
+}
+
+.redeem__login-link {
+  color: var(--lc-emerald);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.redeem__login-link:hover,
+.redeem__login-link:focus-visible {
+  text-decoration: underline;
+}
+
+.redeem__chain-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.redeem__chain-fieldset .redeem__label {
+  /* legend already styled via .redeem__label */
+  display: block;
+}
+
 .redeem__success {
   text-align: center;
   padding: 2rem 1rem;

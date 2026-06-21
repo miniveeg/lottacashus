@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { isSupabaseConfigured, supabase } from "./supabase";
 import type { Transaction, TransactionType } from "../types/transaction";
 
 /** When timestamps match, show wager before win/loss in the list (newest-first). */
@@ -13,6 +13,8 @@ const TYPE_DISPLAY_ORDER: Record<TransactionType, number> = {
 
 export const TRANSACTIONS_PAGE_SIZE = 10;
 
+const NOT_CONFIGURED_ERROR = "Supabase is not configured. Add your keys to .env.";
+
 export function sortTransactionsForDisplay(transactions: Transaction[]): Transaction[] {
   return [...transactions].sort((a, b) => {
     const tb = new Date(b.created_at).getTime();
@@ -22,7 +24,15 @@ export function sortTransactionsForDisplay(transactions: Transaction[]): Transac
   });
 }
 
-export async function fetchTransactionsPage(page: number, pageSize = TRANSACTIONS_PAGE_SIZE) {
+export async function fetchTransactionsPage(page: number, pageSize = TRANSACTIONS_PAGE_SIZE): Promise<{
+  transactions: Transaction[];
+  total: number;
+  error: string | null;
+}> {
+  if (!isSupabaseConfigured) {
+    return { transactions: [], total: 0, error: NOT_CONFIGURED_ERROR };
+  }
+
   const { data, error } = await supabase.rpc("get_user_transactions", {
     p_page: page,
     p_page_size: pageSize,
@@ -43,10 +53,11 @@ export async function fetchTransactionsPage(page: number, pageSize = TRANSACTION
         })
       ),
       total,
-      error: null as string | null,
+      error: null,
     };
   }
 
+  // Fallback path: query the table directly if the RPC is unavailable.
   const from = page * pageSize;
   const to = from + pageSize - 1;
   const { data: fallbackRows, error: fallbackError, count } = await supabase
@@ -56,17 +67,24 @@ export async function fetchTransactionsPage(page: number, pageSize = TRANSACTION
     .range(from, to);
 
   if (fallbackError) {
-    return { transactions: [] as Transaction[], total: 0, error: fallbackError.message };
+    return { transactions: [], total: 0, error: fallbackError.message };
   }
 
   const transactions = sortTransactionsForDisplay(
-    (fallbackRows ?? []).map((row) => mapTransactionRow(row))
+    (fallbackRows ?? []).map((row) => mapTransactionRow(row as {
+      id: string;
+      type: string;
+      amount: number | string;
+      balance_after: number | string | null;
+      description: string | null;
+      created_at: string;
+    }))
   );
 
   return {
     transactions,
     total: count ?? transactions.length,
-    error: null as string | null,
+    error: null,
   };
 }
 

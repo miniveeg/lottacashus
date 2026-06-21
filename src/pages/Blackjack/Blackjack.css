@@ -543,3 +543,17 @@
     font-size: 0.9rem;
   }
 }
+
+/* Reduced-motion: disable decorative animations (card-deal slide-in,
+   result-banner slide-in, card hover lift). Cards still render at their
+   final position with no entrance animation; the result text and totals
+   are still shown — only the motion is suppressed. */
+@media (prefers-reduced-motion: reduce) {
+  .bj__card,
+  .bj__result-banner,
+  .bj__card:hover {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

@@ -19,6 +19,11 @@ const REEL_STOP_STAGGER_MS = 180;
 // Symbol cycle rate during the spin animation. Lower = faster visual flicker.
 const SYMBOL_CYCLE_MS = 55;
 
+function readPrefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 const SYMBOL_GLYPH: Record<number, string> = {
   0: "\u{1F352}",
   1: "\u{1F514}",
@@ -57,6 +62,16 @@ export default function Slots() {
   const lastCycleRef = useRef<number>(0);
   const reelStatesRef = useRef<ReelState[]>(["idle", "idle", "idle"]);
   const landingTimersRef = useRef<number[]>([]);
+  const rollingRef = useRef(false);
+  const cancelledRef = useRef(false);
+  const prefersReducedMotionRef = useRef(false);
+
+  // Read reduced-motion preference once on mount. The rAF spin animation is
+  // purely decorative (the outcome is server-determined), so reduced-motion
+  // users get the result without the flicker.
+  useEffect(() => {
+    prefersReducedMotionRef.current = readPrefersReducedMotion();
+  }, []);
 
   // Keep ref in sync so the rAF closure always sees the latest reel states.
   useEffect(() => {
@@ -125,6 +140,13 @@ export default function Slots() {
     // Land each reel in sequence so the user sees a satisfying left-to-right settle.
     finalReels.forEach((sym, i) => {
       const t = window.setTimeout(() => {
+        // Sync the ref synchronously so the rAF tick stops overwriting this
+        // reel's symbol on the very next frame (the useEffect that mirrors
+        // reelStates → reelStatesRef runs after paint, leaving a one-frame gap
+        // where the just-landed reel's symbol could be replaced with a random one).
+        reelStatesRef.current = reelStatesRef.current.map((s, idx) =>
+          idx === i ? "landed" : s
+        );
         setReels((prev) => {
           const next = [...prev];
           next[i] = sym;
@@ -141,6 +163,12 @@ export default function Slots() {
   }
 
   async function handleSpin() {
+    // Double-spin race guard: the Spin button's `disabled={rolling || !user}`
+    // prop prevents most double-clicks, but there's a sub-ms window between
+    // the first click's setRolling(true) state commit and the second click's
+    // handler execution. The ref closes that window synchronously.
+    if (rollingRef.current) return;
+
     setError(null);
     setShowResult(false);
     setLastResult(null);
@@ -155,8 +183,10 @@ export default function Slots() {
       return;
     }
 
+    rollingRef.current = true;
     setRolling(true);
-    startRollAnimation();
+    const reducedMotion = prefersReducedMotionRef.current;
+    if (!reducedMotion) startRollAnimation();
 
     const startedAt = Date.now();
     const { data, error: apiError } = await placeSlotsBet({ wager, coinType });
@@ -165,30 +195,46 @@ export default function Slots() {
     const remaining = Math.max(0, REVEAL_DELAY_MS - elapsed);
 
     await new Promise((r) => setTimeout(r, remaining));
+    if (cancelledRef.current) return;
 
     if (apiError || !data) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       clearLandingTimers();
+      rollingRef.current = false;
       setRolling(false);
       setReelStates(["idle", "idle", "idle"]);
+      reelStatesRef.current = ["idle", "idle", "idle"];
       setError(apiError ?? "No response from server.");
       setReels([-1, -1, -1]);
+      // Server may have debited before failing — refresh to get the authoritative balance.
+      void refreshProfile();
       return;
     }
 
     // Stop the free-running spin rAF; reel landing timers will settle each reel.
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    stopRollAnimation(data.reels);
 
-    // Wait for the final reel to land before showing the outcome.
-    const lastReelDelay = (data.reels.length - 1) * REEL_STOP_STAGGER_MS + 220;
-    await new Promise((r) => setTimeout(r, lastReelDelay));
+    if (reducedMotion) {
+      // Skip the staggered landing animation — set all reels to their final
+      // values simultaneously.
+      setReels(data.reels);
+      setReelStates(["landed", "landed", "landed"]);
+      reelStatesRef.current = ["landed", "landed", "landed"];
+    } else {
+      stopRollAnimation(data.reels);
+      // Wait for the final reel to land before showing the outcome.
+      const lastReelDelay = (data.reels.length - 1) * REEL_STOP_STAGGER_MS + 220;
+      await new Promise((r) => setTimeout(r, lastReelDelay));
+      if (cancelledRef.current) return;
+    }
 
     setLastResult(data);
     setShowResult(true);
+    rollingRef.current = false;
     setRolling(false);
 
-    if (data.nonce != null) setPfNonce((prev) => (prev ?? 0) + 1);
+    // Server returns the nonce USED for this bet; the next nonce is +1.
+    if (data.nonce != null) setPfNonce(data.nonce + 1);
     refreshProfile();
   }
 
@@ -207,9 +253,13 @@ export default function Slots() {
     });
   }
 
-  // Cleanup any pending rAF / landing timers when the component unmounts.
+  // Cleanup any pending rAF / landing timers when the component unmounts, and
+  // signal the in-flight handleSpin async chain to stop touching state.
   useEffect(() => {
+    cancelledRef.current = false;
     return () => {
+      cancelledRef.current = true;
+      rollingRef.current = false;
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       clearLandingTimers();
     };
@@ -346,10 +396,11 @@ export default function Slots() {
           <button
             type="button"
             className="game-controls__play"
-            disabled={rolling}
+            disabled={rolling || !user}
             onClick={handleSpin}
+            aria-disabled={rolling || !user}
           >
-            {rolling ? "Spinning\u2026" : "Spin"}
+            {rolling ? "Spinning\u2026" : !user ? "Log in to play" : "Spin"}
           </button>
 
           <div className="game-controls__stats">

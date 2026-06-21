@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
+import { forwardRef, memo, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
 import { springTransition } from "../../lib/motion";
 import { cn } from "../../lib/cn";
@@ -8,7 +8,10 @@ type MotionButtonProps = Omit<HTMLMotionProps<"button">, "children"> & {
   glow?: boolean;
   children: ReactNode;
   className?: string;
-} & Pick<ButtonHTMLAttributes<HTMLButtonElement>, "disabled" | "form" | "formAction" | "formMethod" | "formEncType" | "formTarget" | "name" | "value" | "type">;
+} & Pick<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "disabled" | "form" | "formAction" | "formMethod" | "formEncType" | "formTarget" | "name" | "value" | "type"
+>;
 
 const variantClass: Record<NonNullable<MotionButtonProps["variant"]>, string> = {
   primary: "lc-motion-btn--primary",
@@ -16,11 +19,15 @@ const variantClass: Record<NonNullable<MotionButtonProps["variant"]>, string> = 
   ghost: "lc-motion-btn--ghost",
 };
 
-export const MotionButton = forwardRef<HTMLButtonElement, MotionButtonProps>(
-  function MotionButton({ variant = "primary", glow = false, className, children, ...props }, ref) {
+const MotionButtonBase = forwardRef<HTMLButtonElement, MotionButtonProps>(
+  function MotionButton({ variant = "primary", glow = false, className, children, type = "button", ...props }, ref) {
     return (
       <motion.button
         ref={ref}
+        // Default to `type="button"` so a styled MotionButton never
+        // accidentally submits a surrounding form. Callers that want submit
+        // behaviour can pass `type="submit"` explicitly.
+        type={type}
         className={cn("lc-motion-btn", variantClass[variant], glow && "lc-motion-btn--glow", className)}
         whileHover={{ scale: 1.03, y: -2 }}
         whileTap={{ scale: 0.97, y: 0 }}
@@ -33,3 +40,6 @@ export const MotionButton = forwardRef<HTMLButtonElement, MotionButtonProps>(
     );
   }
 );
+
+export const MotionButton = memo(MotionButtonBase);
+MotionButton.displayName = "MotionButton";

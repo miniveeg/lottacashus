@@ -28,6 +28,19 @@ export function Crash() {
   const animRef = useRef<number>(0);
   const phaseRef = useRef<CrashPhaseLocal>("idle");
   const crashPointRef = useRef(1);
+  // busyRef guards handleBet against double-clicks (Bet button disappears
+  // immediately on phase=running, but a sub-ms race window exists between the
+  // click and the re-render). cashingOutRef + cashingOut state guard
+  // handleCashOut and disable the Cash Out button during the server round-trip.
+  const busyRef = useRef(false);
+  const cashingOutRef = useRef(false);
+  // multiplierRef mirrors `multiplier` state synchronously inside tick() so
+  // handleCashOut reads the latest drawn frame (not one render behind).
+  // displayPhaseRef mirrors `phase` so the stable resizeCanvas callback can
+  // read the current display phase without re-creating every frame.
+  const multiplierRef = useRef(1);
+  const displayPhaseRef = useRef<CrashPhaseLocal>("idle");
+  const cancelledRef = useRef(false);
 
   const [wager, setWager] = useState(1);
   const [wagerInput, setWagerInput] = useState("1.00");
@@ -40,6 +53,7 @@ export function Crash() {
     cashedAt: number | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cashingOut, setCashingOut] = useState(false);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
@@ -50,6 +64,13 @@ export function Crash() {
   const historyRef = useRef<{ x: number; y: number }[]>([{ x: 0, y: 1 }]);
 
   type CrashPhaseLocal = "idle" | "running" | "crashed" | "cashed_out";
+
+  // Keep display-phase/multiplier refs in sync with state on every render so
+  // stable callbacks (resizeCanvas) read current values without being
+  // re-created each frame (which previously caused ResizeObserver disconnect/
+  // reconnect churn at 60fps).
+  multiplierRef.current = multiplier;
+  displayPhaseRef.current = phase;
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchCrashPfState();
@@ -174,29 +195,34 @@ export function Crash() {
 
     const w = canvas.width;
     const h = canvas.height;
-    let elapsed = 0;
-    let current = 1;
     const pts = historyRef.current;
     pts.length = 0;
     pts.push({ x: 0, y: 1 });
     phaseRef.current = "running";
     crashPointRef.current = crashPt;
 
+    // Use wall-clock time so the growth rate is independent of the display's
+    // refresh rate. The original `elapsed += 1/60` per tick made the animation
+    // run half-speed on 30Hz displays and 2x speed on 120Hz displays.
+    const startTime = performance.now();
+
     function tick() {
+      if (cancelledRef.current) return;
       if (phaseRef.current !== "running") return;
 
-      elapsed += 1 / 60; // seconds, ~60fps
+      const elapsed = (performance.now() - startTime) / 1000;
       // Exponential growth — feels like a real crash multiplier.
-      current = Math.pow(ANIMATION_GROWTH, elapsed * 60);
+      const current = Math.pow(ANIMATION_GROWTH, elapsed * 60);
       const truncated = truncateCrashMultiplier(current);
 
       if (truncated >= crashPt) {
-        current = crashPt;
         pts.push({ x: elapsed, y: crashPt });
         drawGraph(ctx, w, h, pts, crashPt, true);
+        multiplierRef.current = crashPt;
         setMultiplier(crashPt);
-        setPhase("crashed");
         phaseRef.current = "idle";
+        displayPhaseRef.current = "crashed";
+        setPhase("crashed");
         setLastResult((prev) => ({
           crashedAt: crashPt,
           won: false,
@@ -206,6 +232,7 @@ export function Crash() {
         return;
       }
 
+      multiplierRef.current = truncated;
       setMultiplier(truncated);
       pts.push({ x: elapsed, y: truncated });
       drawGraph(ctx, w, h, pts, truncated, false);
@@ -224,7 +251,9 @@ export function Crash() {
   }
 
   // Responsive canvas: scale the backing store to match the displayed size × DPR
-  // for crisp chart rendering on retina/mobile displays.
+  // for crisp chart rendering on retina/mobile displays. Stable (empty deps) —
+  // reads current multiplier/phase from refs so it doesn't re-create every
+  // animation frame (which previously caused ResizeObserver churn at 60fps).
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -242,9 +271,9 @@ export function Crash() {
     if (!ctxRaw) return;
     const ctx: CanvasRenderingContext2D = ctxRaw;
     // Redraw the current history at the new resolution.
-    const crashed = phaseRef.current === "idle" && phase === "crashed";
-    drawGraph(ctx, canvas.width, canvas.height, historyRef.current, multiplier, crashed);
-  }, [multiplier, phase]);
+    const crashed = displayPhaseRef.current === "crashed";
+    drawGraph(ctx, canvas.width, canvas.height, historyRef.current, multiplierRef.current, crashed);
+  }, []);
 
   useEffect(() => {
     resizeCanvas();
@@ -255,11 +284,23 @@ export function Crash() {
     return () => ro.disconnect();
   }, [resizeCanvas]);
 
+  // Unmount cleanup: cancel the rAF, mark cancelled so in-flight bet/cashout
+  // awaits don't fire setState on a dead component, and release busy flags.
   useEffect(() => {
-    return () => stopAnimation();
+    cancelledRef.current = false;
+    return () => {
+      cancelledRef.current = true;
+      phaseRef.current = "idle";
+      busyRef.current = false;
+      cashingOutRef.current = false;
+      stopAnimation();
+    };
   }, []);
 
   const handleBet = async () => {
+    // Synchronous re-entrancy guard — Bet button disappears on phase=running,
+    // but a sub-ms race window exists between the click and the re-render.
+    if (busyRef.current) return;
     if (!user) {
       setError("Log in to play.");
       return;
@@ -270,44 +311,90 @@ export function Crash() {
       return;
     }
 
+    busyRef.current = true;
     setError(null);
     setLastResult(null);
     setBetId(null);
     setPhase("running");
     phaseRef.current = "running";
+    displayPhaseRef.current = "running";
     setMultiplier(1);
+    multiplierRef.current = 1;
 
     const { data, error: betErr } = await placeCrashBet({ wager, coinType });
     if (betErr || !data) {
+      if (cancelledRef.current) return;
       setPhase("idle");
       phaseRef.current = "idle";
+      displayPhaseRef.current = "idle";
       setError(betErr ?? "Bet failed.");
+      // Server may have debited before failing — refresh to stay accurate.
+      void refreshProfile();
+      busyRef.current = false;
       return;
     }
 
     setBetId(data.betId);
     setPfNonce(data.nonce + 1);
+    busyRef.current = false;
     startAnimation(data.crashPoint);
-    await refreshProfile();
+    void refreshProfile();
   };
 
   const handleCashOut = async () => {
-    if (!betId || phase !== "running") return;
+    // Double-cashout race: rapid clicks could trigger two cashOutCrash calls
+    // before the first settled. busyRef + cashingOutRef guard both paths.
+    if (busyRef.current || cashingOutRef.current) return;
+    if (!betId || phaseRef.current !== "running") return;
 
+    cashingOutRef.current = true;
+    setCashingOut(true);
     stopAnimation();
     phaseRef.current = "idle";
 
-    const { data, error: cashErr } = await cashOutCrash({ betId, cashedAtMultiplier: multiplier, coinType });
+    // Capture the multiplier from the ref (synchronously updated in tick) so
+    // the cashout value matches the latest drawn frame, not the stale state
+    // (which lags one render behind the canvas paint).
+    const multAtClick = multiplierRef.current;
+    const { data, error: cashErr } = await cashOutCrash({
+      betId,
+      cashedAtMultiplier: multAtClick,
+      coinType,
+    });
+
     if (cashErr || !data) {
-      setError(cashErr ?? "Cash out failed. Your bet may still be active.");
-      setPhase("running");
-      phaseRef.current = "running";
-      startAnimation(crashPointRef.current);
+      if (cancelledRef.current) return;
+      cashingOutRef.current = false;
+      setCashingOut(false);
+      // The most common failure is that the bet already crashed server-side
+      // before the cashout was processed. Transition to the crashed state
+      // rather than restarting the animation from 1× (which was jarring and
+      // misleading — the chart would visibly climb again from the start). If
+      // the cashout actually succeeded despite the network error,
+      // refreshProfile() will reflect the updated balance.
+      phaseRef.current = "idle";
+      displayPhaseRef.current = "crashed";
+      setPhase("crashed");
+      multiplierRef.current = crashPointRef.current;
+      setMultiplier(crashPointRef.current);
+      setLastResult((prev) => ({
+        crashedAt: crashPointRef.current,
+        won: false,
+        payout: 0,
+        cashedAt: prev?.cashedAt ?? null,
+      }));
+      setError(cashErr ?? "Cash out failed — bet crashed.");
+      void refreshProfile();
       return;
     }
 
+    cashingOutRef.current = false;
+    setCashingOut(false);
+    phaseRef.current = "idle";
+    displayPhaseRef.current = "cashed_out";
     setPhase("cashed_out");
     const cashedAtMult = data.cashedAt;
+    multiplierRef.current = cashedAtMult;
     setMultiplier(cashedAtMult);
     setLastResult({
       crashedAt: crashPointRef.current,
@@ -315,7 +402,7 @@ export function Crash() {
       payout: data.payout,
       cashedAt: cashedAtMult,
     });
-    await refreshProfile();
+    void refreshProfile();
   };
 
   const saveClientSeed = async () => {
@@ -345,9 +432,10 @@ export function Crash() {
               className="crash__canvas"
               width={CANVAS_BASE_WIDTH}
               height={CANVAS_BASE_HEIGHT}
-              aria-label={`Crash multiplier ${multiplier.toFixed(2)}x`}
+              role="img"
+              aria-label="Crash multiplier chart"
             />
-            <div className="crash__multiplier-overlay" aria-live="polite" aria-atomic="true">
+            <div className="crash__multiplier-overlay">
               <span className={`crash__mult-value${phase === "crashed" ? " crash__mult-value--crashed" : ""}${phase === "cashed_out" ? " crash__mult-value--win" : ""}`}>
                 {multiplier.toFixed(2)}x
               </span>
@@ -362,6 +450,17 @@ export function Crash() {
                   Cashed out — won {formatCoins(lastResult?.payout ?? 0, coinType)}
                 </span>
               )}
+            </div>
+            {/* Visually-hidden SR-only status region. Announces phase changes
+                (not every animation frame) to avoid spamming screen readers
+                with 60fps multiplier updates. */}
+            <div className="crash__sr-status" aria-live="polite" aria-atomic="true">
+              {phase === "idle" && "Place a bet to start."}
+              {phase === "running" && "Round in progress."}
+              {phase === "crashed" &&
+                `Crashed at ${lastResult?.crashedAt.toFixed(2) ?? multiplier.toFixed(2)}x. You lost.`}
+              {phase === "cashed_out" &&
+                `Cashed out at ${lastResult?.cashedAt?.toFixed(2) ?? multiplier.toFixed(2)}x. You won ${formatCoins(lastResult?.payout ?? 0, coinType)}.`}
             </div>
           </div>
 
@@ -436,8 +535,12 @@ export function Crash() {
               type="button"
               className="crash__cashout-btn"
               onClick={handleCashOut}
+              disabled={cashingOut}
+              aria-busy={cashingOut}
             >
-              Cash out at {multiplier.toFixed(2)}x ({formatCoins(potentialPayout, coinType)})
+              {cashingOut
+                ? "Cashing out…"
+                : `Cash out at ${multiplier.toFixed(2)}x (${formatCoins(potentialPayout, coinType)})`}
             </button>
           ) : (
             <button

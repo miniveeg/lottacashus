@@ -103,6 +103,17 @@
   }
 }
 
+/* Respect reduced motion: skip the open animation entirely.
+   (global.css also clamps animation-duration to 0.001ms for all
+   elements under prefers-reduced-motion: reduce, but declaring it
+   explicitly here makes the intent obvious and survives any future
+   loosening of the global rule.) */
+@media (prefers-reduced-motion: reduce) {
+  .lc-select-menu {
+    animation: none;
+  }
+}
+
 .lc-select-option {
   display: flex;
   align-items: center;

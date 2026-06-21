@@ -332,6 +332,13 @@
   font-weight: 600;
 }
 
+.admin__self-tag {
+  color: var(--lc-text-muted);
+  font-weight: 400;
+  font-size: 0.78rem;
+  margin-left: 0.35rem;
+}
+
 .admin__user-meta {
   font-size: 0.82rem;
   color: var(--lc-text-muted);

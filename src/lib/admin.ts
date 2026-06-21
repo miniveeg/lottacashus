@@ -1,4 +1,5 @@
-import { supabase } from "./supabase";
+import type { PostgrestError } from "@supabase/supabase-js";
+import { isSupabaseConfigured, supabase } from "./supabase";
 
 export type AdminStats = {
   pendingWithdrawals: number;
@@ -42,14 +43,62 @@ export type AdminUserResult = {
   createdAt: string;
 };
 
+export type AdminRedemption = {
+  id: string;
+  userId: string;
+  username: string | null;
+  email: string | null;
+  scAmount: number;
+  paypalEmail: string;
+  status: string;
+  reviewedBy: string | null;
+  notes: string | null;
+  createdAt: string;
+};
+
+/**
+ * Public error shape returned by every admin helper. Mirrors the subset of
+ * `PostgrestError` that callers actually read (`.message`). Synthesized when
+ * Supabase is unconfigured or input validation fails so callers never see a
+ * confusing network/CORS error against the placeholder Supabase host.
+ */
+export type AdminError = { message: string; code?: string };
+export type AdminResult<T> = { data: T | null; error: AdminError | null };
+
+const NOT_CONFIGURED_MESSAGE =
+  "Admin tools are unavailable — Supabase is not configured. Add your project URL and anon key to .env.";
+
+function notConfigured<T>(): AdminResult<T> {
+  return { data: null, error: { message: NOT_CONFIGURED_MESSAGE, code: "NOT_CONFIGURED" } };
+}
+
+function fromPostgrest<T>(data: T | null, error: PostgrestError | null): AdminResult<T> {
+  if (error) return { data: null, error: { message: error.message, code: error.code } };
+  return { data, error: null };
+}
+
 function parseNum(value: unknown): number {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
 }
 
-export async function fetchAdminStats() {
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+const VALID_WITHDRAWAL_STATUSES = ["pending", "all", "completed", "failed"] as const;
+type WithdrawalStatus = (typeof VALID_WITHDRAWAL_STATUSES)[number];
+
+const VALID_REDEMPTION_STATUSES = ["pending", "all"] as const;
+type RedemptionStatus = (typeof VALID_REDEMPTION_STATUSES)[number];
+
+const VALID_COIN_TYPES = ["balance", "sweeps_coins"] as const;
+type CoinType = (typeof VALID_COIN_TYPES)[number];
+
+export async function fetchAdminStats(): Promise<AdminResult<AdminStats>> {
+  if (!isSupabaseConfigured) return notConfigured<AdminStats>();
   const { data, error } = await supabase.rpc("admin_get_stats");
-  if (error) return { data: null as AdminStats | null, error };
+  if (error) return fromPostgrest<AdminStats>(null, error);
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) return { data: null, error: null };
   return {
@@ -63,9 +112,18 @@ export async function fetchAdminStats() {
   };
 }
 
-export async function fetchAdminWithdrawals(status: "pending" | "all" | "completed" | "failed" = "pending") {
+export async function fetchAdminWithdrawals(
+  status: WithdrawalStatus = "pending"
+): Promise<AdminResult<AdminWithdrawal[]>> {
+  if (!isSupabaseConfigured) return notConfigured<AdminWithdrawal[]>();
+  if (!VALID_WITHDRAWAL_STATUSES.includes(status)) {
+    return {
+      data: null,
+      error: { message: `Invalid withdrawal status: ${status}`, code: "INVALID_INPUT" },
+    };
+  }
   const { data, error } = await supabase.rpc("admin_list_withdrawals", { p_status: status });
-  if (error) return { data: null as AdminWithdrawal[] | null, error };
+  if (error) return fromPostgrest<AdminWithdrawal[]>(null, error);
   const rows = (data ?? []) as Record<string, unknown>[];
   return {
     data: rows.map((r) => ({
@@ -86,9 +144,10 @@ export async function fetchAdminWithdrawals(status: "pending" | "all" | "complet
   };
 }
 
-export async function fetchAdminRecentDeposits() {
+export async function fetchAdminRecentDeposits(): Promise<AdminResult<AdminDeposit[]>> {
+  if (!isSupabaseConfigured) return notConfigured<AdminDeposit[]>();
   const { data, error } = await supabase.rpc("admin_list_recent_deposits", { p_limit: 15 });
-  if (error) return { data: null as AdminDeposit[] | null, error };
+  if (error) return fromPostgrest<AdminDeposit[]>(null, error);
   const rows = (data ?? []) as Record<string, unknown>[];
   return {
     data: rows.map((r) => ({
@@ -104,23 +163,52 @@ export async function fetchAdminRecentDeposits() {
   };
 }
 
-export async function completeAdminWithdrawal(withdrawalId: string, txHash: string) {
-  return supabase.rpc("admin_complete_crypto_withdrawal", {
+export async function completeAdminWithdrawal(
+  withdrawalId: string,
+  txHash: string
+): Promise<AdminResult<unknown>> {
+  if (!isSupabaseConfigured) return notConfigured<unknown>();
+  if (!isNonEmptyString(withdrawalId)) {
+    return { data: null, error: { message: "Withdrawal ID is required.", code: "INVALID_INPUT" } };
+  }
+  const trimmedHash = txHash?.trim();
+  if (!isNonEmptyString(trimmedHash)) {
+    return { data: null, error: { message: "Transaction hash is required.", code: "INVALID_INPUT" } };
+  }
+  const { data, error } = await supabase.rpc("admin_complete_crypto_withdrawal", {
     p_withdrawal_id: withdrawalId,
-    p_tx_hash: txHash,
+    p_tx_hash: trimmedHash,
   });
+  return fromPostgrest(data, error);
 }
 
-export async function failAdminWithdrawal(withdrawalId: string, errorMessage?: string) {
-  return supabase.rpc("admin_fail_crypto_withdrawal", {
+export async function failAdminWithdrawal(
+  withdrawalId: string,
+  errorMessage?: string
+): Promise<AdminResult<unknown>> {
+  if (!isSupabaseConfigured) return notConfigured<unknown>();
+  if (!isNonEmptyString(withdrawalId)) {
+    return { data: null, error: { message: "Withdrawal ID is required.", code: "INVALID_INPUT" } };
+  }
+  const trimmedErr = errorMessage?.trim();
+  const { data, error } = await supabase.rpc("admin_fail_crypto_withdrawal", {
     p_withdrawal_id: withdrawalId,
-    p_error_message: errorMessage ?? undefined,
+    p_error_message: trimmedErr || undefined,
   });
+  return fromPostgrest(data, error);
 }
 
-export async function searchAdminUsers(query: string) {
-  const { data, error } = await supabase.rpc("admin_search_users", { p_query: query });
-  if (error) return { data: null as AdminUserResult[] | null, error };
+export async function searchAdminUsers(query: string): Promise<AdminResult<AdminUserResult[]>> {
+  if (!isSupabaseConfigured) return notConfigured<AdminUserResult[]>();
+  const trimmed = query?.trim();
+  if (!isNonEmptyString(trimmed) || trimmed.length < 2) {
+    return {
+      data: null,
+      error: { message: "Enter at least 2 characters to search.", code: "INVALID_INPUT" },
+    };
+  }
+  const { data, error } = await supabase.rpc("admin_search_users", { p_query: trimmed });
+  if (error) return fromPostgrest<AdminUserResult[]>(null, error);
   const rows = (data ?? []) as Record<string, unknown>[];
   return {
     data: rows.map((r) => ({
@@ -136,29 +224,33 @@ export async function searchAdminUsers(query: string) {
   };
 }
 
-export async function setUserAdmin(userId: string, isAdmin: boolean) {
-  return supabase.rpc("admin_set_user_admin", {
+export async function setUserAdmin(
+  userId: string,
+  isAdmin: boolean
+): Promise<AdminResult<unknown>> {
+  if (!isSupabaseConfigured) return notConfigured<unknown>();
+  if (!isNonEmptyString(userId)) {
+    return { data: null, error: { message: "User ID is required.", code: "INVALID_INPUT" } };
+  }
+  const { data, error } = await supabase.rpc("admin_set_user_admin", {
     p_user_id: userId,
     p_is_admin: isAdmin,
   });
+  return fromPostgrest(data, error);
 }
 
-export type AdminRedemption = {
-  id: string;
-  userId: string;
-  username: string | null;
-  email: string | null;
-  scAmount: number;
-  paypalEmail: string;
-  status: string;
-  reviewedBy: string | null;
-  notes: string | null;
-  createdAt: string;
-};
-
-export async function fetchAdminRedemptions(status: "pending" | "all" = "pending") {
+export async function fetchAdminRedemptions(
+  status: RedemptionStatus = "pending"
+): Promise<AdminResult<AdminRedemption[]>> {
+  if (!isSupabaseConfigured) return notConfigured<AdminRedemption[]>();
+  if (!VALID_REDEMPTION_STATUSES.includes(status)) {
+    return {
+      data: null,
+      error: { message: `Invalid redemption status: ${status}`, code: "INVALID_INPUT" },
+    };
+  }
   const { data, error } = await supabase.rpc("admin_list_redemptions", { p_status: status });
-  if (error) return { data: null as AdminRedemption[] | null, error };
+  if (error) return fromPostgrest<AdminRedemption[]>(null, error);
   const rows = (data ?? []) as Record<string, unknown>[];
   return {
     data: rows.map((r) => ({
@@ -181,19 +273,48 @@ export async function processAdminRedemption(
   redemptionId: string,
   action: "approve" | "reject",
   notes?: string
-) {
-  return supabase.rpc("admin_process_redemption", {
+): Promise<AdminResult<unknown>> {
+  if (!isSupabaseConfigured) return notConfigured<unknown>();
+  if (!isNonEmptyString(redemptionId)) {
+    return { data: null, error: { message: "Redemption ID is required.", code: "INVALID_INPUT" } };
+  }
+  if (action !== "approve" && action !== "reject") {
+    return { data: null, error: { message: `Invalid action: ${action}`, code: "INVALID_INPUT" } };
+  }
+  const trimmedNotes = notes?.trim() || undefined;
+  const { data, error } = await supabase.rpc("admin_process_redemption", {
     p_redemption_id: redemptionId,
     p_action: action,
-    p_notes: notes ?? null,
+    p_notes: trimmedNotes ?? null,
   });
+  return fromPostgrest(data, error);
 }
 
-export async function adminCreditUser(userId: string, amount: number, note: string, coinType = "balance") {
-  return supabase.rpc("admin_credit_user", {
+export async function adminCreditUser(
+  userId: string,
+  amount: number,
+  note: string,
+  coinType: CoinType = "balance"
+): Promise<AdminResult<unknown>> {
+  if (!isSupabaseConfigured) return notConfigured<unknown>();
+  if (!isNonEmptyString(userId)) {
+    return { data: null, error: { message: "User ID is required.", code: "INVALID_INPUT" } };
+  }
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return {
+      data: null,
+      error: { message: "Amount must be a positive number.", code: "INVALID_INPUT" },
+    };
+  }
+  if (!VALID_COIN_TYPES.includes(coinType)) {
+    return { data: null, error: { message: `Invalid coin type: ${coinType}`, code: "INVALID_INPUT" } };
+  }
+  const trimmedNote = note?.trim() || "Admin credit";
+  const { data, error } = await supabase.rpc("admin_credit_user", {
     p_user_id: userId,
     p_amount: amount,
-    p_note: note,
+    p_note: trimmedNote,
     p_coin_type: coinType,
   });
+  return fromPostgrest(data, error);
 }

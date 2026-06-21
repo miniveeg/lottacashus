@@ -1,6 +1,5 @@
-import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Wallet, Zap, TrendingUp, Dices } from "lucide-react";
 import { MotionLink } from "../../components/ui/MotionLink";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
@@ -9,12 +8,12 @@ import { useAuth } from "../../contexts/AuthContext";
 import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Home.css";
 
-// Lazy-load the 3D scene so Three.js is split into its own chunk and only
-// fetched on the home page. This must match the lazy import used by
-// AtmosphericLayer to avoid duplicate copies of the module.
-const ObsidianScene = lazy(() =>
-  import("../../components/atmosphere/ObsidianScene").then((m) => ({ default: m.ObsidianScene }))
-);
+// The home page relies on the global `AtmosphericLayer` (mounted in AppShell)
+// for its 3D obsidian shards — we do NOT mount a second ObsidianScene here.
+// The atmospheric canvas is `position: fixed` behind the app shell, so the
+// hero card's `lc-glass` `backdrop-filter: blur(...)` samples the shards
+// through the glass for a layered, cinematic effect without the GPU cost
+// of a second WebGL context.
 
 const pillars = [
   {
@@ -41,20 +40,20 @@ const pillars = [
 
 export function Home() {
   const { user, loading } = useAuth();
+  // Respect `prefers-reduced-motion`: when set, render the hero copy in its
+  // final state immediately (no fade-up / stagger). `initial={false}` tells
+  // framer-motion to skip the enter animation and use `animate` as the
+  // starting state; children inherit this via variant propagation.
+  const reduceMotion = useReducedMotion();
 
   return (
     <div className="home lc-page">
       <section className="home__hero lc-glass lc-glass--crimson">
-        <div className="home__hero-3d" aria-hidden="true">
-          <Suspense fallback={null}>
-            <ObsidianScene className="home__hero-canvas" />
-          </Suspense>
-        </div>
         <div className="home__hero-fog" aria-hidden="true" />
 
         <motion.div
           className="home__hero-copy"
-          initial="hidden"
+          initial={reduceMotion ? false : "hidden"}
           animate="visible"
           variants={staggerContainer}
         >
@@ -132,24 +131,24 @@ export function Home() {
           <h2 className="home__section-title">What&rsquo;s next</h2>
           <ul className="home__roadmap-list">
             <li>
-              <span className="home__roadmap-dot home__roadmap-dot--live" />
+              <span className="home__roadmap-dot home__roadmap-dot--live" aria-hidden="true" />
               Live now — accounts, crypto deposits &amp; withdrawals, leveling, Discord link, Help
             </li>
             <li>
-              <span className="home__roadmap-dot home__roadmap-dot--live" />
+              <span className="home__roadmap-dot home__roadmap-dot--live" aria-hidden="true" />
               Live now — <Link to="/originals">Originals</Link>: Keno, Mines, Limbo, Roulette,
               Blackjack, Crash, Case Battles
             </li>
             <li>
-              <span className="home__roadmap-dot home__roadmap-dot--live" />
+              <span className="home__roadmap-dot home__roadmap-dot--live" aria-hidden="true" />
               Live now — <Link to="/promotions">Promotions hub</Link> (rewards launching soon)
             </li>
             <li>
-              <span className="home__roadmap-dot" />
+              <span className="home__roadmap-dot" aria-hidden="true" />
               Coming — expanded casino lobby and third-party providers
             </li>
             <li>
-              <span className="home__roadmap-dot" />
+              <span className="home__roadmap-dot" aria-hidden="true" />
               Later — VIP tiers and Discord community rewards
             </li>
           </ul>

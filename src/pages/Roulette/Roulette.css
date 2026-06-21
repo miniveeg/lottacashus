@@ -605,3 +605,23 @@
     opacity: 1;
   }
 }
+
+/* Reduced-motion: disable decorative animations (disc spin, ball bounce,
+   hub dots, spinner, result-in pop). The wheel disc still renders at its
+   target rotation (no transition), the hub number/color is still shown,
+   and the result text is still displayed — only the motion is suppressed. */
+@media (prefers-reduced-motion: reduce) {
+  .roulette-wheel__disc-wrap--spinning .roulette-wheel__disc,
+  .roulette-wheel__disc-wrap--settling .roulette-wheel__disc,
+  .roulette-wheel__disc-wrap--spinning ~ .roulette-wheel__ball-marker .roulette-wheel__ball,
+  .roulette-wheel__hub-dots span,
+  .roulette__spinner,
+  .roulette__result {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .roulette-wheel__disc-wrap--spinning .roulette-wheel__disc {
+    transform: rotate(var(--spin-from, 0deg));
+  }
+}

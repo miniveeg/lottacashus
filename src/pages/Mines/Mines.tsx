@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -53,6 +53,11 @@ export function Mines() {
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
+
+  // Ref mirror of `busy` so async handlers can guard against re-entrant
+  // clicks without waiting for a state-commit + re-render cycle (which
+  // would let a second click slip through in the same tick).
+  const busyRef = useRef(false);
 
   const playing = gameId !== null;
   const maxGems = getMaxGems(mineCount);
@@ -109,6 +114,7 @@ export function Mines() {
   };
 
   const handleStart = async () => {
+    if (busyRef.current) return;
     if (!user) {
       setError("Log in to play.");
       return;
@@ -122,25 +128,32 @@ export function Mines() {
     setError(null);
     setLastMessage(null);
     setLastOutcome(null);
+    busyRef.current = true;
     setBusy(true);
     resetRound();
 
     const { data, error: startErr } = await startMinesGame({ wager, mineCount, coinType });
-    setBusy(false);
 
     if (startErr || !data) {
+      busyRef.current = false;
+      setBusy(false);
       setError(startErr ?? "Could not start game.");
+      // Server may have debited before failing — refresh to get truth.
+      void refreshProfile();
       return;
     }
 
     setGameId(data.gameId);
     setPfNonce(data.nonce + 1);
+    busyRef.current = false;
+    setBusy(false);
     await refreshProfile();
   };
 
   const handleReveal = async (tile: number) => {
-    if (!gameId || busy || revealed.has(tile)) return;
+    if (!gameId || busyRef.current || revealed.has(tile)) return;
 
+    busyRef.current = true;
     setBusy(true);
     setError(null);
 
@@ -152,14 +165,17 @@ export function Mines() {
     });
 
     if (revealErr || !data) {
+      busyRef.current = false;
       setBusy(false);
       setError(revealErr ?? "Reveal failed.");
+      void refreshProfile();
       return;
     }
 
     setRevealed((prev) => new Set([...prev, tile]));
 
     if (data.isMine) {
+      busyRef.current = false;
       setBusy(false);
       setBustedMines(data.mineTiles ?? []);
       setGameId(null);
@@ -174,24 +190,50 @@ export function Mines() {
     setMultiplier(data.multiplier);
 
     if (data.gemsRevealed >= maxGems) {
-      await handleCashout(true);
+      // Auto-cashout on the final gem. Pass the freshly-revealed gem count
+      // explicitly because the `gemsRevealed` state value is still the
+      // pre-reveal value at this point (state update is queued, not
+      // committed), so reading it would wrongly abort the cashout —
+      // leaving the game stuck in `busy=true` (critical bug fix).
+      await handleCashout(true, data.gemsRevealed);
       return;
     }
 
+    busyRef.current = false;
     setBusy(false);
   };
 
-  const handleCashout = async (auto = false) => {
-    if (!gameId || gemsRevealed < 1) return;
+  const handleCashout = async (auto = false, knownGems?: number) => {
+    // Manual cashout: prevent double-click races. Auto-cashout is invoked
+    // from handleReveal where busy is already true, so we bypass the guard.
+    if (!auto && busyRef.current) return;
 
+    // Use the explicitly-passed gem count when available (auto-cashout path);
+    // otherwise fall back to the committed state value (manual cashout path).
+    const currentGems = knownGems ?? gemsRevealed;
+    if (!gameId || currentGems < 1) {
+      if (auto) {
+        // Defensive: auto-cashout should never hit this branch (caller
+        // already verified gemsRevealed >= maxGems >= 1), but if it does,
+        // release the busy flag acquired by handleReveal so the game
+        // doesn't freeze.
+        busyRef.current = false;
+        setBusy(false);
+      }
+      return;
+    }
+
+    busyRef.current = true;
     setBusy(true);
     setError(null);
 
     const { data, error: cashErr } = await cashoutMinesGame({ gameId, coinType });
+    busyRef.current = false;
     setBusy(false);
 
     if (cashErr || !data) {
       setError(cashErr ?? "Cashout failed.");
+      void refreshProfile();
       return;
     }
 
@@ -223,10 +265,12 @@ export function Mines() {
   function tileClass(tile: number) {
     const classes = ["mines__tile"];
     if (revealed.has(tile)) {
+      // Tile was revealed during play. After a loss, `bustedMines` is set
+      // and we know which revealed tiles were mines vs gems.
       if (bustedMines?.includes(tile)) classes.push("mines__tile--mine");
-      else if (bustedMines && !bustedMines.includes(tile)) classes.push("mines__tile--gem");
       else classes.push("mines__tile--gem");
     } else if (bustedMines?.includes(tile)) {
+      // Unrevealed mine shown via post-loss peek.
       classes.push("mines__tile--mine", "mines__tile--peek");
     }
     if (busy) classes.push("mines__tile--busy");
@@ -259,29 +303,35 @@ export function Mines() {
           )}
 
           <div className="mines__grid" role="grid" aria-label="Mines board">
-            {TILES.map((tile) => (
-              <button
-                key={tile}
-                type="button"
-                role="gridcell"
-                className={tileClass(tile)}
-                disabled={!playing || busy || revealed.has(tile)}
-                onClick={() => handleReveal(tile)}
-                aria-label={
-                  revealed.has(tile)
-                    ? bustedMines?.includes(tile)
-                      ? "Mine"
-                      : "Gem"
-                    : `Tile ${tile + 1}`
-                }
-              >
-                {(revealed.has(tile) || bustedMines?.includes(tile)) && (
-                  <span className="mines__tile-icon" aria-hidden="true">
-                    {bustedMines?.includes(tile) ? "💣" : "💎"}
-                  </span>
-                )}
-              </button>
-            ))}
+            {TILES.map((tile) => {
+              const isRevealed = revealed.has(tile);
+              const isBustedMine = bustedMines?.includes(tile) ?? false;
+              const isPeekMine = !isRevealed && isBustedMine;
+              const tileAriaLabel = isRevealed
+                ? isBustedMine
+                  ? `Tile ${tile + 1}, mine`
+                  : `Tile ${tile + 1}, gem`
+                : isPeekMine
+                  ? `Tile ${tile + 1}, mine`
+                  : `Tile ${tile + 1}`;
+              return (
+                <button
+                  key={tile}
+                  type="button"
+                  role="gridcell"
+                  className={tileClass(tile)}
+                  disabled={!playing || busy || isRevealed}
+                  onClick={() => handleReveal(tile)}
+                  aria-label={tileAriaLabel}
+                >
+                  {(isRevealed || isPeekMine) && (
+                    <span className="mines__tile-icon" aria-hidden="true">
+                      {isBustedMine ? "💣" : "💎"}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {playing && (

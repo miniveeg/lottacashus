@@ -1,5 +1,5 @@
 .crash__header {
-  margin-bottom: 1.5rem;
+  flex-shrink: 0;
 }
 
 .crash__title {
@@ -22,7 +22,9 @@
   display: grid;
   grid-template-columns: 1fr clamp(260px, 22vw, 360px);
   gap: clamp(0.75rem, 1.5vw, 1.25rem);
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
@@ -35,6 +37,8 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  min-height: 0;
+  flex: 1;
 }
 
 .crash__canvas-wrap {
@@ -43,6 +47,8 @@
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 

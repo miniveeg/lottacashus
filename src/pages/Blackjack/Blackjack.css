@@ -3,7 +3,7 @@
 }
 
 .bj__header {
-  margin-bottom: 1.5rem;
+  flex-shrink: 0;
 }
 
 .bj__title {
@@ -25,6 +25,8 @@
   grid-template-columns: minmax(0, 1fr) clamp(260px, 22vw, 360px);
   gap: clamp(0.75rem, 1.5vw, 1.25rem);
   align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
@@ -37,7 +39,8 @@
 .bj__table-panel {
   position: relative;
   overflow: hidden;
-  min-height: min(72vh, 520px);
+  min-height: min(50vh, 420px);
+  flex: 1;
   border: 1px solid rgba(34, 120, 78, 0.45);
   border-radius: var(--lc-radius-lg);
   background:

@@ -38,6 +38,14 @@
 /* ── Page header ── */
 .lc-page__header { margin-bottom: 1.85rem; }
 
+/* Compact header for game pages — less vertical waste */
+.lc-game-page > .lc-page__header { margin-bottom: clamp(0.35rem, 1vw, 0.85rem); }
+.lc-game-page > .lc-page__header .lc-page__subtitle {
+  font-size: 0.85rem;
+  max-height: 2.6rem;
+  overflow: hidden;
+}
+
 .lc-page__eyebrow {
   display: inline-flex;
   align-items: center;
@@ -304,13 +312,17 @@
 
 /* ── Game pages ──
    Every Originals game page shares this shell: no max-width so the game
-   fills whatever space the sidebar leaves. Game layouts (board + controls)
-   use their own grids to divide the space responsively. */
+   fills whatever space the sidebar leaves. The page fills the viewport
+   height (minus topbar) so the game fits on screen without scrolling.
+   Footer/copyright may scroll off — that's intentional. */
 .lc-game-page {
   width: 100%;
   max-width: none;
   margin: 0;
-  padding: clamp(1rem, 2vw, 1.35rem) clamp(0.75rem, 2.5vw, 2rem) clamp(2rem, 4vw, 3rem);
+  padding: clamp(0.6rem, 1.5vw, 1.35rem) clamp(0.75rem, 2.5vw, 2rem) 0;
+  min-height: calc(100dvh - var(--lc-topbar-height));
+  display: flex;
+  flex-direction: column;
 }
 
 .keno__board-panel, .mines__board-panel, .limbo__stage-panel,
@@ -328,6 +340,10 @@
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
   padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
 }
 
 .limbo__stage-panel {
@@ -335,6 +351,10 @@
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
   padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
 }
 
 /* Unified game control panels — consistent styling */
@@ -350,12 +370,13 @@
   gap: 1rem;
 }
 
-/* Sticky controls on desktop, static on mobile */
+/* Sticky controls on desktop, static on mobile.
+   Controls stretch to fill the layout row height so they look uniform. */
 .mines__controls, .keno__controls, .limbo__controls,
 .roulette__controls, .crash__controls, .slots__controls, .bj__controls {
   position: sticky;
   top: calc(var(--lc-topbar-height) + 1rem);
-  align-self: start;
+  align-self: stretch;
 }
 
 .keno__cell, .mines__tile {
@@ -486,7 +507,7 @@ a:focus:not(:focus-visible) { outline: none; }
     --lc-page-pad-b: clamp(1.25rem, 3vw, 2rem);
   }
   .lc-page--auth { padding: 1.25rem clamp(0.6rem, 2vw, 1rem); }
-  .lc-game-page { padding: clamp(0.75rem, 2vw, 1rem) clamp(0.6rem, 2vw, 1rem) clamp(1.5rem, 3vw, 2.5rem); }
+  .lc-game-page { padding: clamp(0.5rem, 1.5vw, 0.75rem) clamp(0.6rem, 2vw, 1rem) 0; }
   .game-controls,
   .mines__controls, .keno__controls, .limbo__controls,
   .roulette__controls, .crash__controls, .slots__controls, .bj__controls {
@@ -503,6 +524,6 @@ a:focus:not(:focus-visible) { outline: none; }
   .lc-page { --lc-page-pad-x: clamp(0.5rem, 2vw, 0.75rem); }
   .lc-page__header { margin-bottom: clamp(0.85rem, 2.5vw, 1.25rem); }
   .lc-panel { padding: clamp(0.75rem, 2vw, 1rem) clamp(0.85rem, 2.5vw, 1.1rem); }
-  .lc-game-page { padding: 0.75rem clamp(0.5rem, 2vw, 0.75rem) clamp(1.25rem, 3vw, 2rem); }
+  .lc-game-page { padding: 0.5rem clamp(0.5rem, 2vw, 0.75rem) 0; }
   .lc-page__title { font-size: clamp(1.15rem, 5vw, 1.35rem); }
 }

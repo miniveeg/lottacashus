@@ -3,7 +3,7 @@
 }
 
 .limbo__header {
-  margin-bottom: 1.5rem;
+  flex-shrink: 0;
 }
 
 .limbo__title {
@@ -24,7 +24,9 @@
   display: grid;
   grid-template-columns: 1fr clamp(260px, 22vw, 360px);
   gap: clamp(0.75rem, 1.5vw, 1.25rem);
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
 @media (max-width: 900px) {
@@ -40,8 +42,9 @@
   flex-direction: column;
   align-items: center;
   gap: 1.25rem;
-  min-height: 280px;
+  min-height: 0;
   justify-content: center;
+  flex: 1;
 }
 
 .limbo__display {

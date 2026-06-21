@@ -9,7 +9,7 @@
 }
 
 .slots__header {
-  margin-bottom: 1.5rem;
+  flex-shrink: 0;
 }
 
 .slots__title {
@@ -34,11 +34,12 @@
   align-items: center;
   justify-content: center;
   gap: 1.5rem;
-  min-height: 320px;
+  min-height: 0;
   padding: 1.5rem 1rem;
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
+  flex: 1;
 }
 
 .slots__reels {
@@ -184,7 +185,9 @@
   display: grid;
   grid-template-columns: 1fr clamp(260px, 22vw, 360px);
   gap: clamp(0.75rem, 1.5vw, 1.25rem);
-  align-items: start;
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
 .slots__stage {

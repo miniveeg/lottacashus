@@ -16,7 +16,6 @@ import "./Keno.css";
 
 const GRID_SIZE = 40;
 const MAX_PICKS = 10;
-const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 const REVEAL_STAGGER_MS = 110;
 
 function randomPick(count: number): number[] {
@@ -108,7 +107,6 @@ export function Keno() {
   };
 
   const halfWager = () => applyWager(wager / 2);
-  const doubleWager = () => applyWager(wager * 2);
 
   const handleBet = async () => {
     if (!user) {
@@ -308,25 +306,27 @@ export function Keno() {
               <button
                 type="button"
                 className="game-controls__wager-adj"
-                onClick={doubleWager}
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(wager * 2, activeBalance));
+                }}
                 disabled={drawing}
                 aria-label="Double bet"
               >
                 2×
               </button>
-            </div>
-            <div className="game-controls__presets">
-              {BET_PRESETS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
-                  onClick={() => applyWager(p)}
-                  disabled={drawing}
-                >
-                  {p}
-                </button>
-              ))}
+              <button
+                type="button"
+                className="game-controls__wager-adj game-controls__wager-adj--max"
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(100_000, activeBalance));
+                }}
+                disabled={drawing}
+                aria-label="Max bet"
+              >
+                MAX
+              </button>
             </div>
           </div>
 

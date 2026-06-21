@@ -22,7 +22,6 @@ import {
 import "../../styles/game-controls.css";
 import "./Mines.css";
 
-const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 const TILES = Array.from({ length: 25 }, (_, i) => i);
 
 function randomUnrevealedTile(revealed: Set<number>): number | null {
@@ -357,26 +356,29 @@ export function Mines() {
               <button
                 type="button"
                 className="game-controls__wager-adj"
-                onClick={() => applyWager(wager * 2)}
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(wager * 2, activeBalance));
+                }}
                 disabled={playing || busy}
                 aria-label="Double bet"
               >
                 2×
               </button>
+              <button
+                type="button"
+                className="game-controls__wager-adj game-controls__wager-adj--max"
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(100_000, activeBalance));
+                }}
+                disabled={playing || busy}
+                aria-label="Max bet"
+              >
+                MAX
+              </button>
             </div>
-            <div className="game-controls__presets">
-              {BET_PRESETS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
-                  onClick={() => applyWager(p)}
-                  disabled={playing || busy}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+
           </div>
 
           {error && (

@@ -20,8 +20,6 @@ import {
 import "../../styles/game-controls.css";
 import "./Blackjack.css";
 
-const BET_PRESETS = [1, 5, 10, 25, 50, 100];
-
 function CardView({ card, hidden, index = 0 }: { card?: number; hidden?: boolean; index?: number }) {
   if (hidden) {
     return <div className="bj__card bj__card--hidden" aria-hidden="true" style={{ ["--card-deal-delay" as string]: `${index * 0.12}s` }} />;
@@ -315,25 +313,27 @@ export function Blackjack() {
               <button
                 type="button"
                 className="game-controls__wager-adj"
-                onClick={() => applyWager(wager * 2)}
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(wager * 2, activeBalance));
+                }}
                 disabled={playing || busy}
                 aria-label="Double bet"
               >
                 2×
               </button>
-            </div>
-            <div className="game-controls__presets">
-              {BET_PRESETS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
-                  onClick={() => applyWager(p)}
-                  disabled={playing || busy}
-                >
-                  {p}
-                </button>
-              ))}
+              <button
+                type="button"
+                className="game-controls__wager-adj game-controls__wager-adj--max"
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(100_000, activeBalance));
+                }}
+                disabled={playing || busy}
+                aria-label="Max bet"
+              >
+                MAX
+              </button>
             </div>
           </div>
 

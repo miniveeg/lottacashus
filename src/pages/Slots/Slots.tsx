@@ -29,8 +29,6 @@ const SYMBOL_GLYPH: Record<number, string> = {
   6: "\u{1F451}",
 };
 
-const BET_PRESETS = [1, 5, 10, 25, 50, 100];
-
 type ReelState = "idle" | "spinning" | "landed";
 
 export default function Slots() {
@@ -321,36 +319,20 @@ export default function Slots() {
                     type="button"
                     className="game-controls__wager-double"
                     disabled={rolling}
-                    onClick={() => {
-                      const doubled = wager * 2;
-                      const clamped = Math.min(doubled, 100000);
-                      setWager(clamped);
-                      setWagerInput(String(clamped));
-                    }}
+                    onClick={() => applyWager(String(Math.min(wager * 2, activeBalance)))}
                   >
                     2x
                   </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="game-controls__option">
-              <span className="game-controls__option-label">Quick bet</span>
-              <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-                {BET_PRESETS.map((preset) => (
                   <button
-                    key={preset}
                     type="button"
+                    className="game-controls__wager-adj game-controls__wager-adj--max"
+                    onClick={() => applyWager(String(Math.min(100_000, activeBalance)))}
                     disabled={rolling}
-                    className={`game-controls__preset${wager === preset ? " game-controls__preset--active" : ""}`}
-                    onClick={() => {
-                      setWager(preset);
-                      setWagerInput(String(preset));
-                    }}
+                    aria-label="Max bet"
                   >
-                    {coinLabel} {preset}
+                    MAX
                   </button>
-                ))}
+                </div>
               </div>
             </div>
           </div>

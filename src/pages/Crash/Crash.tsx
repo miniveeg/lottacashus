@@ -14,7 +14,6 @@ import { truncateCrashMultiplier } from "../../lib/games/crash";
 import "../../styles/game-controls.css";
 import "./Crash.css";
 
-const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 // Animation rate — multiplier grows ~9%/frame at 60fps (exponential, crash-like).
 const ANIMATION_GROWTH = 1.009;
 const CANVAS_BASE_WIDTH = 600;
@@ -407,26 +406,29 @@ export function Crash() {
               <button
                 type="button"
                 className="game-controls__wager-adj"
-                onClick={() => applyWager(wager * 2)}
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(wager * 2, activeBalance));
+                }}
                 disabled={phase === "running"}
                 aria-label="Double bet"
               >
                 2&times;
               </button>
+              <button
+                type="button"
+                className="game-controls__wager-adj game-controls__wager-adj--max"
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(100_000, activeBalance));
+                }}
+                disabled={phase === "running"}
+                aria-label="Max bet"
+              >
+                MAX
+              </button>
             </div>
-            <div className="game-controls__presets">
-              {BET_PRESETS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
-                  onClick={() => applyWager(p)}
-                  disabled={phase === "running"}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+
           </div>
 
           {phase === "running" ? (

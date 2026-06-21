@@ -9,6 +9,7 @@ type NavItem = { icon: UiIconName; label: string; href: string };
 const mainNav: NavItem[] = [
   { icon: "home", label: "Home", href: "/" },
   { icon: "originals", label: "Originals", href: ORIGINALS_PATH },
+  { icon: "slots", label: "Slots", href: "/slots" },
   { icon: "promotions", label: "Promotions", href: "/promotions" },
   { icon: "leaderboard", label: "Leaderboard", href: "/leaderboard" },
 ];
@@ -59,9 +60,9 @@ export function SidebarNav() {
   const { profile } = useProfile();
   const { collapsed } = useSidebar();
 
-  const legalItems: NavItem[] = profile?.isAdmin
-    ? [...legalNav, { icon: "admin", label: "Admin", href: "/admin" }]
-    : legalNav;
+  const accountItems: NavItem[] = profile?.isAdmin
+    ? [...accountNav, { icon: "admin", label: "Admin", href: "/admin" }]
+    : accountNav;
 
   return (
     <>
@@ -77,7 +78,7 @@ export function SidebarNav() {
       <nav className="sidebar__section" aria-label="Account">
         {!collapsed ? <p className="sidebar__label">Account</p> : null}
         <ul className="sidebar__nav">
-          {accountNav.map((item) => (
+          {accountItems.map((item) => (
             <NavLink key={item.label} item={item} />
           ))}
         </ul>
@@ -86,7 +87,7 @@ export function SidebarNav() {
       <nav className="sidebar__section" aria-label="Legal">
         {!collapsed ? <p className="sidebar__label">Legal</p> : null}
         <ul className="sidebar__nav">
-          {legalItems.map((item) => (
+          {legalNav.map((item) => (
             <NavLink key={item.label} item={item} />
           ))}
         </ul>

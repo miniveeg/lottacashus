@@ -83,6 +83,121 @@
   background-clip: text;
 }
 
+/* Search */
+.topbar__search-wrap {
+  position: relative;
+  flex: 1;
+  max-width: min(420px, 30vw);
+  min-width: 0;
+}
+
+.topbar__search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-xl);
+  color: var(--lc-text-muted);
+  transition: border-color var(--lc-transition), box-shadow var(--lc-transition), background var(--lc-transition);
+}
+
+.topbar__search-icon { flex-shrink: 0; opacity: 0.6; }
+
+.topbar__search:focus-within {
+  border-color: var(--lc-border-accent);
+  background: var(--lc-crimson-glow);
+  box-shadow: var(--lc-focus-ring);
+  color: var(--lc-text-secondary);
+}
+
+.topbar__search input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--lc-text-primary);
+  font-family: var(--lc-font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.topbar__search input::placeholder { color: var(--lc-text-muted); }
+
+.topbar__search-results {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  background: var(--lc-bg-glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-lg);
+  box-shadow: var(--lc-shadow-md);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.topbar__search-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--lc-radius-md);
+  text-align: left;
+  color: var(--lc-text-primary);
+  transition: background var(--lc-transition);
+}
+
+.topbar__search-result:hover,
+.topbar__search-result--active {
+  background: var(--lc-crimson-glow);
+}
+
+.topbar__search-result--active {
+  box-shadow: inset 2px 0 0 var(--lc-crimson-soft);
+}
+
+.topbar__search-result:focus-visible {
+  outline: none;
+  background: var(--lc-crimson-glow);
+  box-shadow: var(--lc-focus-ring);
+}
+
+.topbar__search-result-label { font-weight: 700; font-size: 0.875rem; }
+
+.topbar__search-result-meta {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--lc-crimson-soft);
+  flex-shrink: 0;
+}
+
+.topbar__search-empty {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+  color: var(--lc-text-muted);
+  background: var(--lc-bg-glass);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
+  z-index: 100;
+}
+
 /* Actions */
 .topbar__actions {
   display: flex;
@@ -91,6 +206,7 @@
   flex-shrink: 0;
 }
 
+.topbar__icon-btn.topbar__search-toggle { display: none; }
 
 .topbar__balance-group {
   display: flex;
@@ -258,6 +374,38 @@ a.topbar__balance:hover {
 
 @media (max-width: 900px) {
   .topbar__menu-btn { display: flex; }
+  .topbar__search-wrap { display: none; }
+  .topbar__icon-btn.topbar__search-toggle { display: grid; }
+
+  /* On mobile the search bar slides down as an absolute overlay below the
+     topbar instead of wrapping the bar (which would overflow the fixed
+     app-shell grid row and cover the sidebar/main content). */
+  .topbar--search-open .topbar__search-wrap {
+    display: block;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex: none;
+    max-width: none;
+    padding: 0.55rem 0.75rem calc(0.55rem + var(--lc-safe-bottom));
+    background: var(--lc-bg-elevated);
+    border-bottom: 1px solid var(--lc-border);
+    box-shadow: var(--lc-shadow-md);
+    z-index: 60;
+    animation: topbar-search-slide 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @keyframes topbar-search-slide {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .topbar--search-open .topbar__search-results,
+  .topbar--search-open .topbar__search-empty {
+    z-index: 60;
+  }
+
   .topbar__balance-label { display: none; }
   .topbar__balance { padding: 0.4rem 0.75rem; }
   .topbar__name { font-size: 1.05rem; }
@@ -291,9 +439,14 @@ a.topbar__balance:hover {
   .topbar__menu-btn,
   .topbar__icon-btn,
   .topbar__coin-toggle,
+  .topbar__search-toggle,
   .topbar__btn {
     transform: none !important;
   }
 }
 
-
+@media (prefers-reduced-motion: reduce) {
+  .topbar--search-open .topbar__search-wrap {
+    animation: none;
+  }
+}

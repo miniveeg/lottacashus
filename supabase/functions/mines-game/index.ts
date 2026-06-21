@@ -220,7 +220,7 @@ Deno.serve(async (req) => {
       const gemsRevealed = Number(row?.gems_revealed ?? 0);
       const multiplier = Number(row?.multiplier ?? 1);
       const status = String(row?.status ?? "active");
-      const mineTiles = (row?.mine_tiles as number[] | null) ?? [];
+      const resultMineTiles = (row?.mine_tiles as number[] | null) ?? [];
       const gameMineCount = Number(row?.mine_count ?? body?.mineCount ?? 0);
 
       return jsonResponse({
@@ -233,7 +233,7 @@ Deno.serve(async (req) => {
         balance: Number(row?.out_balance ?? 0),
         coinType,
         payout: Number(row?.payout ?? 0),
-        mineTiles: isMine ? mineTiles : undefined,
+        mineTiles: isMine ? resultMineTiles : undefined,
         nextMultiplier:
           status === "active" && gameMineCount > 0
             ? getMinesMultiplier(gameMineCount, gemsRevealed + 1)

@@ -41,6 +41,7 @@
   overflow: hidden;
   min-height: min(50vh, 420px);
   flex: 1;
+  height: 100%;
   border: 1px solid rgba(34, 120, 78, 0.45);
   border-radius: var(--lc-radius-lg);
   background:

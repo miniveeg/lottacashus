@@ -35,6 +35,7 @@
   justify-content: center;
   gap: 1.5rem;
   min-height: 0;
+  height: 100%;
   padding: 1.5rem 1rem;
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);

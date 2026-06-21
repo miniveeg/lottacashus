@@ -372,6 +372,11 @@
   }
   .sidebar-chat__send { min-height: 2.8rem; min-width: 2.8rem; }
   .sidebar-chat__input { min-height: 2.8rem; font-size: 1rem; }
+
+  /* Mobile: hide section labels and dividers for a flat stacked list */
+  .sidebar__label { display: none; }
+  .sidebar__section + .sidebar__section { border-top: none; }
+  .sidebar__section { padding: 0.2rem 0.55rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

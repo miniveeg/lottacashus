@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bell, LogIn, LogOut, Menu, Search, UserPlus, X } from "lucide-react";
+import { Bell, LogIn, LogOut, Menu, UserPlus } from "lucide-react";
 import { NotificationsPanel } from "../NotificationsPanel/NotificationsPanel";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
@@ -12,16 +12,11 @@ import { useToast } from "../../contexts/ToastContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
 import { formatUsd, formatCoins, coinsToUsd, type CoinType } from "../../lib/format";
 import { analytics } from "../../lib/analytics";
-import { searchSite, type SiteSearchItem } from "../../lib/siteSearch";
 import { BrandLogo } from "../BrandLogo/BrandLogo";
 import { TopbarLevelProgress } from "./TopbarLevelProgress";
 import "../BrandLogo/BrandLogo.css";
 import "./Topbar.css";
 import "./TopbarLevelProgress.css";
-
-function searchCategoryLabel(category: SiteSearchItem["category"]): string {
-  return category === "game" ? "Game" : "Page";
-}
 
 export function Topbar() {
   const { user, loading, signOut } = useAuth();
@@ -33,14 +28,6 @@ export function Topbar() {
   const toast = useToast();
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [highlightIndex, setHighlightIndex] = useState(0);
-  const searchWrapRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
-  const searchResults = searchSite(searchQuery);
 
   const displayName =
     profile?.username ??
@@ -54,8 +41,6 @@ export function Topbar() {
       ? (profile?.sweepsCoins ?? 0)
       : (profile?.balance ?? 0);
 
-  // Show the coin amount with its symbol (e.g. "10,000.00 GC") plus a small
-  // USD-equivalent line so users always know the real-world value.
   const balanceDisplay = !user
     ? formatCoins(0, coinType as CoinType)
     : profileLoading
@@ -72,72 +57,8 @@ export function Topbar() {
     navigate("/");
   }
 
-  function goToSearchResult(item: SiteSearchItem) {
-    setSearchQuery("");
-    setSearchOpen(false);
-    setMobileSearchOpen(false);
-    setHighlightIndex(0);
-    navigate(item.href);
-  }
-
-  function handleSearchSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const first = searchResults[0];
-    if (first) goToSearchResult(first);
-  }
-
-  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (!searchOpen && searchResults.length > 0 && (e.key === "ArrowDown" || e.key === "Enter")) {
-      setSearchOpen(true);
-    }
-    if (!searchResults.length) return;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightIndex((i) => (i + 1) % searchResults.length);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightIndex((i) => (i - 1 + searchResults.length) % searchResults.length);
-    } else if (e.key === "Enter" && searchResults[highlightIndex]) {
-      e.preventDefault();
-      goToSearchResult(searchResults[highlightIndex]!);
-    } else if (e.key === "Escape") {
-      setSearchOpen(false);
-    }
-  }
-
-  useEffect(() => {
-    setHighlightIndex(0);
-  }, [searchQuery]);
-
-  // Close the mobile search overlay whenever the route changes.
-  useEffect(() => {
-    setMobileSearchOpen(false);
-    setSearchOpen(false);
-    setSearchQuery("");
-  }, [pathname]);
-
-  useEffect(() => {
-    function onPointerDown(ev: MouseEvent) {
-      if (searchWrapRef.current && !searchWrapRef.current.contains(ev.target as Node)) {
-        setSearchOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", onPointerDown);
-    return () => document.removeEventListener("mousedown", onPointerDown);
-  }, []);
-
-  // Auto-focus the search input when the mobile search overlay opens so the
-  // keyboard appears immediately and the user can start typing.
-  useEffect(() => {
-    if (mobileSearchOpen) {
-      const id = window.setTimeout(() => searchInputRef.current?.focus(), 60);
-      return () => window.clearTimeout(id);
-    }
-  }, [mobileSearchOpen]);
-
   return (
-    <header className={`topbar${mobileSearchOpen ? " topbar--search-open" : ""}`}>
+    <header className="topbar">
       <div className="topbar__start">
         <motion.button
           type="button"
@@ -155,73 +76,7 @@ export function Topbar() {
         </Link>
       </div>
 
-      <div className="topbar__search-wrap" ref={searchWrapRef}>
-        <form
-          className="topbar__search"
-          role="search"
-          onSubmit={handleSearchSubmit}
-        >
-          <Search size={16} aria-hidden className="topbar__search-icon" />
-          <input
-            ref={searchInputRef}
-            type="search"
-            placeholder="Search games and pages…"
-            aria-label="Search games and pages"
-            aria-expanded={searchOpen && searchResults.length > 0}
-            aria-controls="topbar-search-results"
-            aria-autocomplete="list"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setSearchOpen(true);
-            }}
-            onFocus={() => setSearchOpen(true)}
-            onKeyDown={handleSearchKeyDown}
-          />
-        </form>
-        {searchOpen && searchQuery.trim() && searchResults.length > 0 && (
-          <ul
-            id="topbar-search-results"
-            className="topbar__search-results"
-            role="listbox"
-          >
-            {searchResults.map((item, index) => (
-              <li key={item.id} role="option" aria-selected={index === highlightIndex}>
-                <button
-                  type="button"
-                  className={`topbar__search-result${index === highlightIndex ? " topbar__search-result--active" : ""}`}
-                  onMouseEnter={() => setHighlightIndex(index)}
-                  onClick={() => goToSearchResult(item)}
-                >
-                  <span className="topbar__search-result-label">{item.label}</span>
-                  <span className="topbar__search-result-meta">
-                    {searchCategoryLabel(item.category)}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {searchOpen && searchQuery.trim() && searchResults.length === 0 && (
-          <p className="topbar__search-empty" role="status">
-            No matches for &ldquo;{searchQuery.trim()}&rdquo;
-          </p>
-        )}
-      </div>
-
       <div className="topbar__actions">
-        <motion.button
-          type="button"
-          className={`topbar__icon-btn topbar__search-toggle${mobileSearchOpen ? " topbar__icon-btn--active" : ""}`}
-          aria-label={mobileSearchOpen ? "Close search" : "Search"}
-          aria-expanded={mobileSearchOpen}
-          onClick={() => setMobileSearchOpen((open) => !open)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {mobileSearchOpen ? <X size={18} aria-hidden /> : <Search size={18} aria-hidden />}
-        </motion.button>
-
         <div className="topbar__balance-group">
           <Link
             to={user ? "/settings" : loginUrl(pathname)}

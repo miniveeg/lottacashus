@@ -49,6 +49,7 @@ export function Crash() {
   } | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
@@ -328,164 +329,102 @@ export function Crash() {
 
   return (
     <div className="game-page crash">
-      <header className="game-page__header">
-        <div className="game-page__header-text">
-          <h1 className="game-page__title">Crash</h1>
-          <p className="game-page__subtitle">
-            Watch the multiplier rise. Cash out before it crashes.
-          </p>
-        </div>
-        <span className="game-page__rtp">99% RTP</span>
+      <header className="game-header">
+        <h1 className="game-header__title">Crash</h1>
+        <span className="game-header__rtp">99% RTP</span>
+        <span className="game-header__spacer" />
+        <button
+          type="button"
+          className={`game-header__panel-toggle${panelOpen ? " game-header__panel-toggle--open" : ""}`}
+          onClick={() => setPanelOpen((v) => !v)}
+          aria-label="Toggle stats panel"
+          aria-expanded={panelOpen}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+        </button>
       </header>
 
-      <div className="game-page__layout">
-        <section className="game-page__stage crash__stage">
-          <div
-            className={[
-              "crash__canvas-wrap",
-              phase === "running" && "crash__canvas-wrap--running",
-              phase === "crashed" && "crash__canvas-wrap--crashed",
-              phase === "cashed_out" && "crash__canvas-wrap--win",
-            ]
-              .filter(Boolean)
-              .join(" ")}
-          >
-            <canvas
-              ref={canvasRef}
-              className="crash__canvas"
-              aria-label={`Crash multiplier ${multiplier.toFixed(2)}x`}
-            />
-            <div className="crash__multiplier-overlay" aria-live="polite" aria-atomic="true">
-              <span
-                className={[
-                  "crash__mult-value",
-                  phase === "crashed" && "crash__mult-value--crashed",
-                  phase === "cashed_out" && "crash__mult-value--win",
-                  phase === "running" && "crash__mult-value--running",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-              >
-                {multiplier.toFixed(2)}×
+      <div className="game-stage">
+        <div
+          className={[
+            "crash__canvas-wrap",
+            phase === "running" && "crash__canvas-wrap--running",
+            phase === "crashed" && "crash__canvas-wrap--crashed",
+            phase === "cashed_out" && "crash__canvas-wrap--win",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+        >
+          <canvas
+            ref={canvasRef}
+            className="crash__canvas"
+            aria-label={`Crash multiplier ${multiplier.toFixed(2)}x`}
+          />
+          <div className="crash__multiplier-overlay" aria-live="polite" aria-atomic="true">
+            <span
+              className={[
+                "crash__mult-value",
+                phase === "crashed" && "crash__mult-value--crashed",
+                phase === "cashed_out" && "crash__mult-value--win",
+                phase === "running" && "crash__mult-value--running",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              {multiplier.toFixed(2)}×
+            </span>
+            {phase === "idle" && (
+              <span className="crash__mult-label">Place a bet to start</span>
+            )}
+            {phase === "crashed" && (
+              <span className="crash__mult-label crash__mult-label--crashed">Crashed</span>
+            )}
+            {phase === "cashed_out" && (
+              <span className="crash__mult-label crash__mult-label--win">
+                Cashed out · won {formatCoins(lastResult?.payout ?? 0, coinType)}
               </span>
-              {phase === "idle" && (
-                <span className="crash__mult-label">Place a bet to start</span>
-              )}
-              {phase === "crashed" && (
-                <span className="crash__mult-label crash__mult-label--crashed">Crashed</span>
-              )}
-              {phase === "cashed_out" && (
-                <span className="crash__mult-label crash__mult-label--win">
-                  Cashed out · won {formatCoins(lastResult?.payout ?? 0, coinType)}
-                </span>
-              )}
-            </div>
+            )}
           </div>
+        </div>
+      </div>
 
-          {history.length > 0 && (
-            <div className="crash__history" aria-label="Recent crash points">
-              {history.map((h, i) => (
-                <span
-                  key={`${h.crashedAt}-${i}`}
-                  className={`crash__history-chip ${historyChipClass(h.crashedAt)}`}
-                  title={`Crashed at ${h.crashedAt.toFixed(2)}×`}
-                >
-                  {h.crashedAt.toFixed(2)}×
-                </span>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <aside className="game-page__controls game-controls">
-          <div className="game-page__balance">
-            <span className="game-page__balance-label">Balance · {coinLabel}</span>
-            <span className="game-page__balance-value">{formatCoins(activeBalance, coinType)}</span>
-            <span className="game-page__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
-          </div>
-
-          <div className="game-controls__wager-block">
-            <label className="game-controls__wager-label" htmlFor="crash-wager">
-              Bet amount · {coinLabel}
-            </label>
-            <div className="game-controls__wager-row">
-              <input
-                id="crash-wager"
-                type="text"
-                inputMode="decimal"
-                className="game-controls__wager-input"
-                value={wagerInput}
-                onChange={(e) => setWagerInput(e.target.value)}
-                onBlur={() => {
-                  const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
-                }}
-                disabled={phase === "running"}
-              />
-              <button
-                type="button"
-                className="game-controls__wager-adj"
-                onClick={() => applyWager(wager / 2)}
-                disabled={phase === "running"}
-                aria-label="Half bet"
-              >
-                ½
-              </button>
-              <button
-                type="button"
-                className="game-controls__wager-adj"
-                onClick={() => applyWager(wager * 2)}
-                disabled={phase === "running"}
-                aria-label="Double bet"
-              >
-                2×
-              </button>
-            </div>
-            <div className="game-controls__presets">
-              {BET_PRESETS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
-                  onClick={() => applyWager(p)}
-                  disabled={phase === "running"}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {error && <p className="game-controls__error" role="alert">{error}</p>}
-
-          {phase === "running" ? (
+      {panelOpen && (
+        <div className="game-panel" role="complementary" aria-label="Crash stats">
+          <div className="game-panel__head">
+            <h2 className="game-panel__title">Round info</h2>
             <button
               type="button"
-              className="game-controls__play game-controls__play--cashout"
-              onClick={handleCashOut}
+              className="game-panel__close"
+              onClick={() => setPanelOpen(false)}
+              aria-label="Close panel"
             >
-              Cash out · {multiplier.toFixed(2)}× · {formatCoins(potentialPayout, coinType)}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
-          ) : (
-            <button
-              type="button"
-              className="game-controls__play"
-              onClick={handleBet}
-              disabled={!user}
-            >
-              {phase === "crashed" || phase === "cashed_out" ? "Bet again" : "Play"}
-            </button>
-          )}
+          </div>
 
           {lastResult && phase !== "running" && (
-            <div className="game-controls__stats">
-              <div className="game-controls__stat-row">
-                <span className="game-controls__stat-label">Last round</span>
+            <div className="game-panel__section">
+              <h3 className="game-panel__section-title">Last round</h3>
+              <div className="game-panel__row">
+                <span className="game-panel__row-label">Crash point</span>
+                <span className="game-panel__row-value game-panel__row-value--gold">
+                  {lastResult.crashedAt.toFixed(2)}×
+                </span>
+              </div>
+              <div className="game-panel__row">
+                <span className="game-panel__row-label">Outcome</span>
                 <span
-                  className={`game-controls__stat-value${
+                  className={`game-panel__row-value${
                     lastResult.won
-                      ? " game-controls__stat-value--win"
-                      : " game-controls__stat-value--loss"
+                      ? " game-panel__row-value--win"
+                      : " game-panel__row-value--loss"
                   }`}
                 >
                   {lastResult.won
@@ -496,46 +435,145 @@ export function Crash() {
             </div>
           )}
 
-          <p className="game-page__hint">
+          <div className="game-panel__section">
+            <h3 className="game-panel__section-title">History</h3>
+            {history.length > 0 ? (
+              <div className="crash__history" aria-label="Recent crash points">
+                {history.map((h, i) => (
+                  <span
+                    key={`${h.crashedAt}-${i}`}
+                    className={`crash__history-chip ${historyChipClass(h.crashedAt)}`}
+                    title={`Crashed at ${h.crashedAt.toFixed(2)}×`}
+                  >
+                    {h.crashedAt.toFixed(2)}×
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="game-history__empty">No rounds yet.</p>
+            )}
+          </div>
+
+          <div className="game-panel__section game-panel__section--bare">
+            <details className="game-fair">
+              <summary className="game-fair__summary">Provably Fair</summary>
+              <div className="game-fair__body">
+                <div className="game-fair__row">
+                  <span className="game-fair__k">Server seed (hash)</span>
+                  <code className="game-fair__code">{pfHash ?? "…"}</code>
+                </div>
+                <div className="game-fair__row">
+                  <span className="game-fair__k">Next nonce</span>
+                  <code className="game-fair__code">{pfNonce}</code>
+                </div>
+                <div className="game-fair__row">
+                  <span className="game-fair__k">Client seed</span>
+                  <input
+                    type="text"
+                    className="game-fair__input"
+                    value={clientSeed}
+                    maxLength={64}
+                    onChange={(e) => setClientSeed(e.target.value)}
+                    disabled={phase === "running"}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="game-fair__save"
+                  onClick={saveClientSeed}
+                  disabled={phase === "running"}
+                >
+                  Save client seed
+                </button>
+                <p className="game-fair__note">
+                  HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — provably fair.
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <p className="game-actionbar__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
           </p>
+        </div>
+      )}
 
-          <details className="game-page__fairness">
-            <summary>Provably Fair</summary>
-            <div className="game-page__fairness-body">
-              <div className="game-page__fairness-row">
-                <span className="game-page__fairness-k">Server seed (hash)</span>
-                <code className="game-page__fairness-code">{pfHash ?? "…"}</code>
-              </div>
-              <div className="game-page__fairness-row">
-                <span className="game-page__fairness-k">Next nonce</span>
-                <code className="game-page__fairness-code">{pfNonce}</code>
-              </div>
-              <div className="game-page__fairness-row">
-                <span className="game-page__fairness-k">Client seed</span>
-                <input
-                  type="text"
-                  className="game-page__fairness-input"
-                  value={clientSeed}
-                  maxLength={64}
-                  onChange={(e) => setClientSeed(e.target.value)}
-                  disabled={phase === "running"}
-                />
-              </div>
-              <button
-                type="button"
-                className="game-page__fairness-save"
-                onClick={saveClientSeed}
-                disabled={phase === "running"}
-              >
-                Save client seed
-              </button>
-              <p className="game-page__fairness-note">
-                HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — provably fair.
-              </p>
-            </div>
-          </details>
-        </aside>
+      <div className="game-actionbar">
+        <div className="game-actionbar__balance">
+          <span className="game-actionbar__balance-label">{coinLabel}</span>
+          <span className="game-actionbar__balance-value">{formatCoins(activeBalance, coinType)}</span>
+          <span className="game-actionbar__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
+        </div>
+
+        <div className="game-actionbar__wager">
+          <button
+            type="button"
+            className="game-actionbar__adj"
+            onClick={() => applyWager(wager / 2)}
+            disabled={phase === "running"}
+            aria-label="Half bet"
+          >
+            ½
+          </button>
+          <input
+            id="crash-wager"
+            type="text"
+            inputMode="decimal"
+            className="game-actionbar__input"
+            value={wagerInput}
+            onChange={(e) => setWagerInput(e.target.value)}
+            onBlur={() => {
+              const parsed = parseFloat(wagerInput.replace(/,/g, ""));
+              applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+            }}
+            disabled={phase === "running"}
+            aria-label="Bet amount"
+          />
+          <button
+            type="button"
+            className="game-actionbar__adj"
+            onClick={() => applyWager(wager * 2)}
+            disabled={phase === "running"}
+            aria-label="Double bet"
+          >
+            2×
+          </button>
+        </div>
+
+        <div className="game-actionbar__presets">
+          {BET_PRESETS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              className={`game-actionbar__preset${wager === p ? " game-actionbar__preset--active" : ""}`}
+              onClick={() => applyWager(p)}
+              disabled={phase === "running"}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {phase === "running" ? (
+          <button
+            type="button"
+            className="game-actionbar__play game-actionbar__play--cashout"
+            onClick={handleCashOut}
+          >
+            Cash out · {multiplier.toFixed(2)}× · {formatCoins(potentialPayout, coinType)}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="game-actionbar__play"
+            onClick={handleBet}
+            disabled={!user}
+          >
+            {phase === "crashed" || phase === "cashed_out" ? "Bet again" : "Play"}
+          </button>
+        )}
+
+        {error && <p className="game-actionbar__error" role="alert">{error}</p>}
       </div>
     </div>
   );

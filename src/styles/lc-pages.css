@@ -581,3 +581,494 @@ a:focus:not(:focus-visible) {
   .wallet__tabs,
   .help__tabs { margin-bottom: var(--space-4); }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   v3 "Command Center" — new structural classes
+   These support the structural redesign done by Agents 1–4. All
+   existing classes above are kept untouched for backward compat.
+   New classes use token names with literal fallbacks so they still
+   render correctly even if theme.css fails to load.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── App shell navigation (Agent 1) ──
+   Floating desktop pill dock + mobile bottom tab bar. */
+
+.dock {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-5, 1.25rem);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 0.25rem);
+  padding: var(--space-2, 0.5rem);
+  background: var(--bg-glass, rgba(17, 17, 24, 0.8));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.14));
+  border-radius: var(--radius-full, 9999px);
+  box-shadow: var(--shadow-lg, 0 12px 40px rgba(0, 0, 0, 0.5));
+  z-index: var(--z-sticky, 50);
+}
+
+.dock__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 0.5rem);
+  min-width: 44px;
+  min-height: 44px;
+  padding: var(--space-3, 0.75rem);
+  border-radius: var(--radius-full, 9999px);
+  color: var(--text-secondary, #a1a1aa);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: var(--text-sm, 0.875rem);
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  text-decoration: none;
+  transition: background 200ms var(--ease-smooth, ease),
+              color 200ms var(--ease-smooth, ease),
+              transform 200ms var(--ease-smooth, ease);
+}
+
+.dock__item:hover {
+  background: var(--bg-surface-2, #16161f);
+  color: var(--text-primary, #fafafa);
+}
+
+.dock__item--active {
+  background: linear-gradient(135deg, var(--gold-bright, #fcd34d), var(--gold-deep, #d97706));
+  color: #000;
+}
+
+.dock__label {
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-width 220ms var(--ease-out, ease),
+              opacity 220ms var(--ease-out, ease);
+}
+
+.dock__item:hover .dock__label,
+.dock__item--active .dock__label {
+  max-width: 120px;
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .dock { display: none; }
+}
+
+.mobile-tabs {
+  display: none;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--mobile-tabs-height, calc(60px + env(safe-area-inset-bottom, 0px)));
+  padding-bottom: var(--safe-bottom, env(safe-area-inset-bottom, 0px));
+  background: var(--bg-glass, rgba(17, 17, 24, 0.92));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  align-items: stretch;
+  z-index: var(--z-topbar, 200);
+}
+
+.mobile-tabs__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--space-2, 0.5rem) 0;
+  color: var(--text-muted, #71717a);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  transition: color 200ms var(--ease-smooth, ease);
+}
+
+.mobile-tabs__item--active {
+  color: var(--gold, #f5b942);
+}
+
+@media (max-width: 768px) {
+  .mobile-tabs { display: flex; }
+}
+
+/* ── Home dashboard (Agent 2) ──
+   Welcome strip + game launcher grid + live feed (right column). */
+
+.home-dashboard {
+  width: 100%;
+  max-width: var(--lc-page-max, 1280px);
+  margin: 0 auto;
+  padding: var(--space-6, 1.5rem) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12, 3rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-6, 1.5rem);
+  align-items: start;
+}
+
+.home-dashboard__main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 1.5rem);
+  min-width: 0;
+}
+
+.home-dashboard__aside {
+  position: sticky;
+  top: calc(var(--topbar-height, 56px) + var(--space-4, 1rem));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+  min-width: 0;
+}
+
+.home-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4, 1rem);
+  padding: var(--space-5, 1.25rem) var(--space-6, 1.5rem);
+  background: linear-gradient(135deg, var(--bg-surface, #111118), var(--bg-surface-2, #16161f));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-xl, 20px);
+  flex-wrap: wrap;
+}
+
+.home-welcome__title {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 700;
+  font-size: var(--text-2xl, 1.5rem);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.home-welcome__subtitle {
+  margin: var(--space-1, 0.25rem) 0 0;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.home-welcome__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+  flex-wrap: wrap;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4, 1rem);
+}
+
+.home-launcher {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+  padding: var(--space-5, 1.25rem);
+  background: var(--bg-surface, #111118);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-lg, 14px);
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 200ms var(--ease-out, ease),
+              border-color 200ms var(--ease-smooth, ease),
+              box-shadow 200ms var(--ease-smooth, ease);
+}
+
+.home-launcher:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-gold, rgba(245, 185, 66, 0.3));
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.4));
+}
+
+.home-launcher__title {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 700;
+  font-size: var(--text-lg, 1.125rem);
+  letter-spacing: -0.01em;
+  color: var(--text-primary, #fafafa);
+}
+
+.home-launcher__meta {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--text-muted, #71717a);
+}
+
+.home-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-4, 1rem);
+  background: var(--bg-surface, #111118);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-lg, 14px);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 1024px) {
+  .home-dashboard {
+    grid-template-columns: 1fr;
+  }
+  .home-dashboard__aside {
+    position: static;
+  }
+}
+
+/* ── Game page (Agent 3) ──
+   Full-width stage + sticky bottom action bar + collapsible side
+   panel. The action bar lives in game-controls.css. */
+
+.game-page {
+  width: 100%;
+  max-width: var(--lc-page-max, 1280px);
+  margin: 0 auto;
+  padding: var(--space-5, 1.25rem) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12, 3rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5, 1.25rem);
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4, 1rem);
+  flex-wrap: wrap;
+}
+
+.game-header__title {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 700;
+  font-size: var(--text-2xl, 1.5rem);
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: var(--text-primary, #fafafa);
+}
+
+.game-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+}
+
+.game-stage {
+  position: relative;
+  width: 100%;
+  min-height: 360px;
+  background: var(--bg-surface, #111118);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-xl, 20px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-panel {
+  background: var(--bg-surface, #111118);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-lg, 14px);
+  padding: var(--space-4, 1rem);
+}
+
+.game-panel__title {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 700;
+  font-size: var(--text-sm, 0.875rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted, #71717a);
+  margin: 0 0 var(--space-3, 0.75rem);
+}
+
+.game-panel--collapsible {
+  transition: max-height 250ms var(--ease-out, ease),
+              opacity 250ms var(--ease-smooth, ease);
+  overflow: hidden;
+}
+
+.game-panel--collapsed {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  border-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .game-stage { min-height: 280px; }
+}
+
+/* ── Account / Settings (Agent 4) ──
+   Tabbed single-page layouts. The .settings-* classes are scoped to
+   account pages; the generic .tabbed-layout / .wallet-layout /
+   .auth-split below cover Settings, Wallet, and Auth. */
+
+.settings-page {
+  width: 100%;
+  max-width: var(--lc-page-max, 1280px);
+  margin: 0 auto;
+  padding: var(--space-6, 1.5rem) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12, 3rem);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 1.5rem);
+}
+
+.settings-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 0.25rem);
+  padding: var(--space-2, 0.5rem);
+  background: var(--bg-surface, #111118);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-lg, 14px);
+  min-width: 200px;
+  align-self: start;
+}
+
+.settings-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 0.5rem);
+  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
+  border-radius: var(--radius-md, 10px);
+  color: var(--text-secondary, #a1a1aa);
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: var(--text-sm, 0.875rem);
+  font-weight: 500;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  transition: background 200ms var(--ease-smooth, ease),
+              color 200ms var(--ease-smooth, ease);
+}
+
+.settings-tab:hover {
+  background: var(--bg-surface-2, #16161f);
+  color: var(--text-primary, #fafafa);
+}
+
+.settings-tab--active {
+  background: var(--bg-elevated, #1c1c28);
+  color: var(--gold, #f5b942);
+}
+
+.settings-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 1rem);
+}
+
+@media (max-width: 768px) {
+  .settings-tabs {
+    flex-direction: row;
+    overflow-x: auto;
+    min-width: 0;
+    gap: var(--space-1, 0.25rem);
+    padding: var(--space-1, 0.25rem);
+  }
+  .settings-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+/* Tabbed layout (used by Settings, Profile, Admin) */
+.tabbed-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: var(--space-6);
+}
+
+.tabbed-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tabbed-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-align: left;
+  transition: all 200ms;
+  cursor: pointer;
+}
+
+.tabbed-nav__item--active {
+  background: var(--bg-surface);
+  color: var(--gold);
+}
+
+@media (max-width: 768px) {
+  .tabbed-layout { grid-template-columns: 1fr; }
+  .tabbed-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: var(--space-2);
+    padding-bottom: var(--space-2);
+  }
+  .tabbed-nav__item { white-space: nowrap; }
+}
+
+/* Two-column wallet layout (Deposit, Withdraw, Redeem) */
+.wallet-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .wallet-layout { grid-template-columns: 1fr; }
+}
+
+/* Split-screen auth */
+.auth-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100dvh - var(--topbar-height, 56px));
+}
+
+.auth-split__visual {
+  display: grid;
+  place-items: center;
+  padding: var(--space-12);
+  background: linear-gradient(135deg, var(--bg-surface), var(--bg-base));
+}
+
+.auth-split__form {
+  display: grid;
+  place-items: center;
+  padding: var(--space-8);
+}
+
+@media (max-width: 768px) {
+  .auth-split { grid-template-columns: 1fr; }
+  .auth-split__visual { display: none; }
+}

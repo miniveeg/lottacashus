@@ -28,6 +28,85 @@
   margin-bottom: var(--space-8);
 }
 
+/* ── Tabbed layout (sidebar on desktop / top scroll on mobile) ── */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.settings-tabs {
+  position: sticky;
+  top: calc(var(--topbar-height) + var(--space-3));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-2);
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: 14px;
+  box-shadow: var(--lc-shadow-sm);
+}
+
+.settings-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 10px;
+  font-family: var(--lc-font-display);
+  font-size: var(--lc-text-sm);
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--lc-transition), color var(--lc-transition),
+    border-color var(--lc-transition), transform var(--lc-transition);
+}
+
+.settings-tab > svg {
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.settings-tab:hover:not(.settings-tab--active) {
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-hover);
+}
+
+.settings-tab--active {
+  color: var(--og-text-on-gold);
+  background: linear-gradient(
+    135deg,
+    var(--og-gold-bright) 0%,
+    var(--og-gold) 55%,
+    var(--og-gold-deep) 100%
+  );
+  border-color: transparent;
+  box-shadow: 0 2px 12px var(--og-gold-glow-strong);
+}
+
+.settings-tab--active > svg {
+  opacity: 1;
+}
+
+.settings-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--og-gold-ring);
+}
+
+.settings-content {
+  min-width: 0;
+}
+
+.settings-content > .settings__section {
+  margin-bottom: 0;
+}
+
 /* ── Section panels ── */
 .settings__section {
   margin-bottom: var(--space-6);
@@ -800,6 +879,24 @@
 
 /* ── Mobile ── */
 @media (max-width: 768px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .settings-tabs {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding: var(--space-2);
+    gap: var(--space-2);
+  }
+
+  .settings-tab {
+    flex-shrink: 0;
+  }
+
   .settings__balance-grid,
   .settings__meta-grid,
   .settings__stats-grid {

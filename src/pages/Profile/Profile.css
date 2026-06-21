@@ -148,12 +148,92 @@
   letter-spacing: 0.02em;
 }
 
+/* ── Tabs (horizontal under hero, sticky on desktop) ── */
+.profile-tabs {
+  position: sticky;
+  top: calc(var(--topbar-height) + var(--space-2));
+  z-index: 5;
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  margin-bottom: var(--space-5);
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: 14px;
+  box-shadow: var(--lc-shadow-sm);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.profile-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: 10px;
+  font-family: var(--lc-font-display);
+  font-size: var(--lc-text-sm);
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background var(--lc-transition), color var(--lc-transition),
+    border-color var(--lc-transition);
+}
+
+.profile-tab > svg { opacity: 0.75; }
+
+.profile-tab:hover:not(.profile-tab--active) {
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-hover);
+}
+
+.profile-tab--active {
+  color: var(--og-text-on-gold);
+  background: linear-gradient(
+    135deg,
+    var(--og-gold-bright) 0%,
+    var(--og-gold) 55%,
+    var(--og-gold-deep) 100%
+  );
+  border-color: transparent;
+  box-shadow: 0 2px 12px var(--og-gold-glow-strong);
+}
+
+.profile-tab--active > svg { opacity: 1; }
+
+.profile-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--og-gold-ring);
+}
+
+.profile-content {
+  min-width: 0;
+}
+
+.profile-content > .profile-section {
+  margin-bottom: 0;
+}
+
+/* ── Overview grid (2×2 summary cards) ── */
+.profile-section--overview {
+  padding: var(--space-6);
+}
+
+.profile-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
 /* ── Stats grid ── */
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-3);
-  margin-bottom: var(--space-6);
 }
 
 .profile-stat {
@@ -213,9 +293,8 @@
   color: var(--lc-text-muted);
 }
 
-/* ── Section (Badges, Referral) ── */
+/* ── Section (Badges, Referral, Stats, Overview) ── */
 .profile-section {
-  margin-bottom: var(--space-6);
   padding: var(--space-6);
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
@@ -462,7 +541,8 @@
     font-size: var(--lc-text-2xl);
   }
 
-  .profile-stats {
+  .profile-stats,
+  .profile-overview-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }

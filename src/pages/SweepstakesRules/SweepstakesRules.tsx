@@ -15,7 +15,7 @@ const stagger = {
 
 export function SweepstakesRules() {
   return (
-    <div className="help-page lc-page lc-page--narrow">
+    <div className="help-page legal-page lc-page lc-page--narrow">
       <motion.header
         className="help-page__header"
         initial="hidden"

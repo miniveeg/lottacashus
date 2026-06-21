@@ -3,32 +3,17 @@ import { BrandLogo } from "../BrandLogo/BrandLogo";
 import "../BrandLogo/BrandLogo.css";
 import "./Footer.css";
 
-const GAME_LINKS = [
-  { label: "Keno", href: "/keno" },
-  { label: "Mines", href: "/mines" },
-  { label: "Limbo", href: "/limbo" },
-  { label: "Roulette", href: "/roulette" },
-  { label: "Blackjack", href: "/blackjack" },
-  { label: "Case Battles", href: "/case-battles" },
-  { label: "Crash", href: "/crash" },
-  { label: "Slots", href: "/slots" },
-];
-
-const PAGE_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Originals", href: "/originals" },
-  { label: "Promotions", href: "/promotions" },
-  { label: "Leaderboard", href: "/leaderboard" },
-  { label: "Help & FAQ", href: "/help" },
-];
+/* v3 "Command Center" redesign — minimal footer.
+   The dock handles navigation now, so the footer doesn't need nav link
+   columns. Just brand + tagline + legal links + copyright + responsible
+   gaming notice. */
 
 const LEGAL_LINKS = [
   { label: "Terms of Service", href: "/help" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Sweepstakes Rules", href: "/sweepstakes" },
   { label: "Free Entry", href: "/free-entry" },
-  { label: "Responsible Gaming", href: "/responsible-gaming" },
-  { label: "Redeem", href: "/redeem" },
+  { label: "Help & FAQ", href: "/help" },
 ];
 
 export function Footer() {
@@ -45,46 +30,13 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="site-footer__nav">
-          <div className="site-footer__col">
-            <h4 className="site-footer__heading">Games</h4>
-            <ul className="site-footer__list">
-              {GAME_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link to={link.href} className="site-footer__link">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="site-footer__col">
-            <h4 className="site-footer__heading">Pages</h4>
-            <ul className="site-footer__list">
-              {PAGE_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link to={link.href} className="site-footer__link">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="site-footer__col">
-            <h4 className="site-footer__heading">Legal</h4>
-            <ul className="site-footer__list">
-              {LEGAL_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link to={link.href} className="site-footer__link">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
+        <nav className="site-footer__legal" aria-label="Legal">
+          {LEGAL_LINKS.map((link) => (
+            <Link key={`${link.label}-${link.href}`} to={link.href} className="site-footer__link">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
       </div>
 
       <div className="site-footer__bottom">

@@ -104,12 +104,16 @@
   --duration-normal: 250ms;
   --duration-slow: 400ms;
 
-  /* ── Layout (consumed by Agent 2's layout.css) ── */
-  --topbar-height: 60px;
-  --sidebar-width: 240px;
-  --sidebar-collapsed: 68px;
+  /* ── Layout (consumed by Agent 2's layout.css) ──
+     v3 "Command Center" paradigm: slimmer topbar (no sidebar) so the
+     floating dock + bottom tab bar can breathe without crowding. */
+  --topbar-height: 56px;
+  --sidebar-width: 240px;       /* legacy — kept for compat, no longer rendered */
+  --sidebar-collapsed: 68px;    /* legacy — kept for compat */
   --drawer-width: min(280px, 85vw);
   --page-max: 1280px;
+  --dock-height: 64px;
+  --mobile-tabs-height: calc(60px + env(safe-area-inset-bottom, 0px));
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   /* ── Glass ── */
@@ -223,6 +227,8 @@
   --lc-drawer-width: var(--drawer-width);
   --lc-page-max: var(--page-max);
   --lc-safe-bottom: var(--safe-bottom);
+  --lc-dock-height: var(--dock-height);
+  --lc-mobile-tabs-height: var(--mobile-tabs-height);
   --lc-page-pad-x: clamp(var(--space-4), 3vw, var(--space-6));
 
   /* Motion */

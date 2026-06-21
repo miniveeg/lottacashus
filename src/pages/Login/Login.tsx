@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Coins, ShieldCheck, Sparkles } from "lucide-react";
 import { safeRedirectPath } from "../../lib/authRedirect";
 import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
 import { useAuth } from "../../contexts/AuthContext";
@@ -22,9 +23,11 @@ export function Login() {
   if (loading) {
     return (
       <div className="auth-page lc-page--auth">
-        <div className="lc-loading">
-          <div className="lc-loading__pulse" aria-hidden />
-          <p>Loading…</p>
+        <div className="auth-form-side">
+          <div className="lc-loading">
+            <div className="lc-loading__pulse" aria-hidden />
+            <p>Loading…</p>
+          </div>
         </div>
       </div>
     );
@@ -55,6 +58,40 @@ export function Login() {
 
   return (
     <div className="auth-page lc-page--auth">
+      <aside className="auth-visual" aria-hidden="true">
+        <div className="auth-visual__inner">
+          <BrandLogo className="auth-visual__logo" size={56} />
+          <h2 className="auth-visual__headline">Play smarter.<br />Cash out faster.</h2>
+          <p className="auth-visual__lede">
+            LottaCash is the obsidian-class social casino with instant crypto deposits,
+            provably-fair games, and Sweeps Coins you can redeem for real cash.
+          </p>
+          <div className="auth-visual__props">
+            <div className="auth-prop">
+              <div className="auth-prop__icon"><Coins size={18} /></div>
+              <div className="auth-prop__text">
+                <p className="auth-prop__title">Dual-currency wallet</p>
+                <p className="auth-prop__desc">Gold Coins for play, Sweeps Coins for cash.</p>
+              </div>
+            </div>
+            <div className="auth-prop">
+              <div className="auth-prop__icon"><ShieldCheck size={18} /></div>
+              <div className="auth-prop__text">
+                <p className="auth-prop__title">Provably fair</p>
+                <p className="auth-prop__desc">Every spin, crash, and battle is verifiable.</p>
+              </div>
+            </div>
+            <div className="auth-prop">
+              <div className="auth-prop__icon"><Sparkles size={18} /></div>
+              <div className="auth-prop__text">
+                <p className="auth-prop__title">Level up & earn</p>
+                <p className="auth-prop__desc">Wager more, climb tiers, unlock perks.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <div className="auth-form-side">
       <div className="auth-card">
         <BrandLogo className="auth-card__logo" size={48} />
         <h1 className="auth-card__title">Welcome back</h1>
@@ -119,6 +156,7 @@ export function Login() {
         <p className="auth-footer">
           Don&apos;t have an account? <Link to="/signup">Sign up</Link>
         </p>
+      </div>
       </div>
     </div>
   );

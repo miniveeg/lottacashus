@@ -1,20 +1,27 @@
 /* ════════════════════════════════════════════════════════════════
-   LottaCash Topbar — Obsidian Gold premium redesign
-   ─ 60px tall, solid bg-surface, hairline bottom border
-   ─ Left: hamburger (mobile) + BrandLogo + gold-gradient wordmark
-   ─ Center: pill-shaped search bar
-   ─ Right (logged out): "Log in" ghost + "Sign up" gold CTA
-   ─ Right (logged in): balance + coin toggle + level + bell + logout
-   ─ All buttons: 44px min touch target
+   LottaCash Topbar — v3 "Command Center" redesign
+   ───────────────────────────────────────────────────────────────
+   The sidebar is GONE. The topbar now carries:
+     • Left:   BrandLogo + gold wordmark
+     • Center: pill-shaped search bar
+     • Right:  balance + coin toggle (logged in) →
+               level progress (logged in) →
+               USER AVATAR DROPDOWN (logged in) [replaces sidebar account]
+                 ↳ Profile / Settings / Deposit / Withdraw / Redeem / Log out
+               OR login + signup buttons (logged out) →
+               notifications bell
+
+   No hamburger menu — there is no sidebar drawer to open. Mobile
+   navigation lives in the bottom tab bar (see Sidebar.css).
    ════════════════════════════════════════════════════════════════ */
 
 .topbar {
   /* Local token aliases — fall back to spec values if theme tokens
-     aren't defined yet (parallel agent work). */
-  --tb-bg: var(--bg-surface, var(--lc-bg-panel, #111118));
-  --tb-elevated: var(--bg-elevated, var(--lc-bg-elevated, #1c1c28));
-  --tb-border: var(--border, var(--lc-border, rgba(255, 255, 255, 0.08)));
-  --tb-border-strong: var(--border-strong, var(--lc-border-strong, rgba(255, 255, 255, 0.14)));
+     aren't defined yet. */
+  --tb-bg: var(--bg-surface, #111118);
+  --tb-elevated: var(--bg-elevated, #1c1c28);
+  --tb-border: var(--border, rgba(255, 255, 255, 0.08));
+  --tb-border-strong: var(--border-strong, rgba(255, 255, 255, 0.14));
   --tb-gold: var(--gold, #f5b942);
   --tb-gold-bright: var(--gold-bright, #fcd34d);
   --tb-gold-deep: var(--gold-deep, #d97706);
@@ -22,24 +29,22 @@
   --tb-gold-glow-strong: var(--gold-glow-strong, rgba(245, 185, 66, 0.3));
   --tb-sc: var(--sc-color, #10b981);
   --tb-sc-glow: var(--sc-glow, rgba(16, 185, 129, 0.15));
-  --tb-gc: var(--gc-color, #f5b942);
-  --tb-gc-glow: var(--gc-glow, rgba(245, 185, 66, 0.12));
-  --tb-text: var(--text-primary, var(--lc-text-primary, #fafafa));
-  --tb-text-2: var(--text-secondary, var(--lc-text-secondary, #a1a1aa));
-  --tb-text-muted: var(--text-muted, var(--lc-text-muted, #71717a));
+  --tb-text: var(--text-primary, #fafafa);
+  --tb-text-2: var(--text-secondary, #a1a1aa);
+  --tb-text-muted: var(--text-muted, #71717a);
   --tb-radius-md: var(--radius-md, 10px);
   --tb-radius-lg: var(--radius-lg, 14px);
   --tb-radius-full: var(--radius-full, 9999px);
   --tb-shadow-md: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.4));
   --tb-shadow-lg: var(--shadow-lg, 0 12px 40px rgba(0, 0, 0, 0.5));
   --tb-shadow-gold: var(--shadow-gold, 0 0 24px rgba(245, 185, 66, 0.15));
-  --tb-transition: var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
+  --tb-transition: var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3, 0.75rem);
-  height: var(--topbar-height, var(--lc-topbar-height, 60px));
+  height: var(--topbar-height, 56px);
   padding: 0 var(--space-5, 1.25rem);
   background: var(--tb-bg);
   border-bottom: 1px solid var(--tb-border);
@@ -75,27 +80,6 @@
   min-width: 0;
 }
 
-.topbar__menu-btn {
-  display: none;
-  width: 44px;
-  height: 44px;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--tb-radius-md);
-  color: var(--tb-text-2);
-  transition: background var(--tb-transition), color var(--tb-transition);
-}
-
-.topbar__menu-btn:hover {
-  background: var(--tb-gold-glow);
-  color: var(--tb-gold-bright);
-}
-
-.topbar__menu-btn:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--tb-gold-glow);
-}
-
 .topbar__brand {
   display: flex;
   align-items: center;
@@ -113,7 +97,7 @@
 
 /* Gold-gradient wordmark — premium casino feel */
 .topbar__name {
-  font-family: var(--lc-font-display, 'Inter', system-ui, sans-serif);
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
   font-weight: 800;
   font-size: 1.15rem;
   letter-spacing: -0.02em;
@@ -159,7 +143,7 @@
   border: none;
   outline: none;
   color: var(--tb-text);
-  font-family: var(--lc-font-body, 'Inter', system-ui, sans-serif);
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
   font-size: 0.9rem;
   font-weight: 500;
   min-width: 0;
@@ -265,7 +249,7 @@
   border: 1px solid var(--tb-border-strong);
   border-radius: var(--tb-radius-md);
   text-decoration: none;
-  min-height: 44px;
+  min-height: 40px;
   justify-content: center;
   transition: border-color var(--tb-transition), background var(--tb-transition), box-shadow var(--tb-transition);
 }
@@ -284,7 +268,7 @@ a.topbar__balance:hover {
 }
 
 .topbar__balance-value {
-  font-family: var(--lc-font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
   font-weight: 600;
   font-size: 0.92rem;
   letter-spacing: -0.01em;
@@ -303,13 +287,13 @@ a.topbar__balance:hover {
   color: var(--tb-text-muted);
   letter-spacing: 0.02em;
   line-height: 1;
-  font-family: var(--lc-font-mono, 'JetBrains Mono', monospace);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
 }
 
 /* ── Coin toggle (pill button — gold for GC, emerald for SC) ── */
 .topbar__coin-toggle {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 40px;
+  min-height: 40px;
   padding: 0 0.7rem;
   display: grid;
   place-items: center;
@@ -318,7 +302,7 @@ a.topbar__balance:hover {
   background: var(--tb-elevated);
   border: 1px solid var(--tb-border);
   transition: border-color var(--tb-transition), color var(--tb-transition), background var(--tb-transition), box-shadow var(--tb-transition);
-  font-family: var(--lc-font-display, 'Inter', system-ui, sans-serif);
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
   font-weight: 800;
   font-size: 0.74rem;
   letter-spacing: 0.04em;
@@ -354,16 +338,16 @@ a.topbar__balance:hover {
   box-shadow: 0 0 0 3px var(--tb-gold-glow);
 }
 
-/* ── Buttons (login/signup/logout) ── */
+/* ── Buttons (login/signup) ── */
 .topbar__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  min-height: 44px;
+  min-height: 40px;
   padding: 0 1rem;
   border-radius: var(--tb-radius-md);
-  font-family: var(--lc-font-display, 'Inter', system-ui, sans-serif);
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
   font-weight: 700;
   font-size: 0.82rem;
   letter-spacing: 0.02em;
@@ -402,13 +386,165 @@ a.topbar__balance:hover {
   text-align: center;
 }
 
+/* ════════════════════════════════════════════════════════════════
+   USER AVATAR DROPDOWN — replaces the sidebar account section
+   ════════════════════════════════════════════════════════════════ */
+.topbar__user-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.topbar__avatar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.45rem 0.2rem 0.25rem;
+  border-radius: var(--tb-radius-full);
+  border: 1px solid var(--tb-border-strong);
+  background: var(--tb-elevated);
+  color: var(--tb-text);
+  cursor: pointer;
+  min-height: 40px;
+  transition: border-color var(--tb-transition), box-shadow var(--tb-transition), background var(--tb-transition);
+}
+
+.topbar__avatar:hover,
+.topbar__avatar--open {
+  border-color: var(--tb-gold);
+  box-shadow: 0 0 0 3px var(--tb-gold-glow);
+  background: var(--tb-gold-glow);
+}
+
+.topbar__avatar:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--tb-gold-glow);
+}
+
+.topbar__avatar-letter {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--tb-radius-full);
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  color: #1a1208;
+  background: linear-gradient(135deg, var(--tb-gold-bright) 0%, var(--tb-gold) 55%, var(--tb-gold-deep) 100%);
+  box-shadow: 0 0 10px var(--tb-gold-glow-strong);
+  user-select: none;
+}
+
+.topbar__avatar-caret {
+  color: var(--tb-text-muted);
+  flex-shrink: 0;
+  transition: transform var(--tb-transition), color var(--tb-transition);
+}
+
+.topbar__avatar--open .topbar__avatar-caret {
+  transform: rotate(180deg);
+  color: var(--tb-gold-bright);
+}
+
+/* Dropdown panel */
+.topbar__user-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 240px;
+  background: var(--tb-elevated);
+  border: 1px solid var(--tb-border-strong);
+  border-radius: var(--tb-radius-lg);
+  box-shadow: var(--tb-shadow-lg);
+  z-index: 200;
+  overflow: hidden;
+  animation: topbar-user-menu-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes topbar-user-menu-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.topbar__user-dropdown-header {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--tb-border);
+  background: var(--tb-bg);
+}
+
+.topbar__user-dropdown-name {
+  display: block;
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--tb-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar__user-dropdown-email {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--tb-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topbar__user-dropdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem;
+}
+
+.topbar__user-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border-radius: var(--tb-radius-md);
+  color: var(--tb-text-2);
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--tb-transition), color var(--tb-transition);
+}
+
+.topbar__user-dropdown-item:hover {
+  background: var(--tb-gold-glow);
+  color: var(--tb-text);
+}
+
+.topbar__user-dropdown-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--tb-gold-glow);
+}
+
+.topbar__user-dropdown-footer {
+  padding: 0.4rem;
+  border-top: 1px solid var(--tb-border);
+}
+
+.topbar__user-dropdown-item--danger:hover {
+  background: var(--danger-glow, rgba(239, 68, 68, 0.15));
+  color: var(--danger, #ef4444);
+}
+
 /* ── Notifications ── */
 .topbar__notif-wrap { position: relative; }
 
 .topbar__icon-btn {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border-radius: var(--tb-radius-md);
@@ -433,8 +569,8 @@ a.topbar__balance:hover {
 
 .topbar__notif-badge {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 4px;
+  right: 4px;
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
@@ -449,13 +585,12 @@ a.topbar__balance:hover {
   box-shadow: 0 0 10px rgba(225, 29, 72, 0.4);
 }
 
-/* ── Mobile ≤ 900px ── */
-@media (max-width: 900px) {
+/* ── Mobile ≤ 768px ── */
+@media (max-width: 768px) {
   .topbar {
     gap: 0.6rem;
     padding: 0 0.85rem;
   }
-  .topbar__menu-btn { display: flex; }
   .topbar__search-wrap { display: none; }
   .topbar__icon-btn.topbar__search-toggle { display: grid; }
 
@@ -468,7 +603,7 @@ a.topbar__balance:hover {
     right: 0;
     flex: none;
     max-width: none;
-    padding: 0.6rem 0.85rem calc(0.6rem + var(--lc-safe-bottom, 0px));
+    padding: 0.6rem 0.85rem calc(0.6rem + var(--safe-bottom, 0px));
     background: var(--tb-bg);
     border-bottom: 1px solid var(--tb-border);
     box-shadow: var(--tb-shadow-md);
@@ -486,8 +621,11 @@ a.topbar__balance:hover {
     z-index: 60;
   }
 
-  .topbar__balance { padding: 0.35rem 0.75rem; }
+  .topbar__balance { padding: 0.3rem 0.7rem; }
   .topbar-level:not(.topbar-level--compact) { display: none; }
+  /* Hide the caret on mobile — the avatar letter is enough */
+  .topbar__avatar-caret { display: none; }
+  .topbar__avatar { padding: 0.2rem; }
 }
 
 /* ── Very small phones ≤ 480px ── */
@@ -503,7 +641,6 @@ a.topbar__balance:hover {
   /* Hide login text — icon only on tiny phones */
   .topbar__btn--login { padding: 0 0.6rem; }
   .topbar__btn--login .topbar__btn-label { display: none; }
-  .topbar__btn--logout { display: none; }
   .topbar__actions { gap: 0.2rem; }
 }
 
@@ -512,21 +649,22 @@ a.topbar__balance:hover {
   .topbar__btn--signup { padding: 0 0.65rem; font-size: 0.72rem; }
   .topbar__balance { padding: 0.3rem 0.45rem; }
   .topbar__balance-value { font-size: 0.75rem; }
-  .topbar__coin-toggle { min-width: 40px; padding: 0 0.4rem; }
+  .topbar__coin-toggle { min-width: 36px; padding: 0 0.4rem; }
 }
 
 /* Touch devices: kill framer-motion scale transforms that feel jittery.
    !important overrides framer-motion's inline styles. */
 @media (hover: none) and (pointer: coarse) {
-  .topbar__menu-btn,
   .topbar__icon-btn,
   .topbar__coin-toggle,
   .topbar__search-toggle,
-  .topbar__btn {
+  .topbar__btn,
+  .topbar__avatar {
     transform: none !important;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .topbar--search-open .topbar__search-wrap { animation: none; }
+  .topbar--search-open .topbar__search-wrap,
+  .topbar__user-dropdown { animation: none; }
 }

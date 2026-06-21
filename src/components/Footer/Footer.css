@@ -1,19 +1,22 @@
 /* ════════════════════════════════════════════════════════════════
-   LottaCash Footer — Obsidian Gold redesign
-   ─ bg-surface, hairline top border, generous padding
-   ─ 3 columns desktop → 1 column mobile
-   ─ Brand + tagline, page links, legal links
-   ─ text-sm muted, links hover = gold
+   LottaCash Footer — v3 "Command Center" redesign (MINIMAL)
+   ───────────────────────────────────────────────────────────────
+   The dock now handles navigation, so the footer is just:
+     • Brand + tagline (left)
+     • Legal links (right, inline row)
+     • Responsible gaming notice + copyright (bottom bar)
+   No more 3-column nav grid — the dock + topbar search + avatar
+   dropdown cover all navigation needs.
    ════════════════════════════════════════════════════════════════ */
 
 .site-footer {
-  --sf-bg: var(--bg-surface, var(--lc-bg-panel, #111118));
-  --sf-border: var(--border, var(--lc-border, rgba(255, 255, 255, 0.08)));
+  --sf-bg: var(--bg-surface, #111118);
+  --sf-border: var(--border, rgba(255, 255, 255, 0.08));
   --sf-gold: var(--gold, #f5b942);
   --sf-gold-bright: var(--gold-bright, #fcd34d);
-  --sf-text: var(--text-primary, var(--lc-text-primary, #fafafa));
-  --sf-text-2: var(--text-secondary, var(--lc-text-secondary, #a1a1aa));
-  --sf-text-muted: var(--text-muted, var(--lc-text-muted, #71717a));
+  --sf-text: var(--text-primary, #fafafa);
+  --sf-text-2: var(--text-secondary, #a1a1aa);
+  --sf-text-muted: var(--text-muted, #71717a);
 
   margin-top: auto;
   padding: var(--space-8, 2rem) var(--space-6, 1.5rem);
@@ -22,12 +25,13 @@
 }
 
 .site-footer__inner {
-  max-width: var(--lc-page-max, 1200px);
+  max-width: var(--page-max, 1200px);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) repeat(3, minmax(0, 1fr));
-  gap: var(--space-8, 2rem);
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-6, 1.5rem);
 }
 
 .site-footer__brand {
@@ -35,6 +39,7 @@
   flex-direction: column;
   gap: var(--space-2, 0.5rem);
   min-width: 0;
+  max-width: 420px;
 }
 
 .site-footer__logo-link {
@@ -43,7 +48,7 @@
   gap: 0.5rem;
   text-decoration: none;
   color: var(--sf-text);
-  font-family: var(--lc-font-display, 'Inter', system-ui, sans-serif);
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
   font-weight: 800;
   font-size: 1.15rem;
   letter-spacing: -0.02em;
@@ -67,37 +72,24 @@
   color: var(--sf-text-muted);
   font-size: var(--text-sm, 0.875rem);
   line-height: 1.5;
-  max-width: 280px;
 }
 
-.site-footer__col {
-  min-width: 0;
-}
-
-.site-footer__heading {
-  font-family: var(--lc-font-display, 'Inter', system-ui, sans-serif);
-  font-size: var(--text-xs, 0.75rem);
-  font-weight: 700;
-  color: var(--sf-text-2);
-  margin: 0 0 var(--space-3, 0.75rem);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.site-footer__list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* Legal links — inline row on desktop, wraps on mobile */
+.site-footer__legal {
   display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  justify-content: flex-end;
+  align-items: center;
+  flex: 1;
+  min-width: 200px;
 }
 
 .site-footer__link {
   color: var(--sf-text-muted);
   text-decoration: none;
   font-size: var(--text-sm, 0.875rem);
-  transition: color var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
+  transition: color var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .site-footer__link:hover {
@@ -105,8 +97,8 @@
 }
 
 .site-footer__bottom {
-  max-width: var(--lc-page-max, 1200px);
-  margin: var(--space-8, 2rem) auto 0;
+  max-width: var(--page-max, 1200px);
+  margin: var(--space-6, 1.5rem) auto 0;
   padding-top: var(--space-5, 1.25rem);
   border-top: 1px solid var(--sf-border);
   display: flex;
@@ -130,7 +122,7 @@
   color: var(--sf-gold);
   text-decoration: none;
   font-weight: 600;
-  transition: color var(--lc-transition, 250ms cubic-bezier(0.4, 0, 0.2, 1));
+  transition: color var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
 }
 
 .site-footer__ncpg-link:hover {
@@ -147,23 +139,19 @@
 @media (max-width: 768px) {
   .site-footer { padding: var(--space-8, 2rem) var(--space-5, 1.25rem) var(--space-5, 1.25rem); }
   .site-footer__inner {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-6, 1.5rem);
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-5, 1.25rem);
   }
-  .site-footer__brand {
-    grid-column: 1 / -1;
-    min-width: 0;
+  .site-footer__brand { max-width: none; }
+  .site-footer__legal {
+    justify-content: flex-start;
   }
-  .site-footer__tagline { max-width: none; }
-  .site-footer__bottom { margin-top: var(--space-6, 1.5rem); padding-top: var(--space-5, 1.25rem); }
+  .site-footer__bottom { margin-top: var(--space-5, 1.25rem); padding-top: var(--space-4, 1rem); }
 }
 
 @media (max-width: 480px) {
-  .site-footer { padding: var(--space-8, 2rem) var(--space-4, 1rem) var(--space-5, 1.25rem); }
-  .site-footer__inner {
-    grid-template-columns: 1fr;
-    gap: var(--space-6, 1.5rem);
-  }
+  .site-footer { padding: var(--space-6, 1.5rem) var(--space-4, 1rem) var(--space-5, 1.25rem); }
   .site-footer__responsible {
     flex-direction: column;
     gap: 0.4rem;

@@ -371,3 +371,143 @@
   .game-controls__options { gap: var(--space-3); }
   .game-controls__play { min-height: 52px; }
 }
+
+/* ════════════════════════════════════════════════════════════════
+   v3 "Command Center" — sticky bottom action bar
+   Replaces the side-by-side .game-controls panel for game pages that
+   use the new full-width stage paradigm (Agent 3). The legacy
+   .game-controls classes above are kept untouched for backward
+   compatibility; games can adopt .game-actionbar incrementally.
+   ════════════════════════════════════════════════════════════════ */
+
+/* Sticky bottom action bar for game pages */
+.game-actionbar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  background: var(--bg-glass, rgba(17, 17, 24, 0.8));
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border, rgba(255,255,255,0.08));
+  z-index: 20;
+}
+
+.game-actionbar__balance {
+  display: flex;
+  flex-direction: column;
+  min-width: 100px;
+}
+
+.game-actionbar__balance-label {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--text-muted, #71717a);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.game-actionbar__balance-value {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--gold, #f5b942);
+  font-weight: 600;
+}
+
+.game-actionbar__wager {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  max-width: 300px;
+}
+
+.game-actionbar__input {
+  flex: 1;
+  min-height: 44px;
+  background: var(--bg-elevated, #1c1c28);
+  border: 1px solid var(--border-strong, rgba(255,255,255,0.14));
+  border-radius: var(--radius-md, 10px);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-sm, 0.875rem);
+  text-align: right;
+  padding: 0 var(--space-3, 0.75rem);
+  color: var(--text-primary, #fafafa);
+}
+
+.game-actionbar__input:focus {
+  outline: none;
+  border-color: var(--gold, #f5b942);
+  box-shadow: 0 0 0 3px var(--gold-glow, rgba(245,185,66,0.15));
+}
+
+.game-actionbar__adj {
+  width: 44px;
+  height: 44px;
+  background: var(--bg-elevated, #1c1c28);
+  border: 1px solid var(--border-strong, rgba(255,255,255,0.14));
+  border-radius: var(--radius-md, 10px);
+  color: var(--text-secondary, #a1a1aa);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.game-actionbar__adj:hover {
+  background: var(--bg-hover, #16161f);
+  color: var(--text-primary, #fafafa);
+}
+
+.game-actionbar__presets {
+  display: flex;
+  gap: var(--space-2, 0.5rem);
+}
+
+.game-actionbar__preset {
+  padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  background: var(--bg-elevated, #1c1c28);
+  border: 1px solid var(--border, rgba(255,255,255,0.08));
+  border-radius: var(--radius-full, 9999px);
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--text-secondary, #a1a1aa);
+  cursor: pointer;
+}
+
+.game-actionbar__preset--active {
+  background: linear-gradient(135deg, var(--gold-bright, #fcd34d), var(--gold-deep, #d97706));
+  color: #000;
+  border-color: transparent;
+}
+
+.game-actionbar__play {
+  min-height: 44px;
+  padding: 0 var(--space-6, 1.5rem);
+  background: linear-gradient(135deg, var(--gold-bright, #fcd34d), var(--gold-deep, #d97706));
+  color: #000;
+  font-weight: 700;
+  font-size: var(--text-sm, 0.875rem);
+  border-radius: var(--radius-md, 10px);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 200ms;
+}
+
+.game-actionbar__play:hover:not(:disabled) {
+  filter: brightness(1.1);
+  box-shadow: var(--shadow-gold, 0 0 24px rgba(245,185,66,0.3));
+}
+
+.game-actionbar__play:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .game-actionbar {
+    flex-wrap: wrap;
+    padding: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+  }
+  .game-actionbar__presets { display: none; }
+  .game-actionbar__balance { display: none; }
+  .game-actionbar__wager { max-width: none; }
+  .game-actionbar__play { flex: 1; }
+}

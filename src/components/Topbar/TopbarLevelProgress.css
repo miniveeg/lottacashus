@@ -153,7 +153,7 @@
   transform: none;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .topbar-level--full { display: none; }
   .topbar-level--compact { display: block; }
 }

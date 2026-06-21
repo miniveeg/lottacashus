@@ -1,13 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bell, LogIn, LogOut, Menu, Search, UserPlus, X } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  CreditCard,
+  LogIn,
+  LogOut,
+  Search,
+  Settings as SettingsIcon,
+  User as UserIcon,
+  UserPlus,
+  Wallet,
+  X,
+} from "lucide-react";
 import { NotificationsPanel } from "../NotificationsPanel/NotificationsPanel";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
-import { useSidebar } from "../../contexts/SidebarContext";
 import { useToast } from "../../contexts/ToastContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
 import { formatUsd, formatCoins, coinsToUsd, type CoinType } from "../../lib/format";
@@ -23,21 +34,36 @@ function searchCategoryLabel(category: SiteSearchItem["category"]): string {
   return category === "game" ? "Game" : "Page";
 }
 
+type UserMenuItem = {
+  label: string;
+  href: string;
+  icon: typeof UserIcon;
+};
+
+const USER_MENU_ITEMS: UserMenuItem[] = [
+  { label: "Profile", href: "/profile", icon: UserIcon },
+  { label: "Settings", href: "/settings", icon: SettingsIcon },
+  { label: "Deposit", href: "/deposit", icon: CreditCard },
+  { label: "Withdraw", href: "/withdraw", icon: Wallet },
+  { label: "Redeem", href: "/redeem", icon: Wallet },
+];
+
 export function Topbar() {
   const { user, loading, signOut } = useAuth();
   const { profile, profileLoading } = useProfile();
   const { coinType, setCoinType } = usePlayMode();
   const { pathname } = useLocation();
   const { unreadCount } = useNotifications();
-  const { toggleMobile } = useSidebar();
   const toast = useToast();
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
   const searchWrapRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const searchResults = searchSite(searchQuery);
@@ -64,7 +90,13 @@ export function Topbar() {
 
   const balanceUsd = coinsToUsd(activeBalance, coinType as CoinType);
 
+  function avatarLetter(name: string) {
+    const trimmed = name.trim();
+    return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
+  }
+
   async function handleSignOut() {
+    setUserMenuOpen(false);
     await signOut();
     analytics.logout();
     analytics.reset();
@@ -110,17 +142,21 @@ export function Topbar() {
     setHighlightIndex(0);
   }, [searchQuery]);
 
-  // Close the mobile search overlay whenever the route changes.
+  // Close the mobile search overlay + user menu whenever the route changes.
   useEffect(() => {
     setMobileSearchOpen(false);
     setSearchOpen(false);
     setSearchQuery("");
+    setUserMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
     function onPointerDown(ev: MouseEvent) {
       if (searchWrapRef.current && !searchWrapRef.current.contains(ev.target as Node)) {
         setSearchOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(ev.target as Node)) {
+        setUserMenuOpen(false);
       }
     }
     document.addEventListener("mousedown", onPointerDown);
@@ -135,19 +171,13 @@ export function Topbar() {
     }
   }, [mobileSearchOpen]);
 
+  const userMenuItems: UserMenuItem[] = profile?.isAdmin
+    ? [...USER_MENU_ITEMS, { label: "Admin", href: "/admin", icon: SettingsIcon }]
+    : USER_MENU_ITEMS;
+
   return (
     <header className={`topbar${mobileSearchOpen ? " topbar--search-open" : ""}`}>
       <div className="topbar__start">
-        <motion.button
-          type="button"
-          className="topbar__menu-btn"
-          aria-label="Open menu"
-          onClick={toggleMobile}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <Menu size={20} aria-hidden />
-        </motion.button>
         <Link to="/" className="topbar__brand">
           <BrandLogo className="topbar__logo" size={28} alt="" />
           <span className="topbar__name">LottaCash</span>
@@ -264,16 +294,69 @@ export function Topbar() {
               totalWagered={profile?.totalWagered ?? 0}
               loading={profileLoading}
             />
-            <motion.button
-              type="button"
-              className="topbar__btn topbar__btn--ghost topbar__btn--logout"
-              onClick={handleSignOut}
-              whileHover={{ y: -1 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <LogOut size={14} aria-hidden />
-              <span className="topbar__btn-label">Log out</span>
-            </motion.button>
+
+            {/* User avatar dropdown — replaces the sidebar account section */}
+            <div className="topbar__user-menu" ref={userMenuRef}>
+              <motion.button
+                type="button"
+                className={`topbar__avatar${userMenuOpen ? " topbar__avatar--open" : ""}`}
+                onClick={() => setUserMenuOpen((open) => !open)}
+                aria-haspopup="menu"
+                aria-expanded={userMenuOpen}
+                aria-label={`Account menu for ${displayName}`}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                <span className="topbar__avatar-letter" aria-hidden="true">
+                  {avatarLetter(displayName)}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className="topbar__avatar-caret"
+                  aria-hidden="true"
+                />
+              </motion.button>
+
+              {userMenuOpen && (
+                <div className="topbar__user-dropdown" role="menu">
+                  <div className="topbar__user-dropdown-header">
+                    <span className="topbar__user-dropdown-name">{displayName}</span>
+                    {user.email ? (
+                      <span className="topbar__user-dropdown-email">{user.email}</span>
+                    ) : null}
+                  </div>
+                  <ul className="topbar__user-dropdown-list">
+                    {userMenuItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <li key={item.href}>
+                          <Link
+                            to={item.href}
+                            className="topbar__user-dropdown-item"
+                            role="menuitem"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <Icon size={16} aria-hidden />
+                            <span>{item.label}</span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <div className="topbar__user-dropdown-footer">
+                    <button
+                      type="button"
+                      className="topbar__user-dropdown-item topbar__user-dropdown-item--danger"
+                      role="menuitem"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut size={16} aria-hidden />
+                      <span>Log out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <>

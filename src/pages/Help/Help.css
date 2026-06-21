@@ -23,7 +23,103 @@
   --og-sc-color: #10b981;
   --og-shadow-gold: 0 0 24px rgba(245, 185, 66, 0.15);
 
-  max-width: 800px;
+  max-width: 1100px;
+}
+
+/* Two-column FAQ layout: categories flow on the left, search/tabs rail on the right.
+   Falls back to single column under 860px. */
+.help-page__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .help-page__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.help-page__main {
+  min-width: 0;
+}
+
+.help-page__rail {
+  position: sticky;
+  top: calc(var(--lc-topbar-height, 60px) + var(--space-4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.help-page__rail-card {
+  padding: var(--space-5);
+  background: var(--og-bg-surface);
+  border: 1px solid var(--og-border);
+  border-radius: var(--radius-xl);
+}
+
+.help-page__rail-title {
+  margin: 0 0 var(--space-3);
+  font-family: var(--lc-font-display);
+  font-size: var(--lc-text-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--og-text-gold);
+}
+
+.help-page__rail-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  font-size: var(--lc-text-sm);
+  color: var(--og-text-secondary);
+  text-decoration: none;
+  border-top: 1px solid var(--og-border);
+  transition: color var(--lc-transition);
+}
+
+.help-page__rail-link:first-of-type {
+  border-top: none;
+}
+
+.help-page__rail-link:hover {
+  color: var(--og-text-gold);
+}
+
+.help-page__rail-link svg {
+  color: var(--og-gold);
+  flex-shrink: 0;
+}
+
+.help-page__rail-text {
+  margin: 0;
+  font-size: var(--lc-text-sm);
+  line-height: 1.6;
+  color: var(--og-text-secondary);
+}
+
+.help-page__rail-text a {
+  color: var(--og-text-gold);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Legal pages (Privacy, Sweepstakes Rules) — narrow prose column ── */
+.legal-page {
+  max-width: 720px;
+}
+
+.legal-page .help-page__layout {
+  display: block;
+}
+
+.legal-page .help-page__rail {
+  display: none;
 }
 
 /* ── Header ── */

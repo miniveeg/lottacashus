@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Info } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
@@ -80,7 +80,7 @@ export default function Redeem() {
 
   if (!user) {
     return (
-      <div className="redeem lc-page lc-page--narrow">
+      <div className="redeem lc-page lc-page--medium">
         <header className="lc-page__header">
           <h1 className="lc-page__title">Redeem Sweeps Coins</h1>
           <p className="lc-page__subtitle">Log in to cash out your Sweeps Coins for real money.</p>
@@ -90,7 +90,7 @@ export default function Redeem() {
   }
 
   return (
-    <div className="redeem lc-page lc-page--narrow">
+    <div className="redeem lc-page lc-page--medium">
       <header className="lc-page__header">
         <h1 className="lc-page__title">Redeem Sweeps Coins</h1>
         <p className="lc-page__subtitle">
@@ -109,109 +109,143 @@ export default function Redeem() {
           </p>
         </div>
       ) : (
-        <div className="redeem__card">
-          <div className="redeem__balance">
-            <p className="redeem__balance-label">Available</p>
-            <p className="redeem__balance-value">
-              {formatCoins(sweepsCoins, "sweeps_coins")}
-            </p>
-            <p className="redeem__rate">
-              {formatUsd(balanceUsd)} USD &middot; 100 SC = {formatUsd(1)} &middot; 1 SC = {formatUsd(SC_USD_RATE)}
-            </p>
-          </div>
-
-          {error && <p className="redeem__error" role="alert">{error}</p>}
-
-          <div className="redeem__field">
-            <label className="redeem__label" htmlFor="sc-amount">
-              SC amount
-            </label>
-            <input
-              id="sc-amount"
-              className="redeem__input"
-              type="number"
-              min={MIN_REDEMPTION_SC}
-              max={sweepsCoins}
-              step="1"
-              value={scAmount}
-              onChange={(e) => setScAmount(e.target.value)}
-              disabled={submitting}
-              placeholder="100"
-            />
-            <p className="redeem__info">
-              Minimum {MIN_REDEMPTION_SC} SC ({formatUsd(minUsd)}).
-            </p>
-          </div>
-
-          <div className="redeem__field">
-            <span className="redeem__label">Payout chain</span>
-            <div className="redeem__chain-picker">
-              {CRYPTO_CHAINS.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={`redeem__chain-btn${chain === c.id ? " redeem__chain-btn--active" : ""}`}
-                  onClick={() => setChain(c.id)}
-                  disabled={submitting}
-                >
-                  {c.symbol}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="redeem__field">
-            <label className="redeem__label" htmlFor="redeem-destination">
-              Destination {chain.toUpperCase()} address
-            </label>
-            <input
-              id="redeem-destination"
-              className="redeem__input"
-              type="text"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              disabled={submitting}
-              placeholder={`Your ${chain.toUpperCase()} wallet address`}
-              autoComplete="off"
-              spellCheck={false}
-            />
-            <p className="redeem__info">
-              Enter the external wallet address that will receive your payout.
-            </p>
-          </div>
-
-          {amountValid && addressValid && (
-            <div className="redeem__summary">
-              <div className="redeem__summary-row">
-                <span className="redeem__summary-label">Redeeming</span>
-                <span className="redeem__summary-value redeem__summary-value--sc">
-                  {formatCoins(parsedAmount, "sweeps_coins")}
-                </span>
-              </div>
-              <div className="redeem__summary-arrow" aria-hidden="true">↓</div>
-              <div className="redeem__summary-row">
-                <span className="redeem__summary-label">You receive</span>
-                <span className="redeem__summary-value redeem__summary-value--usd">
-                  {formatUsd(usdValue)} USD
-                </span>
-              </div>
-              <p className="redeem__summary-dest">
-                To {chain.toUpperCase()}: <code>{destination.trim()}</code>
+        <div className="redeem__grid">
+          {/* Left column — balance + form */}
+          <div className="redeem__card">
+            <div className="redeem__balance">
+              <p className="redeem__balance-label">Available</p>
+              <p className="redeem__balance-value">
+                {formatCoins(sweepsCoins, "sweeps_coins")}
+              </p>
+              <p className="redeem__rate">
+                {formatUsd(balanceUsd)} USD &middot; 100 SC = {formatUsd(1)} &middot; 1 SC = {formatUsd(SC_USD_RATE)}
               </p>
             </div>
-          )}
 
-          <button
-            type="button"
-            className="redeem__submit"
-            disabled={!isValid || submitting}
-            onClick={handleRedeem}
-          >
-            {submitting && <span className="redeem__submit-spinner" aria-hidden="true" />}
-            {submitting
-              ? "Submitting…"
-              : `Redeem ${formatCoins(safeAmount, "sweeps_coins")} for ${formatUsd(usdValue)}`}
-          </button>
+            {error && <p className="redeem__error" role="alert">{error}</p>}
+
+            <div className="redeem__field">
+              <label className="redeem__label" htmlFor="sc-amount">
+                SC amount
+              </label>
+              <input
+                id="sc-amount"
+                className="redeem__input"
+                type="number"
+                min={MIN_REDEMPTION_SC}
+                max={sweepsCoins}
+                step="1"
+                value={scAmount}
+                onChange={(e) => setScAmount(e.target.value)}
+                disabled={submitting}
+                placeholder="100"
+              />
+              <p className="redeem__info">
+                Minimum {MIN_REDEMPTION_SC} SC ({formatUsd(minUsd)}).
+              </p>
+            </div>
+
+            <div className="redeem__field">
+              <span className="redeem__label">Payout chain</span>
+              <div className="redeem__chain-picker">
+                {CRYPTO_CHAINS.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={`redeem__chain-btn${chain === c.id ? " redeem__chain-btn--active" : ""}`}
+                    onClick={() => setChain(c.id)}
+                    disabled={submitting}
+                  >
+                    {c.symbol}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="redeem__field">
+              <label className="redeem__label" htmlFor="redeem-destination">
+                Destination {chain.toUpperCase()} address
+              </label>
+              <input
+                id="redeem-destination"
+                className="redeem__input"
+                type="text"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                disabled={submitting}
+                placeholder={`Your ${chain.toUpperCase()} wallet address`}
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <p className="redeem__info">
+                Enter the external wallet address that will receive your payout.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="redeem__submit"
+              disabled={!isValid || submitting}
+              onClick={handleRedeem}
+            >
+              {submitting && <span className="redeem__submit-spinner" aria-hidden="true" />}
+              {submitting
+                ? "Submitting…"
+                : `Redeem ${formatCoins(safeAmount, "sweeps_coins")} for ${formatUsd(usdValue)}`}
+            </button>
+          </div>
+
+          {/* Right column — live summary + info */}
+          <aside className="redeem__aside">
+            {amountValid && addressValid ? (
+              <div className="redeem__summary">
+                <h2 className="redeem__summary-title">Redemption summary</h2>
+                <div className="redeem__summary-row">
+                  <span className="redeem__summary-label">Redeeming</span>
+                  <span className="redeem__summary-value redeem__summary-value--sc">
+                    {formatCoins(parsedAmount, "sweeps_coins")}
+                  </span>
+                </div>
+                <div className="redeem__summary-arrow" aria-hidden="true">↓</div>
+                <div className="redeem__summary-row">
+                  <span className="redeem__summary-label">You receive</span>
+                  <span className="redeem__summary-value redeem__summary-value--usd">
+                    {formatUsd(usdValue)} USD
+                  </span>
+                </div>
+                <p className="redeem__summary-dest">
+                  To {chain.toUpperCase()}: <code>{destination.trim()}</code>
+                </p>
+              </div>
+            ) : (
+              <div className="redeem__summary redeem__summary--placeholder">
+                <h2 className="redeem__summary-title">
+                  <Info size={16} aria-hidden="true" /> How redemptions work
+                </h2>
+                <p className="redeem__summary-text">
+                  Enter a valid SC amount (minimum {MIN_REDEMPTION_SC} SC) and a destination
+                  {chain.toUpperCase()} address. Your live summary will appear here.
+                </p>
+                <p className="redeem__summary-text">
+                  100 SC = {formatUsd(1)} USD &middot; 1 SC = {formatUsd(SC_USD_RATE)} USD.
+                </p>
+              </div>
+            )}
+
+            <div className="redeem__info-card">
+              <h3 className="redeem__info-card-title">Processing</h3>
+              <p className="redeem__info-card-text">
+                Redemptions are reviewed by our team and processed within 3&ndash;5 business days.
+                Payouts are sent on-chain to the address you provide.
+              </p>
+            </div>
+            <div className="redeem__info-card">
+              <h3 className="redeem__info-card-title">Sweeps Coins</h3>
+              <p className="redeem__info-card-text">
+                Only SC is redeemable for cash. Gold Coins (GC) are play money and cannot be redeemed.
+              </p>
+            </div>
+          </aside>
         </div>
       )}
     </div>

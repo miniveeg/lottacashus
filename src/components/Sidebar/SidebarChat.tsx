@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { X } from "lucide-react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
+import { useSidebar } from "../../contexts/SidebarContext";
 import { fetchRecentChatMessages, rowToChatMessage, sendChatMessage, enrichChatMessagesWithLevels } from "../../lib/chat";
 import { levelFromWagered } from "../../lib/leveling";
 import { LevelBadge } from "../Level/LevelBadge";
@@ -215,5 +217,63 @@ export function SidebarChat() {
         </div>
       </form>
     </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ChatPanel — slide-in wrapper around <SidebarChat />
+   ───────────────────────────────────────────────────────────────
+   In the v3 "Command Center" layout the chat is no longer a permanent
+   sidebar section. It's a slide-in panel anchored to the right edge
+   of the viewport, opened from the Dock (desktop) or the bottom tab
+   bar (mobile) via SidebarContext.chatOpen.
+
+   • translateX(100%) when closed → off-screen to the right
+   • translateX(0) when open
+   • Backdrop on mobile only (desktop keeps the page visible)
+   • Escape key + backdrop click both close (handled in SidebarContext)
+   ════════════════════════════════════════════════════════════════ */
+
+export function ChatPanel() {
+  const { chatOpen, closeChat } = useSidebar();
+
+  return (
+    <>
+      {/* Mobile backdrop — closes the panel on tap */}
+      <button
+        type="button"
+        className={`chat-panel__backdrop${chatOpen ? " chat-panel__backdrop--open" : ""}`}
+        aria-hidden={!chatOpen}
+        tabIndex={chatOpen ? 0 : -1}
+        onClick={closeChat}
+        aria-label="Close chat"
+      />
+
+      <aside
+        className={`chat-panel${chatOpen ? " chat-panel--open" : ""}`}
+        role="dialog"
+        aria-modal="false"
+        aria-label="Live chat"
+        aria-hidden={!chatOpen}
+      >
+        <div className="chat-panel__header">
+          <div className="chat-panel__heading">
+            <p className="chat-panel__title">Live chat</p>
+            <p className="chat-panel__subtitle">Everyone on the site</p>
+          </div>
+          <button
+            type="button"
+            className="chat-panel__close"
+            onClick={closeChat}
+            aria-label="Close chat"
+          >
+            <X size={18} aria-hidden />
+          </button>
+        </div>
+        <div className="chat-panel__body">
+          <SidebarChat />
+        </div>
+      </aside>
+    </>
   );
 }

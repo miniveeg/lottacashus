@@ -48,6 +48,7 @@ export function Mines() {
   const [bustedMines, setBustedMines] = useState<number[] | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [lastOutcome, setLastOutcome] = useState<"win" | "loss" | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
@@ -235,191 +236,134 @@ export function Mines() {
 
   return (
     <div className="game-page mines">
-      <header className="game-page__header">
-        <div className="game-page__header-text">
-          <h1 className="game-page__title">Mines</h1>
-          <p className="game-page__subtitle">
-            5×5 grid. Reveal gems, avoid mines. Cash out anytime.
-          </p>
-        </div>
-        <span className="game-page__rtp">94.5% RTP</span>
+      <header className="game-header">
+        <h1 className="game-header__title">Mines</h1>
+        <span className="game-header__rtp">94.5% RTP</span>
+        <span className="game-header__spacer" />
+        <button
+          type="button"
+          className={`game-header__panel-toggle${panelOpen ? " game-header__panel-toggle--open" : ""}`}
+          onClick={() => setPanelOpen((v) => !v)}
+          aria-label="Toggle stats panel"
+          aria-expanded={panelOpen}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10" />
+            <line x1="12" y1="20" x2="12" y2="4" />
+            <line x1="6" y1="20" x2="6" y2="14" />
+          </svg>
+        </button>
       </header>
 
-      <div className="game-page__layout">
-        <section className="game-page__stage mines__stage">
-          <div className="mines__toolbar">
-            <div className="mines__mine-pills" role="group" aria-label="Mine count">
-              {MINES_PRESETS.map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  className={`mines__pill${mineCount === n ? " mines__pill--active" : ""}`}
-                  onClick={() => setMineCount(n)}
-                  disabled={playing || busy}
-                  aria-pressed={mineCount === n}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-            {playing && (
+      <div className="game-stage">
+        <div className="mines__toolbar">
+          <div className="mines__mine-pills" role="group" aria-label="Mine count">
+            {MINES_PRESETS.map((n) => (
               <button
+                key={n}
                 type="button"
-                className="mines__tool-btn"
-                onClick={pickRandom}
-                disabled={busy}
+                className={`mines__pill${mineCount === n ? " mines__pill--active" : ""}`}
+                onClick={() => setMineCount(n)}
+                disabled={playing || busy}
+                aria-pressed={mineCount === n}
               >
-                Random tile
-              </button>
-            )}
-          </div>
-
-          <div className="mines__grid" role="grid" aria-label="Mines board">
-            {TILES.map((tile) => (
-              <button
-                key={tile}
-                type="button"
-                role="gridcell"
-                className={tileClass(tile)}
-                disabled={!playing || busy || revealed.has(tile)}
-                onClick={() => handleReveal(tile)}
-                aria-label={
-                  revealed.has(tile)
-                    ? bustedMines?.includes(tile)
-                      ? "Mine"
-                      : "Gem"
-                    : `Tile ${tile + 1}`
-                }
-              >
-                {(revealed.has(tile) || bustedMines?.includes(tile)) && (
-                  <span className="mines__tile-icon" aria-hidden="true">
-                    {bustedMines?.includes(tile) ? "💣" : "💎"}
-                  </span>
-                )}
+                {n}
               </button>
             ))}
           </div>
-
           {playing && (
-            <div className="mines__live-stats">
-              <div className="mines__live-stat">
-                <span className="mines__live-stat-label">Multiplier</span>
-                <span className="mines__live-stat-value">{multiplier.toFixed(2)}×</span>
-              </div>
-              <div className="mines__live-stat">
-                <span className="mines__live-stat-label">Gems</span>
-                <span className="mines__live-stat-value">{gemsRevealed}/{maxGems}</span>
-              </div>
-              <div className="mines__live-stat">
-                <span className="mines__live-stat-label">Next pick</span>
-                <span className="mines__live-stat-value">{nextMult.toFixed(2)}×</span>
-              </div>
-            </div>
-          )}
-        </section>
-
-        <aside className="game-page__controls game-controls">
-          <div className="game-page__balance">
-            <span className="game-page__balance-label">Balance · {coinLabel}</span>
-            <span className="game-page__balance-value">{formatCoins(activeBalance, coinType)}</span>
-            <span className="game-page__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
-          </div>
-
-          <div className="game-controls__wager-block">
-            <label className="game-controls__wager-label" htmlFor="mines-wager">
-              Bet amount · {coinLabel}
-            </label>
-            <div className="game-controls__wager-row">
-              <input
-                id="mines-wager"
-                type="text"
-                inputMode="decimal"
-                className="game-controls__wager-input"
-                value={wagerInput}
-                onChange={(e) => setWagerInput(e.target.value)}
-                onBlur={() => {
-                  const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
-                }}
-                disabled={playing || busy}
-              />
-              <button
-                type="button"
-                className="game-controls__wager-adj"
-                onClick={() => applyWager(wager / 2)}
-                disabled={playing || busy}
-                aria-label="Half bet"
-              >
-                ½
-              </button>
-              <button
-                type="button"
-                className="game-controls__wager-adj"
-                onClick={() => applyWager(wager * 2)}
-                disabled={playing || busy}
-                aria-label="Double bet"
-              >
-                2×
-              </button>
-            </div>
-            <div className="game-controls__presets">
-              {BET_PRESETS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
-                  onClick={() => applyWager(p)}
-                  disabled={playing || busy}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {error && <p className="game-controls__error" role="alert">{error}</p>}
-
-          {lastMessage && (
-            <p
-              className={`mines__message${lastOutcome === "win" ? " mines__message--win" : lastOutcome === "loss" ? " mines__message--loss" : ""}`}
-              role="status"
-              aria-live="polite"
-            >
-              {lastMessage}
-            </p>
-          )}
-
-          {!playing ? (
             <button
               type="button"
-              className="game-controls__play"
-              onClick={handleStart}
-              disabled={busy || !user}
-              aria-busy={busy}
+              className="mines__tool-btn"
+              onClick={pickRandom}
+              disabled={busy}
             >
-              {busy ? "Starting…" : "Play"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              className="game-controls__play game-controls__play--cashout"
-              onClick={() => handleCashout(false)}
-              disabled={busy || gemsRevealed < 1}
-              aria-busy={busy}
-            >
-              {busy ? "…" : `Cash out · ${formatCoins(potentialPayout, coinType)}`}
+              Random tile
             </button>
           )}
+        </div>
+
+        <div className="mines__grid" role="grid" aria-label="Mines board">
+          {TILES.map((tile) => (
+            <button
+              key={tile}
+              type="button"
+              role="gridcell"
+              className={tileClass(tile)}
+              disabled={!playing || busy || revealed.has(tile)}
+              onClick={() => handleReveal(tile)}
+              aria-label={
+                revealed.has(tile)
+                  ? bustedMines?.includes(tile)
+                    ? "Mine"
+                    : "Gem"
+                  : `Tile ${tile + 1}`
+              }
+            >
+              {(revealed.has(tile) || bustedMines?.includes(tile)) && (
+                <span className="mines__tile-icon" aria-hidden="true">
+                  {bustedMines?.includes(tile) ? "💣" : "💎"}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {playing && (
+          <div className="mines__live-stats">
+            <div className="mines__live-stat">
+              <span className="mines__live-stat-label">Multiplier</span>
+              <span className="mines__live-stat-value">{multiplier.toFixed(2)}×</span>
+            </div>
+            <div className="mines__live-stat">
+              <span className="mines__live-stat-label">Gems</span>
+              <span className="mines__live-stat-value">{gemsRevealed}/{maxGems}</span>
+            </div>
+            <div className="mines__live-stat">
+              <span className="mines__live-stat-label">Next pick</span>
+              <span className="mines__live-stat-value">{nextMult.toFixed(2)}×</span>
+            </div>
+          </div>
+        )}
+
+        {lastMessage && (
+          <p
+            className={`mines__message${lastOutcome === "win" ? " mines__message--win" : lastOutcome === "loss" ? " mines__message--loss" : ""}`}
+            role="status"
+            aria-live="polite"
+          >
+            {lastMessage}
+          </p>
+        )}
+      </div>
+
+      {panelOpen && (
+        <div className="game-panel" role="complementary" aria-label="Mines stats">
+          <div className="game-panel__head">
+            <h2 className="game-panel__title">Round info</h2>
+            <button
+              type="button"
+              className="game-panel__close"
+              onClick={() => setPanelOpen(false)}
+              aria-label="Close panel"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
 
           {lastOutcome && (
-            <div className="game-controls__stats">
-              <div className="game-controls__stat-row">
-                <span className="game-controls__stat-label">Last round</span>
+            <div className="game-panel__section">
+              <h3 className="game-panel__section-title">Last round</h3>
+              <div className="game-panel__row">
+                <span className="game-panel__row-label">Outcome</span>
                 <span
-                  className={`game-controls__stat-value${
+                  className={`game-panel__row-value${
                     lastOutcome === "win"
-                      ? " game-controls__stat-value--win"
-                      : " game-controls__stat-value--loss"
+                      ? " game-panel__row-value--win"
+                      : " game-panel__row-value--loss"
                   }`}
                 >
                   {lastOutcome === "win" ? "Cashed out" : "Bust"}
@@ -428,46 +372,129 @@ export function Mines() {
             </div>
           )}
 
-          <p className="game-page__hint">
+          <div className="game-panel__section game-panel__section--bare">
+            <details className="game-fair">
+              <summary className="game-fair__summary">Provably Fair</summary>
+              <div className="game-fair__body">
+                <div className="game-fair__row">
+                  <span className="game-fair__k">Server seed (hash)</span>
+                  <code className="game-fair__code">{pfHash ?? "…"}</code>
+                </div>
+                <div className="game-fair__row">
+                  <span className="game-fair__k">Next nonce</span>
+                  <code className="game-fair__code">{pfNonce}</code>
+                </div>
+                <div className="game-fair__row">
+                  <span className="game-fair__k">Client seed</span>
+                  <input
+                    type="text"
+                    className="game-fair__input"
+                    value={clientSeed}
+                    maxLength={64}
+                    onChange={(e) => setClientSeed(e.target.value)}
+                    disabled={playing}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="game-fair__save"
+                  onClick={saveClientSeed}
+                  disabled={playing}
+                >
+                  Save client seed
+                </button>
+                <p className="game-fair__note">
+                  Mine positions use 24 HMAC floats + Fisher-Yates (Stake Mines).
+                </p>
+              </div>
+            </details>
+          </div>
+
+          <p className="game-actionbar__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
           </p>
+        </div>
+      )}
 
-          <details className="game-page__fairness">
-            <summary>Provably Fair</summary>
-            <div className="game-page__fairness-body">
-              <div className="game-page__fairness-row">
-                <span className="game-page__fairness-k">Server seed (hash)</span>
-                <code className="game-page__fairness-code">{pfHash ?? "…"}</code>
-              </div>
-              <div className="game-page__fairness-row">
-                <span className="game-page__fairness-k">Next nonce</span>
-                <code className="game-page__fairness-code">{pfNonce}</code>
-              </div>
-              <div className="game-page__fairness-row">
-                <span className="game-page__fairness-k">Client seed</span>
-                <input
-                  type="text"
-                  className="game-page__fairness-input"
-                  value={clientSeed}
-                  maxLength={64}
-                  onChange={(e) => setClientSeed(e.target.value)}
-                  disabled={playing}
-                />
-              </div>
-              <button
-                type="button"
-                className="game-page__fairness-save"
-                onClick={saveClientSeed}
-                disabled={playing}
-              >
-                Save client seed
-              </button>
-              <p className="game-page__fairness-note">
-                Mine positions use 24 HMAC floats + Fisher-Yates (Stake Mines).
-              </p>
-            </div>
-          </details>
-        </aside>
+      <div className="game-actionbar">
+        <div className="game-actionbar__balance">
+          <span className="game-actionbar__balance-label">{coinLabel}</span>
+          <span className="game-actionbar__balance-value">{formatCoins(activeBalance, coinType)}</span>
+          <span className="game-actionbar__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
+        </div>
+
+        <div className="game-actionbar__wager">
+          <button
+            type="button"
+            className="game-actionbar__adj"
+            onClick={() => applyWager(wager / 2)}
+            disabled={playing || busy}
+            aria-label="Half bet"
+          >
+            ½
+          </button>
+          <input
+            id="mines-wager"
+            type="text"
+            inputMode="decimal"
+            className="game-actionbar__input"
+            value={wagerInput}
+            onChange={(e) => setWagerInput(e.target.value)}
+            onBlur={() => {
+              const parsed = parseFloat(wagerInput.replace(/,/g, ""));
+              applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+            }}
+            disabled={playing || busy}
+            aria-label="Bet amount"
+          />
+          <button
+            type="button"
+            className="game-actionbar__adj"
+            onClick={() => applyWager(wager * 2)}
+            disabled={playing || busy}
+            aria-label="Double bet"
+          >
+            2×
+          </button>
+        </div>
+
+        <div className="game-actionbar__presets">
+          {BET_PRESETS.map((p) => (
+            <button
+              key={p}
+              type="button"
+              className={`game-actionbar__preset${wager === p ? " game-actionbar__preset--active" : ""}`}
+              onClick={() => applyWager(p)}
+              disabled={playing || busy}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+
+        {!playing ? (
+          <button
+            type="button"
+            className="game-actionbar__play"
+            onClick={handleStart}
+            disabled={busy || !user}
+            aria-busy={busy}
+          >
+            {busy ? "Starting…" : "Play"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="game-actionbar__play game-actionbar__play--cashout"
+            onClick={() => handleCashout(false)}
+            disabled={busy || gemsRevealed < 1}
+            aria-busy={busy}
+          >
+            {busy ? "…" : `Cash out · ${formatCoins(potentialPayout, coinType)}`}
+          </button>
+        )}
+
+        {error && <p className="game-actionbar__error" role="alert">{error}</p>}
       </div>
     </div>
   );

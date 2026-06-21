@@ -86,7 +86,7 @@ export function Deposit() {
 
   if (authLoading) {
     return (
-      <div className="wallet lc-page lc-page--narrow">
+      <div className="wallet lc-page lc-page--medium">
         <div className="lc-loading">
           <div className="lc-loading__pulse" aria-hidden />
           <p>Loading…</p>
@@ -105,7 +105,7 @@ export function Deposit() {
   }
 
   return (
-    <div className="wallet lc-page lc-page--narrow">
+    <div className="wallet lc-page lc-page--medium">
       <header className="lc-page__header">
         <h1 className="lc-page__title wallet__title">Deposit</h1>
         <p className="lc-page__subtitle wallet__subtitle">
@@ -122,100 +122,108 @@ export function Deposit() {
         </Link>
       </div>
 
-      <section className="wallet__info-panel" aria-label="How deposits work">
-        <p className="wallet__info-text">
-          Deposit crypto to fund your account. You&apos;ll receive Gold Coins (GC) for gameplay plus
-          bonus Sweeps Coins (SC) as a promotional reward.
-        </p>
-        <p className="wallet__info-rate">
-          <strong>100 GC = $1 USD</strong> &middot; <strong>1 bonus SC per $1 deposited</strong>
-        </p>
-        <p className="wallet__info-example">
-          <span className="wallet__info-example-input">$10</span>
-          <span className="wallet__info-example-arrow" aria-hidden="true">&rarr;</span>
-          <span className="wallet__info-example-output">
-            {formatCoins(depositGc(10), "balance")} + {formatCoins(depositBonusSc(10), "sweeps_coins")} bonus
-          </span>
-        </p>
-      </section>
+      <div className="wallet__grid">
+        {/* Left column — primary action */}
+        <section className="wallet__section wallet__section--primary" aria-label="Deposit address">
+          <h2 className="wallet__list-title">Your deposit address</h2>
 
-      <p className="wallet__hint wallet__hint--balance">
-        Gold Coins (GC): <strong>{formatCoinsWithUsd(profile?.balance ?? 0, "balance")}</strong>
-        <br />
-        Sweeps Coins (SC): <strong>{formatCoinsWithUsd(profile?.sweepsCoins ?? 0, "sweeps_coins")}</strong>
-      </p>
-
-      <section className="wallet__section">
-        <div className="wallet__chain-picker">
-          {CRYPTO_CHAINS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className={`wallet__chain-btn${chain === c.id ? " wallet__chain-btn--active" : ""}`}
-              onClick={() => setChain(c.id)}
-            >
-              {c.symbol}
-            </button>
-          ))}
-        </div>
-
-        {error && <p className="wallet__error" role="alert">{error}</p>}
-
-        <p className="wallet__hint">{CONFIRMATIONS_LABEL[chain]}</p>
-
-        <div className="wallet__address-box">
-          {loadingAddr ? (
-            <p className="wallet__hint">Generating your {chain.toUpperCase()} address…</p>
-          ) : address ? (
-            <>
-              <p className="wallet__hint">Your unique {chain.toUpperCase()} deposit address</p>
-              <p className="wallet__address">{address}</p>
-              <div className="wallet__copy-row">
-                <button type="button" className="wallet__btn" onClick={handleCopy} aria-live="polite">
-                  {copied ? "Copied!" : "Copy address"}
-                </button>
-              </div>
-            </>
-          ) : (
-            <p className="wallet__hint">Could not load address.</p>
-          )}
-        </div>
-
-        <p className="wallet__hint">
-          Only send <strong>{chain.toUpperCase()}</strong> on the correct network to this address.
-          Other assets may be lost. Funds are swept to treasury wallets on a schedule after credit.
-        </p>
-      </section>
-
-      <section className="wallet__section">
-        <h2 className="wallet__list-title">Recent deposits</h2>
-        {deposits.length === 0 ? (
-          <div className="wallet__empty">
-            <Inbox size={28} aria-hidden="true" />
-            <p>No deposits detected yet</p>
-            <p className="wallet__empty-hint">Send crypto to your address above to see it here.</p>
+          <div className="wallet__chain-picker">
+            {CRYPTO_CHAINS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`wallet__chain-btn${chain === c.id ? " wallet__chain-btn--active" : ""}`}
+                onClick={() => setChain(c.id)}
+              >
+                {c.symbol}
+              </button>
+            ))}
           </div>
-        ) : (
-          deposits.map((d) => (
-            <div key={d.id} className="wallet__deposit-item">
-              <div className="wallet__deposit-row">
-                <span>
-                  <strong>{d.chain.toUpperCase()}</strong> · {formatUsd(d.usd_amount)}
-                </span>
-                <span className={`wallet__status wallet__status--${d.status}`}>{d.status}</span>
+
+          {error && <p className="wallet__error" role="alert">{error}</p>}
+
+          <p className="wallet__hint">{CONFIRMATIONS_LABEL[chain]}</p>
+
+          <div className="wallet__address-box">
+            {loadingAddr ? (
+              <p className="wallet__hint">Generating your {chain.toUpperCase()} address…</p>
+            ) : address ? (
+              <>
+                <p className="wallet__hint">Your unique {chain.toUpperCase()} deposit address</p>
+                <p className="wallet__address">{address}</p>
+                <div className="wallet__copy-row">
+                  <button type="button" className="wallet__btn" onClick={handleCopy} aria-live="polite">
+                    {copied ? "Copied!" : "Copy address"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="wallet__hint">Could not load address.</p>
+            )}
+          </div>
+
+          <p className="wallet__hint wallet__hint--note">
+            Only send <strong>{chain.toUpperCase()}</strong> on the correct network to this address.
+            Other assets may be lost. Funds are swept to treasury wallets on a schedule after credit.
+          </p>
+        </section>
+
+        {/* Right column — context */}
+        <div className="wallet__aside">
+          <section className="wallet__info-panel" aria-label="How deposits work">
+            <p className="wallet__info-text">
+              Deposit crypto to fund your account. You&apos;ll receive Gold Coins (GC) for gameplay plus
+              bonus Sweeps Coins (SC) as a promotional reward.
+            </p>
+            <p className="wallet__info-rate">
+              <strong>100 GC = $1 USD</strong> &middot; <strong>1 bonus SC per $1 deposited</strong>
+            </p>
+            <p className="wallet__info-example">
+              <span className="wallet__info-example-input">$10</span>
+              <span className="wallet__info-example-arrow" aria-hidden="true">&rarr;</span>
+              <span className="wallet__info-example-output">
+                {formatCoins(depositGc(10), "balance")} + {formatCoins(depositBonusSc(10), "sweeps_coins")} bonus
+              </span>
+            </p>
+          </section>
+
+          <p className="wallet__hint wallet__hint--balance">
+            Gold Coins (GC): <strong>{formatCoinsWithUsd(profile?.balance ?? 0, "balance")}</strong>
+            <br />
+            Sweeps Coins (SC): <strong>{formatCoinsWithUsd(profile?.sweepsCoins ?? 0, "sweeps_coins")}</strong>
+          </p>
+
+          <section className="wallet__section wallet__section--secondary">
+            <h2 className="wallet__list-title">Recent deposits</h2>
+            {deposits.length === 0 ? (
+              <div className="wallet__empty">
+                <Inbox size={28} aria-hidden="true" />
+                <p>No deposits detected yet</p>
+                <p className="wallet__empty-hint">Send crypto to your address above to see it here.</p>
               </div>
-              <p className="wallet__hint wallet__hint--meta">
-                {d.confirmations}/{d.required_confirmations} confirmations ·{" "}
-                {d.crypto_amount} {d.chain.toUpperCase()}
-              </p>
-              <p className="wallet__hint wallet__hint--meta wallet__hint--yield">
-                Yields: {formatCoins(depositGc(d.usd_amount), "balance")} +{" "}
-                {formatCoins(depositBonusSc(d.usd_amount), "sweeps_coins")} bonus
-              </p>
-            </div>
-          ))
-        )}
-      </section>
+            ) : (
+              deposits.map((d) => (
+                <div key={d.id} className="wallet__deposit-item">
+                  <div className="wallet__deposit-row">
+                    <span>
+                      <strong>{d.chain.toUpperCase()}</strong> · {formatUsd(d.usd_amount)}
+                    </span>
+                    <span className={`wallet__status wallet__status--${d.status}`}>{d.status}</span>
+                  </div>
+                  <p className="wallet__hint wallet__hint--meta">
+                    {d.confirmations}/{d.required_confirmations} confirmations ·{" "}
+                    {d.crypto_amount} {d.chain.toUpperCase()}
+                  </p>
+                  <p className="wallet__hint wallet__hint--meta wallet__hint--yield">
+                    Yields: {formatCoins(depositGc(d.usd_amount), "balance")} +{" "}
+                    {formatCoins(depositBonusSc(d.usd_amount), "sweeps_coins")} bonus
+                  </p>
+                </div>
+              ))
+            )}
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

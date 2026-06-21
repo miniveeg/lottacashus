@@ -1,60 +1,59 @@
 /* ════════════════════════════════════════════════════════════════
-   LottaCash — App shell grid (Obsidian Gold redesign)
-   ─ 60px topbar row + sidebar/main row (fills viewport)
-   ─ Sidebar: 240px expanded / 68px collapsed
-   ─ Mobile (≤900px): sidebar becomes off-canvas drawer with backdrop
-   ─ Main: vertical scroll only; horizontal overflow hidden
+   LottaCash — App shell grid (v3 "Command Center" redesign)
+   ───────────────────────────────────────────────────────────────
+   STRUCTURAL CHANGE: the left sidebar is GONE.
+
+     ┌──────────────────────────────────────────────┐
+     │  TOPBAR (56px): logo | search | balance      │
+     ├──────────────────────────────────────────────┤
+     │                                              │
+     │   FULL-WIDTH MAIN CONTENT (scrolls)          │
+     │   no sidebar column eating 240px             │
+     │                                              │
+     │  ┌─────┐                       ┌─────┐       │
+     │  │DOCK │ (fixed, left-center)  │CHAT │       │
+     │  └─────┘                       └─────┘       │
+     ├──────────────────────────────────────────────┤
+     │  BOTTOM TAB BAR (mobile only, 56px)          │
+     └──────────────────────────────────────────────┘
+
+   • Grid has TWO rows only: topbar + main. No sidebar column.
+   • Dock floats at left-center on desktop (≥769px) — fixed position.
+   • Mobile tab bar floats at the bottom on mobile (≤768px) — fixed position.
+   • Both nav elements are OUTSIDE the grid (fixed), so main content is
+     genuinely full-width.
    ════════════════════════════════════════════════════════════════ */
 
-/* Local layout tokens — fall back to theme tokens, then to spec values.
-   This keeps the shell self-contained even if Agent 1 hasn't shipped
-   the matching tokens in theme.css yet. */
 .app-shell {
-  --topbar-height: var(--lc-topbar-height, 60px);
-  --sidebar-width: var(--lc-sidebar-width, 240px);
-  --sidebar-collapsed: var(--lc-sidebar-collapsed, 68px);
-  --app-sidebar-w: var(--sidebar-width);
+  /* Local layout tokens — fall back to theme tokens, then to spec values.
+     Override --topbar-height locally so a 56px shell can co-exist with
+     theme.css (which still defines 60px for backward compat). */
+  --topbar-height: 56px;
+  --dock-width: 56px;
+  --mobile-tabs-height: 56px;
   --app-shell-bg: var(--bg-base, #0a0a0f);
 
   display: grid;
   grid-template-rows: var(--topbar-height) minmax(0, 1fr);
-  grid-template-columns: var(--app-sidebar-w) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr); /* NO sidebar column */
   grid-template-areas:
-    "topbar topbar"
-    "sidebar main";
+    "topbar"
+    "main";
   height: 100%;
   min-height: 100dvh;
   overflow: hidden;
   position: relative;
   background: var(--app-shell-bg);
-  /* Sidebar width animates smoothly when collapsing / expanding. */
-  transition: grid-template-columns var(--lc-transition-slow, 400ms cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.app-shell--sidebar-collapsed {
-  --app-sidebar-w: var(--sidebar-collapsed);
 }
 
 /* ── Topbar row ── */
 .app-shell__topbar {
   grid-area: topbar;
   position: relative;
-  z-index: var(--lc-z-topbar, 200);
+  z-index: var(--z-topbar, 200);
 }
 
-/* ── Sidebar column ── */
-.app-shell__sidebar {
-  grid-area: sidebar;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
-  position: relative;
-  overflow: hidden;
-  z-index: var(--lc-z-sticky, 50);
-}
-
-/* ── Main column ── */
+/* ── Main column — full viewport width minus the topbar height ── */
 .app-shell__main {
   grid-area: main;
   min-width: 0;
@@ -63,77 +62,30 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   position: relative;
-  z-index: var(--lc-z-content, 1);
+  z-index: var(--z-content, 1);
   scroll-behavior: auto; /* Lenis (SmoothScroll) handles inertia */
+
+  /* On mobile the fixed bottom tab bar eats 56px of vertical space.
+     Pad the bottom of the scroll area so content (and the footer)
+     isn't hidden behind it. */
+  padding-bottom: 0;
 }
 
-/* ── Mobile backdrop (hidden on desktop) ── */
-.app-shell__backdrop {
-  display: none;
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .app-shell {
+    transition: none;
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════
-   Mobile ≤ 900px: sidebar becomes an off-canvas drawer
+   Mobile ≤ 768px: reserve space for the bottom tab bar
    ════════════════════════════════════════════════════════════════ */
-@media (max-width: 900px) {
-  .app-shell,
-  .app-shell--sidebar-collapsed {
-    --app-sidebar-w: 0px;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas:
-      "topbar"
-      "main";
-    transition: none; /* no grid animation on mobile */
-  }
-
-  .app-shell__sidebar {
-    position: fixed;
-    top: var(--topbar-height);
-    left: 0;
-    bottom: 0;
-    width: min(280px, 85vw);
-    max-width: 100%;
-    z-index: var(--lc-z-overlay, 100);
-    transform: translateX(-100%);
-    transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
-    box-shadow: var(--shadow-lg, 0 12px 40px rgba(0, 0, 0, 0.5));
-    will-change: transform;
-  }
-
-  .app-shell--sidebar-open .app-shell__sidebar {
-    transform: translateX(0);
-  }
-
-  .app-shell__backdrop {
-    display: block;
-    position: fixed;
-    inset: var(--topbar-height) 0 0 0;
-    z-index: 90;
-    border: none;
-    padding: 0;
-    margin: 0;
-    /* Dark overlay + subtle blur — keeps page context visible while
-       still letting the drawer stand out. */
-    background: rgba(5, 5, 8, 0.7);
-    backdrop-filter: blur(6px) saturate(0.85);
-    -webkit-backdrop-filter: blur(6px) saturate(0.85);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 320ms cubic-bezier(0.22, 1, 0.36, 1);
-    cursor: pointer;
-  }
-
-  .app-shell--sidebar-open .app-shell__backdrop {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
-/* ── Reduced motion: kill the slow grid + drawer transitions ── */
-@media (prefers-reduced-motion: reduce) {
-  .app-shell,
-  .app-shell__sidebar,
-  .app-shell__backdrop {
-    transition: none;
+@media (max-width: 768px) {
+  .app-shell__main {
+    /* The mobile tab bar is position:fixed and 56px tall. Pad the
+       bottom of the main scroll region so the last items / footer
+       aren't hidden behind it. */
+    padding-bottom: calc(var(--mobile-tabs-height) + var(--safe-bottom, 0px));
   }
 }

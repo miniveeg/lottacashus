@@ -51,7 +51,7 @@ export function Leaderboard() {
   const rest = entries.slice(3);
 
   return (
-    <div className="leaderboard-page lc-page lc-page--medium">
+    <div className="leaderboard-page lc-page lc-page--wide">
       {/* ── Header ── */}
       <motion.header
         className="leaderboard-page__header"

@@ -593,10 +593,42 @@
   color: var(--og-text-primary);
 }
 
-.promotions-roadmap__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+.promotions-roadmap__flow {
+  display: flex;
+  flex-direction: column;
   gap: var(--space-4);
+}
+
+.promotions-roadmap__banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-8);
+  background:
+    radial-gradient(ellipse 40% 100% at 0% 50%, var(--og-gold-glow) 0%, transparent 60%),
+    var(--og-bg-surface);
+  border: 1px solid var(--og-border);
+  border-left: 3px solid var(--og-gold);
+  border-radius: var(--radius-xl);
+  transition:
+    transform var(--lc-transition),
+    border-color var(--lc-transition),
+    box-shadow var(--lc-transition);
+}
+
+.promotions-roadmap__banner:hover {
+  transform: translateX(2px);
+  border-color: var(--og-border-gold);
+  border-left-color: var(--og-gold-bright);
+  box-shadow: var(--og-shadow-gold);
+}
+
+.promotions-roadmap__banner-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .promotions-roadmap__card {

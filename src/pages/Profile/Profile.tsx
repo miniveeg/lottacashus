@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
-import { Lock } from "lucide-react";
+import { BarChart3, Gift, Lock, User as UserIcon } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { loginUrl } from "../../lib/authRedirect";
@@ -17,6 +17,8 @@ const BADGES: Badge[] = [
   { id: "whale", name: "Whale", icon: "◆", description: "$100,000+ total wagered", check: (p) => p.totalWagered >= 100000 },
   { id: "veteran", name: "Veteran", icon: "⏱", description: "Account age 30+ days", check: (p) => { if (!p.memberSince) return false; return (Date.now() - new Date(p.memberSince).getTime()) / 86400000 >= 30; } },
 ];
+
+type TabId = "overview" | "stats" | "badges" | "referrals";
 
 function calcLevel(totalWagered: number): { level: number; xp: number; xpMax: number } {
   const xpPerLevel = 100;
@@ -38,6 +40,8 @@ export function ProfilePage() {
 
   const isOwnProfile = !routeUsername;
   const displayProfile = isOwnProfile ? authProfile : null;
+
+  const [activeTab, setActiveTab] = useState<TabId>("overview");
 
   useEffect(() => {
     let cancelled = false;
@@ -134,9 +138,19 @@ export function ProfilePage() {
   const memberSince = stats.memberSince ? new Date(stats.memberSince).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : null;
   const sweepsBalance = (p as { sweepsCoins?: number }).sweepsCoins ?? 0;
 
+  const TABS: { id: TabId; label: string; icon: typeof UserIcon; show: boolean }[] = [
+    { id: "overview", label: "Overview", icon: UserIcon, show: true },
+    { id: "stats", label: "Stats", icon: BarChart3, show: true },
+    { id: "badges", label: "Badges", icon: Gift, show: true },
+    { id: "referrals", label: "Referrals", icon: Gift, show: isOwnProfile && Boolean(referralInfo) },
+  ];
+  const visibleTabs = TABS.filter((t) => t.show);
+  // If active tab no longer applies, fall back to overview
+  const currentTab: TabId = visibleTabs.some((t) => t.id === activeTab) ? activeTab : "overview";
+
   return (
     <div className="lc-page lc-page--medium profile-page">
-      {/* Hero */}
+      {/* Hero (always visible) */}
       <section className="profile-hero">
         <div className="profile-hero__avatar" aria-hidden="true">
           {p.username ? p.username[0].toUpperCase() : "?"}
@@ -153,121 +167,177 @@ export function ProfilePage() {
         </div>
       </section>
 
-      {/* Stats grid */}
-      <section className="profile-stats">
-        <div className="profile-stat profile-stat--gc">
-          <span className="profile-stat__label">Gold Coins</span>
-          <span className="profile-stat__value profile-stat__value--gold">
-            {formatCoinsWithUsd(p.balance, "balance")}
-          </span>
-          <span className="profile-stat__sublabel">Play money</span>
-        </div>
-        <div className="profile-stat profile-stat--sc">
-          <span className="profile-stat__label">Sweeps Coins</span>
-          <span className="profile-stat__value profile-stat__value--emerald">
-            {formatCoinsWithUsd(sweepsBalance, "sweeps_coins")}
-          </span>
-          <span className="profile-stat__sublabel">Redeemable for cash</span>
-        </div>
-        <div className="profile-stat">
-          <span className="profile-stat__label">Total Wagered</span>
-          <span className="profile-stat__value">{formatUsd(p.totalWagered)}</span>
-        </div>
-        <div className="profile-stat">
-          <span className="profile-stat__label">Deposited</span>
-          <span className="profile-stat__value">{formatUsd(p.totalDeposited)}</span>
-        </div>
-        <div className="profile-stat">
-          <span className="profile-stat__label">Withdrawn</span>
-          <span className="profile-stat__value">{formatUsd(p.totalWithdrawn)}</span>
-        </div>
-        <div className="profile-stat">
-          <span className="profile-stat__label">Net P/L</span>
-          <span className={`profile-stat__value ${netPL >= 0 ? "profile-stat__value--emerald" : "profile-stat__value--danger"}`}>
-            {netPL >= 0 ? "+" : ""}{formatUsd(netPL)}
-          </span>
-        </div>
-        <div className="profile-stat">
-          <span className="profile-stat__label">Win Rate</span>
-          <span className="profile-stat__value">{winRate}%</span>
-        </div>
-      </section>
+      {/* Tabs */}
+      <nav className="profile-tabs" aria-label="Profile sections">
+        {visibleTabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              className={`profile-tab${currentTab === tab.id ? " profile-tab--active" : ""}`}
+              onClick={() => setActiveTab(tab.id)}
+              aria-selected={currentTab === tab.id}
+              role="tab"
+            >
+              <Icon size={16} aria-hidden="true" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </nav>
 
-      {/* Badges */}
-      <section className="profile-section">
-        <h2 className="profile-section__title">Badges</h2>
-        <div className="profile-badges">
-          {BADGES.map((badge) => {
-            const earned = badge.check(stats);
-            return (
-              <div
-                key={badge.id}
-                className={`profile-badge${earned ? " profile-badge--earned" : " profile-badge--locked"}`}
-                title={`${badge.name}: ${badge.description}${earned ? "" : " (locked)"}`}
-              >
-                <span className="profile-badge__icon" aria-hidden="true">{badge.icon}</span>
-                <span className="profile-badge__name">{badge.name}</span>
-                {!earned && (
-                  <Lock
-                    size={12}
-                    className="profile-badge__lock"
-                    aria-label="Locked"
-                  />
-                )}
+      <div className="profile-content" role="tabpanel">
+        {currentTab === "overview" && (
+          <section className="profile-section profile-section--overview">
+            <h2 className="profile-section__title">Overview</h2>
+            <div className="profile-overview-grid">
+              <div className="profile-stat profile-stat--gc">
+                <span className="profile-stat__label">Gold Coins</span>
+                <span className="profile-stat__value profile-stat__value--gold">
+                  {formatCoinsWithUsd(p.balance, "balance")}
+                </span>
+                <span className="profile-stat__sublabel">Play money</span>
               </div>
-            );
-          })}
-        </div>
-      </section>
+              <div className="profile-stat profile-stat--sc">
+                <span className="profile-stat__label">Sweeps Coins</span>
+                <span className="profile-stat__value profile-stat__value--emerald">
+                  {formatCoinsWithUsd(sweepsBalance, "sweeps_coins")}
+                </span>
+                <span className="profile-stat__sublabel">Redeemable for cash</span>
+              </div>
+              <div className="profile-stat">
+                <span className="profile-stat__label">Total Wagered</span>
+                <span className="profile-stat__value">{formatUsd(p.totalWagered)}</span>
+                <span className="profile-stat__sublabel">Lifetime</span>
+              </div>
+              <div className="profile-stat">
+                <span className="profile-stat__label">Win Rate</span>
+                <span className="profile-stat__value">{winRate}%</span>
+                <span className="profile-stat__sublabel">{totalGames} games</span>
+              </div>
+            </div>
+          </section>
+        )}
 
-      {/* Referral section (own profile only) */}
-      {isOwnProfile && referralInfo && (
-        <section className="profile-section">
-          <h2 className="profile-section__title">Affiliate & Referrals</h2>
-          <div className="profile-referral">
-            <div className="profile-referral__code-row">
-              <div className="profile-referral__code">
-                <span className="profile-referral__label">Your code</span>
-                <code className="profile-referral__value">{referralInfo.referralCode}</code>
+        {currentTab === "stats" && (
+          <section className="profile-section">
+            <h2 className="profile-section__title">Lifetime stats</h2>
+            <div className="profile-stats">
+              <div className="profile-stat">
+                <span className="profile-stat__label">Total Wagered</span>
+                <span className="profile-stat__value">{formatUsd(p.totalWagered)}</span>
+              </div>
+              <div className="profile-stat">
+                <span className="profile-stat__label">Deposited</span>
+                <span className="profile-stat__value">{formatUsd(p.totalDeposited)}</span>
+              </div>
+              <div className="profile-stat">
+                <span className="profile-stat__label">Withdrawn</span>
+                <span className="profile-stat__value">{formatUsd(p.totalWithdrawn)}</span>
+              </div>
+              <div className="profile-stat">
+                <span className="profile-stat__label">Wins</span>
+                <span className="profile-stat__value profile-stat__value--emerald">{formatUsd(wins)}</span>
+              </div>
+              <div className="profile-stat">
+                <span className="profile-stat__label">Losses</span>
+                <span className="profile-stat__value profile-stat__value--danger">{formatUsd(losses)}</span>
+              </div>
+              <div className="profile-stat">
+                <span className="profile-stat__label">Net P/L</span>
+                <span className={`profile-stat__value ${netPL >= 0 ? "profile-stat__value--emerald" : "profile-stat__value--danger"}`}>
+                  {netPL >= 0 ? "+" : ""}{formatUsd(netPL)}
+                </span>
+              </div>
+              <div className="profile-stat">
+                <span className="profile-stat__label">Win Rate</span>
+                <span className="profile-stat__value">{winRate}%</span>
+              </div>
+              <div className="profile-stat">
+                <span className="profile-stat__label">Games</span>
+                <span className="profile-stat__value">{totalGames}</span>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {currentTab === "badges" && (
+          <section className="profile-section">
+            <h2 className="profile-section__title">Badges</h2>
+            <div className="profile-badges">
+              {BADGES.map((badge) => {
+                const earned = badge.check(stats);
+                return (
+                  <div
+                    key={badge.id}
+                    className={`profile-badge${earned ? " profile-badge--earned" : " profile-badge--locked"}`}
+                    title={`${badge.name}: ${badge.description}${earned ? "" : " (locked)"}`}
+                  >
+                    <span className="profile-badge__icon" aria-hidden="true">{badge.icon}</span>
+                    <span className="profile-badge__name">{badge.name}</span>
+                    {!earned && (
+                      <Lock
+                        size={12}
+                        className="profile-badge__lock"
+                        aria-label="Locked"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {currentTab === "referrals" && isOwnProfile && referralInfo && (
+          <section className="profile-section">
+            <h2 className="profile-section__title">Affiliate & Referrals</h2>
+            <div className="profile-referral">
+              <div className="profile-referral__code-row">
+                <div className="profile-referral__code">
+                  <span className="profile-referral__label">Your code</span>
+                  <code className="profile-referral__value">{referralInfo.referralCode}</code>
+                  <button
+                    type="button"
+                    className="profile-referral__copy"
+                    onClick={handleCopy}
+                    aria-label="Copy referral code to clipboard"
+                    aria-live="polite"
+                  >
+                    {copied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              </div>
+              <div className="profile-referral__stats">
+                <div className="profile-referral__stat">
+                  <span className="profile-referral__stat-label">Referred users</span>
+                  <span className="profile-referral__stat-value">{referralInfo.referredCount}</span>
+                </div>
+                <div className="profile-referral__stat">
+                  <span className="profile-referral__stat-label">Claimable balance</span>
+                  <span className="profile-referral__stat-value">{formatUsd(referralInfo.claimableBalance)}</span>
+                </div>
+              </div>
+              {referralInfo.claimableBalance > 0 && (
                 <button
                   type="button"
-                  className="profile-referral__copy"
-                  onClick={handleCopy}
-                  aria-label="Copy referral code to clipboard"
-                  aria-live="polite"
+                  className="profile-referral__claim"
+                  onClick={handleClaim}
+                  disabled={claiming}
                 >
-                  {copied ? "Copied!" : "Copy"}
+                  {claiming ? "Claiming…" : "Claim to balance"}
                 </button>
-              </div>
+              )}
+              {claimMsg && (
+                <p className={`profile-referral__msg${claimMsg.includes("error") || claimMsg.includes("Error") ? " profile-referral__msg--error" : ""}`}>
+                  {claimMsg}
+                </p>
+              )}
             </div>
-            <div className="profile-referral__stats">
-              <div className="profile-referral__stat">
-                <span className="profile-referral__stat-label">Referred users</span>
-                <span className="profile-referral__stat-value">{referralInfo.referredCount}</span>
-              </div>
-              <div className="profile-referral__stat">
-                <span className="profile-referral__stat-label">Claimable balance</span>
-                <span className="profile-referral__stat-value">{formatUsd(referralInfo.claimableBalance)}</span>
-              </div>
-            </div>
-            {referralInfo.claimableBalance > 0 && (
-              <button
-                type="button"
-                className="profile-referral__claim"
-                onClick={handleClaim}
-                disabled={claiming}
-              >
-                {claiming ? "Claiming…" : "Claim to balance"}
-              </button>
-            )}
-            {claimMsg && (
-              <p className={`profile-referral__msg${claimMsg.includes("error") || claimMsg.includes("Error") ? " profile-referral__msg--error" : ""}`}>
-                {claimMsg}
-              </p>
-            )}
-          </div>
-        </section>
-      )}
+          </section>
+        )}
+      </div>
     </div>
   );
 }

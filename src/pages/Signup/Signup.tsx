@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Coins, Gift, ShieldCheck } from "lucide-react";
 import { loginUrlFromSearchParams, safeRedirectPath } from "../../lib/authRedirect";
 import {
   clearStoredAffiliateRef,
@@ -49,9 +50,11 @@ export function Signup() {
   if (loading) {
     return (
       <div className="auth-page lc-page--auth">
-        <div className="lc-loading">
-          <div className="lc-loading__pulse" aria-hidden />
-          <p>Loading…</p>
+        <div className="auth-form-side">
+          <div className="lc-loading">
+            <div className="lc-loading__pulse" aria-hidden />
+            <p>Loading…</p>
+          </div>
         </div>
       </div>
     );
@@ -180,6 +183,40 @@ export function Signup() {
 
   return (
     <div className="auth-page lc-page--auth">
+      <aside className="auth-visual" aria-hidden="true">
+        <div className="auth-visual__inner">
+          <BrandLogo className="auth-visual__logo" size={56} />
+          <h2 className="auth-visual__headline">Join LottaCash.<br />Claim your welcome bonus.</h2>
+          <p className="auth-visual__lede">
+            Create an account in seconds. Get Gold Coins to play instantly and bonus Sweeps Coins
+            you can redeem for real cash prizes.
+          </p>
+          <div className="auth-visual__props">
+            <div className="auth-prop">
+              <div className="auth-prop__icon"><Gift size={18} /></div>
+              <div className="auth-prop__text">
+                <p className="auth-prop__title">Welcome bonus</p>
+                <p className="auth-prop__desc">Free GC + bonus SC on signup.</p>
+              </div>
+            </div>
+            <div className="auth-prop">
+              <div className="auth-prop__icon"><Coins size={18} /></div>
+              <div className="auth-prop__text">
+                <p className="auth-prop__title">Crypto-ready</p>
+                <p className="auth-prop__desc">Deposit SOL, LTC, or ETH in seconds.</p>
+              </div>
+            </div>
+            <div className="auth-prop">
+              <div className="auth-prop__icon"><ShieldCheck size={18} /></div>
+              <div className="auth-prop__text">
+                <p className="auth-prop__title">18+ & provably fair</p>
+                <p className="auth-prop__desc">Email-verified accounts only.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <div className="auth-form-side">
       <div className="auth-card">
         <BrandLogo className="auth-card__logo" size={48} />
         <h1 className="auth-card__title">Create your account</h1>
@@ -401,6 +438,7 @@ export function Signup() {
         <p className="auth-footer">
           Already have an account? <Link to={loginUrlFromSearchParams(searchParams)}>Log in</Link>
         </p>
+      </div>
       </div>
     </div>
   );

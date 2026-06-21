@@ -27,6 +27,29 @@
   /* inherits from lc-page__title/subtitle */
 }
 
+/* ── 2-column layout (primary action left, context right) ── */
+.wallet__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.wallet__aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.wallet__section--primary {
+  /* primary action section — same panel styling, no extra margins */
+}
+
+.wallet__section--secondary {
+  margin-bottom: 0;
+}
+
 /* ── Tabs (Deposit / Withdraw) — override crimson with gold active ── */
 .wallet__tabs {
   margin-bottom: var(--space-6);
@@ -545,6 +568,13 @@
 }
 
 /* ── Mobile ── */
+@media (max-width: 900px) {
+  .wallet__grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+}
+
 @media (max-width: 640px) {
   .wallet__section { padding: var(--space-5); }
 

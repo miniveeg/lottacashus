@@ -443,17 +443,19 @@ export function Promotions() {
         </div>
       </ScrollReveal>
 
-      {/* ── Roadmap cards ── */}
+      {/* ── Roadmap — single-column banner flow ── */}
       <section className="promotions-roadmap" aria-label="Planned promotions">
         <ScrollReveal className="promotions-roadmap__head" as="div">
           <span className="promotions-roadmap__kicker">On the roadmap</span>
           <h2 className="promotions-roadmap__title">What we&rsquo;re building next</h2>
         </ScrollReveal>
-        <div className="promotions-roadmap__grid">
+        <div className="promotions-roadmap__flow">
           {upcoming.map((item, i) => (
-            <ScrollReveal key={item.title} delay={i} as="article" className="promotions-roadmap__card">
-              <span className="promotions-roadmap__badge">{item.tag}</span>
-              <h3 className="promotions-roadmap__card-title">{item.title}</h3>
+            <ScrollReveal key={item.title} delay={i} as="article" className="promotions-roadmap__banner">
+              <div className="promotions-roadmap__banner-head">
+                <span className="promotions-roadmap__badge">{item.tag}</span>
+                <h3 className="promotions-roadmap__card-title">{item.title}</h3>
+              </div>
               <p className="promotions-roadmap__card-desc">{item.desc}</p>
               <Link to="/sweepstakes" className="promotions-roadmap__card-link">
                 Sweepstakes rules

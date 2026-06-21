@@ -45,8 +45,7 @@ function buildClient(): SupabaseClient {
   });
 }
 
-export const supabase: SupabaseClient =
-  globalForSupabase.__lottacashSupabase ?? buildClient();
+export const supabase: SupabaseClient = globalForSupabase.__lottacashSupabase ?? buildClient();
 if (!globalForSupabase.__lottacashSupabase) {
   globalForSupabase.__lottacashSupabase = supabase;
 }

@@ -105,8 +105,12 @@ export function buildPlayerResultLines(
           ? Math.round((w / totalJackpotW) * 1000) / 10
           : undefined;
 
+      // Group mode: ALL slots are winners (the pot is split equally among
+      // every seat, humans AND bots). Use winningSlots (which includes all
+      // slots in Group mode) rather than `payout > 0` so bots are also
+      // marked as winners in the results display.
       const isWinner = isGroup
-        ? payout > 0
+        ? winningSlots.includes(player.slot)
         : isJackpot && isTeamMode(battle.playerMode)
           ? winningSlots.includes(player.slot)
           : winningSlots.includes(player.slot);

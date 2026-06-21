@@ -162,23 +162,32 @@ function lastRoundValue(p: BattlePlayerResult): number {
   return last ? last.value : 0;
 }
 
-function splitAmongHumans(players: BattlePlayerResult[], payoutPool: number): WinnerPayout[] {
-  const humans = players
-    .filter((p) => !p.isBot && p.userId)
-    .sort((a, b) => a.slot - b.slot);
-  if (!humans.length || payoutPool <= 0) return [];
+/** Split a payout pool equally among ALL player slots (humans AND bots).
+ *
+ *  Each slot receives an equal share of the pool. Only humans actually
+ *  receive a credit (bots have no `userId` to pay); bot shares are not
+ *  paid out — they are effectively returned to the house. This makes Group
+ *  mode a true "fair unbox" where the total unboxed value is divided per
+ *  seat, so playing with bots reduces each human's take (prevents Group-mode
+ *  farming with bots). */
+function splitAmongAllSlots(players: BattlePlayerResult[], payoutPool: number): WinnerPayout[] {
+  const slots = [...players].sort((a, b) => a.slot - b.slot);
+  if (!slots.length || payoutPool <= 0) return [];
 
-  const each = Math.round((payoutPool / humans.length) * 100) / 100;
+  const each = Math.round((payoutPool / slots.length) * 100) / 100;
   let distributed = 0;
   const payouts: WinnerPayout[] = [];
-  for (let i = 0; i < humans.length; i++) {
-    const human = humans[i]!;
-    const amt =
-      i === humans.length - 1
+  for (let i = 0; i < slots.length; i++) {
+    const p = slots[i]!;
+    const share =
+      i === slots.length - 1
         ? Math.round((payoutPool - distributed) * 100) / 100
         : each;
-    distributed += amt;
-    payouts.push({ userId: human.userId!, amount: amt });
+    distributed += share;
+    // Only humans receive payouts; bot shares are not credited.
+    if (!p.isBot && p.userId) {
+      payouts.push({ userId: p.userId, amount: share });
+    }
   }
   return payouts;
 }
@@ -299,7 +308,11 @@ function resolveNormal(
 
 function resolveGroup(players: BattlePlayerResult[], _potTotal: number): OutcomeResult {
   const unboxedPool = totalUnboxedPool(players);
-  const winnerPayouts = splitAmongHumans(players, unboxedPool);
+  // Group mode: split the total unboxed value equally among ALL player slots
+  // (humans AND bots). Only humans receive actual balance credits; bot shares
+  // are not paid out. All slots are marked as "winners" since everyone
+  // participates in the cooperative unbox.
+  const winnerPayouts = splitAmongAllSlots(players, unboxedPool);
   const paidTotal = winnerPayouts.reduce((s, p) => s + p.amount, 0);
 
   return {

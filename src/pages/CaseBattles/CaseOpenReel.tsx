@@ -5,6 +5,12 @@ import "./CaseOpenReel.css";
 
 const ITEM_H = 92;
 
+/** Consistent easing curve for all reels — a strong deceleration that feels
+ *  weighty and satisfying, similar to CS:GO / Rust case opening reels.
+ *  All reels use the same curve so the multi-player columns feel unified
+ *  rather than each having a slightly different stop pattern. */
+const REEL_EASING = "cubic-bezier(0.08, 0.82, 0.17, 1)";
+
 export type ReelSpinProfile = {
   landIndex: number;
   stripLen: number;
@@ -12,22 +18,23 @@ export type ReelSpinProfile = {
   easing: string;
 };
 
-/** Per-player scroll distance & easing; shared duration so all reels land together. */
+/** Per-player scroll distance; shared duration + easing so all reels land
+ *  together with a consistent feel. The landIndex varies per slot/round so
+ *  each reel scrolls a slightly different distance (visual variety) but the
+ *  easing curve is identical across all reels. */
 export function getReelSpinProfile(
   slot: number,
   round: number,
   baseDurationMs: number
 ): ReelSpinProfile {
-  const n = ((slot + 1) * 92837111 ^ (round + 1) * 689287499) >>> 0;
+  const n = (((slot + 1) * 92837111) ^ ((round + 1) * 689287499)) >>> 0;
   const landIndex = 34 + (n % 18);
   const stripLen = landIndex + 8 + ((n >>> 4) % 7);
-  const easeY1 = 0.62 + ((n >>> 8) % 28) / 100;
-  const easeY2 = 0.08 + ((n >>> 12) % 18) / 100;
   return {
     landIndex,
     stripLen,
     durationMs: baseDurationMs,
-    easing: `cubic-bezier(0.06, ${easeY1.toFixed(2)}, ${easeY2.toFixed(2)}, 1)`,
+    easing: REEL_EASING,
   };
 }
 
@@ -50,7 +57,7 @@ function ReelTile({
   accent: string;
   dimmed?: boolean;
 }) {
-  const color = RARITY_COLORS[item.rarity as CaseRarity] ?? "#94a3b8";
+  const color = RARITY_COLORS[item.rarity as CaseRarity] ?? "#7a7a98";
   return (
     <div
       className={"case-reel__tile" + (dimmed ? " case-reel__tile--dim" : "")}

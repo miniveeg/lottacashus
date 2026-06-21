@@ -27,19 +27,19 @@
   padding: 0.5rem 1.25rem;
   border-radius: 999px;
   font-weight: 700;
-  background: rgba(245, 185, 66, 0.15);
-  border: 1px solid rgba(245, 185, 66, 0.4);
+  background: rgba(220, 20, 60, 0.15);
+  border: 1px solid rgba(220, 20, 60, 0.4);
   color: var(--lc-gold);
 }
 
 .cbr__result-pill--win {
-  border-color: rgba(34, 197, 94, 0.45);
-  color: #86efac;
+  border-color: rgba(0, 232, 122, 0.45);
+  color: #00e87a;
 }
 
 .cbr__result-pill--neutral {
-  background: rgba(148, 163, 184, 0.1);
-  border-color: rgba(148, 163, 184, 0.3);
+  background: rgba(122, 122, 152, 0.1);
+  border-color: rgba(122, 122, 152, 0.3);
   color: var(--lc-text-secondary);
   font-weight: 600;
 }
@@ -70,7 +70,7 @@
   border: 1px solid var(--cb-panel-border);
   border-radius: var(--lc-radius-lg);
   background:
-    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(56, 189, 248, 0.1), transparent 60%),
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(220, 20, 60, 0.1), transparent 60%),
     var(--cb-panel);
   padding: 1.25rem 1.35rem 1.5rem;
   overflow: visible;
@@ -86,13 +86,13 @@
   right: 1.35rem;
   height: 3px;
   border-radius: 0 0 3px 3px;
-  background: rgba(148, 163, 184, 0.35);
+  background: rgba(122, 122, 152, 0.35);
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .cbr__arena[data-phase="waiting"]::before {
-  background: rgba(245, 185, 66, 0.55);
-  box-shadow: 0 0 12px rgba(245, 185, 66, 0.35);
+  background: rgba(220, 20, 60, 0.55);
+  box-shadow: 0 0 12px rgba(220, 20, 60, 0.35);
 }
 
 .cbr__arena[data-phase="running"]::before {
@@ -101,8 +101,8 @@
 }
 
 .cbr__arena[data-phase="completed"]::before {
-  background: rgba(34, 197, 94, 0.55);
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.3);
+  background: rgba(0, 232, 122, 0.55);
+  box-shadow: 0 0 12px rgba(0, 232, 122, 0.3);
 }
 
 .cbr__arena-status-stack {
@@ -118,7 +118,7 @@
 }
 
 .cbr__badge--phase {
-  background: rgba(148, 163, 184, 0.12);
+  background: rgba(122, 122, 152, 0.12);
   color: var(--lc-text-secondary);
   border-color: var(--lc-border);
   text-transform: none;
@@ -128,21 +128,21 @@
 }
 
 .cbr__badge--phase-waiting {
-  background: rgba(245, 185, 66, 0.12);
+  background: rgba(220, 20, 60, 0.12);
   color: var(--lc-gold);
-  border-color: rgba(245, 185, 66, 0.4);
+  border-color: rgba(220, 20, 60, 0.4);
 }
 
 .cbr__badge--phase-running {
-  background: rgba(56, 189, 248, 0.12);
-  color: #7dd3fc;
-  border-color: rgba(56, 189, 248, 0.45);
+  background: rgba(220, 20, 60, 0.12);
+  color: #ff2d55;
+  border-color: rgba(220, 20, 60, 0.45);
 }
 
 .cbr__badge--phase-running::before {
   content: "●";
   margin-right: 0.3rem;
-  color: #7dd3fc;
+  color: #ff2d55;
   animation: cbr-pulse 1.4s ease-in-out infinite;
 }
 
@@ -152,9 +152,9 @@
 }
 
 .cbr__badge--phase-done {
-  background: rgba(34, 197, 94, 0.12);
-  color: #86efac;
-  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(0, 232, 122, 0.12);
+  color: #00e87a;
+  border-color: rgba(0, 232, 122, 0.4);
 }
 
 .cbr__eos-progress-pending {
@@ -179,15 +179,15 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 2px solid rgba(56, 189, 248, 0.15);
+  border: 2px solid rgba(220, 20, 60, 0.15);
   border-top-color: var(--cb-accent);
   animation: cbr-eos-spin 0.9s linear infinite;
 }
 
 .cbr__eos-wait--jackpot .cbr__eos-spinner span {
-  border-top-color: #fde047;
-  border-color: rgba(253, 224, 71, 0.18);
-  border-top-color: #fde047;
+  border-top-color: #ff2d55;
+  border-color: rgba(255, 45, 85, 0.18);
+  border-top-color: #ff2d55;
 }
 
 @keyframes cbr-eos-spin {
@@ -230,12 +230,12 @@
 
 .cbr__badge--crazy {
   border-color: rgba(244, 63, 94, 0.35);
-  color: #fda4af;
+  color: #ff3b5c;
 }
 
 .cbr__badge--fast {
-  border-color: rgba(56, 189, 248, 0.35);
-  color: #7dd3fc;
+  border-color: rgba(220, 20, 60, 0.35);
+  color: #ff2d55;
 }
 
 .cbr__arena-meta,
@@ -338,7 +338,7 @@
   font-size: 1.35rem;
   font-weight: 800;
   line-height: 1;
-  color: rgba(148, 163, 184, 0.55);
+  color: rgba(122, 122, 152, 0.55);
   user-select: none;
 }
 
@@ -370,8 +370,8 @@
 }
 
 .cbr__slot--you {
-  border-color: rgba(56, 189, 248, 0.55);
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.15);
+  border-color: rgba(220, 20, 60, 0.55);
+  box-shadow: 0 0 0 1px rgba(220, 20, 60, 0.15);
 }
 
 .cbr__slot-index {
@@ -403,7 +403,7 @@
 }
 
 .cbr__slot-tag--you {
-  color: #7dd3fc;
+  color: #ff2d55;
 }
 
 .cbr__slot-add-bot {
@@ -412,16 +412,16 @@
   font-weight: 700;
   font-size: 0.78rem;
   border-radius: var(--lc-radius-sm);
-  border: 1px solid rgba(56, 189, 248, 0.45);
-  background: rgba(56, 189, 248, 0.12);
-  color: #93c5fd;
+  border: 1px solid rgba(220, 20, 60, 0.45);
+  background: rgba(220, 20, 60, 0.12);
+  color: #8b5cf6;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .cbr__slot-add-bot:hover:not(:disabled) {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: rgba(56, 189, 248, 0.65);
+  background: rgba(220, 20, 60, 0.2);
+  border-color: rgba(220, 20, 60, 0.65);
 }
 
 .cbr__slot-add-bot:disabled {
@@ -545,7 +545,7 @@
 }
 
 .cbr__reel-col--you .cbr__reel-col-head {
-  border-color: rgba(56, 189, 248, 0.45);
+  border-color: rgba(220, 20, 60, 0.45);
 }
 
 .cbr__reel-col-head {
@@ -603,11 +603,11 @@
 
 .cbr__pulls-col--you {
   border-radius: var(--lc-radius-md);
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 0 0 1px rgba(220, 20, 60, 0.2);
 }
 
 .cbr__pulls-col--winner .cbr__pulls-col-head {
-  border-color: rgba(245, 185, 66, 0.45);
+  border-color: rgba(220, 20, 60, 0.45);
 }
 
 .cbr__pulls-col-head {
@@ -706,8 +706,8 @@
 
 .cbr__round-chip--active {
   border-color: var(--cb-accent);
-  color: #7dd3fc;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+  color: #ff2d55;
+  box-shadow: 0 0 12px rgba(220, 20, 60, 0.25);
 }
 
 .cbr__round-chip--done {
@@ -726,12 +726,12 @@
 }
 
 .cbr__player-panel--you {
-  border-color: rgba(56, 189, 248, 0.45);
+  border-color: rgba(220, 20, 60, 0.45);
 }
 
 .cbr__player-panel--winner {
-  border-color: rgba(245, 185, 66, 0.5);
-  box-shadow: 0 0 16px rgba(245, 185, 66, 0.12);
+  border-color: rgba(220, 20, 60, 0.5);
+  box-shadow: 0 0 16px rgba(220, 20, 60, 0.12);
 }
 
 .cbr__player-panel-name {
@@ -827,22 +827,22 @@
   padding: 1.75rem 1.25rem;
   margin: 0.5rem 0 1rem;
   border-radius: var(--lc-radius-md);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(220, 20, 60, 0.25);
+  background: rgba(220, 20, 60, 0.06);
   overflow: hidden;
 }
 
 .cbr__eos-wait--jackpot {
-  border-color: rgba(253, 224, 71, 0.35);
-  background: rgba(253, 224, 71, 0.06);
+  border-color: rgba(255, 45, 85, 0.35);
+  background: rgba(255, 45, 85, 0.06);
 }
 
 .cbr__eos-wait--jackpot .cbr__eos-title {
-  color: #fde047;
+  color: #ff2d55;
 }
 
 .cbr__eos-wait--jackpot .cbr__eos-pulse {
-  background: radial-gradient(ellipse, rgba(253, 224, 71, 0.35), transparent 70%);
+  background: radial-gradient(ellipse, rgba(255, 45, 85, 0.35), transparent 70%);
 }
 
 .cbr__eos-icon {
@@ -854,7 +854,7 @@
   margin: 0 0 0.35rem;
   font-weight: 800;
   font-size: 1rem;
-  color: #7dd3fc;
+  color: #ff2d55;
 }
 
 .cbr__eos-desc,
@@ -876,7 +876,7 @@
   position: absolute;
   inset: auto 30% -2rem;
   height: 4rem;
-  background: radial-gradient(ellipse, rgba(56, 189, 248, 0.35), transparent 70%);
+  background: radial-gradient(ellipse, rgba(220, 20, 60, 0.35), transparent 70%);
   animation: cbr-eos-pulse 1.6s ease-in-out infinite;
 }
 
@@ -896,8 +896,8 @@
   margin: 1rem 0;
   padding: 1rem 1.1rem;
   border-radius: var(--lc-radius-md);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  background: rgba(56, 189, 248, 0.06);
+  border: 1px solid rgba(220, 20, 60, 0.35);
+  background: rgba(220, 20, 60, 0.06);
   text-align: center;
 }
 
@@ -939,7 +939,7 @@
 }
 
 .cbr__join-toggle-track--on {
-  background: rgba(56, 189, 248, 0.55);
+  background: rgba(220, 20, 60, 0.55);
 }
 
 .cbr__join-toggle-thumb {
@@ -963,7 +963,7 @@
   gap: 0.5rem;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #7dd3fc;
+  color: #ff2d55;
 }
 
 .cbr__join-borrow-slider--off {
@@ -987,7 +987,7 @@
 .cbr__join-panel-warn {
   margin: 0 0 0.5rem;
   font-size: 0.8rem;
-  color: #fda4af;
+  color: #ff3b5c;
 }
 
 .cbr__join-panel-btn {
@@ -1030,12 +1030,12 @@
 }
 
 .cbr__result-col--you .cbr__result-col-head {
-  border-color: rgba(56, 189, 248, 0.45);
+  border-color: rgba(220, 20, 60, 0.45);
 }
 
 .cbr__result-col--winner .cbr__result-col-head {
-  border-color: rgba(245, 185, 66, 0.45);
-  background: rgba(245, 185, 66, 0.06);
+  border-color: rgba(220, 20, 60, 0.45);
+  background: rgba(220, 20, 60, 0.06);
 }
 
 .cbr__result-col-head {
@@ -1091,8 +1091,8 @@
 }
 
 .cbr__result-col--winner .cbr__result-col-body {
-  border-color: rgba(245, 185, 66, 0.35);
-  background: rgba(245, 185, 66, 0.05);
+  border-color: rgba(220, 20, 60, 0.35);
+  background: rgba(220, 20, 60, 0.05);
 }
 
 .cbr__result-col-unboxed {
@@ -1112,7 +1112,7 @@
   margin: 0;
   font-size: 0.68rem;
   font-weight: 700;
-  color: #38bdf8;
+  color: #dc143c;
 }
 
 .cbr__result-col-borrow {
@@ -1135,7 +1135,7 @@
 .cbr__result-col-borrow-note {
   margin: 0;
   font-size: 0.6rem;
-  color: #94a3b8;
+  color: #7a7a98;
   line-height: 1.3;
 }
 
@@ -1183,12 +1183,12 @@
 }
 
 .cbr__results-row--winner {
-  border-color: rgba(245, 185, 66, 0.45);
-  background: rgba(245, 185, 66, 0.06);
+  border-color: rgba(220, 20, 60, 0.45);
+  background: rgba(220, 20, 60, 0.06);
 }
 
 .cbr__results-row--you {
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 0 0 1px rgba(220, 20, 60, 0.2);
 }
 
 .cbr__results-player {
@@ -1230,7 +1230,7 @@
 .cbr__results-jp-pct {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #38bdf8;
+  color: #dc143c;
 }
 
 .cbr__results-borrow {
@@ -1250,7 +1250,7 @@
 
 .cbr__results-borrow-note {
   font-size: 0.62rem;
-  color: #94a3b8;
+  color: #7a7a98;
   max-width: 12rem;
 }
 
@@ -1270,19 +1270,19 @@
 
 .cbr__p-col--empty {
   border-style: dashed;
-  border-color: rgba(148, 163, 184, 0.35);
+  border-color: rgba(122, 122, 152, 0.35);
   background: rgba(0, 0, 0, 0.25);
 }
 
 .cbr__p-col--you {
-  border-color: rgba(56, 189, 248, 0.5);
+  border-color: rgba(220, 20, 60, 0.5);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 0 0 1px rgba(56, 189, 248, 0.12);
+    0 0 0 1px rgba(220, 20, 60, 0.12);
 }
 
 .cbr__p-col--winner {
-  border-color: rgba(245, 185, 66, 0.5);
+  border-color: rgba(220, 20, 60, 0.5);
   background: linear-gradient(180deg, rgba(45, 38, 22, 0.95), rgba(22, 20, 16, 0.98));
 }
 
@@ -1311,7 +1311,7 @@
   font-weight: 800;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: #e2e8f0;
+  color: #9494b0;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1319,7 +1319,7 @@
 }
 
 .cbr__p-col--empty .cbr__p-col-name {
-  color: #94a3b8;
+  color: #7a7a98;
 }
 
 .cbr__p-col-body {
@@ -1338,16 +1338,16 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   border-radius: var(--lc-radius-sm);
-  border: 1px solid rgba(56, 189, 248, 0.5);
-  background: rgba(56, 189, 248, 0.14);
-  color: #93c5fd;
+  border: 1px solid rgba(220, 20, 60, 0.5);
+  background: rgba(220, 20, 60, 0.14);
+  color: #8b5cf6;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .cbr__p-col-call-bot:hover:not(:disabled) {
-  background: rgba(56, 189, 248, 0.22);
-  border-color: rgba(56, 189, 248, 0.7);
+  background: rgba(220, 20, 60, 0.22);
+  border-color: rgba(220, 20, 60, 0.7);
 }
 
 .cbr__p-col-call-bot:disabled {
@@ -1401,11 +1401,11 @@
 
 .cbr__pulls-col--you {
   border-radius: var(--lc-radius-md);
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.15);
+  box-shadow: 0 0 0 1px rgba(220, 20, 60, 0.15);
 }
 
 .cbr__pulls-col--winner .cbr__pulls-col-head {
-  border-color: rgba(245, 185, 66, 0.45);
+  border-color: rgba(220, 20, 60, 0.45);
 }
 
 .cbr__pulls-col-head {
@@ -1466,13 +1466,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #64748b;
+  color: #7a7a98;
 }
 
 .cbr__pull-item-name {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #f2f2f8;
   line-height: 1.2;
   word-break: break-word;
 }
@@ -1507,7 +1507,7 @@
   margin: 0 0 0.5rem;
   font-size: 1.35rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: #f2f2f8;
 }
 
 .cbr__final-winner-name {
@@ -1521,7 +1521,7 @@
 }
 
 .cbr__final-pot strong {
-  color: #e2e8f0;
+  color: #9494b0;
 }
 
 .cbr__final-pot--muted {
@@ -1541,11 +1541,11 @@
 .cbr__final-jackpot {
   margin: 0.5rem 0 0;
   font-size: 0.82rem;
-  color: #7dd3fc;
+  color: #ff2d55;
 }
 
 .cbr__final-jackpot strong {
-  color: #fde047;
+  color: #ff2d55;
 }
 
 .cbr__final-row {
@@ -1580,12 +1580,12 @@
 }
 
 .cbr__final-card--winner {
-  border-color: rgba(245, 185, 66, 0.5);
-  background: linear-gradient(145deg, rgba(245, 185, 66, 0.1), rgba(0, 0, 0, 0.3));
+  border-color: rgba(220, 20, 60, 0.5);
+  background: linear-gradient(145deg, rgba(220, 20, 60, 0.1), rgba(0, 0, 0, 0.3));
 }
 
 .cbr__final-card--you {
-  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
+  box-shadow: 0 0 0 1px rgba(220, 20, 60, 0.2);
 }
 
 .cbr__final-card-top {
@@ -1637,14 +1637,14 @@
   color: var(--lc-gold);
   padding: 0.12rem 0.35rem;
   border-radius: 999px;
-  border: 1px solid rgba(245, 185, 66, 0.4);
+  border: 1px solid rgba(220, 20, 60, 0.4);
 }
 
 .cbr__final-card-jp {
   margin: 0;
   font-size: 0.62rem;
   font-weight: 700;
-  color: #38bdf8;
+  color: #dc143c;
 }
 
 .cbr__final-card-borrow {
@@ -1656,7 +1656,7 @@
 .cbr__final-card-note {
   margin: 0;
   font-size: 0.55rem;
-  color: #94a3b8;
+  color: #7a7a98;
   line-height: 1.25;
 }
 
@@ -1685,13 +1685,13 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
+  color: #7a7a98;
 }
 
 .cbr__p-item-name {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #f2f2f8;
   line-height: 1.25;
   word-break: break-word;
 }
@@ -1703,7 +1703,7 @@
 
 .cbr__p-col-spin {
   border-radius: var(--lc-radius-sm);
-  border: 1px solid rgba(56, 189, 248, 0.35);
+  border: 1px solid rgba(220, 20, 60, 0.35);
   background: rgba(0, 0, 0, 0.45);
   overflow: hidden;
   min-height: 5.5rem;
@@ -1743,7 +1743,7 @@
 .cbr__p-result-jp {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #38bdf8;
+  color: #dc143c;
 }
 
 .cbr__p-result-borrow {
@@ -1763,7 +1763,7 @@
 
 .cbr__p-result-note {
   font-size: 0.58rem;
-  color: #94a3b8;
+  color: #7a7a98;
   line-height: 1.3;
 }
 
@@ -1782,7 +1782,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
+  color: #7a7a98;
 }
 
 .cbr__p-col-foot-val {
@@ -1906,7 +1906,7 @@
 .cbr__p-col-last-drop-name {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: #f2f2f8;
   line-height: 1.2;
   word-break: break-word;
   max-width: 100%;
@@ -1926,7 +1926,7 @@
   color: var(--lc-gold);
   padding: 0.1rem 0.3rem;
   border-radius: 999px;
-  border: 1px solid rgba(245, 185, 66, 0.4);
+  border: 1px solid rgba(220, 20, 60, 0.4);
 }
 
 /* Reduced-motion: suppress decorative spinners (loading, EOS wait), pulses,
@@ -1959,5 +1959,191 @@
 
   .cbr__arena::before {
     transition: none;
+  }
+}
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATION ENHANCEMENTS — entrance, transition, and reveal animations
+   for the full CaseBattles game flow.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Round chip transitions ──
+   Smoothly transition between idle → active → done states as rounds progress. */
+.cbr__round-chip {
+  transition:
+    border-color 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease,
+    opacity 0.25s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cbr__round-chip--active {
+  transform: scale(1.08);
+}
+
+/* ── Final results section entrance ──
+   The entire results section fades + slides in when the battle completes. */
+.cbr__final {
+  animation: cbr-final-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes cbr-final-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Final results cards — staggered entrance ──
+   Each player card fades + pops in with a slight delay based on its position,
+   creating a cascade reveal effect. */
+.cbr__final-card {
+  animation: cbr-final-card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cbr__final-row .cbr__board-team .cbr__final-card:nth-child(1) { animation-delay: 0.05s; }
+.cbr__final-row .cbr__board-team .cbr__final-card:nth-child(2) { animation-delay: 0.12s; }
+.cbr__final-row .cbr__board-team .cbr__final-card:nth-child(3) { animation-delay: 0.19s; }
+.cbr__final-row .cbr__board-team .cbr__final-card:nth-child(4) { animation-delay: 0.26s; }
+.cbr__final-row .cbr__board-team .cbr__final-card:nth-child(5) { animation-delay: 0.33s; }
+.cbr__final-row .cbr__board-team .cbr__final-card:nth-child(6) { animation-delay: 0.40s; }
+
+@keyframes cbr-final-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Winner card glow pulse ──
+   The winning card(s) get a subtle crimson glow pulse to draw the eye. */
+.cbr__final-card--winner {
+  animation: cbr-final-card-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1) both,
+             cbr-winner-glow 2.2s ease-in-out 0.5s infinite;
+}
+
+@keyframes cbr-winner-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 1px rgba(220, 20, 60, 0.3), 0 0 16px rgba(220, 20, 60, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(220, 20, 60, 0.5), 0 0 32px rgba(220, 20, 60, 0.2);
+  }
+}
+
+/* ── Pull card entrance ──
+   Each drop in the pull history slides in from the right when revealed. */
+.cbr__pull-card {
+  animation: cbr-pull-card-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cbr-pull-card-enter {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Results column entrance (CaseBattleResults inline view) ── */
+.cbr__result-col {
+  animation: cbr-result-col-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes cbr-result-col-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cbr__result-col--winner {
+  animation: cbr-result-col-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both,
+             cbr-winner-glow 2.2s ease-in-out 0.5s infinite;
+}
+
+/* ── Player column phase transition ──
+   Smoothly fade between lobby/playing/results phases. */
+.cbr__p-col {
+  transition:
+    border-color 0.3s ease,
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* ── Result pill (win/neutral) entrance ── */
+.cbr__result-pill {
+  animation: cbr-result-pill-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes cbr-result-pill-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── Arena head badge transitions ── */
+.cbr__badge {
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.cbr__badge--phase {
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* ── Player column body fade between phases ── */
+.cbr__p-col-body {
+  transition: opacity 0.2s ease;
+}
+
+/* ── Pulls section title entrance ── */
+.cbr__pulls-section-title {
+  animation: cbr-final-enter 0.3s ease;
+}
+
+/* ── Reduced motion: disable all non-essential animations ── */
+@media (prefers-reduced-motion: reduce) {
+  .cbr__round-chip,
+  .cbr__final,
+  .cbr__final-card,
+  .cbr__final-card--winner,
+  .cbr__pull-card,
+  .cbr__result-col,
+  .cbr__result-col--winner,
+  .cbr__result-pill,
+  .cbr__badge,
+  .cbr__badge--phase,
+  .cbr__p-col,
+  .cbr__p-col-body,
+  .cbr__pulls-section-title {
+    animation: none !important;
+    transition: none !important;
   }
 }

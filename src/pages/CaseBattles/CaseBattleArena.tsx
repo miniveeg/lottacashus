@@ -533,8 +533,11 @@ export function CaseBattleArena({
 
   const playerIsWinner = (player: CaseBattlePlayer) =>
     showStaticResults &&
+    // Group mode: ALL slots are winners (pot split among all seats, humans
+    // AND bots). Use winningSlots (which includes every slot in Group mode)
+    // rather than checking payout amounts so bots are also marked as winners.
     (battleGamemode === "group"
-      ? (resultData?.winnerPayouts?.some((p) => p.userId === player.userId && p.amount > 0) ?? false)
+      ? battle.winningSlots.includes(player.slot)
       : battleGamemode === "jackpot" && isTeamMode(battle.playerMode)
         ? battle.winningSlots.includes(player.slot)
         : battle.winningSlots.length > 0

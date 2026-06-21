@@ -10,12 +10,12 @@
 }
 
 .cb-page {
-  --cb-accent: #38bdf8;
-  --cb-accent-2: #2563eb;
-  --cb-accent-dim: rgba(56, 189, 248, 0.14);
-  --cb-accent-glow: rgba(56, 189, 248, 0.35);
+  --cb-accent: #dc143c;
+  --cb-accent-2: #dc143c;
+  --cb-accent-dim: rgba(220, 20, 60, 0.14);
+  --cb-accent-glow: rgba(220, 20, 60, 0.35);
   --cb-panel: rgba(16, 20, 30, 0.88);
-  --cb-panel-border: rgba(148, 163, 184, 0.12);
+  --cb-panel-border: rgba(122, 122, 152, 0.12);
   max-width: min(1080px, 96vw);
   margin: 0 auto;
   padding: 1.25rem clamp(1rem, 3vw, 1.5rem) 5rem;
@@ -29,7 +29,7 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(56, 189, 248, 0.11), transparent 58%),
+    radial-gradient(ellipse 90% 55% at 50% -15%, rgba(220, 20, 60, 0.11), transparent 58%),
     radial-gradient(ellipse 50% 45% at 0% 80%, rgba(59, 130, 246, 0.07), transparent 50%),
     radial-gradient(ellipse 40% 35% at 100% 60%, rgba(168, 85, 247, 0.05), transparent 45%);
 }
@@ -145,7 +145,7 @@
 
 .cb-page__btn-ghost:hover:not(:disabled) {
   border-color: var(--cb-accent);
-  color: #7dd3fc;
+  color: #ff2d55;
 }
 
 .cb-page__btn-ghost:disabled {
@@ -176,7 +176,7 @@
   font-family: var(--lc-font-display);
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(90deg, #e2e8f0, #7dd3fc);
+  background: linear-gradient(90deg, #9494b0, #ff2d55);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

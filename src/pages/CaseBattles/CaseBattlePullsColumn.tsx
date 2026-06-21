@@ -3,7 +3,7 @@ import { formatCoins } from "../../lib/format";
 import type { CaseBattleDrop, CaseBattlePlayer } from "../../lib/caseBattles";
 
 export function PulledItemCard({ drop, round }: { drop: CaseBattleDrop; round?: number }) {
-  const color = RARITY_COLORS[drop.rarity as CaseRarity] ?? "#94a3b8";
+  const color = RARITY_COLORS[drop.rarity as CaseRarity] ?? "#7a7a98";
   return (
     <div className="cbr__pull-item" style={{ borderColor: `${color}44` }}>
       {round != null && <span className="cbr__pull-item-round">R{round + 1}</span>}

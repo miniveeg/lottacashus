@@ -147,7 +147,7 @@ export function CaseBattlePlayerColumn({
                 ? player.drops[revealedRounds - 1]
                 : undefined;
               const lastColor = lastDrop
-                ? (RARITY_COLORS[lastDrop.rarity as CaseRarity] ?? "#94a3b8")
+                ? (RARITY_COLORS[lastDrop.rarity as CaseRarity] ?? "#7a7a98")
                 : undefined;
               return (
                 <div className="cbr__p-col-reel-wait">

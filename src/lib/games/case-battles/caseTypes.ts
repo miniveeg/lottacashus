@@ -16,10 +16,19 @@ export type LootCase = {
   items: CaseItem[];
 };
 
+/** Rarity → display color, mapped to the Obsidian Luxury theme palette.
+ *
+ *  Progression ascends through the theme's semantic accents:
+ *    common    → muted gray  (--lc-text-muted)
+ *    uncommon  → emerald     (--lc-emerald)
+ *    rare      → cyan        (--lc-cyan)
+ *    epic      → violet      (--lc-violet)
+ *    legendary → crimson     (--lc-crimson — the brand color, most prestigious)
+ */
 export const RARITY_COLORS: Record<CaseRarity, string> = {
-  common: "#94a3b8",
-  uncommon: "#22c55e",
-  rare: "#3b82f6",
-  epic: "#a855f7",
-  legendary: "#f59e0b",
+  common: "#7a7a98",
+  uncommon: "#00e87a",
+  rare: "#38bdf8",
+  epic: "#8b5cf6",
+  legendary: "#dc143c",
 };

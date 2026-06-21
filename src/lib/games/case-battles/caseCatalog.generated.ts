@@ -6,7 +6,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "velvet-vault",
     name: "Velvet Vault",
     price: 0.11,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "velvet-vault-i0", name: "Solar Sigil", value: 0.19, rarity: "legendary", weight: 10000 },
       { id: "velvet-vault-i1", name: "Lunar Token", value: 0.18, rarity: "epic", weight: 20000 },
@@ -19,7 +19,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "crimson-vault",
     name: "Crimson Vault",
     price: 0.14,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "crimson-vault-i0", name: "Mythic Talisman", value: 0.41, rarity: "legendary", weight: 10000 },
       { id: "crimson-vault-i1", name: "Royal Statue", value: 0.19, rarity: "epic", weight: 25000 },
@@ -31,7 +31,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "azure-vault",
     name: "Azure Vault",
     price: 0.16,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "azure-vault-i0", name: "Neon Scroll", value: 0.43, rarity: "legendary", weight: 10000 },
       { id: "azure-vault-i1", name: "Shadow Badge", value: 0.22, rarity: "epic", weight: 20000 },
@@ -43,7 +43,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "golden-vault",
     name: "Golden Vault",
     price: 0.17,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "golden-vault-i0", name: "Silver Chain", value: 0.46, rarity: "legendary", weight: 5000 },
       { id: "golden-vault-i1", name: "Copper Disc", value: 0.43, rarity: "epic", weight: 5000 },
@@ -56,7 +56,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "shadow-vault",
     name: "Shadow Vault",
     price: 0.26,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "shadow-vault-i0", name: "Ruby Chest", value: 46.44, rarity: "legendary", weight: 500 },
       { id: "shadow-vault-i1", name: "Sapphire Mask", value: 0.01, rarity: "common", weight: 99500 }
@@ -66,7 +66,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "neon-vault",
     name: "Neon Vault",
     price: 0.26,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "neon-vault-i0", name: "Onyx Lens", value: 0.44, rarity: "legendary", weight: 50000 },
       { id: "neon-vault-i1", name: "Ivory Node", value: 0.03, rarity: "common", weight: 50000 }
@@ -76,7 +76,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "copper-vault",
     name: "Copper Vault",
     price: 0.28,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "copper-vault-i0", name: "Azure Token", value: 1.11, rarity: "legendary", weight: 5000 },
       { id: "copper-vault-i1", name: "Violet Crown", value: 1.02, rarity: "epic", weight: 5000 },
@@ -90,7 +90,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ivory-vault",
     name: "Ivory Vault",
     price: 0.33,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "ivory-vault-i0", name: "Echo Statue", value: 2.78, rarity: "legendary", weight: 500 },
       { id: "ivory-vault-i1", name: "Pulse Coin", value: 1.83, rarity: "epic", weight: 500 },
@@ -103,7 +103,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "onyx-vault",
     name: "Onyx Vault",
     price: 0.48,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "onyx-vault-i0", name: "Flux Badge", value: 148.15, rarity: "legendary", weight: 100 },
       { id: "onyx-vault-i1", name: "Zen Star", value: 138.89, rarity: "rare", weight: 100 },
@@ -117,7 +117,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "scarlet-vault",
     name: "Scarlet Vault",
     price: 0.6,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "scarlet-vault-i0", name: "Lucky Disc", value: 11.11, rarity: "legendary", weight: 1500 },
       { id: "scarlet-vault-i1", name: "Grand Cube", value: 2.22, rarity: "epic", weight: 3500 },
@@ -131,7 +131,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "frost-vault",
     name: "Frost Vault",
     price: 0.74,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "frost-vault-i0", name: "Hidden Mask", value: 3.61, rarity: "legendary", weight: 4000 },
       { id: "frost-vault-i1", name: "Blazing Gauntlet", value: 1.81, rarity: "epic", weight: 12000 },
@@ -143,7 +143,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ember-vault",
     name: "Ember Vault",
     price: 0.75,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "ember-vault-i0", name: "Ember Node", value: 5.46, rarity: "legendary", weight: 1000 },
       { id: "ember-vault-i1", name: "Cosmic Flare", value: 5.39, rarity: "epic", weight: 1000 },
@@ -157,7 +157,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "jade-vault",
     name: "Jade Vault",
     price: 0.8,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "jade-vault-i0", name: "Silent Crown", value: 3.89, rarity: "legendary", weight: 3000 },
       { id: "jade-vault-i1", name: "Noble Charm", value: 2.04, rarity: "epic", weight: 11000 },
@@ -170,7 +170,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silver-vault",
     name: "Silver Vault",
     price: 0.84,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "silver-vault-i0", name: "Turbo Coin", value: 50, rarity: "legendary", weight: 50 },
       { id: "silver-vault-i1", name: "Solar Ticket", value: 1.79, rarity: "epic", weight: 10000 },
@@ -184,7 +184,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "obsidian-vault",
     name: "Obsidian Vault",
     price: 0.95,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "obsidian-vault-i0", name: "Crystal Star", value: 555.56, rarity: "legendary", weight: 100 },
       { id: "obsidian-vault-i1", name: "Mythic Ring", value: 70.37, rarity: "rare", weight: 400 },
@@ -195,7 +195,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "solar-vault",
     name: "Solar Vault",
     price: 1.44,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "solar-vault-i0", name: "Ancient Cube", value: 346.98, rarity: "legendary", weight: 100 },
       { id: "solar-vault-i1", name: "Neon Lock", value: 262.21, rarity: "epic", weight: 100 },
@@ -210,7 +210,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lunar-vault",
     name: "Lunar Vault",
     price: 1.52,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "lunar-vault-i0", name: "Golden Gauntlet", value: 8.89, rarity: "legendary", weight: 1500 },
       { id: "lunar-vault-i1", name: "Silver Wand", value: 8.33, rarity: "epic", weight: 3500 },
@@ -225,7 +225,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "royal-vault",
     name: "Royal Vault",
     price: 1.61,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "royal-vault-i0", name: "Jade Flare", value: 9.49, rarity: "legendary", weight: 5000 },
       { id: "royal-vault-i1", name: "Ruby Relic", value: 3.05, rarity: "epic", weight: 5000 },
@@ -239,7 +239,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mystic-vault",
     name: "Mystic Vault",
     price: 2.19,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "mystic-vault-i0", name: "Emerald Charm", value: 15, rarity: "legendary", weight: 1500 },
       { id: "mystic-vault-i1", name: "Onyx Idol", value: 8.33, rarity: "epic", weight: 3500 },
@@ -252,7 +252,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prism-vault",
     name: "Prism Vault",
     price: 2.25,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "prism-vault-i0", name: "Crimson Ticket", value: 18.15, rarity: "legendary", weight: 10000 },
       { id: "prism-vault-i1", name: "Azure Seal", value: 1.89, rarity: "rare", weight: 10000 },
@@ -263,7 +263,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "amber-vault",
     name: "Amber Vault",
     price: 2.31,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "amber-vault-i0", name: "Prism Ring", value: 17.22, rarity: "legendary", weight: 1500 },
       { id: "amber-vault-i1", name: "Echo Plate", value: 5.74, rarity: "epic", weight: 8500 },
@@ -276,7 +276,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "sapphire-vault",
     name: "Sapphire Vault",
     price: 2.44,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "sapphire-vault-i0", name: "Nova Lock", value: 28.78, rarity: "legendary", weight: 3500 },
       { id: "sapphire-vault-i1", name: "Flux Banner", value: 8.07, rarity: "epic", weight: 4000 },
@@ -291,7 +291,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ruby-vault",
     name: "Ruby Vault",
     price: 2.55,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "ruby-vault-i0", name: "Wild Wand", value: 111.11, rarity: "legendary", weight: 250 },
       { id: "ruby-vault-i1", name: "Lucky Core", value: 83.33, rarity: "epic", weight: 250 },
@@ -305,7 +305,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cobalt-vault",
     name: "Cobalt Vault",
     price: 2.57,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "cobalt-vault-i0", name: "Prime Relic", value: 65.97, rarity: "legendary", weight: 1000 },
       { id: "cobalt-vault-i1", name: "Hidden Shard", value: 43.95, rarity: "legendary", weight: 1000 },
@@ -321,7 +321,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "platinum-vault",
     name: "Platinum Vault",
     price: 2.64,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "platinum-vault-i0", name: "Frost Idol", value: 109.26, rarity: "legendary", weight: 500 },
       { id: "platinum-vault-i1", name: "Ember Gem", value: 35.37, rarity: "epic", weight: 1500 },
@@ -336,7 +336,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "bronze-vault",
     name: "Bronze Vault",
     price: 2.98,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "bronze-vault-i0", name: "Rustic Seal", value: 20.37, rarity: "legendary", weight: 1500 },
       { id: "bronze-vault-i1", name: "Silent Ribbon", value: 18.33, rarity: "epic", weight: 3500 },
@@ -349,7 +349,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "arctic-vault",
     name: "Arctic Vault",
     price: 3.03,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "arctic-vault-i0", name: "Rogue Plate", value: 11.3, rarity: "legendary", weight: 10000 },
       { id: "arctic-vault-i1", name: "Turbo Orb", value: 5.93, rarity: "epic", weight: 10000 },
@@ -363,7 +363,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "volcanic-vault",
     name: "Volcanic Vault",
     price: 3.24,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "volcanic-vault-i0", name: "Lunar Banner", value: 34.21, rarity: "legendary", weight: 2000 },
       { id: "volcanic-vault-i1", name: "Crystal Helm", value: 31.17, rarity: "epic", weight: 2000 },
@@ -377,7 +377,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cosmic-vault",
     name: "Cosmic Vault",
     price: 3.34,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "cosmic-vault-i0", name: "Royal Core", value: 16.49, rarity: "legendary", weight: 3500 },
       { id: "cosmic-vault-i1", name: "Ancient Spark", value: 10, rarity: "epic", weight: 6500 },
@@ -389,7 +389,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rustic-vault",
     name: "Rustic Vault",
     price: 3.47,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "rustic-vault-i0", name: "Shadow Shard", value: 18.84, rarity: "legendary", weight: 5000 },
       { id: "rustic-vault-i1", name: "Golden Medallion", value: 9.34, rarity: "epic", weight: 5000 },
@@ -403,7 +403,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silent-vault",
     name: "Silent Vault",
     price: 3.47,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "silent-vault-i0", name: "Copper Gem", value: 20.32, rarity: "legendary", weight: 5000 },
       { id: "silent-vault-i1", name: "Jade Chip", value: 15.23, rarity: "epic", weight: 5000 },
@@ -417,7 +417,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "blazing-vault",
     name: "Blazing Vault",
     price: 3.64,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "blazing-vault-i0", name: "Sapphire Ribbon", value: 28.18, rarity: "legendary", weight: 5000 },
       { id: "blazing-vault-i1", name: "Emerald Comet", value: 16.57, rarity: "legendary", weight: 5000 },
@@ -439,7 +439,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hidden-vault",
     name: "Hidden Vault",
     price: 3.65,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "hidden-vault-i0", name: "Ivory Orb", value: 186.74, rarity: "legendary", weight: 1000 },
       { id: "hidden-vault-i1", name: "Crimson Key", value: 7.02, rarity: "epic", weight: 4000 },
@@ -453,7 +453,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lucky-vault",
     name: "Lucky Vault",
     price: 4.06,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "lucky-vault-i0", name: "Violet Helm", value: 388.89, rarity: "legendary", weight: 250 },
       { id: "lucky-vault-i1", name: "Prism Blade", value: 24.07, rarity: "epic", weight: 1750 },
@@ -467,7 +467,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "wild-vault",
     name: "Wild Vault",
     price: 4.12,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "wild-vault-i0", name: "Pulse Spark", value: 7.39, rarity: "legendary", weight: 50000 },
       { id: "wild-vault-i1", name: "Nova Sigil", value: 0.04, rarity: "epic", weight: 10000 },
@@ -481,7 +481,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "grand-vault",
     name: "Grand Vault",
     price: 4.31,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "grand-vault-i0", name: "Zen Medallion", value: 40.81, rarity: "legendary", weight: 5000 },
       { id: "grand-vault-i1", name: "Wild Talisman", value: 6.67, rarity: "epic", weight: 15000 },
@@ -494,7 +494,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prime-vault",
     name: "Prime Vault",
     price: 4.53,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "prime-vault-i0", name: "Grand Chip", value: 88.89, rarity: "legendary", weight: 1500 },
       { id: "prime-vault-i1", name: "Prime Scroll", value: 20.37, rarity: "epic", weight: 3500 },
@@ -506,7 +506,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ultra-vault",
     name: "Ultra Vault",
     price: 4.59,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "ultra-vault-i0", name: "Blazing Comet", value: 62.92, rarity: "legendary", weight: 500 },
       { id: "ultra-vault-i1", name: "Frost Chain", value: 60.02, rarity: "epic", weight: 500 },
@@ -519,7 +519,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hyper-vault",
     name: "Hyper Vault",
     price: 4.91,
-    accent: "#94a3b8",
+    accent: "#7a7a98",
     items: [
       { id: "hyper-vault-i0", name: "Cosmic Key", value: 545.53, rarity: "legendary", weight: 250 },
       { id: "hyper-vault-i1", name: "Rustic Chest", value: 181.74, rarity: "epic", weight: 750 },
@@ -533,7 +533,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mega-vault",
     name: "Mega Vault",
     price: 5.08,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "mega-vault-i0", name: "Noble Blade", value: 82, rarity: "legendary", weight: 1000 },
       { id: "mega-vault-i1", name: "Rogue Lens", value: 30.68, rarity: "epic", weight: 4000 },
@@ -547,7 +547,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "turbo-vault",
     name: "Turbo Vault",
     price: 5.56,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "turbo-vault-i0", name: "Solar Sigil", value: 101.85, rarity: "legendary", weight: 1000 },
       { id: "turbo-vault-i1", name: "Lunar Token", value: 92.59, rarity: "epic", weight: 1000 },
@@ -561,7 +561,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "nova-vault",
     name: "Nova Vault",
     price: 5.56,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "nova-vault-i0", name: "Mythic Talisman", value: 92.59, rarity: "legendary", weight: 500 },
       { id: "nova-vault-i1", name: "Royal Statue", value: 29.63, rarity: "legendary", weight: 1000 },
@@ -577,7 +577,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "echo-vault",
     name: "Echo Vault",
     price: 5.74,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "echo-vault-i0", name: "Neon Scroll", value: 126.33, rarity: "legendary", weight: 1000 },
       { id: "echo-vault-i1", name: "Shadow Badge", value: 32.27, rarity: "legendary", weight: 1000 },
@@ -593,7 +593,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "pulse-vault",
     name: "Pulse Vault",
     price: 5.96,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "pulse-vault-i0", name: "Silver Chain", value: 314.81, rarity: "legendary", weight: 250 },
       { id: "pulse-vault-i1", name: "Copper Disc", value: 265.31, rarity: "epic", weight: 250 },
@@ -607,7 +607,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "flux-vault",
     name: "Flux Vault",
     price: 7.1,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "flux-vault-i0", name: "Ruby Chest", value: 26.59, rarity: "legendary", weight: 10000 },
       { id: "flux-vault-i1", name: "Sapphire Mask", value: 17.82, rarity: "epic", weight: 10000 },
@@ -619,7 +619,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "zen-vault",
     name: "Zen Vault",
     price: 7.41,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "zen-vault-i0", name: "Onyx Lens", value: 109.26, rarity: "legendary", weight: 500 },
       { id: "zen-vault-i1", name: "Ivory Node", value: 27.8, rarity: "epic", weight: 2500 },
@@ -633,7 +633,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rogue-vault",
     name: "Rogue Vault",
     price: 7.75,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "rogue-vault-i0", name: "Azure Token", value: 90.47, rarity: "legendary", weight: 5000 },
       { id: "rogue-vault-i1", name: "Violet Crown", value: 9.42, rarity: "epic", weight: 10000 },
@@ -647,7 +647,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "noble-vault",
     name: "Noble Vault",
     price: 7.89,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "noble-vault-i0", name: "Echo Statue", value: 240.8, rarity: "legendary", weight: 500 },
       { id: "noble-vault-i1", name: "Pulse Coin", value: 25.24, rarity: "epic", weight: 15000 },
@@ -660,7 +660,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ancient-vault",
     name: "Ancient Vault",
     price: 8.01,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "ancient-vault-i0", name: "Flux Badge", value: 1590.15, rarity: "legendary", weight: 100 },
       { id: "ancient-vault-i1", name: "Zen Star", value: 185.19, rarity: "epic", weight: 400 },
@@ -676,7 +676,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "future-vault",
     name: "Future Vault",
     price: 8.77,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "future-vault-i0", name: "Lucky Disc", value: 52.78, rarity: "legendary", weight: 2000 },
       { id: "future-vault-i1", name: "Grand Cube", value: 23.45, rarity: "legendary", weight: 10000 },
@@ -692,7 +692,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "velvet-cache",
     name: "Velvet Cache",
     price: 9.01,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "velvet-cache-i0", name: "Hidden Mask", value: 81.14, rarity: "legendary", weight: 2500 },
       { id: "velvet-cache-i1", name: "Blazing Gauntlet", value: 17.11, rarity: "epic", weight: 30000 },
@@ -705,7 +705,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "crimson-cache",
     name: "Crimson Cache",
     price: 9.15,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "crimson-cache-i0", name: "Ember Node", value: 92.59, rarity: "legendary", weight: 5000 },
       { id: "crimson-cache-i1", name: "Cosmic Flare", value: 46.3, rarity: "epic", weight: 5000 },
@@ -719,7 +719,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "azure-cache",
     name: "Azure Cache",
     price: 9.59,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "azure-cache-i0", name: "Silent Crown", value: 52.51, rarity: "legendary", weight: 2500 },
       { id: "azure-cache-i1", name: "Noble Charm", value: 41.74, rarity: "epic", weight: 2500 },
@@ -733,7 +733,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "golden-cache",
     name: "Golden Cache",
     price: 9.61,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "golden-cache-i0", name: "Turbo Coin", value: 26.19, rarity: "legendary", weight: 5000 },
       { id: "golden-cache-i1", name: "Solar Ticket", value: 13.42, rarity: "epic", weight: 20000 },
@@ -745,7 +745,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "shadow-cache",
     name: "Shadow Cache",
     price: 10.02,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "shadow-cache-i0", name: "Crystal Star", value: 158.33, rarity: "legendary", weight: 2000 },
       { id: "shadow-cache-i1", name: "Mythic Ring", value: 96.3, rarity: "epic", weight: 3000 },
@@ -759,7 +759,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "neon-cache",
     name: "Neon Cache",
     price: 10.35,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "neon-cache-i0", name: "Ancient Cube", value: 290.64, rarity: "legendary", weight: 500 },
       { id: "neon-cache-i1", name: "Neon Lock", value: 128.37, rarity: "epic", weight: 1000 },
@@ -774,7 +774,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "copper-cache",
     name: "Copper Cache",
     price: 10.48,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "copper-cache-i0", name: "Golden Gauntlet", value: 407.41, rarity: "legendary", weight: 1000 },
       { id: "copper-cache-i1", name: "Silver Wand", value: 129.63, rarity: "rare", weight: 4000 },
@@ -785,7 +785,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ivory-cache",
     name: "Ivory Cache",
     price: 10.59,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "ivory-cache-i0", name: "Jade Flare", value: 39.51, rarity: "legendary", weight: 10000 },
       { id: "ivory-cache-i1", name: "Ruby Relic", value: 29.87, rarity: "epic", weight: 10000 },
@@ -798,7 +798,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "onyx-cache",
     name: "Onyx Cache",
     price: 10.93,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "onyx-cache-i0", name: "Emerald Charm", value: 1581.17, rarity: "legendary", weight: 100 },
       { id: "onyx-cache-i1", name: "Onyx Idol", value: 15.28, rarity: "rare", weight: 24900 },
@@ -809,7 +809,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "scarlet-cache",
     name: "Scarlet Cache",
     price: 11.84,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "scarlet-cache-i0", name: "Crimson Ticket", value: 57.41, rarity: "legendary", weight: 10000 },
       { id: "scarlet-cache-i1", name: "Azure Seal", value: 12.4, rarity: "epic", weight: 18000 },
@@ -823,7 +823,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "frost-cache",
     name: "Frost Cache",
     price: 12.09,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "frost-cache-i0", name: "Prism Ring", value: 816.67, rarity: "legendary", weight: 1000 },
       { id: "frost-cache-i1", name: "Echo Plate", value: 20.26, rarity: "epic", weight: 5000 },
@@ -837,7 +837,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ember-cache",
     name: "Ember Cache",
     price: 12.38,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "ember-cache-i0", name: "Nova Lock", value: 222.22, rarity: "legendary", weight: 2000 },
       { id: "ember-cache-i1", name: "Flux Banner", value: 194.44, rarity: "epic", weight: 2000 },
@@ -849,7 +849,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "jade-cache",
     name: "Jade Cache",
     price: 12.59,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "jade-cache-i0", name: "Wild Wand", value: 555.56, rarity: "legendary", weight: 1000 },
       { id: "jade-cache-i1", name: "Lucky Core", value: 185.19, rarity: "epic", weight: 1000 },
@@ -863,7 +863,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silver-cache",
     name: "Silver Cache",
     price: 12.96,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "silver-cache-i0", name: "Prime Relic", value: 666.67, rarity: "legendary", weight: 500 },
       { id: "silver-cache-i1", name: "Hidden Shard", value: 222.22, rarity: "epic", weight: 750 },
@@ -878,7 +878,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "obsidian-cache",
     name: "Obsidian Cache",
     price: 12.96,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "obsidian-cache-i0", name: "Frost Idol", value: 272.39, rarity: "legendary", weight: 250 },
       { id: "obsidian-cache-i1", name: "Ember Gem", value: 101.85, rarity: "epic", weight: 3500 },
@@ -891,7 +891,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "solar-cache",
     name: "Solar Cache",
     price: 13.06,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "solar-cache-i0", name: "Rustic Seal", value: 537.04, rarity: "legendary", weight: 500 },
       { id: "solar-cache-i1", name: "Silent Ribbon", value: 152.13, rarity: "epic", weight: 1500 },
@@ -906,7 +906,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lunar-cache",
     name: "Lunar Cache",
     price: 13.37,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "lunar-cache-i0", name: "Rogue Plate", value: 185.19, rarity: "legendary", weight: 250 },
       { id: "lunar-cache-i1", name: "Turbo Orb", value: 111.11, rarity: "legendary", weight: 1250 },
@@ -922,7 +922,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "royal-cache",
     name: "Royal Cache",
     price: 13.52,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "royal-cache-i0", name: "Lunar Banner", value: 760.34, rarity: "legendary", weight: 1000 },
       { id: "royal-cache-i1", name: "Crystal Helm", value: 56.08, rarity: "rare", weight: 3000 },
@@ -933,7 +933,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mystic-cache",
     name: "Mystic Cache",
     price: 13.6,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "mystic-cache-i0", name: "Royal Core", value: 89.99, rarity: "legendary", weight: 5000 },
       { id: "mystic-cache-i1", name: "Ancient Spark", value: 40.9, rarity: "epic", weight: 5000 },
@@ -948,7 +948,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prism-cache",
     name: "Prism Cache",
     price: 14.11,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "prism-cache-i0", name: "Shadow Shard", value: 44.44, rarity: "legendary", weight: 20000 },
       { id: "prism-cache-i1", name: "Golden Medallion", value: 16, rarity: "epic", weight: 15000 },
@@ -962,7 +962,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "amber-cache",
     name: "Amber Cache",
     price: 14.18,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "amber-cache-i0", name: "Copper Gem", value: 151.56, rarity: "legendary", weight: 5000 },
       { id: "amber-cache-i1", name: "Jade Chip", value: 19.17, rarity: "epic", weight: 20000 },
@@ -976,7 +976,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "sapphire-cache",
     name: "Sapphire Cache",
     price: 14.2,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "sapphire-cache-i0", name: "Sapphire Ribbon", value: 101.85, rarity: "legendary", weight: 5000 },
       { id: "sapphire-cache-i1", name: "Emerald Comet", value: 29.44, rarity: "epic", weight: 5000 },
@@ -990,7 +990,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ruby-cache",
     name: "Ruby Cache",
     price: 15.15,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "ruby-cache-i0", name: "Ivory Orb", value: 378.14, rarity: "legendary", weight: 3000 },
       { id: "ruby-cache-i1", name: "Crimson Key", value: 5.65, rarity: "epic", weight: 7000 },
@@ -1004,7 +1004,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cobalt-cache",
     name: "Cobalt Cache",
     price: 16.8,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "cobalt-cache-i0", name: "Violet Helm", value: 607.29, rarity: "legendary", weight: 1000 },
       { id: "cobalt-cache-i1", name: "Prism Blade", value: 58.89, rarity: "epic", weight: 9000 },
@@ -1018,7 +1018,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "platinum-cache",
     name: "Platinum Cache",
     price: 17,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "platinum-cache-i0", name: "Pulse Spark", value: 185.19, rarity: "legendary", weight: 5000 },
       { id: "platinum-cache-i1", name: "Nova Sigil", value: 44.59, rarity: "epic", weight: 5000 },
@@ -1032,7 +1032,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "bronze-cache",
     name: "Bronze Cache",
     price: 17.11,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "bronze-cache-i0", name: "Zen Medallion", value: 76.33, rarity: "legendary", weight: 5000 },
       { id: "bronze-cache-i1", name: "Wild Talisman", value: 45.24, rarity: "epic", weight: 5000 },
@@ -1046,7 +1046,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "arctic-cache",
     name: "Arctic Cache",
     price: 17.99,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "arctic-cache-i0", name: "Grand Chip", value: 283.04, rarity: "legendary", weight: 2500 },
       { id: "arctic-cache-i1", name: "Prime Scroll", value: 37.98, rarity: "epic", weight: 10000 },
@@ -1060,7 +1060,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "volcanic-cache",
     name: "Volcanic Cache",
     price: 19.25,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "volcanic-cache-i0", name: "Blazing Comet", value: 566.32, rarity: "legendary", weight: 1000 },
       { id: "volcanic-cache-i1", name: "Frost Chain", value: 387.38, rarity: "epic", weight: 1000 },
@@ -1074,7 +1074,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cosmic-cache",
     name: "Cosmic Cache",
     price: 19.6,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "cosmic-cache-i0", name: "Cosmic Key", value: 225.84, rarity: "legendary", weight: 1000 },
       { id: "cosmic-cache-i1", name: "Rustic Chest", value: 212.38, rarity: "legendary", weight: 1000 },
@@ -1093,7 +1093,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rustic-cache",
     name: "Rustic Cache",
     price: 19.9,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "rustic-cache-i0", name: "Noble Blade", value: 999.87, rarity: "legendary", weight: 250 },
       { id: "rustic-cache-i1", name: "Rogue Lens", value: 837.69, rarity: "legendary", weight: 250 },
@@ -1111,7 +1111,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silent-cache",
     name: "Silent Cache",
     price: 19.9,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "silent-cache-i0", name: "Solar Sigil", value: 157.41, rarity: "legendary", weight: 5000 },
       { id: "silent-cache-i1", name: "Lunar Token", value: 92.59, rarity: "epic", weight: 5000 },
@@ -1125,7 +1125,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "blazing-cache",
     name: "Blazing Cache",
     price: 20.19,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "blazing-cache-i0", name: "Mythic Talisman", value: 77.78, rarity: "legendary", weight: 10000 },
       { id: "blazing-cache-i1", name: "Royal Statue", value: 59.26, rarity: "epic", weight: 15000 },
@@ -1140,7 +1140,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hidden-cache",
     name: "Hidden Cache",
     price: 20.81,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "hidden-cache-i0", name: "Neon Scroll", value: 740.74, rarity: "legendary", weight: 500 },
       { id: "hidden-cache-i1", name: "Shadow Badge", value: 388.89, rarity: "epic", weight: 500 },
@@ -1154,7 +1154,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lucky-cache",
     name: "Lucky Cache",
     price: 20.91,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "lucky-cache-i0", name: "Silver Chain", value: 1296.3, rarity: "legendary", weight: 500 },
       { id: "lucky-cache-i1", name: "Copper Disc", value: 362.14, rarity: "epic", weight: 1500 },
@@ -1169,7 +1169,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "wild-cache",
     name: "Wild Cache",
     price: 21.06,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "wild-cache-i0", name: "Ruby Chest", value: 231.48, rarity: "legendary", weight: 2500 },
       { id: "wild-cache-i1", name: "Sapphire Mask", value: 66.89, rarity: "epic", weight: 15000 },
@@ -1183,7 +1183,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "grand-cache",
     name: "Grand Cache",
     price: 21.4,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "grand-cache-i0", name: "Onyx Lens", value: 731.77, rarity: "legendary", weight: 150 },
       { id: "grand-cache-i1", name: "Ivory Node", value: 115.86, rarity: "epic", weight: 2500 },
@@ -1198,7 +1198,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prime-cache",
     name: "Prime Cache",
     price: 21.42,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "prime-cache-i0", name: "Azure Token", value: 1111.11, rarity: "legendary", weight: 500 },
       { id: "prime-cache-i1", name: "Violet Crown", value: 740.74, rarity: "epic", weight: 500 },
@@ -1212,7 +1212,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ultra-cache",
     name: "Ultra Cache",
     price: 21.66,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "ultra-cache-i0", name: "Echo Statue", value: 1030.67, rarity: "legendary", weight: 250 },
       { id: "ultra-cache-i1", name: "Pulse Coin", value: 811.8, rarity: "epic", weight: 250 },
@@ -1227,7 +1227,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hyper-cache",
     name: "Hyper Cache",
     price: 22.03,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "hyper-cache-i0", name: "Flux Badge", value: 370.37, rarity: "legendary", weight: 2500 },
       { id: "hyper-cache-i1", name: "Zen Star", value: 194.44, rarity: "epic", weight: 2500 },
@@ -1241,7 +1241,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mega-cache",
     name: "Mega Cache",
     price: 22.16,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "mega-cache-i0", name: "Lucky Disc", value: 370.37, rarity: "legendary", weight: 2500 },
       { id: "mega-cache-i1", name: "Grand Cube", value: 231.48, rarity: "epic", weight: 2500 },
@@ -1255,7 +1255,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "turbo-cache",
     name: "Turbo Cache",
     price: 22.54,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "turbo-cache-i0", name: "Hidden Mask", value: 648.15, rarity: "legendary", weight: 1000 },
       { id: "turbo-cache-i1", name: "Blazing Gauntlet", value: 55.73, rarity: "epic", weight: 9000 },
@@ -1268,7 +1268,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "nova-cache",
     name: "Nova Cache",
     price: 23.14,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "nova-cache-i0", name: "Ember Node", value: 2050.64, rarity: "legendary", weight: 250 },
       { id: "nova-cache-i1", name: "Cosmic Flare", value: 1413.95, rarity: "legendary", weight: 250 },
@@ -1285,7 +1285,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "echo-cache",
     name: "Echo Cache",
     price: 23.3,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "echo-cache-i0", name: "Silent Crown", value: 1666.67, rarity: "legendary", weight: 250 },
       { id: "echo-cache-i1", name: "Noble Charm", value: 1518.52, rarity: "legendary", weight: 250 },
@@ -1307,7 +1307,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "pulse-cache",
     name: "Pulse Cache",
     price: 23.45,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "pulse-cache-i0", name: "Turbo Coin", value: 1866.49, rarity: "legendary", weight: 100 },
       { id: "pulse-cache-i1", name: "Solar Ticket", value: 677.66, rarity: "epic", weight: 100 },
@@ -1322,7 +1322,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "flux-cache",
     name: "Flux Cache",
     price: 23.66,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "flux-cache-i0", name: "Crystal Star", value: 670.69, rarity: "legendary", weight: 500 },
       { id: "flux-cache-i1", name: "Mythic Ring", value: 314.88, rarity: "epic", weight: 2000 },
@@ -1337,7 +1337,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "zen-cache",
     name: "Zen Cache",
     price: 23.79,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "zen-cache-i0", name: "Ancient Cube", value: 209, rarity: "legendary", weight: 5000 },
       { id: "zen-cache-i1", name: "Neon Lock", value: 152.95, rarity: "epic", weight: 5000 },
@@ -1351,7 +1351,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rogue-cache",
     name: "Rogue Cache",
     price: 25.11,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "rogue-cache-i0", name: "Golden Gauntlet", value: 1746.01, rarity: "legendary", weight: 500 },
       { id: "rogue-cache-i1", name: "Silver Wand", value: 232.29, rarity: "epic", weight: 2500 },
@@ -1365,7 +1365,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "noble-cache",
     name: "Noble Cache",
     price: 25.11,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "noble-cache-i0", name: "Jade Flare", value: 92.89, rarity: "legendary", weight: 20000 },
       { id: "noble-cache-i1", name: "Ruby Relic", value: 18.48, rarity: "rare", weight: 20000 },
@@ -1376,7 +1376,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ancient-cache",
     name: "Ancient Cache",
     price: 25.27,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "ancient-cache-i0", name: "Emerald Charm", value: 282.01, rarity: "legendary", weight: 2500 },
       { id: "ancient-cache-i1", name: "Onyx Idol", value: 156.08, rarity: "epic", weight: 3750 },
@@ -1390,7 +1390,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "future-cache",
     name: "Future Cache",
     price: 25.76,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "future-cache-i0", name: "Crimson Ticket", value: 952.29, rarity: "legendary", weight: 250 },
       { id: "future-cache-i1", name: "Azure Seal", value: 384.01, rarity: "legendary", weight: 250 },
@@ -1406,7 +1406,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "velvet-crate",
     name: "Velvet Crate",
     price: 25.93,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "velvet-crate-i0", name: "Prism Ring", value: 1388.89, rarity: "legendary", weight: 250 },
       { id: "velvet-crate-i1", name: "Echo Plate", value: 823.78, rarity: "legendary", weight: 500 },
@@ -1425,7 +1425,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "crimson-crate",
     name: "Crimson Crate",
     price: 26.82,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "crimson-crate-i0", name: "Nova Lock", value: 1898.12, rarity: "legendary", weight: 250 },
       { id: "crimson-crate-i1", name: "Flux Banner", value: 1099.75, rarity: "epic", weight: 750 },
@@ -1437,7 +1437,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "azure-crate",
     name: "Azure Crate",
     price: 26.95,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "azure-crate-i0", name: "Wild Wand", value: 175.59, rarity: "legendary", weight: 9000 },
       { id: "azure-crate-i1", name: "Lucky Core", value: 40.89, rarity: "epic", weight: 9000 },
@@ -1452,7 +1452,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "golden-crate",
     name: "Golden Crate",
     price: 27.24,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "golden-crate-i0", name: "Prime Relic", value: 1113.39, rarity: "legendary", weight: 250 },
       { id: "golden-crate-i1", name: "Hidden Shard", value: 721.06, rarity: "legendary", weight: 250 },
@@ -1471,7 +1471,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "shadow-crate",
     name: "Shadow Crate",
     price: 27.43,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "shadow-crate-i0", name: "Frost Idol", value: 1111.11, rarity: "legendary", weight: 250 },
       { id: "shadow-crate-i1", name: "Ember Gem", value: 268.52, rarity: "epic", weight: 500 },
@@ -1486,7 +1486,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "neon-crate",
     name: "Neon Crate",
     price: 27.69,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "neon-crate-i0", name: "Rustic Seal", value: 945.44, rarity: "legendary", weight: 1000 },
       { id: "neon-crate-i1", name: "Silent Ribbon", value: 51.85, rarity: "epic", weight: 7500 },
@@ -1501,7 +1501,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "copper-crate",
     name: "Copper Crate",
     price: 28.79,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "copper-crate-i0", name: "Rogue Plate", value: 710.2, rarity: "legendary", weight: 250 },
       { id: "copper-crate-i1", name: "Turbo Orb", value: 262.21, rarity: "epic", weight: 250 },
@@ -1516,7 +1516,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ivory-crate",
     name: "Ivory Crate",
     price: 29,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "ivory-crate-i0", name: "Lunar Banner", value: 296.3, rarity: "legendary", weight: 2500 },
       { id: "ivory-crate-i1", name: "Crystal Helm", value: 164.61, rarity: "epic", weight: 7500 },
@@ -1530,7 +1530,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "onyx-crate",
     name: "Onyx Crate",
     price: 30.4,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "onyx-crate-i0", name: "Royal Core", value: 1954.81, rarity: "legendary", weight: 250 },
       { id: "onyx-crate-i1", name: "Ancient Spark", value: 1766.11, rarity: "epic", weight: 250 },
@@ -1545,7 +1545,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "scarlet-crate",
     name: "Scarlet Crate",
     price: 31.3,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "scarlet-crate-i0", name: "Shadow Shard", value: 1959.92, rarity: "legendary", weight: 250 },
       { id: "scarlet-crate-i1", name: "Golden Medallion", value: 214.25, rarity: "legendary", weight: 1500 },
@@ -1564,7 +1564,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "frost-crate",
     name: "Frost Crate",
     price: 31.37,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "frost-crate-i0", name: "Copper Gem", value: 220.24, rarity: "legendary", weight: 2000 },
       { id: "frost-crate-i1", name: "Jade Chip", value: 77.48, rarity: "epic", weight: 28000 },
@@ -1577,7 +1577,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ember-crate",
     name: "Ember Crate",
     price: 32.21,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "ember-crate-i0", name: "Sapphire Ribbon", value: 384.01, rarity: "legendary", weight: 500 },
       { id: "ember-crate-i1", name: "Emerald Comet", value: 98.5, rarity: "epic", weight: 12500 },
@@ -1591,7 +1591,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "jade-crate",
     name: "Jade Crate",
     price: 32.61,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "jade-crate-i0", name: "Ivory Orb", value: 227.59, rarity: "legendary", weight: 10000 },
       { id: "jade-crate-i1", name: "Crimson Key", value: 19.35, rarity: "epic", weight: 18000 },
@@ -1605,7 +1605,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silver-crate",
     name: "Silver Crate",
     price: 33.14,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "silver-crate-i0", name: "Violet Helm", value: 277.78, rarity: "legendary", weight: 1000 },
       { id: "silver-crate-i1", name: "Prism Blade", value: 240.93, rarity: "epic", weight: 1750 },
@@ -1619,7 +1619,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "obsidian-crate",
     name: "Obsidian Crate",
     price: 34.09,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "obsidian-crate-i0", name: "Pulse Spark", value: 462.96, rarity: "legendary", weight: 2000 },
       { id: "obsidian-crate-i1", name: "Nova Sigil", value: 185.19, rarity: "epic", weight: 2000 },
@@ -1633,7 +1633,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "solar-crate",
     name: "Solar Crate",
     price: 35.41,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "solar-crate-i0", name: "Zen Medallion", value: 1185.19, rarity: "legendary", weight: 500 },
       { id: "solar-crate-i1", name: "Wild Talisman", value: 685.19, rarity: "legendary", weight: 750 },
@@ -1649,7 +1649,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lunar-crate",
     name: "Lunar Crate",
     price: 38.29,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "lunar-crate-i0", name: "Grand Chip", value: 1163.46, rarity: "legendary", weight: 250 },
       { id: "lunar-crate-i1", name: "Prime Scroll", value: 852.06, rarity: "legendary", weight: 500 },
@@ -1665,7 +1665,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "royal-crate",
     name: "Royal Crate",
     price: 38.48,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "royal-crate-i0", name: "Blazing Comet", value: 1148.51, rarity: "legendary", weight: 500 },
       { id: "royal-crate-i1", name: "Frost Chain", value: 394.81, rarity: "epic", weight: 2500 },
@@ -1678,7 +1678,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mystic-crate",
     name: "Mystic Crate",
     price: 38.51,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "mystic-crate-i0", name: "Cosmic Key", value: 407.41, rarity: "legendary", weight: 1000 },
       { id: "mystic-crate-i1", name: "Rustic Chest", value: 231.48, rarity: "epic", weight: 1000 },
@@ -1692,7 +1692,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prism-crate",
     name: "Prism Crate",
     price: 39.12,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "prism-crate-i0", name: "Noble Blade", value: 283.04, rarity: "legendary", weight: 500 },
       { id: "prism-crate-i1", name: "Rogue Lens", value: 256.76, rarity: "epic", weight: 1000 },
@@ -1706,7 +1706,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "amber-crate",
     name: "Amber Crate",
     price: 39.75,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "amber-crate-i0", name: "Solar Sigil", value: 1976.63, rarity: "legendary", weight: 500 },
       { id: "amber-crate-i1", name: "Lunar Token", value: 362.96, rarity: "legendary", weight: 3000 },
@@ -1723,7 +1723,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "sapphire-crate",
     name: "Sapphire Crate",
     price: 39.97,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "sapphire-crate-i0", name: "Mythic Talisman", value: 407.41, rarity: "legendary", weight: 1500 },
       { id: "sapphire-crate-i1", name: "Royal Statue", value: 314.81, rarity: "legendary", weight: 1500 },
@@ -1742,7 +1742,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ruby-crate",
     name: "Ruby Crate",
     price: 40.64,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "ruby-crate-i0", name: "Neon Scroll", value: 237.54, rarity: "legendary", weight: 5000 },
       { id: "ruby-crate-i1", name: "Shadow Badge", value: 97.63, rarity: "epic", weight: 5000 },
@@ -1756,7 +1756,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cobalt-crate",
     name: "Cobalt Crate",
     price: 41.14,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "cobalt-crate-i0", name: "Silver Chain", value: 1467.4, rarity: "legendary", weight: 1000 },
       { id: "cobalt-crate-i1", name: "Copper Disc", value: 929.37, rarity: "epic", weight: 1000 },
@@ -1769,7 +1769,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "platinum-crate",
     name: "Platinum Crate",
     price: 41.25,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "platinum-crate-i0", name: "Ruby Chest", value: 629.63, rarity: "legendary", weight: 1000 },
       { id: "platinum-crate-i1", name: "Sapphire Mask", value: 333.33, rarity: "legendary", weight: 4000 },
@@ -1786,7 +1786,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "bronze-crate",
     name: "Bronze Crate",
     price: 44.72,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "bronze-crate-i0", name: "Onyx Lens", value: 462.96, rarity: "legendary", weight: 5000 },
       { id: "bronze-crate-i1", name: "Ivory Node", value: 231.48, rarity: "epic", weight: 5000 },
@@ -1800,7 +1800,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "arctic-crate",
     name: "Arctic Crate",
     price: 45.14,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "arctic-crate-i0", name: "Azure Token", value: 270.63, rarity: "legendary", weight: 5000 },
       { id: "arctic-crate-i1", name: "Violet Crown", value: 114.92, rarity: "epic", weight: 10000 },
@@ -1815,7 +1815,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "volcanic-crate",
     name: "Volcanic Crate",
     price: 45.53,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "volcanic-crate-i0", name: "Echo Statue", value: 407.41, rarity: "legendary", weight: 10000 },
       { id: "volcanic-crate-i1", name: "Pulse Coin", value: 0.26, rarity: "common", weight: 10000 },
@@ -1828,7 +1828,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cosmic-crate",
     name: "Cosmic Crate",
     price: 46.73,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "cosmic-crate-i0", name: "Flux Badge", value: 258.57, rarity: "legendary", weight: 5000 },
       { id: "cosmic-crate-i1", name: "Zen Star", value: 157.79, rarity: "epic", weight: 10000 },
@@ -1841,7 +1841,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rustic-crate",
     name: "Rustic Crate",
     price: 47.03,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "rustic-crate-i0", name: "Lucky Disc", value: 157.28, rarity: "legendary", weight: 2500 },
       { id: "rustic-crate-i1", name: "Grand Cube", value: 79.09, rarity: "epic", weight: 47500 },
@@ -1854,7 +1854,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silent-crate",
     name: "Silent Crate",
     price: 48.04,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "silent-crate-i0", name: "Hidden Mask", value: 1931.37, rarity: "legendary", weight: 1000 },
       { id: "silent-crate-i1", name: "Blazing Gauntlet", value: 505.25, rarity: "epic", weight: 2000 },
@@ -1868,7 +1868,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "blazing-crate",
     name: "Blazing Crate",
     price: 48.06,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "blazing-crate-i0", name: "Ember Node", value: 685.19, rarity: "legendary", weight: 500 },
       { id: "blazing-crate-i1", name: "Cosmic Flare", value: 314.81, rarity: "epic", weight: 2000 },
@@ -1881,7 +1881,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hidden-crate",
     name: "Hidden Crate",
     price: 49.04,
-    accent: "#22c55e",
+    accent: "#00e87a",
     items: [
       { id: "hidden-crate-i0", name: "Silent Crown", value: 148.15, rarity: "legendary", weight: 5000 },
       { id: "hidden-crate-i1", name: "Noble Charm", value: 138.89, rarity: "epic", weight: 5000 },
@@ -1895,7 +1895,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lucky-crate",
     name: "Lucky Crate",
     price: 50.15,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "lucky-crate-i0", name: "Turbo Coin", value: 226.66, rarity: "legendary", weight: 10000 },
       { id: "lucky-crate-i1", name: "Solar Ticket", value: 151.85, rarity: "epic", weight: 2500 },
@@ -1909,7 +1909,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "wild-crate",
     name: "Wild Crate",
     price: 50.43,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "wild-crate-i0", name: "Crystal Star", value: 1166.76, rarity: "legendary", weight: 500 },
       { id: "wild-crate-i1", name: "Mythic Ring", value: 851.85, rarity: "epic", weight: 500 },
@@ -1924,7 +1924,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "grand-crate",
     name: "Grand Crate",
     price: 51.54,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "grand-crate-i0", name: "Ancient Cube", value: 744.42, rarity: "legendary", weight: 5000 },
       { id: "grand-crate-i1", name: "Neon Lock", value: 75.35, rarity: "rare", weight: 5000 },
@@ -1935,7 +1935,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prime-crate",
     name: "Prime Crate",
     price: 51.85,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "prime-crate-i0", name: "Golden Gauntlet", value: 666.79, rarity: "legendary", weight: 500 },
       { id: "prime-crate-i1", name: "Silver Wand", value: 500.58, rarity: "legendary", weight: 1000 },
@@ -1954,7 +1954,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ultra-crate",
     name: "Ultra Crate",
     price: 52.63,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "ultra-crate-i0", name: "Jade Flare", value: 462.96, rarity: "legendary", weight: 10000 },
       { id: "ultra-crate-i1", name: "Ruby Relic", value: 3.2, rarity: "epic", weight: 18000 },
@@ -1968,7 +1968,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hyper-crate",
     name: "Hyper Crate",
     price: 55.47,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "hyper-crate-i0", name: "Emerald Charm", value: 462.96, rarity: "legendary", weight: 10000 },
       { id: "hyper-crate-i1", name: "Onyx Idol", value: 6.7, rarity: "epic", weight: 18000 },
@@ -1982,7 +1982,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mega-crate",
     name: "Mega Crate",
     price: 55.49,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "mega-crate-i0", name: "Crimson Ticket", value: 2092.82, rarity: "legendary", weight: 1000 },
       { id: "mega-crate-i1", name: "Azure Seal", value: 743.02, rarity: "epic", weight: 1000 },
@@ -1997,7 +1997,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "turbo-crate",
     name: "Turbo Crate",
     price: 55.67,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "turbo-crate-i0", name: "Prism Ring", value: 1396.76, rarity: "legendary", weight: 1000 },
       { id: "turbo-crate-i1", name: "Echo Plate", value: 1115.61, rarity: "epic", weight: 1000 },
@@ -2011,7 +2011,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "nova-crate",
     name: "Nova Crate",
     price: 55.85,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "nova-crate-i0", name: "Nova Lock", value: 1314.81, rarity: "legendary", weight: 250 },
       { id: "nova-crate-i1", name: "Flux Banner", value: 763.67, rarity: "legendary", weight: 500 },
@@ -2027,7 +2027,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "echo-crate",
     name: "Echo Crate",
     price: 56.01,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "echo-crate-i0", name: "Wild Wand", value: 1129.63, rarity: "legendary", weight: 500 },
       { id: "echo-crate-i1", name: "Lucky Core", value: 537.04, rarity: "epic", weight: 1000 },
@@ -2042,7 +2042,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "pulse-crate",
     name: "Pulse Crate",
     price: 56.13,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "pulse-crate-i0", name: "Prime Relic", value: 462.96, rarity: "legendary", weight: 5000 },
       { id: "pulse-crate-i1", name: "Hidden Shard", value: 167.04, rarity: "epic", weight: 5000 },
@@ -2056,7 +2056,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "flux-crate",
     name: "Flux Crate",
     price: 56.44,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "flux-crate-i0", name: "Frost Idol", value: 1944.44, rarity: "legendary", weight: 250 },
       { id: "flux-crate-i1", name: "Ember Gem", value: 270.24, rarity: "epic", weight: 5000 },
@@ -2070,7 +2070,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "zen-crate",
     name: "Zen Crate",
     price: 56.68,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "zen-crate-i0", name: "Rustic Seal", value: 1693.68, rarity: "legendary", weight: 1000 },
       { id: "zen-crate-i1", name: "Silent Ribbon", value: 1484.42, rarity: "epic", weight: 1000 },
@@ -2084,7 +2084,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rogue-crate",
     name: "Rogue Crate",
     price: 56.99,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "rogue-crate-i0", name: "Rogue Plate", value: 138.89, rarity: "legendary", weight: 12500 },
       { id: "rogue-crate-i1", name: "Turbo Orb", value: 111.11, rarity: "legendary", weight: 12500 },
@@ -2100,7 +2100,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "noble-crate",
     name: "Noble Crate",
     price: 58.41,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "noble-crate-i0", name: "Lunar Banner", value: 2592.59, rarity: "legendary", weight: 250 },
       { id: "noble-crate-i1", name: "Crystal Helm", value: 1838.57, rarity: "epic", weight: 250 },
@@ -2114,7 +2114,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ancient-crate",
     name: "Ancient Crate",
     price: 58.59,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "ancient-crate-i0", name: "Royal Core", value: 620.37, rarity: "legendary", weight: 500 },
       { id: "ancient-crate-i1", name: "Ancient Spark", value: 464.12, rarity: "epic", weight: 500 },
@@ -2128,7 +2128,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "future-crate",
     name: "Future Crate",
     price: 58.6,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "future-crate-i0", name: "Shadow Shard", value: 1151.35, rarity: "legendary", weight: 250 },
       { id: "future-crate-i1", name: "Golden Medallion", value: 1029.84, rarity: "legendary", weight: 250 },
@@ -2148,7 +2148,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "velvet-hoard",
     name: "Velvet Hoard",
     price: 60.24,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "velvet-hoard-i0", name: "Copper Gem", value: 777.78, rarity: "legendary", weight: 500 },
       { id: "velvet-hoard-i1", name: "Jade Chip", value: 268.52, rarity: "epic", weight: 5000 },
@@ -2162,7 +2162,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "crimson-hoard",
     name: "Crimson Hoard",
     price: 63.19,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "crimson-hoard-i0", name: "Sapphire Ribbon", value: 1608.47, rarity: "legendary", weight: 2500 },
       { id: "crimson-hoard-i1", name: "Emerald Comet", value: 232.85, rarity: "epic", weight: 2500 },
@@ -2176,7 +2176,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "azure-hoard",
     name: "Azure Hoard",
     price: 63.55,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "azure-hoard-i0", name: "Ivory Orb", value: 1449.47, rarity: "legendary", weight: 250 },
       { id: "azure-hoard-i1", name: "Crimson Key", value: 1035.56, rarity: "legendary", weight: 250 },
@@ -2194,7 +2194,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "golden-hoard",
     name: "Golden Hoard",
     price: 63.71,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "golden-hoard-i0", name: "Violet Helm", value: 1388.89, rarity: "legendary", weight: 1000 },
       { id: "golden-hoard-i1", name: "Prism Blade", value: 846.52, rarity: "epic", weight: 2000 },
@@ -2208,7 +2208,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "shadow-hoard",
     name: "Shadow Hoard",
     price: 63.91,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "shadow-hoard-i0", name: "Pulse Spark", value: 925.93, rarity: "legendary", weight: 2500 },
       { id: "shadow-hoard-i1", name: "Nova Sigil", value: 555.56, rarity: "epic", weight: 2500 },
@@ -2222,7 +2222,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "neon-hoard",
     name: "Neon Hoard",
     price: 66.16,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "neon-hoard-i0", name: "Zen Medallion", value: 629.63, rarity: "legendary", weight: 5000 },
       { id: "neon-hoard-i1", name: "Wild Talisman", value: 416.67, rarity: "epic", weight: 5000 },
@@ -2235,7 +2235,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "copper-hoard",
     name: "Copper Hoard",
     price: 69.63,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "copper-hoard-i0", name: "Grand Chip", value: 2408.49, rarity: "legendary", weight: 500 },
       { id: "copper-hoard-i1", name: "Prime Scroll", value: 1853.28, rarity: "legendary", weight: 500 },
@@ -2255,7 +2255,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ivory-hoard",
     name: "Ivory Hoard",
     price: 74.16,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "ivory-hoard-i0", name: "Blazing Comet", value: 566.46, rarity: "legendary", weight: 2500 },
       { id: "ivory-hoard-i1", name: "Frost Chain", value: 309.85, rarity: "epic", weight: 10000 },
@@ -2268,7 +2268,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "onyx-hoard",
     name: "Onyx Hoard",
     price: 74.63,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "onyx-hoard-i0", name: "Cosmic Key", value: 222.22, rarity: "legendary", weight: 10000 },
       { id: "onyx-hoard-i1", name: "Rustic Chest", value: 175.93, rarity: "legendary", weight: 10000 },
@@ -2284,7 +2284,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "scarlet-hoard",
     name: "Scarlet Hoard",
     price: 76.13,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "scarlet-hoard-i0", name: "Noble Blade", value: 1388.89, rarity: "legendary", weight: 2500 },
       { id: "scarlet-hoard-i1", name: "Rogue Lens", value: 555.56, rarity: "epic", weight: 2500 },
@@ -2298,7 +2298,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "frost-hoard",
     name: "Frost Hoard",
     price: 78.37,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "frost-hoard-i0", name: "Solar Sigil", value: 2229.14, rarity: "legendary", weight: 500 },
       { id: "frost-hoard-i1", name: "Lunar Token", value: 1952.22, rarity: "legendary", weight: 500 },
@@ -2316,7 +2316,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ember-hoard",
     name: "Ember Hoard",
     price: 82.81,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "ember-hoard-i0", name: "Mythic Talisman", value: 2222.22, rarity: "legendary", weight: 500 },
       { id: "ember-hoard-i1", name: "Royal Statue", value: 1296.3, rarity: "epic", weight: 500 },
@@ -2333,7 +2333,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "jade-hoard",
     name: "Jade Hoard",
     price: 83.83,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "jade-hoard-i0", name: "Neon Scroll", value: 1881.24, rarity: "legendary", weight: 500 },
       { id: "jade-hoard-i1", name: "Shadow Badge", value: 1772.32, rarity: "legendary", weight: 500 },
@@ -2350,7 +2350,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silver-hoard",
     name: "Silver Hoard",
     price: 84.98,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "silver-hoard-i0", name: "Silver Chain", value: 151.85, rarity: "legendary", weight: 50000 },
       { id: "silver-hoard-i1", name: "Copper Disc", value: 1.3, rarity: "epic", weight: 10000 },
@@ -2364,7 +2364,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "obsidian-hoard",
     name: "Obsidian Hoard",
     price: 87.24,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "obsidian-hoard-i0", name: "Ruby Chest", value: 1111.11, rarity: "legendary", weight: 2500 },
       { id: "obsidian-hoard-i1", name: "Sapphire Mask", value: 648.15, rarity: "epic", weight: 2500 },
@@ -2378,7 +2378,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "solar-hoard",
     name: "Solar Hoard",
     price: 89.18,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "solar-hoard-i0", name: "Onyx Lens", value: 575.79, rarity: "legendary", weight: 1000 },
       { id: "solar-hoard-i1", name: "Ivory Node", value: 537.31, rarity: "legendary", weight: 1000 },
@@ -2394,7 +2394,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lunar-hoard",
     name: "Lunar Hoard",
     price: 90.79,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "lunar-hoard-i0", name: "Azure Token", value: 1296.3, rarity: "legendary", weight: 5000 },
       { id: "lunar-hoard-i1", name: "Violet Crown", value: 129.63, rarity: "epic", weight: 10000 },
@@ -2408,7 +2408,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "royal-hoard",
     name: "Royal Hoard",
     price: 90.97,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "royal-hoard-i0", name: "Echo Statue", value: 1922.04, rarity: "legendary", weight: 3500 },
       { id: "royal-hoard-i1", name: "Pulse Coin", value: 182.98, rarity: "epic", weight: 6500 },
@@ -2422,7 +2422,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mystic-hoard",
     name: "Mystic Hoard",
     price: 93.71,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "mystic-hoard-i0", name: "Flux Badge", value: 2502.76, rarity: "legendary", weight: 1000 },
       { id: "mystic-hoard-i1", name: "Zen Star", value: 2232.19, rarity: "epic", weight: 1000 },
@@ -2436,7 +2436,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prism-hoard",
     name: "Prism Hoard",
     price: 95.8,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "prism-hoard-i0", name: "Lucky Disc", value: 2802.01, rarity: "legendary", weight: 500 },
       { id: "prism-hoard-i1", name: "Grand Cube", value: 1186.3, rarity: "legendary", weight: 1000 },
@@ -2452,7 +2452,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "amber-hoard",
     name: "Amber Hoard",
     price: 99.96,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "amber-hoard-i0", name: "Hidden Mask", value: 2070.91, rarity: "legendary", weight: 200 },
       { id: "amber-hoard-i1", name: "Blazing Gauntlet", value: 1368.86, rarity: "legendary", weight: 800 },
@@ -2468,7 +2468,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "sapphire-hoard",
     name: "Sapphire Hoard",
     price: 100.17,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "sapphire-hoard-i0", name: "Ember Node", value: 1681.95, rarity: "legendary", weight: 500 },
       { id: "sapphire-hoard-i1", name: "Cosmic Flare", value: 1396.95, rarity: "legendary", weight: 500 },
@@ -2484,7 +2484,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ruby-hoard",
     name: "Ruby Hoard",
     price: 102.67,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "ruby-hoard-i0", name: "Silent Crown", value: 257.93, rarity: "legendary", weight: 15000 },
       { id: "ruby-hoard-i1", name: "Noble Charm", value: 232.82, rarity: "epic", weight: 15000 },
@@ -2498,7 +2498,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cobalt-hoard",
     name: "Cobalt Hoard",
     price: 106.07,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "cobalt-hoard-i0", name: "Turbo Coin", value: 1148.15, rarity: "legendary", weight: 5000 },
       { id: "cobalt-hoard-i1", name: "Solar Ticket", value: 259.26, rarity: "epic", weight: 10000 },
@@ -2510,7 +2510,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "platinum-hoard",
     name: "Platinum Hoard",
     price: 106.24,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "platinum-hoard-i0", name: "Crystal Star", value: 629.32, rarity: "legendary", weight: 500 },
       { id: "platinum-hoard-i1", name: "Mythic Ring", value: 355.4, rarity: "legendary", weight: 1500 },
@@ -2526,7 +2526,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "bronze-hoard",
     name: "Bronze Hoard",
     price: 111.65,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "bronze-hoard-i0", name: "Ancient Cube", value: 833.33, rarity: "legendary", weight: 10000 },
       { id: "bronze-hoard-i1", name: "Neon Lock", value: 166.67, rarity: "epic", weight: 10000 },
@@ -2538,7 +2538,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "arctic-hoard",
     name: "Arctic Hoard",
     price: 117.25,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "arctic-hoard-i0", name: "Golden Gauntlet", value: 703.7, rarity: "legendary", weight: 5000 },
       { id: "arctic-hoard-i1", name: "Silver Wand", value: 259.26, rarity: "legendary", weight: 5000 },
@@ -2555,7 +2555,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "volcanic-hoard",
     name: "Volcanic Hoard",
     price: 121.19,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "volcanic-hoard-i0", name: "Jade Flare", value: 2029.71, rarity: "legendary", weight: 1500 },
       { id: "volcanic-hoard-i1", name: "Ruby Relic", value: 1148.15, rarity: "epic", weight: 4500 },
@@ -2569,7 +2569,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cosmic-hoard",
     name: "Cosmic Hoard",
     price: 128.03,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "cosmic-hoard-i0", name: "Emerald Charm", value: 1949.73, rarity: "legendary", weight: 250 },
       { id: "cosmic-hoard-i1", name: "Onyx Idol", value: 931.71, rarity: "legendary", weight: 750 },
@@ -2588,7 +2588,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rustic-hoard",
     name: "Rustic Hoard",
     price: 130.49,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "rustic-hoard-i0", name: "Crimson Ticket", value: 833.33, rarity: "legendary", weight: 10000 },
       { id: "rustic-hoard-i1", name: "Azure Seal", value: 240.74, rarity: "epic", weight: 7500 },
@@ -2603,7 +2603,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silent-hoard",
     name: "Silent Hoard",
     price: 130.99,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "silent-hoard-i0", name: "Prism Ring", value: 6290.46, rarity: "legendary", weight: 500 },
       { id: "silent-hoard-i1", name: "Echo Plate", value: 3738.1, rarity: "epic", weight: 1000 },
@@ -2617,7 +2617,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "blazing-hoard",
     name: "Blazing Hoard",
     price: 131.29,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "blazing-hoard-i0", name: "Nova Lock", value: 2021.44, rarity: "legendary", weight: 1000 },
       { id: "blazing-hoard-i1", name: "Flux Banner", value: 1607.87, rarity: "legendary", weight: 2000 },
@@ -2634,7 +2634,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hidden-hoard",
     name: "Hidden Hoard",
     price: 132.21,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "hidden-hoard-i0", name: "Wild Wand", value: 1056.5, rarity: "legendary", weight: 10000 },
       { id: "hidden-hoard-i1", name: "Lucky Core", value: 131.34, rarity: "rare", weight: 10000 },
@@ -2645,7 +2645,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lucky-hoard",
     name: "Lucky Hoard",
     price: 133.99,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "lucky-hoard-i0", name: "Prime Relic", value: 2788.49, rarity: "legendary", weight: 1000 },
       { id: "lucky-hoard-i1", name: "Hidden Shard", value: 1389.28, rarity: "epic", weight: 2000 },
@@ -2660,7 +2660,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "wild-hoard",
     name: "Wild Hoard",
     price: 134.33,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "wild-hoard-i0", name: "Frost Idol", value: 1404.76, rarity: "legendary", weight: 5000 },
       { id: "wild-hoard-i1", name: "Ember Gem", value: 372.69, rarity: "epic", weight: 10000 },
@@ -2674,7 +2674,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "grand-hoard",
     name: "Grand Hoard",
     price: 134.46,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "grand-hoard-i0", name: "Rustic Seal", value: 1370.37, rarity: "legendary", weight: 5000 },
       { id: "grand-hoard-i1", name: "Silent Ribbon", value: 398.15, rarity: "epic", weight: 5000 },
@@ -2688,7 +2688,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prime-hoard",
     name: "Prime Hoard",
     price: 143.01,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "prime-hoard-i0", name: "Rogue Plate", value: 2120.13, rarity: "legendary", weight: 3000 },
       { id: "prime-hoard-i1", name: "Turbo Orb", value: 1870.07, rarity: "epic", weight: 3000 },
@@ -2702,7 +2702,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ultra-hoard",
     name: "Ultra Hoard",
     price: 151.64,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "ultra-hoard-i0", name: "Lunar Banner", value: 1388.89, rarity: "legendary", weight: 5000 },
       { id: "ultra-hoard-i1", name: "Crystal Helm", value: 666.43, rarity: "epic", weight: 5000 },
@@ -2716,7 +2716,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hyper-hoard",
     name: "Hyper Hoard",
     price: 152.69,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "hyper-hoard-i0", name: "Royal Core", value: 1905.55, rarity: "legendary", weight: 500 },
       { id: "hyper-hoard-i1", name: "Ancient Spark", value: 1504.54, rarity: "legendary", weight: 1500 },
@@ -2732,7 +2732,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mega-hoard",
     name: "Mega Hoard",
     price: 155.01,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "mega-hoard-i0", name: "Shadow Shard", value: 1631.91, rarity: "legendary", weight: 1000 },
       { id: "mega-hoard-i1", name: "Golden Medallion", value: 1355.7, rarity: "legendary", weight: 1000 },
@@ -2753,7 +2753,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "turbo-hoard",
     name: "Turbo Hoard",
     price: 155.31,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "turbo-hoard-i0", name: "Copper Gem", value: 4170.48, rarity: "legendary", weight: 250 },
       { id: "turbo-hoard-i1", name: "Jade Chip", value: 3189.65, rarity: "epic", weight: 250 },
@@ -2767,7 +2767,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "nova-hoard",
     name: "Nova Hoard",
     price: 163.29,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "nova-hoard-i0", name: "Sapphire Ribbon", value: 1356.89, rarity: "legendary", weight: 1000 },
       { id: "nova-hoard-i1", name: "Emerald Comet", value: 1210.05, rarity: "legendary", weight: 1500 },
@@ -2785,7 +2785,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "echo-hoard",
     name: "Echo Hoard",
     price: 199.95,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "echo-hoard-i0", name: "Ivory Orb", value: 5219.77, rarity: "legendary", weight: 500 },
       { id: "echo-hoard-i1", name: "Crimson Key", value: 4708.5, rarity: "epic", weight: 1000 },
@@ -2799,7 +2799,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "pulse-hoard",
     name: "Pulse Hoard",
     price: 221.56,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "pulse-hoard-i0", name: "Violet Helm", value: 2163.75, rarity: "legendary", weight: 250 },
       { id: "pulse-hoard-i1", name: "Prism Blade", value: 2078.38, rarity: "legendary", weight: 250 },
@@ -2816,7 +2816,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "flux-hoard",
     name: "Flux Hoard",
     price: 223.33,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "flux-hoard-i0", name: "Pulse Spark", value: 425.93, rarity: "legendary", weight: 45000 },
       { id: "flux-hoard-i1", name: "Nova Sigil", value: 55.56, rarity: "epic", weight: 5000 },
@@ -2829,7 +2829,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "zen-hoard",
     name: "Zen Hoard",
     price: 228,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "zen-hoard-i0", name: "Zen Medallion", value: 3643.48, rarity: "legendary", weight: 2000 },
       { id: "zen-hoard-i1", name: "Wild Talisman", value: 2586.25, rarity: "epic", weight: 2000 },
@@ -2843,7 +2843,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rogue-hoard",
     name: "Rogue Hoard",
     price: 232.47,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "rogue-hoard-i0", name: "Grand Chip", value: 1392.53, rarity: "legendary", weight: 5000 },
       { id: "rogue-hoard-i1", name: "Prime Scroll", value: 980.88, rarity: "epic", weight: 5000 },
@@ -2857,7 +2857,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "noble-hoard",
     name: "Noble Hoard",
     price: 237.66,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "noble-hoard-i0", name: "Blazing Comet", value: 2282.28, rarity: "legendary", weight: 1000 },
       { id: "noble-hoard-i1", name: "Frost Chain", value: 2081.73, rarity: "legendary", weight: 1000 },
@@ -2874,7 +2874,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ancient-hoard",
     name: "Ancient Hoard",
     price: 247.51,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "ancient-hoard-i0", name: "Cosmic Key", value: 629.63, rarity: "legendary", weight: 15000 },
       { id: "ancient-hoard-i1", name: "Rustic Chest", value: 388.89, rarity: "epic", weight: 25000 },
@@ -2888,7 +2888,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "future-hoard",
     name: "Future Hoard",
     price: 253.55,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "future-hoard-i0", name: "Noble Blade", value: 5591.63, rarity: "legendary", weight: 500 },
       { id: "future-hoard-i1", name: "Rogue Lens", value: 3546.03, rarity: "legendary", weight: 500 },
@@ -2908,7 +2908,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "velvet-reliquary",
     name: "Velvet Reliquary",
     price: 271.85,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "velvet-reliquary-i0", name: "Solar Sigil", value: 1554.6, rarity: "legendary", weight: 500 },
       { id: "velvet-reliquary-i1", name: "Lunar Token", value: 1320.29, rarity: "legendary", weight: 1000 },
@@ -2927,7 +2927,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "crimson-reliquary",
     name: "Crimson Reliquary",
     price: 281.61,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "crimson-reliquary-i0", name: "Mythic Talisman", value: 2797.38, rarity: "legendary", weight: 2500 },
       { id: "crimson-reliquary-i1", name: "Royal Statue", value: 2098.09, rarity: "legendary", weight: 2500 },
@@ -2944,7 +2944,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "azure-reliquary",
     name: "Azure Reliquary",
     price: 283.17,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "azure-reliquary-i0", name: "Neon Scroll", value: 3882.93, rarity: "legendary", weight: 2000 },
       { id: "azure-reliquary-i1", name: "Shadow Badge", value: 2362.85, rarity: "legendary", weight: 2000 },
@@ -2961,7 +2961,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "golden-reliquary",
     name: "Golden Reliquary",
     price: 306.21,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "golden-reliquary-i0", name: "Silver Chain", value: 1912.71, rarity: "legendary", weight: 5000 },
       { id: "golden-reliquary-i1", name: "Copper Disc", value: 1527.64, rarity: "legendary", weight: 5000 },
@@ -2977,7 +2977,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "shadow-reliquary",
     name: "Shadow Reliquary",
     price: 312.13,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "shadow-reliquary-i0", name: "Ruby Chest", value: 1859.94, rarity: "legendary", weight: 5000 },
       { id: "shadow-reliquary-i1", name: "Sapphire Mask", value: 1390.69, rarity: "epic", weight: 5000 },
@@ -2991,7 +2991,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "neon-reliquary",
     name: "Neon Reliquary",
     price: 325.23,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "neon-reliquary-i0", name: "Onyx Lens", value: 2006.91, rarity: "legendary", weight: 4000 },
       { id: "neon-reliquary-i1", name: "Ivory Node", value: 1019.14, rarity: "epic", weight: 6000 },
@@ -3006,7 +3006,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "copper-reliquary",
     name: "Copper Reliquary",
     price: 325.3,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "copper-reliquary-i0", name: "Azure Token", value: 1950.54, rarity: "legendary", weight: 10000 },
       { id: "copper-reliquary-i1", name: "Violet Crown", value: 949.97, rarity: "rare", weight: 10000 },
@@ -3017,7 +3017,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ivory-reliquary",
     name: "Ivory Reliquary",
     price: 327.22,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "ivory-reliquary-i0", name: "Echo Statue", value: 4808.79, rarity: "legendary", weight: 2500 },
       { id: "ivory-reliquary-i1", name: "Pulse Coin", value: 1899.76, rarity: "epic", weight: 2500 },
@@ -3031,7 +3031,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "onyx-reliquary",
     name: "Onyx Reliquary",
     price: 342.34,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "onyx-reliquary-i0", name: "Flux Badge", value: 5587.3, rarity: "legendary", weight: 500 },
       { id: "onyx-reliquary-i1", name: "Zen Star", value: 3936.79, rarity: "epic", weight: 1500 },
@@ -3046,7 +3046,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "scarlet-reliquary",
     name: "Scarlet Reliquary",
     price: 408.03,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "scarlet-reliquary-i0", name: "Lucky Disc", value: 2777.78, rarity: "legendary", weight: 2500 },
       { id: "scarlet-reliquary-i1", name: "Grand Cube", value: 1851.85, rarity: "legendary", weight: 4000 },
@@ -3063,7 +3063,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "frost-reliquary",
     name: "Frost Reliquary",
     price: 419.13,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "frost-reliquary-i0", name: "Hidden Mask", value: 2425.93, rarity: "legendary", weight: 5000 },
       { id: "frost-reliquary-i1", name: "Blazing Gauntlet", value: 1944.44, rarity: "legendary", weight: 5000 },
@@ -3080,7 +3080,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ember-reliquary",
     name: "Ember Reliquary",
     price: 464.02,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "ember-reliquary-i0", name: "Ember Node", value: 2690.97, rarity: "legendary", weight: 1000 },
       { id: "ember-reliquary-i1", name: "Cosmic Flare", value: 2505.78, rarity: "legendary", weight: 1000 },
@@ -3097,7 +3097,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "jade-reliquary",
     name: "Jade Reliquary",
     price: 479.41,
-    accent: "#3b82f6",
+    accent: "#38bdf8",
     items: [
       { id: "jade-reliquary-i0", name: "Silent Crown", value: 2037.04, rarity: "legendary", weight: 10000 },
       { id: "jade-reliquary-i1", name: "Noble Charm", value: 1296.3, rarity: "epic", weight: 10000 },
@@ -3111,7 +3111,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silver-reliquary",
     name: "Silver Reliquary",
     price: 526.85,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "silver-reliquary-i0", name: "Turbo Coin", value: 1556.79, rarity: "legendary", weight: 10000 },
       { id: "silver-reliquary-i1", name: "Solar Ticket", value: 1209.09, rarity: "epic", weight: 10000 },
@@ -3125,7 +3125,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "obsidian-reliquary",
     name: "Obsidian Reliquary",
     price: 594.73,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "obsidian-reliquary-i0", name: "Crystal Star", value: 2314.81, rarity: "legendary", weight: 7500 },
       { id: "obsidian-reliquary-i1", name: "Mythic Ring", value: 1768.52, rarity: "epic", weight: 7500 },
@@ -3139,7 +3139,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "solar-reliquary",
     name: "Solar Reliquary",
     price: 773.99,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "solar-reliquary-i0", name: "Ancient Cube", value: 3376.85, rarity: "legendary", weight: 5000 },
       { id: "solar-reliquary-i1", name: "Neon Lock", value: 2325.83, rarity: "legendary", weight: 5000 },
@@ -3155,7 +3155,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lunar-reliquary",
     name: "Lunar Reliquary",
     price: 850.54,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "lunar-reliquary-i0", name: "Golden Gauntlet", value: 1897.89, rarity: "legendary", weight: 40000 },
       { id: "lunar-reliquary-i1", name: "Silver Wand", value: 61.03, rarity: "rare", weight: 10000 },
@@ -3166,7 +3166,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "royal-reliquary",
     name: "Royal Reliquary",
     price: 897.83,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "royal-reliquary-i0", name: "Jade Flare", value: 7453.44, rarity: "legendary", weight: 500 },
       { id: "royal-reliquary-i1", name: "Ruby Relic", value: 3899.75, rarity: "epic", weight: 2000 },
@@ -3180,7 +3180,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mystic-reliquary",
     name: "Mystic Reliquary",
     price: 900.54,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "mystic-reliquary-i0", name: "Emerald Charm", value: 6647.54, rarity: "legendary", weight: 2000 },
       { id: "mystic-reliquary-i1", name: "Onyx Idol", value: 5495.99, rarity: "epic", weight: 3000 },
@@ -3194,7 +3194,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prism-reliquary",
     name: "Prism Reliquary",
     price: 906.38,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "prism-reliquary-i0", name: "Crimson Ticket", value: 3703.7, rarity: "legendary", weight: 5000 },
       { id: "prism-reliquary-i1", name: "Azure Seal", value: 2777.78, rarity: "epic", weight: 5000 },
@@ -3208,7 +3208,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "amber-reliquary",
     name: "Amber Reliquary",
     price: 914.74,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "amber-reliquary-i0", name: "Prism Ring", value: 5785.36, rarity: "legendary", weight: 10000 },
       { id: "amber-reliquary-i1", name: "Echo Plate", value: 1639.48, rarity: "epic", weight: 10000 },
@@ -3222,7 +3222,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "sapphire-reliquary",
     name: "Sapphire Reliquary",
     price: 985.57,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "sapphire-reliquary-i0", name: "Nova Lock", value: 6515.88, rarity: "legendary", weight: 5000 },
       { id: "sapphire-reliquary-i1", name: "Flux Banner", value: 5575.29, rarity: "epic", weight: 5000 },
@@ -3236,7 +3236,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ruby-reliquary",
     name: "Ruby Reliquary",
     price: 1137.64,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "ruby-reliquary-i0", name: "Wild Wand", value: 3377.32, rarity: "legendary", weight: 10000 },
       { id: "ruby-reliquary-i1", name: "Lucky Core", value: 2289.19, rarity: "legendary", weight: 10000 },
@@ -3252,7 +3252,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cobalt-reliquary",
     name: "Cobalt Reliquary",
     price: 1171.01,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "cobalt-reliquary-i0", name: "Prime Relic", value: 4689.98, rarity: "legendary", weight: 500 },
       { id: "cobalt-reliquary-i1", name: "Hidden Shard", value: 4084.94, rarity: "epic", weight: 500 },
@@ -3266,7 +3266,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "platinum-reliquary",
     name: "Platinum Reliquary",
     price: 1321.77,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "platinum-reliquary-i0", name: "Frost Idol", value: 2797.38, rarity: "legendary", weight: 10000 },
       { id: "platinum-reliquary-i1", name: "Ember Gem", value: 2277.18, rarity: "epic", weight: 10000 },
@@ -3280,7 +3280,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "bronze-reliquary",
     name: "Bronze Reliquary",
     price: 1333.33,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "bronze-reliquary-i0", name: "Rustic Seal", value: 3703.7, rarity: "legendary", weight: 10000 },
       { id: "bronze-reliquary-i1", name: "Silent Ribbon", value: 2777.78, rarity: "epic", weight: 10000 },
@@ -3294,7 +3294,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "arctic-reliquary",
     name: "Arctic Reliquary",
     price: 1334.37,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "arctic-reliquary-i0", name: "Rogue Plate", value: 6519.6, rarity: "legendary", weight: 4000 },
       { id: "arctic-reliquary-i1", name: "Turbo Orb", value: 3313.76, rarity: "legendary", weight: 4000 },
@@ -3311,7 +3311,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "volcanic-reliquary",
     name: "Volcanic Reliquary",
     price: 1555.66,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "volcanic-reliquary-i0", name: "Lunar Banner", value: 11189.6, rarity: "legendary", weight: 1000 },
       { id: "volcanic-reliquary-i1", name: "Crystal Helm", value: 9314.24, rarity: "legendary", weight: 1000 },
@@ -3327,7 +3327,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "cosmic-reliquary",
     name: "Cosmic Reliquary",
     price: 1576.65,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "cosmic-reliquary-i0", name: "Royal Core", value: 5092.59, rarity: "legendary", weight: 7500 },
       { id: "cosmic-reliquary-i1", name: "Ancient Spark", value: 4074.07, rarity: "epic", weight: 7500 },
@@ -3341,7 +3341,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rustic-reliquary",
     name: "Rustic Reliquary",
     price: 1873.45,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "rustic-reliquary-i0", name: "Shadow Shard", value: 4749.47, rarity: "legendary", weight: 20000 },
       { id: "rustic-reliquary-i1", name: "Golden Medallion", value: 2593.95, rarity: "epic", weight: 10000 },
@@ -3356,7 +3356,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "silent-reliquary",
     name: "Silent Reliquary",
     price: 1995.08,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "silent-reliquary-i0", name: "Copper Gem", value: 9286.96, rarity: "legendary", weight: 1000 },
       { id: "silent-reliquary-i1", name: "Jade Chip", value: 7714.69, rarity: "legendary", weight: 1000 },
@@ -3373,7 +3373,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "blazing-reliquary",
     name: "Blazing Reliquary",
     price: 2018.77,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "blazing-reliquary-i0", name: "Sapphire Ribbon", value: 11149.24, rarity: "legendary", weight: 1250 },
       { id: "blazing-reliquary-i1", name: "Emerald Comet", value: 9696.24, rarity: "legendary", weight: 1250 },
@@ -3390,7 +3390,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hidden-reliquary",
     name: "Hidden Reliquary",
     price: 2199.29,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "hidden-reliquary-i0", name: "Ivory Orb", value: 9295.34, rarity: "legendary", weight: 500 },
       { id: "hidden-reliquary-i1", name: "Crimson Key", value: 7443.49, rarity: "legendary", weight: 2000 },
@@ -3406,7 +3406,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "lucky-reliquary",
     name: "Lucky Reliquary",
     price: 2204.25,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "lucky-reliquary-i0", name: "Violet Helm", value: 10224.99, rarity: "legendary", weight: 100 },
       { id: "lucky-reliquary-i1", name: "Prism Blade", value: 9299.06, rarity: "legendary", weight: 100 },
@@ -3426,7 +3426,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "wild-reliquary",
     name: "Wild Reliquary",
     price: 2287.55,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "wild-reliquary-i0", name: "Pulse Spark", value: 11138.79, rarity: "legendary", weight: 250 },
       { id: "wild-reliquary-i1", name: "Nova Sigil", value: 9305.29, rarity: "legendary", weight: 250 },
@@ -3443,7 +3443,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "grand-reliquary",
     name: "Grand Reliquary",
     price: 2331.38,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "grand-reliquary-i0", name: "Zen Medallion", value: 7420.14, rarity: "legendary", weight: 10000 },
       { id: "grand-reliquary-i1", name: "Wild Talisman", value: 6898.87, rarity: "epic", weight: 10000 },
@@ -3457,7 +3457,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "prime-reliquary",
     name: "Prime Reliquary",
     price: 2372.43,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "prime-reliquary-i0", name: "Grand Chip", value: 18518.52, rarity: "legendary", weight: 5000 },
       { id: "prime-reliquary-i1", name: "Prime Scroll", value: 6481.48, rarity: "epic", weight: 5000 },
@@ -3471,7 +3471,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "ultra-reliquary",
     name: "Ultra Reliquary",
     price: 2968.75,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "ultra-reliquary-i0", name: "Blazing Comet", value: 10054.78, rarity: "legendary", weight: 5000 },
       { id: "ultra-reliquary-i1", name: "Frost Chain", value: 6554.95, rarity: "legendary", weight: 5000 },
@@ -3487,7 +3487,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "hyper-reliquary",
     name: "Hyper Reliquary",
     price: 3702.72,
-    accent: "#a855f7",
+    accent: "#8b5cf6",
     items: [
       { id: "hyper-reliquary-i0", name: "Cosmic Key", value: 13927.02, rarity: "legendary", weight: 2000 },
       { id: "hyper-reliquary-i1", name: "Rustic Chest", value: 9807.09, rarity: "legendary", weight: 2000 },
@@ -3504,7 +3504,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "mega-reliquary",
     name: "Mega Reliquary",
     price: 7133.74,
-    accent: "#ef4444",
+    accent: "#ff2d55",
     items: [
       { id: "mega-reliquary-i0", name: "Noble Blade", value: 18518.52, rarity: "legendary", weight: 30000 },
       { id: "mega-reliquary-i1", name: "Rogue Lens", value: 1944.44, rarity: "rare", weight: 30000 },
@@ -3515,7 +3515,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "turbo-reliquary",
     name: "Turbo Reliquary",
     price: 7816.2,
-    accent: "#ef4444",
+    accent: "#ff2d55",
     items: [
       { id: "turbo-reliquary-i0", name: "Solar Sigil", value: 19312.21, rarity: "legendary", weight: 20000 },
       { id: "turbo-reliquary-i1", name: "Lunar Token", value: 9535.71, rarity: "epic", weight: 10000 },
@@ -3529,7 +3529,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "nova-reliquary",
     name: "Nova Reliquary",
     price: 9040.33,
-    accent: "#ef4444",
+    accent: "#ff2d55",
     items: [
       { id: "nova-reliquary-i0", name: "Mythic Talisman", value: 37037.04, rarity: "legendary", weight: 5000 },
       { id: "nova-reliquary-i1", name: "Royal Statue", value: 27777.78, rarity: "epic", weight: 5000 },
@@ -3543,7 +3543,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "echo-reliquary",
     name: "Echo Reliquary",
     price: 12173.35,
-    accent: "#ef4444",
+    accent: "#ff2d55",
     items: [
       { id: "echo-reliquary-i0", name: "Neon Scroll", value: 46296.3, rarity: "legendary", weight: 12500 },
       { id: "echo-reliquary-i1", name: "Shadow Badge", value: 18518.52, rarity: "epic", weight: 12500 },
@@ -3557,7 +3557,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "pulse-reliquary",
     name: "Pulse Reliquary",
     price: 12386.83,
-    accent: "#ef4444",
+    accent: "#ff2d55",
     items: [
       { id: "pulse-reliquary-i0", name: "Silver Chain", value: 55555.56, rarity: "legendary", weight: 5000 },
       { id: "pulse-reliquary-i1", name: "Copper Disc", value: 27777.78, rarity: "epic", weight: 15000 },
@@ -3571,7 +3571,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "flux-reliquary",
     name: "Flux Reliquary",
     price: 13024.69,
-    accent: "#ef4444",
+    accent: "#ff2d55",
     items: [
       { id: "flux-reliquary-i0", name: "Ruby Chest", value: 74074.07, rarity: "legendary", weight: 2000 },
       { id: "flux-reliquary-i1", name: "Sapphire Mask", value: 46296.3, rarity: "legendary", weight: 2000 },
@@ -3588,7 +3588,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "zen-reliquary",
     name: "Zen Reliquary",
     price: 14053.5,
-    accent: "#ef4444",
+    accent: "#ff2d55",
     items: [
       { id: "zen-reliquary-i0", name: "Onyx Lens", value: 115740.74, rarity: "legendary", weight: 1000 },
       { id: "zen-reliquary-i1", name: "Ivory Node", value: 64814.81, rarity: "legendary", weight: 2000 },
@@ -3605,7 +3605,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "rogue-reliquary",
     name: "Rogue Reliquary",
     price: 26114.4,
-    accent: "#ef4444",
+    accent: "#ff2d55",
     items: [
       { id: "rogue-reliquary-i0", name: "Azure Token", value: 129629.63, rarity: "legendary", weight: 5000 },
       { id: "rogue-reliquary-i1", name: "Violet Crown", value: 120370.37, rarity: "legendary", weight: 5000 },
@@ -3625,7 +3625,7 @@ export const GENERATED_CASE_CATALOG: LootCase[] = [
     id: "noble-reliquary",
     name: "Noble Reliquary",
     price: 33894.65,
-    accent: "#ef4444",
+    accent: "#ff2d55",
     items: [
       { id: "noble-reliquary-i0", name: "Echo Statue", value: 138888.89, rarity: "legendary", weight: 5000 },
       { id: "noble-reliquary-i1", name: "Pulse Coin", value: 83333.33, rarity: "legendary", weight: 5000 },

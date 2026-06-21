@@ -21,7 +21,9 @@ type JackpotReelProps = {
 
 type StripEntry = { player: CaseBattlePlayer; pct: number };
 
-const SLOT_COLORS = ["#38bdf8", "#a78bfa", "#34d399", "#fbbf24", "#f472b6", "#fb7185"];
+/** Per-slot accent colors, drawn from the Obsidian Luxury theme palette.
+ *  Each player gets a distinct semantic color so columns are easy to track. */
+const SLOT_COLORS = ["#dc143c", "#8b5cf6", "#00e87a", "#38bdf8", "#ff3b5c", "#ff2d55"];
 
 function PlayerTile({
   player,
@@ -101,7 +103,7 @@ export function JackpotReel({
   const winnerPlayer = sorted.find((p) => p.slot === targetSlot) ?? sorted[0];
 
   const slotColor = useCallback(
-    (slot: number) => SLOT_COLORS[slot % SLOT_COLORS.length] ?? "#38bdf8",
+    (slot: number) => SLOT_COLORS[slot % SLOT_COLORS.length] ?? "#dc143c",
     []
   );
 

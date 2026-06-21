@@ -7,7 +7,7 @@ import {
   type CaseBattlePlayer,
   type CaseBattleView,
 } from "../../lib/caseBattles";
-import { CASE_BATTLE_BOT_ROSTER, isTeamMode } from "../../lib/games/case-battles";
+import { isTeamMode } from "../../lib/games/case-battles";
 import { CaseBattleJoinPanel } from "./CaseBattleJoinPanel";
 import { CaseBattleRoundsStrip } from "./CaseBattleRoundsStrip";
 import { CaseBattleFinalResults } from "./CaseBattleFinalResults";
@@ -75,27 +75,11 @@ function resolvePlaybackBootstrap(
     };
   }
 
-  /** Server settled the battle, but the user already watched the full replay. */
-  if (
-    saved &&
-    !inProgress &&
-    (battleStatus === "completed" || battleStatus === "pending_jackpot_eos")
-  ) {
-    return {
-      activeRound: saved.activeRound,
-      settledRounds: saved.settledRounds,
-      roundsStarted: true,
-      casesPlaybackDone: saved.casesPlaybackDone,
-      jackpotReelDone: isJackpot ? saved.jackpotReelDone : true,
-      forceFull: false,
-      skipPlaybackSync: true,
-      resumedFromReload: false,
-    };
-  }
-
   /**
-   * Server may be completed (EOS mined) before the client finishes animating.
-   * Always run the full case reel playback unless session storage shows a finished watch.
+   * Battle is completed (or pending jackpot EOS). ALWAYS replay the full
+   * case reel animation from round 0 so the user sees the spins — never
+   * skip to static results even if they watched before. The previous
+   * "already watched" skip caused reels to never visibly spin.
    */
   if (battleStatus === "completed" || battleStatus === "pending_jackpot_eos") {
     return {
@@ -233,13 +217,9 @@ export function CaseBattleArena({
     () => battleSlotGroups(battle.playerMode, battle.gamemode, battle.maxPlayers),
     [battle.playerMode, battle.gamemode, battle.maxPlayers]
   );
-  const showTeamDividers = battle.gamemode !== "group" && slotGroups.length > 1;
+  const showTeamDividers = battle.gamemode !== "group" && isTeamMode(battle.playerMode) && slotGroups.length > 1;
 
   const showPullsRow = roundsStarted && battle.status !== "waiting";
-  const showPotInMeta =
-    showStaticResults ||
-    battle.status === "waiting" ||
-    (roundsStarted && hasRoundData);
   const displayPot = useMemo(() => {
     if (!hasRoundData || !roundsStarted) return battle.potTotal;
     if (showStaticResults) return battleTotalUnboxed(battle);
@@ -595,76 +575,78 @@ export function CaseBattleArena({
             : "running"
       }
     >
-      <div className="cbr__arena-head">
-        <div className="cbr__arena-badges">
-          <span className="cbr__badge">{battle.playerMode.toUpperCase()}</span>
-          <span className="cbr__badge cbr__badge--mode">
-            {gamemodeIcon(battle.gamemode)} {gamemodeLabel(battle.gamemode)}
-          </span>
-          {battle.crazyMode && <span className="cbr__badge cbr__badge--crazy">Crazy</span>}
-          {battle.fastSpin && <span className="cbr__badge cbr__badge--fast">Fast</span>}
-          <span
-            className={
-              "cbr__badge cbr__badge--phase" +
-              (showStaticResults
-                ? " cbr__badge--phase-done"
-                : battle.status === "waiting" || isEosPending
-                  ? " cbr__badge--phase-waiting"
-                  : " cbr__badge--phase-running")
-            }
-            aria-live="polite"
-          >
-            {showStaticResults
-              ? "Completed"
-              : battle.status === "waiting"
-                ? "Open"
-                : isEosPending
-                  ? "Mining EOS"
-                  : "Live"}
-          </span>
+      <header className="cbr__arena-head">
+        <div className="cbr__arena-head-row">
+          <div className="cbr__arena-head-left">
+            <span className="cbr__mode-badge">
+              <span className="cbr__mode-badge-icon" aria-hidden>
+                {gamemodeIcon(battle.gamemode)}
+              </span>
+              <span className="cbr__mode-badge-text">{gamemodeLabel(battle.gamemode)}</span>
+            </span>
+            {battle.crazyMode && <span className="cbr__head-tag">Crazy</span>}
+            {battle.fastSpin && <span className="cbr__head-tag">Fast</span>}
+            <span className="cbr__head-tag cbr__head-tag--muted">{battle.playerMode.toUpperCase()}</span>
+          </div>
+
+          <div className="cbr__arena-head-stats">
+            <div className="cbr__head-stat">
+              <span className="cbr__head-stat-label">Rounds</span>
+              <span className="cbr__head-stat-val">{battle.rounds}</span>
+            </div>
+            <span className="cbr__head-stat-sep" aria-hidden />
+            <div className="cbr__head-stat">
+              <span className="cbr__head-stat-label">Entry</span>
+              <span className="cbr__head-stat-val">{formatCoins(battle.entryCost, "balance")}</span>
+            </div>
+            <span className="cbr__head-stat-sep" aria-hidden />
+            <div className="cbr__head-stat cbr__head-stat--pot">
+              <span className="cbr__head-stat-label">
+                {showStaticResults ? "Unboxed" : battle.status === "waiting" ? "Pot" : "Unboxed"}
+              </span>
+              <span className="cbr__head-stat-val">{formatCoins(displayPot, "balance")}</span>
+            </div>
+          </div>
+
+          <div className="cbr__arena-head-right">
+            <span
+              className={
+                "cbr__phase-pill" +
+                (showStaticResults
+                  ? " cbr__phase-pill--done"
+                  : battle.status === "waiting" || isEosPending
+                    ? " cbr__phase-pill--waiting"
+                    : " cbr__phase-pill--running")
+              }
+              aria-live="polite"
+            >
+              {showStaticResults
+                ? "Completed"
+                : battle.status === "waiting"
+                  ? "Open"
+                  : isEosPending
+                    ? "Mining EOS"
+                    : "Live"}
+            </span>
+          </div>
         </div>
-        <p className="cbr__arena-meta">
-          {battle.rounds} case{battle.rounds === 1 ? "" : "s"} · Entry {formatCoins(battle.entryCost, "balance")} per seat
-          {showStaticResults ? (
-            <>
-              {" "}
-              · Unboxed {formatCoins(battleTotalUnboxed(battle), "balance")} · Entry pot {formatCoins(battle.potTotal, "balance")}
-            </>
-          ) : showPotInMeta ? (
-            <>
-              {" "}
-              · {battle.status === "waiting"
-                ? "Pot so far"
-                : "Unboxed"}{" "}
-              {formatCoins(displayPot, "balance")}
-            </>
-          ) : null}
-        </p>
-        <div className="cbr__arena-status-stack" role="status" aria-live="polite">
+
+        <div className="cbr__arena-status-line" role="status" aria-live="polite">
           {battle.status === "waiting" && (
-            <p className="cbr__arena-status">
-              Waiting for players — {battle.players.length}/{battle.maxPlayers} filled
-              {isCreator
-                ? ` · Call bots — random pick from ${CASE_BATTLE_BOT_ROSTER.length} lucky bots`
-                : ""}
-            </p>
+            <>
+              Waiting for players · {battle.players.length}/{battle.maxPlayers} filled
+              {isCreator ? ` · call bots` : ""}
+            </>
           )}
-          {isEosPending && (
-            <p className="cbr__arena-status">Committing battle seed — waiting for EOS block…</p>
-          )}
-          {awaitingRoundSync && (
-            <p className="cbr__arena-status">Catching up — next round starts shortly…</p>
-          )}
+          {isEosPending && <>Committing battle seed · waiting for EOS block…</>}
+          {awaitingRoundSync && <>Catching up · next round starts shortly…</>}
           {reelsPhase && !showStaticResults && (
-            <p className="cbr__arena-status">
-              Round {activeRound + 1} of {battle.rounds} · Opening cases…
-            </p>
+            <>Round {activeRound + 1} of {battle.rounds} · opening cases…</>
           )}
-          {showJackpotEosWait && (
-            <p className="cbr__arena-status">All cases opened — waiting for jackpot EOS block…</p>
-          )}
-          {showJackpotReel && <p className="cbr__arena-status">Jackpot block mined — rolling for winner…</p>}
+          {showJackpotEosWait && <>All cases opened · waiting for jackpot EOS block…</>}
+          {showJackpotReel && <>Jackpot block mined · rolling for winner…</>}
         </div>
+
         {showStaticResults && isWinner && (
           <span
             className="cbr__result-pill cbr__result-pill--win"
@@ -683,7 +665,7 @@ export function CaseBattleArena({
             Battle complete — no win this time
           </span>
         )}
-      </div>
+      </header>
 
       {battle.caseIds.length > 0 &&
         (columnPhase !== "lobby" || battle.status === "pending_eos") && (
@@ -749,8 +731,10 @@ export function CaseBattleArena({
               {slotGroups.map((teamSlots, groupIdx) => (
                 <div key={`col-g-${groupIdx}`} className="cbr__board-group">
                   {showTeamDividers && groupIdx > 0 && (
-                    <span className="cbr__lobby-vs cbr__lobby-vs--battle" aria-hidden>
-                      ×
+                    <span className="cbr__vs" aria-hidden>
+                      <span className="cbr__vs-line" />
+                      <span className="cbr__vs-text">VS</span>
+                      <span className="cbr__vs-line" />
                     </span>
                   )}
                   <div className="cbr__board-team">{teamSlots.map(renderSlotColumn)}</div>
@@ -760,19 +744,17 @@ export function CaseBattleArena({
           )}
 
           {showPullsRow && (
-            <div className="cbr__pulls-section">
-              <h3 className="cbr__pulls-section-title">Pull history</h3>
-              <div className="cbr__pulls-row">
-                {slotGroups.map((teamSlots, groupIdx) => (
-                  <div key={`pulls-g-${groupIdx}`} className="cbr__board-group">
-                    {showTeamDividers && groupIdx > 0 && (
-                      <span className="cbr__lobby-vs cbr__lobby-vs--pulls" aria-hidden />
-                    )}
-                    <div className="cbr__board-team">{teamSlots.map(renderPullsColumn)}</div>
-                  </div>
-                ))}
+            <section className="cbr__pulls-section">
+              <div className="cbr__pulls-section-head">
+                <span className="cbr__pulls-section-label">Pull history</span>
+                <span className="cbr__pulls-section-rule" aria-hidden />
               </div>
-            </div>
+              <div className="cbr__pulls-list">
+                {Array.from({ length: battle.maxPlayers }, (_, slot) =>
+                  renderPullsColumn(slot)
+                )}
+              </div>
+            </section>
           )}
         </div>
       )}

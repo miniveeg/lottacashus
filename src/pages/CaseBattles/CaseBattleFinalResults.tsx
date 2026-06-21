@@ -44,13 +44,13 @@ function FinalPlayerCard({
         (line.isYou ? " cbr__final-card--you" : "")
       }
     >
+      {line.isWinner && <span className="cbr__final-card-crown" aria-hidden>👑</span>}
       <div className="cbr__final-card-top">
         <span className="cbr__final-card-avatar">{line.isBot ? "🤖" : "👤"}</span>
         <span className="cbr__final-card-name">
           {line.displayName}
           {line.isYou ? " (you)" : ""}
         </span>
-        {line.isWinner && <span className="cbr__final-card-badge">Winner</span>}
       </div>
       <p className="cbr__final-card-unboxed">Unboxed {formatCoins(line.unboxedTotal, "balance")}</p>
       <p
@@ -109,6 +109,7 @@ export function CaseBattleFinalResults({
         <h2 className="cbr__final-title">
           {winnerLine ? (
             <>
+              <span className="cbr__final-crown" aria-hidden>👑</span>
               <span className="cbr__final-winner-name">{winnerLine.displayName}</span>
               {winnerLine.isYou ? " (you)" : ""} wins
             </>
@@ -118,8 +119,8 @@ export function CaseBattleFinalResults({
         </h2>
         <p className="cbr__final-pot">
           Total unboxed <strong>{formatCoins(totalUnboxed, "balance")}</strong>
-          <span className="cbr__final-pot-note"> {payoutNote}</span>
         </p>
+        <p className="cbr__final-pot-note">{payoutNote}</p>
         {isJackpot && jackpotWinner && (
           <p className="cbr__final-jackpot">
             Jackpot landed on <strong>{jackpotWinner.displayName}</strong>
@@ -131,8 +132,10 @@ export function CaseBattleFinalResults({
         {slotGroups.map((teamSlots, groupIdx) => (
           <div key={`final-g-${groupIdx}`} className="cbr__board-group">
             {showTeamDividers && groupIdx > 0 && (
-              <span className="cbr__lobby-vs cbr__lobby-vs--battle" aria-hidden>
-                ×
+              <span className="cbr__vs" aria-hidden>
+                <span className="cbr__vs-line" />
+                <span className="cbr__vs-text">VS</span>
+                <span className="cbr__vs-line" />
               </span>
             )}
             <div className="cbr__board-team">

@@ -92,18 +92,40 @@ export function buildPlayerResultLines(
       ? battle.winningSlots
       : (results?.winningSlots ?? (battle.winnerSlot != null ? [battle.winnerSlot] : []));
 
-  return [...battle.players]
-    .sort((a, b) => a.slot - b.slot)
+  // Pre-compute jackpot percentages using the largest remainder method so
+  // they sum to exactly 100.0% (avoids 100.1% or 99.9% from naive rounding).
+  const sortedPlayers = [...battle.players].sort((a, b) => a.slot - b.slot);
+  const jackpotPctBySlot = new Map<number, number>();
+  if (isJackpot && totalJackpotW > 0) {
+    const rawPcts = sortedPlayers.map((p) => {
+      const w = weights.find((x) => x.slot === p.slot)?.weight ?? 0;
+      return (w / totalJackpotW) * 100;
+    });
+    // Floor to 1 decimal place, then distribute the remainder.
+    const floored = rawPcts.map((v) => Math.floor(v * 10) / 10);
+    const remainder = Math.round((100 - floored.reduce((s, v) => s + v, 0)) * 10);
+    // Sort indices by largest fractional remainder, add 0.1 to the top ones.
+    const fracs = rawPcts.map((v, i) => ({
+      i,
+      frac: v * 10 - Math.floor(v * 10),
+    }));
+    fracs.sort((a, b) => b.frac - a.frac);
+    for (let r = 0; r < remainder; r++) {
+      const idx = fracs[r % fracs.length]!.i;
+      floored[idx] = Math.round((floored[idx]! + 0.1) * 10) / 10;
+    }
+    sortedPlayers.forEach((p, i) => {
+      jackpotPctBySlot.set(p.slot, floored[i]!);
+    });
+  }
+
+  return sortedPlayers
     .map((player) => {
       const payout =
         player.userId != null
           ? (payouts.find((p) => p.userId === player.userId)?.amount ?? 0)
           : 0;
-      const w = weights.find((x) => x.slot === player.slot)?.weight ?? 0;
-      const jackpotPct =
-        isJackpot && totalJackpotW > 0
-          ? Math.round((w / totalJackpotW) * 1000) / 10
-          : undefined;
+      const jackpotPct = jackpotPctBySlot.get(player.slot);
 
       // Group mode: ALL slots are winners (the pot is split equally among
       // every seat, humans AND bots). Use winningSlots (which includes all

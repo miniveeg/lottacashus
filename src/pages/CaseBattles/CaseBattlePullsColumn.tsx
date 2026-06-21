@@ -23,6 +23,14 @@ type CaseBattlePullsColumnProps = {
   revealedRounds: number;
 };
 
+/**
+ * Renders ONE player's pull history as a horizontal strip:
+ *   [ avatar | name + tags ]  [ item · item · item · ... ]
+ *
+ * Multiple strips stack vertically inside `.cbr__pulls-list`. This mirrors
+ * cases.gg's "drop history" layout — each player gets a single horizontal
+ * row of their drops rather than a tall vertical stack that's hard to scan.
+ */
 export function CaseBattlePullsColumn({
   player,
   slot,
@@ -31,35 +39,43 @@ export function CaseBattlePullsColumn({
   revealedRounds,
 }: CaseBattlePullsColumnProps) {
   if (!player) {
-    return (
-      <div className="cbr__pulls-col cbr__pulls-col--empty">
-        <span className="cbr__pulls-col-name">—</span>
-      </div>
-    );
+    // Empty slot — render nothing so the strip list stays compact.
+    return null;
   }
 
   const revealed = player.drops.slice(0, revealedRounds);
+  const total = revealed.reduce((sum, d) => sum + d.value, 0);
 
   return (
     <div
       className={
-        "cbr__pulls-col" +
-        (isYou ? " cbr__pulls-col--you" : "") +
-        (isWinner ? " cbr__pulls-col--winner" : "")
+        "cbr__pulls-strip" +
+        (isYou ? " cbr__pulls-strip--you" : "") +
+        (isWinner ? " cbr__pulls-strip--winner" : "")
       }
     >
-      <div className="cbr__pulls-col-head">
-        <span className="cbr__pulls-col-avatar" aria-hidden>
+      <div className="cbr__pulls-strip-head">
+        <span className="cbr__pulls-strip-avatar" aria-hidden>
           {player.isBot ? "🤖" : "👤"}
         </span>
-        <span className="cbr__pulls-col-name">
-          {player.displayName}
-          {isYou ? " (you)" : ""}
+        <div className="cbr__pulls-strip-meta">
+          <span className="cbr__pulls-strip-name">{player.displayName}</span>
+          <div className="cbr__pulls-strip-tags">
+            {player.isBot && <span className="cbr__pulls-strip-tag">Bot</span>}
+            {isYou && <span className="cbr__pulls-strip-tag cbr__pulls-strip-tag--you">You</span>}
+            {isWinner && (
+              <span className="cbr__pulls-strip-tag cbr__pulls-strip-tag--winner">Winner</span>
+            )}
+          </div>
+        </div>
+        <span className="cbr__pulls-strip-total" aria-label="Total pulled">
+          {formatCoins(total, "balance")}
         </span>
       </div>
-      <div className="cbr__pulls-col-items">
+
+      <div className="cbr__pulls-strip-items">
         {revealed.length === 0 ? (
-          <p className="cbr__pulls-col-empty">No pulls yet</p>
+          <p className="cbr__pulls-strip-empty">No pulls yet</p>
         ) : (
           revealed.map((drop, i) => (
             <PulledItemCard key={`${slot}-${i}`} drop={drop} round={drop.round} />

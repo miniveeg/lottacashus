@@ -86,9 +86,7 @@ export function CaseBattlePlayerColumn({
     lootCase && currentDrop && player ? dropToItem(currentDrop, lootCase) : null;
   const isSpinning = phase === "playing" && reelsPhase && filled && targetItem != null;
 
-  const headerLabel = filled
-    ? `${player!.displayName}${isYou ? " (you)" : ""}`
-    : "Call bot";
+  const headerLabel = filled ? player!.displayName : "Call bot";
 
   return (
     <div
@@ -97,12 +95,15 @@ export function CaseBattlePlayerColumn({
         (filled ? " cbr__p-col--filled" : " cbr__p-col--empty") +
         (isYou ? " cbr__p-col--you" : "")
       }
+      data-phase={phase}
     >
       <header className="cbr__p-col-head">
         <span className={"cbr__p-col-avatar" + (filled ? "" : " cbr__p-col-avatar--ghost")} aria-hidden>
           {filled ? (player!.isBot ? "🤖" : "👤") : "·"}
         </span>
         <span className="cbr__p-col-name">{headerLabel}</span>
+        {filled && player!.isBot && <span className="cbr__p-col-tag">Bot</span>}
+        {isYou && <span className="cbr__p-col-tag cbr__p-col-tag--you">You</span>}
       </header>
 
       <div className="cbr__p-col-body">

@@ -548,9 +548,10 @@ async function resolveJackpot(
 ): Promise<OutcomeResult> {
   const unboxedPool = totalUnboxedPool(players);
   const weightValues = jackpotWeightsForPlayers(players, crazy);
-  const jackpotWeights = players.map((p, i) => ({ slot: p.slot, weight: weightValues[i]! }));
 
   if (!isTeamMode(playerMode)) {
+    // Solo jackpot: each player's weight IS their odds.
+    const jackpotWeights = players.map((p, i) => ({ slot: p.slot, weight: weightValues[i]! }));
     const idx = await pickWeightedIndex(weightValues, battleSeed, crazy ? "jackpot-winner-crazy" : "jackpot-winner");
     const winner = players[idx]!;
     const winnerPayouts: WinnerPayout[] = [];
@@ -568,23 +569,34 @@ async function resolveJackpot(
     };
   }
 
+  // Team jackpot: sum per-player weights into team buckets, then pick a team.
+  // Each player's returned weight = their TEAM's total weight so UI percentages
+  // show the team's actual odds (all players on a team share the same fate).
   const teamIds: number[] = [];
   const teamWeights: number[] = [];
   const teamSlots = new Map<number, number[]>();
+  const playerTeamIndex: number[] = [];
 
   for (let pi = 0; pi < players.length; pi++) {
     const p = players[pi]!;
     const t = teamIndexForMode(playerMode, p.slot);
     const w = weightValues[pi] ?? 0;
-    if (!teamSlots.has(t)) {
+    let idx = teamIds.indexOf(t);
+    if (idx === -1) {
       teamIds.push(t);
       teamWeights.push(0);
       teamSlots.set(t, []);
+      idx = teamIds.length - 1;
     }
-    const idx = teamIds.indexOf(t);
     teamWeights[idx] = (teamWeights[idx] ?? 0) + w;
     teamSlots.get(t)!.push(p.slot);
+    playerTeamIndex[pi] = idx;
   }
+
+  const jackpotWeights = players.map((p, i) => ({
+    slot: p.slot,
+    weight: teamWeights[playerTeamIndex[i]] ?? 0,
+  }));
 
   const teamIdx = await pickWeightedIndex(
     teamWeights,

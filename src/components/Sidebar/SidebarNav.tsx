@@ -9,7 +9,6 @@ type NavItem = { icon: UiIconName; label: string; href: string };
 const mainNav: NavItem[] = [
   { icon: "home", label: "Home", href: "/" },
   { icon: "originals", label: "Originals", href: ORIGINALS_PATH },
-  { icon: "slots", label: "Slots", href: "/slots" },
   { icon: "promotions", label: "Promotions", href: "/promotions" },
   { icon: "leaderboard", label: "Leaderboard", href: "/leaderboard" },
 ];
@@ -60,9 +59,9 @@ export function SidebarNav() {
   const { profile } = useProfile();
   const { collapsed } = useSidebar();
 
-  const accountItems: NavItem[] = profile?.isAdmin
-    ? [...accountNav, { icon: "admin", label: "Admin", href: "/admin" }]
-    : accountNav;
+  const adminItem: NavItem[] = profile?.isAdmin
+    ? [{ icon: "admin", label: "Admin", href: "/admin" }]
+    : [];
 
   return (
     <>
@@ -78,7 +77,7 @@ export function SidebarNav() {
       <nav className="sidebar__section" aria-label="Account">
         {!collapsed ? <p className="sidebar__label">Account</p> : null}
         <ul className="sidebar__nav">
-          {accountItems.map((item) => (
+          {accountNav.map((item) => (
             <NavLink key={item.label} item={item} />
           ))}
         </ul>
@@ -92,6 +91,16 @@ export function SidebarNav() {
           ))}
         </ul>
       </nav>
+
+      {adminItem.length > 0 && (
+        <nav className="sidebar__section sidebar__section--admin" aria-label="Admin">
+          <ul className="sidebar__nav">
+            {adminItem.map((item) => (
+              <NavLink key={item.label} item={item} />
+            ))}
+          </ul>
+        </nav>
+      )}
     </>
   );
 }

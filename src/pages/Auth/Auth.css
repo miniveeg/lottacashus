@@ -9,7 +9,7 @@
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
+  max-width: min(420px, 94vw);
   padding: 2rem;
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border-strong);

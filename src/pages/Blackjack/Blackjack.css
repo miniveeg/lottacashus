@@ -22,8 +22,8 @@
 
 .bj__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
-  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 22vw, 360px);
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
   align-items: stretch;
 }
 
@@ -91,7 +91,7 @@
   min-height: inherit;
   padding: 2rem 1.5rem 2.5rem;
   width: 100%;
-  max-width: 640px;
+  max-width: min(640px, 100%);
   margin: 0 auto;
 }
 

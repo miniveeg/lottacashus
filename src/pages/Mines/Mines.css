@@ -24,8 +24,8 @@
 
 .mines__layout {
   display: grid;
-  grid-template-columns: 1fr minmax(300px, 340px);
-  gap: 1.25rem;
+  grid-template-columns: 1fr clamp(260px, 22vw, 360px);
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
   align-items: start;
 }
 
@@ -71,8 +71,8 @@
 .mines__grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 0.5rem;
-  max-width: 420px;
+  gap: clamp(0.35rem, 0.8vw, 0.5rem);
+  max-width: min(520px, 100%);
   margin: 0 auto 1rem;
 }
 

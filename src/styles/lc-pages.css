@@ -8,20 +8,23 @@
     var(--lc-bg-base);
 }
 
-/* ── Page shell ── */
+/* ── Page shell ──
+   Pages fill 100% of the available main area by default.
+   Modifiers cap the width for readability on very wide screens.
+   All widths are fluid via min()/clamp() so they adapt to any viewport. */
 .lc-page {
-  --lc-page-pad-x: clamp(1rem, 3vw, 1.5rem);
-  --lc-page-pad-y: clamp(1.25rem, 3vw, 1.75rem);
-  --lc-page-pad-b: clamp(2rem, 5vw, 3.5rem);
+  --lc-page-pad-x: clamp(0.75rem, 2.5vw, 2rem);
+  --lc-page-pad-y: clamp(1rem, 2.5vw, 1.75rem);
+  --lc-page-pad-b: clamp(1.5rem, 4vw, 3.5rem);
   width: 100%;
-  max-width: var(--lc-page-max, 1120px);
+  max-width: var(--lc-page-max, none);
   margin: 0 auto;
   padding: var(--lc-page-pad-y) var(--lc-page-pad-x) var(--lc-page-pad-b);
 }
 
-.lc-page--narrow  { --lc-page-max: 720px; }
-.lc-page--medium  { --lc-page-max: 900px; }
-.lc-page--wide    { --lc-page-max: 1180px; }
+.lc-page--narrow  { --lc-page-max: min(720px, 90vw); }
+.lc-page--medium  { --lc-page-max: min(960px, 94vw); }
+.lc-page--wide    { max-width: none; }
 
 .lc-page--auth {
   max-width: none;
@@ -57,7 +60,7 @@
 .lc-page__title {
   font-family: var(--lc-font-display);
   font-weight: 800;
-  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  font-size: clamp(1.35rem, 2.8vw, 1.9rem);
   letter-spacing: -0.03em;
   line-height: 1.12;
   margin: 0 0 0.4rem;
@@ -300,19 +303,14 @@
 }
 
 /* ── Game pages ──
-   Every Originals game page (Mines, Keno, Limbo, Roulette, Blackjack, Crash,
-   Slots) shares this one shell so they all line up: same max width, same
-   horizontal centering, same top/bottom padding. Add the `lc-game-page`
-   class to any new game page and it inherits this automatically — no need
-   to enumerate it below. Blackjack alone gets a wider stage for the table. */
+   Every Originals game page shares this shell: no max-width so the game
+   fills whatever space the sidebar leaves. Game layouts (board + controls)
+   use their own grids to divide the space responsively. */
 .lc-game-page {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 1.35rem clamp(1rem, 3vw, 1.5rem) 3rem;
-}
-
-.lc-game-page.bj {
-  max-width: 1280px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: clamp(1rem, 2vw, 1.35rem) clamp(0.75rem, 2.5vw, 2rem) clamp(2rem, 4vw, 3rem);
 }
 
 .keno__board-panel, .mines__board-panel, .limbo__stage-panel,
@@ -483,12 +481,12 @@ a:focus:not(:focus-visible) { outline: none; }
 /* ── Mobile ── */
 @media (max-width: 900px) {
   .lc-page {
-    --lc-page-pad-x: 1rem;
-    --lc-page-pad-y: 1rem;
-    --lc-page-pad-b: 2rem;
+    --lc-page-pad-x: clamp(0.6rem, 2vw, 1rem);
+    --lc-page-pad-y: clamp(0.75rem, 2vw, 1rem);
+    --lc-page-pad-b: clamp(1.25rem, 3vw, 2rem);
   }
-  .lc-page--auth { padding: 1.25rem 1rem; }
-  .lc-game-page { padding: 1rem 1rem 2.5rem; }
+  .lc-page--auth { padding: 1.25rem clamp(0.6rem, 2vw, 1rem); }
+  .lc-game-page { padding: clamp(0.75rem, 2vw, 1rem) clamp(0.6rem, 2vw, 1rem) clamp(1.5rem, 3vw, 2.5rem); }
   .game-controls,
   .mines__controls, .keno__controls, .limbo__controls,
   .roulette__controls, .crash__controls, .slots__controls, .bj__controls {
@@ -502,9 +500,9 @@ a:focus:not(:focus-visible) { outline: none; }
 }
 
 @media (max-width: 480px) {
-  .lc-page { --lc-page-pad-x: 0.75rem; }
-  .lc-page__header { margin-bottom: 1.25rem; }
-  .lc-panel { padding: 1rem 1.1rem; }
-  .lc-game-page { padding: 0.75rem 0.75rem 2rem; }
-  .lc-page__title { font-size: 1.35rem; }
+  .lc-page { --lc-page-pad-x: clamp(0.5rem, 2vw, 0.75rem); }
+  .lc-page__header { margin-bottom: clamp(0.85rem, 2.5vw, 1.25rem); }
+  .lc-panel { padding: clamp(0.75rem, 2vw, 1rem) clamp(0.85rem, 2.5vw, 1.1rem); }
+  .lc-game-page { padding: 0.75rem clamp(0.5rem, 2vw, 0.75rem) clamp(1.25rem, 3vw, 2rem); }
+  .lc-page__title { font-size: clamp(1.15rem, 5vw, 1.35rem); }
 }

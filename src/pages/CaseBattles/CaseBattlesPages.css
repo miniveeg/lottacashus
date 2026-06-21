@@ -1,6 +1,6 @@
 /* Shared layout for Case Battles hub + create */
 .cb-page--compact {
-  max-width: 1180px;
+  max-width: min(1180px, 96vw);
   padding-bottom: 2rem;
 }
 
@@ -16,7 +16,7 @@
   --cb-accent-glow: rgba(56, 189, 248, 0.35);
   --cb-panel: rgba(16, 20, 30, 0.88);
   --cb-panel-border: rgba(148, 163, 184, 0.12);
-  max-width: 1080px;
+  max-width: min(1080px, 96vw);
   margin: 0 auto;
   padding: 1.25rem clamp(1rem, 3vw, 1.5rem) 5rem;
   position: relative;

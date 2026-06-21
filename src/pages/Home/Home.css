@@ -35,7 +35,7 @@
 .home__hero-copy {
   position: relative;
   z-index: 2;
-  max-width: 560px;
+  max-width: min(560px, 85%);
 }
 
 .home__eyebrow {
@@ -113,7 +113,7 @@
 
 .home__pillar-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
   gap: 1rem;
 }
 

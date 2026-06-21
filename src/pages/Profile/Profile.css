@@ -1,7 +1,7 @@
 /* ── Profile page ── */
 
 .profile-page {
-  max-width: 900px;
+  max-width: min(900px, 94vw);
 }
 
 /* ── Hero ── */

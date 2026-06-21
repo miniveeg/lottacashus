@@ -1,7 +1,7 @@
 /* ── Leaderboard page ── */
 
 .leaderboard-page {
-  max-width: 900px;
+  max-width: min(900px, 94vw);
 }
 
 .leaderboard-header {

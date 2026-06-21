@@ -12,9 +12,9 @@
   --lc-bg-glass: rgba(14, 14, 22, 0.72);
 
   /* ── Layout ── */
-  --lc-topbar-height: 64px;
-  --lc-sidebar-width: 252px;
-  --lc-sidebar-collapsed: 72px;
+  --lc-topbar-height: clamp(52px, 7vw, 64px);
+  --lc-sidebar-width: clamp(200px, 18vw, 252px);
+  --lc-sidebar-collapsed: clamp(56px, 5vw, 72px);
 
   /* ── Crimson accent (primary) ── */
   --lc-crimson: #dc143c;
@@ -100,7 +100,7 @@
   --lc-transition-spring: 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
   /* ── Layout constraints ── */
-  --lc-page-max: 1120px;
+  --lc-page-max: min(1120px, 92vw);
   --lc-focus-ring: 0 0 0 3px var(--lc-crimson-glow);
   --lc-focus-outline: 2px solid var(--lc-crimson-soft);
 

@@ -187,7 +187,7 @@ export function Admin() {
   }
 
   return (
-    <div className="admin lc-page lc-page--medium">
+    <div className="admin lc-page lc-page--wide">
       <header className="lc-page__header admin__header">
         <h1 className="lc-page__title admin__title">Admin</h1>
         <p className="lc-page__subtitle admin__subtitle">Manage withdrawals, review deposits, and assign admin access.</p>

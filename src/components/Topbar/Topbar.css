@@ -87,7 +87,7 @@
 .topbar__search-wrap {
   position: relative;
   flex: 1;
-  max-width: 420px;
+  max-width: min(420px, 30vw);
   min-width: 0;
 }
 

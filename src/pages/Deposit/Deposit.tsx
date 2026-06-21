@@ -86,7 +86,7 @@ export function Deposit() {
 
   if (authLoading) {
     return (
-      <div className="wallet lc-page lc-page--narrow">
+      <div className="wallet lc-page lc-page--medium">
         <div className="lc-loading">
           <div className="lc-loading__pulse" aria-hidden />
           <p>Loading…</p>

@@ -80,7 +80,7 @@ export default function Redeem() {
 
   if (!user) {
     return (
-      <div className="redeem lc-page lc-page--narrow">
+      <div className="redeem lc-page lc-page--medium">
         <header className="lc-page__header">
           <h1 className="lc-page__title">Redeem</h1>
           <p className="lc-page__subtitle">Log in to cash out your Sweeps Coins.</p>

@@ -220,7 +220,7 @@ export function Settings() {
         : "settings__tally-value--neutral";
 
   return (
-    <div className="settings lc-page lc-page--medium">
+    <div className="settings lc-page lc-page--wide">
       <header className="lc-page__header">
         <h1 className="lc-page__title settings__title">Settings</h1>
         <p className="lc-page__subtitle settings__subtitle">Your LottaCash account overview</p>

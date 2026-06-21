@@ -1,5 +1,5 @@
 .redeem {
-  max-width: 520px;
+  max-width: min(520px, 94vw);
   margin: 0 auto;
   padding: 2rem 1rem;
 }

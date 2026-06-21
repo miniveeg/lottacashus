@@ -1,12 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
-  LayoutDashboard,
-  Users,
-  Banknote,
-  Gift,
-  PlusCircle,
-} from "lucide-react";
-import {
   adminCreditUser,
   completeAdminWithdrawal,
   failAdminWithdrawal,
@@ -25,16 +18,6 @@ import {
 } from "../../lib/admin";
 import { formatUsd } from "../../lib/format";
 import "./Admin.css";
-
-type TabId = "overview" | "users" | "withdrawals" | "redemptions" | "credits";
-
-const TABS: { id: TabId; label: string; icon: typeof Users }[] = [
-  { id: "overview", label: "Overview", icon: LayoutDashboard },
-  { id: "withdrawals", label: "Withdrawals", icon: Banknote },
-  { id: "redemptions", label: "Redemptions", icon: Gift },
-  { id: "users", label: "Users", icon: Users },
-  { id: "credits", label: "Credits", icon: PlusCircle },
-];
 
 function formatDate(iso: string | null) {
   if (!iso) return "—";
@@ -74,8 +57,6 @@ export function Admin() {
   const [creditNote, setCreditNote] = useState("");
   const [creditStatus, setCreditStatus] = useState<string | null>(null);
   const [creditBusy, setCreditBusy] = useState(false);
-
-  const [activeTab, setActiveTab] = useState<TabId>("overview");
 
   const loadRedemptions = useCallback(async () => {
     const { data, error: err } = await fetchAdminRedemptions("pending");
@@ -206,12 +187,10 @@ export function Admin() {
   }
 
   return (
-    <div className="admin lc-page lc-page--wide">
+    <div className="admin lc-page lc-page--medium">
       <header className="lc-page__header admin__header">
-        <h1 className="lc-page__title">Admin</h1>
-        <p className="lc-page__subtitle">
-          Manage withdrawals, review deposits, process redemptions, and assign admin access.
-        </p>
+        <h1 className="lc-page__title admin__title">Admin</h1>
+        <p className="lc-page__subtitle admin__subtitle">Manage withdrawals, review deposits, and assign admin access.</p>
       </header>
 
       {error && (
@@ -225,377 +204,308 @@ export function Admin() {
         </p>
       )}
 
-      <div className="admin-layout">
-        <nav className="admin-tabs" aria-label="Admin sections">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                className={`admin-tab${activeTab === tab.id ? " admin-tab--active" : ""}`}
-                onClick={() => setActiveTab(tab.id)}
-                aria-selected={activeTab === tab.id}
-                role="tab"
-              >
-                <Icon size={16} aria-hidden="true" />
-                <span>{tab.label}</span>
-                {tab.id === "withdrawals" && withdrawals.length > 0 && (
-                  <span className="admin-tab__count">{withdrawals.length}</span>
-                )}
-                {tab.id === "redemptions" && redemptions.length > 0 && (
-                  <span className="admin-tab__count">{redemptions.length}</span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="admin-content" role="tabpanel">
-          {activeTab === "overview" && (
-            <>
-              <section className="admin__stats" aria-label="Overview">
-                <div className="admin__stat">
-                  <span className="admin__stat-label">Pending withdrawals</span>
-                  <span className="admin__stat-value">
-                    {loading ? "…" : (stats?.pendingWithdrawals ?? 0)}
-                  </span>
-                </div>
-                <div className="admin__stat admin__stat--gold">
-                  <span className="admin__stat-label">Pending volume</span>
-                  <span className="admin__stat-value admin__stat-value--gold">
-                    {loading ? "…" : formatUsd(stats?.pendingWithdrawalsUsd ?? 0)}
-                  </span>
-                </div>
-                <div className="admin__stat">
-                  <span className="admin__stat-label">Total users</span>
-                  <span className="admin__stat-value">{loading ? "…" : (stats?.totalUsers ?? 0)}</span>
-                </div>
-                <div className="admin__stat">
-                  <span className="admin__stat-label">Deposits (24h)</span>
-                  <span className="admin__stat-value">{loading ? "…" : (stats?.creditedDeposits24h ?? 0)}</span>
-                </div>
-              </section>
-
-              <section className="admin__section lc-panel">
-                <div className="admin__section-head">
-                  <div>
-                    <h2 className="admin__section-title">Recent deposits</h2>
-                    <p className="admin__section-desc">Last credited on-chain deposits.</p>
-                  </div>
-                  <button type="button" className="admin__refresh" onClick={() => loadDashboard()} disabled={loading}>
-                    Refresh
-                  </button>
-                </div>
-                {deposits.length === 0 ? (
-                  <p className="admin__empty">No credited deposits yet.</p>
-                ) : (
-                  <div className="admin__table-wrap">
-                    <table className="admin__table">
-                      <thead>
-                        <tr>
-                          <th>User</th>
-                          <th>Chain</th>
-                          <th>Amount</th>
-                          <th>Credited</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {deposits.map((d) => (
-                          <tr key={d.id}>
-                            <td>{displayUser(d.username, null)}</td>
-                            <td>{d.chain.toUpperCase()}</td>
-                            <td className="admin__table-amount">{formatUsd(d.usdAmount)}</td>
-                            <td>{formatDate(d.creditedAt)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </section>
-            </>
-          )}
-
-          {activeTab === "withdrawals" && (
-            <section className="admin__section lc-panel">
-              <div className="admin__section-head">
-                <div>
-                  <h2 className="admin__section-title">Pending withdrawals</h2>
-                  <p className="admin__section-desc">
-                    Send crypto from treasury wallets, then mark complete with the tx hash. Fail refunds the user&apos;s balance.
-                  </p>
-                </div>
-                <button type="button" className="admin__refresh" onClick={() => loadDashboard()} disabled={loading}>
-                  Refresh
-                </button>
-              </div>
-
-              {loading ? (
-                <div className="lc-loading admin__loading">
-                  <div className="lc-loading__pulse" aria-hidden />
-                  <p>Loading withdrawals…</p>
-                </div>
-              ) : withdrawals.length === 0 ? (
-                <p className="admin__empty">No pending withdrawals.</p>
-              ) : (
-                <div className="admin__withdrawals">
-                  {withdrawals.map((w) => (
-                    <article key={w.id} className="admin__withdrawal-card">
-                      <div className="admin__withdrawal-top">
-                        <div>
-                          <p className="admin__withdrawal-user">{displayUser(w.username, w.email)}</p>
-                          <p className="admin__withdrawal-meta">
-                            {formatUsd(w.usdAmount)} · {w.chain.toUpperCase()} · {formatDate(w.createdAt)}
-                          </p>
-                        </div>
-                        <span className="admin__badge admin__badge--pending">{w.status}</span>
-                      </div>
-
-                      <div className="admin__field-row">
-                        <span className="admin__field-label">Destination</span>
-                        <code className="admin__mono">{w.destinationAddress}</code>
-                        <button
-                          type="button"
-                          className="admin__copy"
-                          onClick={() => copyText(w.destinationAddress)}
-                        >
-                          Copy
-                        </button>
-                      </div>
-
-                      <div className="admin__field-row">
-                        <span className="admin__field-label">User balance</span>
-                        <span>{formatUsd(w.userBalance)}</span>
-                      </div>
-
-                      <label className="admin__tx-label" htmlFor={`tx-${w.id}`}>
-                        Transaction hash (required to complete)
-                      </label>
-                      <input
-                        id={`tx-${w.id}`}
-                        className="admin__input"
-                        type="text"
-                        placeholder="Paste on-chain tx hash"
-                        value={txHashes[w.id] ?? ""}
-                        onChange={(e) =>
-                          setTxHashes((prev) => ({ ...prev, [w.id]: e.target.value }))
-                        }
-                        disabled={busyId === w.id}
-                      />
-
-                      <div className="admin__actions">
-                        <button
-                          type="button"
-                          className="admin__btn admin__btn--primary"
-                          disabled={busyId === w.id}
-                          onClick={() => handleComplete(w)}
-                        >
-                          {busyId === w.id ? "Processing…" : "Mark completed"}
-                        </button>
-                        <button
-                          type="button"
-                          className="admin__btn admin__btn--danger"
-                          disabled={busyId === w.id}
-                          onClick={() => handleFail(w)}
-                        >
-                          Fail & refund
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
-          {activeTab === "redemptions" && (
-            <section className="admin__section lc-panel">
-              <div className="admin__section-head">
-                <div>
-                  <h2 className="admin__section-title">Redemption requests</h2>
-                  <p className="admin__section-desc">
-                    Pending Sweeps Coins redemption requests. Approve to process payout or reject.
-                  </p>
-                </div>
-              </div>
-              {redemptions.length === 0 ? (
-                <p className="admin__empty">No pending redemptions.</p>
-              ) : (
-                <ul className="admin__user-list">
-                  {redemptions.map((r) => (
-                    <li key={r.id} className="admin__user-row">
-                      <div>
-                        <p className="admin__user-name">{displayUser(r.username, r.email)}</p>
-                        <p className="admin__user-meta">
-                          <span className="admin__coin admin__coin--sc">{r.scAmount} SC</span>
-                          {" · "}
-                          PayPal: {r.paypalEmail}
-                          {" · "}
-                          {new Date(r.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="admin__btn-group">
-                        <button
-                          type="button"
-                          className="admin__btn admin__btn--primary"
-                          disabled={fundingApproveBusy === r.id}
-                          onClick={async () => {
-                            setFundingApproveBusy(r.id);
-                            const { error: err } = await processAdminRedemption(r.id, "approve");
-                            setFundingApproveBusy(null);
-                            if (err) setActionError(err.message);
-                            else loadRedemptions();
-                          }}
-                        >
-                          {fundingApproveBusy === r.id ? "Approving…" : "Approve"}
-                        </button>
-                        <button
-                          type="button"
-                          className="admin__btn admin__btn--danger"
-                          disabled={fundingRejectBusy === r.id}
-                          onClick={async () => {
-                            setFundingRejectBusy(r.id);
-                            const { error: err } = await processAdminRedemption(r.id, "reject");
-                            setFundingRejectBusy(null);
-                            if (err) setActionError(err.message);
-                            else loadRedemptions();
-                          }}
-                        >
-                          {fundingRejectBusy === r.id ? "Rejecting…" : "Reject"}
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-
-          {activeTab === "users" && (
-            <section className="admin__section lc-panel">
-              <div className="admin__section-head">
-                <div>
-                  <h2 className="admin__section-title">User access</h2>
-                  <p className="admin__section-desc">
-                    Search by username, email, or user ID to grant or revoke admin. You cannot change your own admin status here.
-                  </p>
-                </div>
-              </div>
-              <form className="admin__search" onSubmit={handleUserSearch}>
-                <input
-                  className="admin__input admin__search-input"
-                  type="search"
-                  placeholder="Search users…"
-                  value={userQuery}
-                  onChange={(e) => setUserQuery(e.target.value)}
-                />
-                <button type="submit" className="admin__btn admin__btn--primary" disabled={userSearching}>
-                  {userSearching ? "Searching…" : "Search"}
-                </button>
-              </form>
-              {userSearchError && (
-                <p className="admin__banner admin__banner--error" role="alert">
-                  {userSearchError}
-                </p>
-              )}
-              {userResults.length > 0 && (
-                <ul className="admin__user-list">
-                  {userResults.map((u) => (
-                    <li key={u.id} className="admin__user-row">
-                      <div>
-                        <p className="admin__user-name">{displayUser(u.username, u.email)}</p>
-                        <p className="admin__user-meta">
-                          <span className="admin__coin admin__coin--gc">GC {formatUsd(u.balance)}</span>
-                          {" · "}
-                          <span className="admin__coin admin__coin--sc">SC {(u.sweepsCoins ?? 0).toFixed(2)}</span>
-                          {" · "}
-                          {u.isAdmin ? "Admin" : "Member"}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className={`admin__btn${u.isAdmin ? " admin__btn--danger" : " admin__btn--secondary"}`}
-                        onClick={() => toggleAdmin(u)}
-                      >
-                        {u.isAdmin ? "Revoke admin" : "Make admin"}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-
-          {activeTab === "credits" && (
-            <section className="admin__section lc-panel">
-              <div className="admin__section-head">
-                <div>
-                  <h2 className="admin__section-title">Credit user balance</h2>
-                  <p className="admin__section-desc">
-                    Credit funds to a user&apos;s account. Used for manual sweepstakes mail-in entry
-                    fulfillment and promotions. Enter the user&apos;s UUID.
-                  </p>
-                </div>
-              </div>
-              <form className="admin__credit-form" onSubmit={handleCredit}>
-                <div className="admin__credit-row">
-                  <input
-                    className="admin__input admin__credit-input"
-                    type="text"
-                    placeholder="User ID (uuid)"
-                    value={creditUserId}
-                    onChange={(e) => setCreditUserId(e.target.value)}
-                    disabled={creditBusy}
-                  />
-                  <input
-                    className="admin__input admin__credit-amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="Amount"
-                    value={creditAmount}
-                    onChange={(e) => setCreditAmount(e.target.value)}
-                    disabled={creditBusy}
-                  />
-                  <select
-                    className="admin__input admin__select-coin"
-                    value={creditCoinType}
-                    onChange={(e) => setCreditCoinType(e.target.value)}
-                    disabled={creditBusy}
-                  >
-                    <option value="balance">GC</option>
-                    <option value="sweeps_coins">SC</option>
-                  </select>
-                  <input
-                    className="admin__input admin__credit-note"
-                    type="text"
-                    placeholder="Note (optional)"
-                    value={creditNote}
-                    onChange={(e) => setCreditNote(e.target.value)}
-                    disabled={creditBusy}
-                  />
-                  <button
-                    type="submit"
-                    className="admin__btn admin__btn--primary"
-                    disabled={creditBusy}
-                  >
-                    {creditBusy ? "Crediting…" : "Credit"}
-                  </button>
-                </div>
-                {creditStatus && (
-                  <p
-                    className={`admin__banner${creditStatus.includes("Error") || creditStatus.includes("error") ? " admin__banner--error" : " admin__banner--success"}`}
-                    role="status"
-                  >
-                    {creditStatus}
-                  </p>
-                )}
-              </form>
-            </section>
-          )}
+      <section className="admin__stats" aria-label="Overview">
+        <div className="admin__stat">
+          <span className="admin__stat-label">Pending withdrawals</span>
+          <span className="admin__stat-value">
+            {loading ? "…" : (stats?.pendingWithdrawals ?? 0)}
+          </span>
         </div>
-      </div>
+        <div className="admin__stat">
+          <span className="admin__stat-label">Pending volume</span>
+          <span className="admin__stat-value admin__stat-value--gold">
+            {loading ? "…" : formatUsd(stats?.pendingWithdrawalsUsd ?? 0)}
+          </span>
+        </div>
+        <div className="admin__stat">
+          <span className="admin__stat-label">Total users</span>
+          <span className="admin__stat-value">{loading ? "…" : (stats?.totalUsers ?? 0)}</span>
+        </div>
+        <div className="admin__stat">
+          <span className="admin__stat-label">Deposits (24h)</span>
+          <span className="admin__stat-value">{loading ? "…" : (stats?.creditedDeposits24h ?? 0)}</span>
+        </div>
+      </section>
+
+      <section className="admin__section">
+        <div className="admin__section-head">
+          <h2 className="admin__section-title">Pending withdrawals</h2>
+          <button type="button" className="admin__refresh" onClick={() => loadDashboard()} disabled={loading}>
+            Refresh
+          </button>
+        </div>
+        <p className="admin__section-desc">
+          Send crypto from treasury wallets, then mark complete with the tx hash. Fail refunds the user&apos;s balance.
+        </p>
+
+        {loading ? (
+          <div className="lc-loading admin__loading">
+            <div className="lc-loading__pulse" aria-hidden />
+            <p>Loading withdrawals…</p>
+          </div>
+        ) : withdrawals.length === 0 ? (
+          <p className="admin__empty">No pending withdrawals.</p>
+        ) : (
+          <div className="admin__withdrawals">
+            {withdrawals.map((w) => (
+              <article key={w.id} className="admin__withdrawal-card">
+                <div className="admin__withdrawal-top">
+                  <div>
+                    <p className="admin__withdrawal-user">{displayUser(w.username, w.email)}</p>
+                    <p className="admin__withdrawal-meta">
+                      {formatUsd(w.usdAmount)} · {w.chain.toUpperCase()} · {formatDate(w.createdAt)}
+                    </p>
+                  </div>
+                  <span className="admin__badge admin__badge--pending">{w.status}</span>
+                </div>
+
+                <div className="admin__field-row">
+                  <span className="admin__field-label">Destination</span>
+                  <code className="admin__mono">{w.destinationAddress}</code>
+                  <button
+                    type="button"
+                    className="admin__copy"
+                    onClick={() => copyText(w.destinationAddress)}
+                  >
+                    Copy
+                  </button>
+                </div>
+
+                <div className="admin__field-row">
+                  <span className="admin__field-label">User balance</span>
+                  <span>{formatUsd(w.userBalance)}</span>
+                </div>
+
+                <label className="admin__tx-label" htmlFor={`tx-${w.id}`}>
+                  Transaction hash (required to complete)
+                </label>
+                <input
+                  id={`tx-${w.id}`}
+                  className="admin__input"
+                  type="text"
+                  placeholder="Paste on-chain tx hash"
+                  value={txHashes[w.id] ?? ""}
+                  onChange={(e) =>
+                    setTxHashes((prev) => ({ ...prev, [w.id]: e.target.value }))
+                  }
+                  disabled={busyId === w.id}
+                />
+
+                <div className="admin__actions">
+                  <button
+                    type="button"
+                    className="admin__btn admin__btn--primary"
+                    disabled={busyId === w.id}
+                    onClick={() => handleComplete(w)}
+                  >
+                    {busyId === w.id ? "Processing…" : "Mark completed"}
+                  </button>
+                  <button
+                    type="button"
+                    className="admin__btn admin__btn--danger"
+                    disabled={busyId === w.id}
+                    onClick={() => handleFail(w)}
+                  >
+                    Fail & refund
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="admin__section">
+        <h2 className="admin__section-title">Recent deposits</h2>
+        <p className="admin__section-desc">Last credited on-chain deposits.</p>
+        {deposits.length === 0 ? (
+          <p className="admin__empty">No credited deposits yet.</p>
+        ) : (
+          <div className="admin__table-wrap">
+            <table className="admin__table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Chain</th>
+                  <th>Amount</th>
+                  <th>Credited</th>
+                </tr>
+              </thead>
+              <tbody>
+                {deposits.map((d) => (
+                  <tr key={d.id}>
+                    <td>{displayUser(d.username, null)}</td>
+                    <td>{d.chain.toUpperCase()}</td>
+                    <td>{formatUsd(d.usdAmount)}</td>
+                    <td>{formatDate(d.creditedAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="admin__section">
+        <h2 className="admin__section-title">User access</h2>
+        <p className="admin__section-desc">
+          Search by username, email, or user ID to grant or revoke admin. You cannot change your own admin status here.
+        </p>
+        <form className="admin__search" onSubmit={handleUserSearch}>
+          <input
+            className="admin__input"
+            type="search"
+            placeholder="Search users…"
+            value={userQuery}
+            onChange={(e) => setUserQuery(e.target.value)}
+          />
+          <button type="submit" className="admin__btn admin__btn--primary" disabled={userSearching}>
+            {userSearching ? "Searching…" : "Search"}
+          </button>
+        </form>
+        {userSearchError && (
+          <p className="admin__banner admin__banner--error" role="alert">
+            {userSearchError}
+          </p>
+        )}
+        {userResults.length > 0 && (
+          <ul className="admin__user-list">
+            {userResults.map((u) => (
+              <li key={u.id} className="admin__user-row">
+                <div>
+                  <p className="admin__user-name">{displayUser(u.username, u.email)}</p>
+                  <p className="admin__user-meta">
+                    GC {formatUsd(u.balance)} · SC {(u.sweepsCoins ?? 0).toFixed(2)} · {u.isAdmin ? "Admin" : "Member"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={`admin__btn${u.isAdmin ? " admin__btn--danger" : " admin__btn--secondary"}`}
+                  onClick={() => toggleAdmin(u)}
+                >
+                  {u.isAdmin ? "Revoke admin" : "Make admin"}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="admin__section">
+        <h2 className="admin__section-title">Redemption requests</h2>
+        <p className="admin__section-desc">
+          Pending Sweeps Coins redemption requests. Approve to process payout or reject.
+        </p>
+        {redemptions.length === 0 ? (
+          <p className="admin__hint">No pending redemptions.</p>
+        ) : (
+          <ul className="admin__user-list">
+            {redemptions.map((r) => (
+              <li key={r.id} className="admin__user-row">
+                <div>
+                  <p className="admin__user-name">{displayUser(r.username, r.email)}</p>
+                  <p className="admin__user-meta">
+                    {r.scAmount} SC &middot; PayPal: {r.paypalEmail} &middot;{" "}
+                    {new Date(r.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="admin__btn-group">
+                  <button
+                    type="button"
+                    className="admin__btn admin__btn--primary"
+                    disabled={fundingApproveBusy === r.id}
+                    onClick={async () => {
+                      setFundingApproveBusy(r.id);
+                      const { error: err } = await processAdminRedemption(r.id, "approve");
+                      setFundingApproveBusy(null);
+                      if (err) setActionError(err.message);
+                      else loadRedemptions();
+                    }}
+                  >
+                    {fundingApproveBusy === r.id ? "Approving…" : "Approve"}
+                  </button>
+                  <button
+                    type="button"
+                    className="admin__btn admin__btn--danger"
+                    disabled={fundingRejectBusy === r.id}
+                    onClick={async () => {
+                      setFundingRejectBusy(r.id);
+                      const { error: err } = await processAdminRedemption(r.id, "reject");
+                      setFundingRejectBusy(null);
+                      if (err) setActionError(err.message);
+                      else loadRedemptions();
+                    }}
+                  >
+                    {fundingRejectBusy === r.id ? "Rejecting…" : "Reject"}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="admin__section">
+        <h2 className="admin__section-title">Credit user balance</h2>
+        <p className="admin__section-desc">
+          Credit funds to a user&apos;s account. Used for manual sweepstakes mail-in entry
+          fulfillment and promotions. Enter the user&apos;s UUID.
+        </p>
+        <form className="admin__credit-form" onSubmit={handleCredit}>
+          <div className="admin__credit-row">
+            <input
+              className="admin__input admin__credit-input"
+              type="text"
+              placeholder="User ID (uuid)"
+              value={creditUserId}
+              onChange={(e) => setCreditUserId(e.target.value)}
+              disabled={creditBusy}
+            />
+            <input
+              className="admin__input admin__credit-amount"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="Amount"
+              value={creditAmount}
+              onChange={(e) => setCreditAmount(e.target.value)}
+              disabled={creditBusy}
+            />
+            <select
+              className="admin__input admin__select-coin"
+              value={creditCoinType}
+              onChange={(e) => setCreditCoinType(e.target.value)}
+              disabled={creditBusy}
+            >
+              <option value="balance">GC</option>
+              <option value="sweeps_coins">SC</option>
+            </select>
+            <input
+              className="admin__input admin__credit-note"
+              type="text"
+              placeholder="Note (optional)"
+              value={creditNote}
+              onChange={(e) => setCreditNote(e.target.value)}
+              disabled={creditBusy}
+            />
+            <button
+              type="submit"
+              className="admin__btn admin__btn--primary"
+              disabled={creditBusy}
+            >
+              {creditBusy ? "Crediting…" : "Credit"}
+            </button>
+          </div>
+          {creditStatus && (
+            <p
+              className={`admin__banner${creditStatus.includes("Error") || creditStatus.includes("error") ? " admin__banner--error" : ""}`}
+              role="status"
+            >
+              {creditStatus}
+            </p>
+          )}
+        </form>
+      </section>
     </div>
   );
 }

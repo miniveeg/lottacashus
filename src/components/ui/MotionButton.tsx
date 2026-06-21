@@ -1,33 +1,14 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
-import { motion, useReducedMotion, type HTMLMotionProps } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { springTransition } from "../../lib/motion";
 import { cn } from "../../lib/cn";
 
-/**
- * MotionButton — "Obsidian Gold" button.
- *
- * Visual surface (gold gradient primary, subtle border secondary,
- * transparent ghost) lives in `src/styles/ui-motion.css`. React
- * only handles the motion: clean scale hover (1.02, no y-translate)
- * and a tiny scale-down on tap. Respects prefers-reduced-motion.
- */
 type MotionButtonProps = Omit<HTMLMotionProps<"button">, "children"> & {
   variant?: "primary" | "secondary" | "ghost";
   glow?: boolean;
   children: ReactNode;
   className?: string;
-} & Pick<
-  ButtonHTMLAttributes<HTMLButtonElement>,
-  | "disabled"
-  | "form"
-  | "formAction"
-  | "formMethod"
-  | "formEncType"
-  | "formTarget"
-  | "name"
-  | "value"
-  | "type"
->;
+} & Pick<ButtonHTMLAttributes<HTMLButtonElement>, "disabled" | "form" | "formAction" | "formMethod" | "formEncType" | "formTarget" | "name" | "value" | "type">;
 
 const variantClass: Record<NonNullable<MotionButtonProps["variant"]>, string> = {
   primary: "lc-motion-btn--primary",
@@ -37,19 +18,12 @@ const variantClass: Record<NonNullable<MotionButtonProps["variant"]>, string> = 
 
 export const MotionButton = forwardRef<HTMLButtonElement, MotionButtonProps>(
   function MotionButton({ variant = "primary", glow = false, className, children, ...props }, ref) {
-    const reduceMotion = useReducedMotion();
-
     return (
       <motion.button
         ref={ref}
-        className={cn(
-          "lc-motion-btn",
-          variantClass[variant],
-          glow && "lc-motion-btn--glow",
-          className,
-        )}
-        whileHover={reduceMotion ? undefined : { scale: 1.02 }}
-        whileTap={reduceMotion ? undefined : { scale: 0.98 }}
+        className={cn("lc-motion-btn", variantClass[variant], glow && "lc-motion-btn--glow", className)}
+        whileHover={{ scale: 1.03, y: -2 }}
+        whileTap={{ scale: 0.97, y: 0 }}
         transition={springTransition}
         {...props}
       >
@@ -57,5 +31,5 @@ export const MotionButton = forwardRef<HTMLButtonElement, MotionButtonProps>(
         {children}
       </motion.button>
     );
-  },
+  }
 );

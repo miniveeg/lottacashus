@@ -21,11 +21,11 @@
   top: 50%;
   transform: translateY(-50%);
   height: var(--reel-item-h, 92px);
-  border: 2px solid var(--reel-accent, var(--lc-crimson));
+  border: 2px solid var(--reel-accent, #38bdf8);
   border-radius: var(--lc-radius-sm);
   box-shadow:
-    0 0 0 1px rgba(225, 29, 72, 0.15),
-    0 0 20px rgba(225, 29, 72, 0.12);
+    0 0 0 1px rgba(56, 189, 248, 0.15),
+    0 0 20px rgba(56, 189, 248, 0.12);
   pointer-events: none;
   z-index: 3;
 }
@@ -97,9 +97,9 @@
 /* Highlight the center tile once the reel has settled */
 .case-reel--landed .case-reel__center-line {
   box-shadow:
-    0 0 0 1px rgba(225, 29, 72, 0.35),
-    0 0 28px rgba(225, 29, 72, 0.22);
-  border-color: var(--reel-accent, var(--lc-crimson));
+    0 0 0 1px rgba(56, 189, 248, 0.35),
+    0 0 28px rgba(56, 189, 248, 0.22);
+  border-color: var(--reel-accent, #38bdf8);
 }
 
 .case-reel--landed .case-reel__tile:not(.case-reel__tile--dim) .case-reel__tile-gem {

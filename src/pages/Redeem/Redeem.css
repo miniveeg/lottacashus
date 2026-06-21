@@ -1,273 +1,125 @@
-/* ════════════════════════════════════════════════════════════════
-   LottaCash — Redeem Sweeps Coins page
-   "Obsidian Gold" — emerald SC balance panel, gold chain picker,
-   emerald submit (cash out), success state with checkmark.
-   ════════════════════════════════════════════════════════════════ */
-
 .redeem {
-  --og-gold: #f5b942;
-  --og-gold-bright: #fcd34d;
-  --og-gold-deep: #d97706;
-  --og-gold-glow: rgba(245, 185, 66, 0.15);
-  --og-gold-glow-strong: rgba(245, 185, 66, 0.3);
-  --og-gold-ring: 0 0 0 3px rgba(245, 185, 66, 0.22);
-
-  --og-emerald: #10b981;
-  --og-emerald-bright: #34d399;
-  --og-emerald-deep: #047857;
-  --og-emerald-glow: rgba(16, 185, 129, 0.15);
-  --og-emerald-glow-strong: rgba(16, 185, 129, 0.3);
-
-  --og-text-on-emerald: #022c1e;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
 }
 
-/* ── Card ── */
 .redeem__card {
-  padding: var(--space-6);
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: 16px;
-  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-lg);
+  padding: 1.5rem;
 }
 
-/* ── 2-column layout (form left, live summary + info right) ── */
-.redeem__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: var(--space-6);
-  align-items: start;
-}
-
-.redeem__aside {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  min-width: 0;
-}
-
-/* ── SC balance panel (emerald) ── */
 .redeem__balance {
   text-align: center;
-  padding: var(--space-4) 0 var(--space-5);
-  margin-bottom: var(--space-5);
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
   border-bottom: 1px solid var(--lc-border);
-  background: linear-gradient(135deg, var(--og-emerald-glow) 0%, transparent 70%);
-  border-radius: 14px;
 }
 
 .redeem__balance-label {
-  margin: 0;
-  font-size: var(--lc-text-xs);
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--og-emerald-bright);
+  letter-spacing: 0.1em;
+  color: var(--lc-text-muted);
 }
 
 .redeem__balance-value {
-  margin: var(--space-2) 0 var(--space-1);
   font-family: var(--lc-font-mono);
-  font-size: var(--lc-text-3xl);
+  font-size: 2rem;
   font-weight: 700;
-  color: var(--og-emerald-bright);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  color: var(--lc-emerald);
+  margin-top: 0.25rem;
 }
 
 .redeem__rate {
-  margin: var(--space-1) 0 0;
-  font-family: var(--lc-font-mono);
-  font-size: var(--lc-text-sm);
-  font-weight: 500;
+  font-size: 0.82rem;
   color: var(--lc-text-muted);
-  letter-spacing: 0.01em;
+  margin-top: 0.25rem;
 }
 
-/* ── Field ── */
 .redeem__field {
-  margin-bottom: var(--space-5);
+  margin-bottom: 1rem;
 }
 
 .redeem__label {
   display: block;
-  font-size: var(--lc-text-sm);
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--lc-text-secondary);
-  margin-bottom: var(--space-2);
+  margin-bottom: 0.35rem;
 }
 
 .redeem__input {
   width: 100%;
-  min-height: 44px;
-  padding: var(--space-2) var(--space-4);
+  min-height: 2.6rem;
+  padding: 0.5rem 0.75rem;
   font-family: var(--lc-font-mono);
-  font-size: var(--lc-text-base);
-  font-weight: 600;
-  color: var(--lc-text-primary);
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border-strong);
-  border-radius: 10px;
-  box-sizing: border-box;
-  transition: border-color var(--lc-transition),
-    box-shadow var(--lc-transition);
-}
-
-.redeem__input::placeholder {
-  color: var(--lc-text-muted);
+  font-size: 1.05rem;
   font-weight: 500;
+  color: var(--lc-text-primary);
+  background: var(--lc-bg);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-md);
+  box-sizing: border-box;
 }
 
-.redeem__input:focus,
-.redeem__input:focus-visible {
+.redeem__input:focus {
   outline: none;
-  border-color: var(--og-gold);
-  box-shadow: var(--og-gold-ring);
-}
-
-.redeem__input:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .redeem__info {
-  font-size: var(--lc-text-xs);
+  font-size: 0.78rem;
   color: var(--lc-text-muted);
-  margin: var(--space-2) 0 0;
-  line-height: 1.5;
+  margin-top: 0.35rem;
 }
 
-/* ── Summary preview box ── */
-.redeem__summary {
-  margin: 0;
-  padding: var(--space-5);
-  background: linear-gradient(135deg, var(--og-emerald-glow) 0%, var(--lc-bg-elevated) 70%);
-  border: 1px solid var(--og-emerald-glow-strong);
-  border-radius: 14px;
-}
-
-.redeem__summary-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-base);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--lc-text-primary);
-  margin: 0 0 var(--space-3);
-}
-
-.redeem__summary-text {
-  margin: 0 0 var(--space-2);
-  font-size: var(--lc-text-sm);
-  color: var(--lc-text-secondary);
-  line-height: 1.5;
-}
-
-.redeem__summary-text:last-child {
-  margin-bottom: 0;
-}
-
-.redeem__summary-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.redeem__summary-label {
-  font-size: var(--lc-text-sm);
-  font-weight: 500;
-  color: var(--lc-text-secondary);
-}
-
-.redeem__summary-value {
-  font-family: var(--lc-font-mono);
-  font-size: var(--lc-text-lg);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-}
-
-.redeem__summary-value--sc {
-  color: var(--og-emerald-bright);
-}
-
-.redeem__summary-value--usd {
-  color: #fff;
-  font-size: var(--lc-text-xl);
-}
-
-.redeem__summary-arrow {
-  text-align: center;
-  font-size: 1.5rem;
-  line-height: 1;
-  color: var(--og-emerald-bright);
-  margin: var(--space-2) 0;
-}
-
-.redeem__summary-dest {
-  margin: var(--space-3) 0 0;
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--lc-border);
-  font-size: var(--lc-text-xs);
-  color: var(--lc-text-muted);
-  line-height: 1.5;
+.redeem__info--payout {
+  margin-bottom: 1rem;
+  color: var(--lc-emerald);
   word-break: break-all;
+  line-height: 1.5;
 }
 
-.redeem__summary-dest code {
-  font-family: var(--lc-font-mono);
-  color: var(--og-gold-bright);
-  font-size: 0.95em;
-}
-
-/* ── Chain picker (gold for UI selection) ── */
 .redeem__chain-picker {
   display: flex;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  border-radius: 12px;
+  gap: 0.5rem;
 }
 
 .redeem__chain-btn {
   flex: 1;
-  min-height: 44px;
-  padding: var(--space-2) var(--space-3);
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: transparent;
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border-strong);
+  background: var(--lc-bg);
   font-family: var(--lc-font-display);
   font-weight: 700;
-  font-size: var(--lc-text-sm);
+  font-size: 0.92rem;
   letter-spacing: 0.04em;
   color: var(--lc-text-secondary);
   cursor: pointer;
-  transition: background var(--lc-transition),
-    color var(--lc-transition),
-    border-color var(--lc-transition);
+  transition: border-color var(--lc-transition), color var(--lc-transition), background var(--lc-transition);
 }
 
 .redeem__chain-btn:hover:not(.redeem__chain-btn--active):not(:disabled) {
+  border-color: var(--lc-border-accent);
   color: var(--lc-text-primary);
-  background: var(--lc-bg-hover);
+  background: var(--lc-bg-elevated);
 }
 
 .redeem__chain-btn:focus-visible {
   outline: none;
-  box-shadow: var(--og-gold-ring);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .redeem__chain-btn--active {
-  color: var(--lc-text-primary);
-  background: linear-gradient(
-    135deg,
-    var(--og-gold-bright),
-    var(--og-gold-deep)
-  );
-  border-color: transparent;
-  box-shadow: 0 2px 12px var(--og-gold-glow-strong);
+  border-color: var(--lc-emerald-dim);
+  color: var(--lc-emerald);
+  background: rgba(16, 185, 129, 0.1);
 }
 
 .redeem__chain-btn:disabled {
@@ -275,34 +127,23 @@
   cursor: not-allowed;
 }
 
-/* ── Submit (emerald — cash out) ── */
 .redeem__submit {
   width: 100%;
-  min-height: 52px;
+  min-height: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  border-radius: 12px;
+  gap: 0.5rem;
+  border-radius: var(--lc-radius-lg);
   font-family: var(--lc-font-display);
-  font-size: var(--lc-text-base);
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  color: var(--og-text-on-emerald);
-  background: linear-gradient(
-    135deg,
-    var(--og-emerald-bright) 0%,
-    var(--og-emerald) 55%,
-    var(--og-emerald-deep) 100%
-  );
-  border: none;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.25) inset,
-    0 4px 18px var(--og-emerald-glow-strong),
-    var(--lc-shadow-inset);
-  cursor: pointer;
-  transition: transform var(--lc-transition-spring),
-    filter var(--lc-transition), opacity var(--lc-transition);
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #080602;
+  background: linear-gradient(135deg, var(--lc-emerald) 0%, var(--lc-emerald-dim) 100%);
+  box-shadow: 0 2px 20px var(--lc-emerald-glow), var(--lc-shadow-inset);
+  transition: transform var(--lc-transition-spring), filter var(--lc-transition), opacity var(--lc-transition);
 }
 
 .redeem__submit-spinner {
@@ -315,140 +156,70 @@
 }
 
 @keyframes redeem-submit-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 .redeem__submit:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
+  transform: translateY(-2px);
+  filter: brightness(1.08);
 }
 
 .redeem__submit:disabled {
   opacity: 0.45;
   cursor: not-allowed;
-  transform: none;
-  filter: none;
 }
 
-.redeem__submit:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
-}
-
-/* ── Error ── */
 .redeem__error {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  color: #fca5a5;
-  font-size: var(--lc-text-sm);
-  font-weight: 500;
-  line-height: 1.45;
-  margin-bottom: var(--space-4);
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: 10px;
+  color: var(--lc-ruby);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
 }
 
-/* ── Success state ── */
 .redeem__success {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   text-align: center;
-  padding: var(--space-10) var(--space-6);
-  background: linear-gradient(135deg, var(--og-emerald-glow) 0%, var(--lc-bg-panel) 70%);
-  border: 1px solid var(--og-emerald-glow-strong);
-  border-radius: 20px;
-  box-shadow: var(--lc-shadow-md);
+  padding: 2rem 1rem;
 }
 
 .redeem__success-icon {
   display: flex;
   justify-content: center;
-  align-items: center;
-  width: 4.5rem;
-  height: 4.5rem;
-  border-radius: 50%;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid var(--og-emerald-glow-strong);
-  color: var(--og-emerald-bright);
-  margin-bottom: var(--space-5);
-  animation: redeem-success-pop 0.5s var(--lc-transition-spring);
-  box-shadow: 0 0 28px var(--og-emerald-glow-strong);
-}
-
-@keyframes redeem-success-pop {
-  0% {
-    transform: scale(0.6);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+  margin-bottom: 0.5rem;
+  color: var(--lc-emerald);
 }
 
 .redeem__success-title {
   font-family: var(--lc-font-display);
-  font-size: var(--lc-text-xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--og-emerald-bright);
-  margin: 0 0 var(--space-3);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--lc-emerald);
+  margin-bottom: 0.5rem;
 }
 
 .redeem__success-desc {
-  font-size: var(--lc-text-sm);
-  color: var(--lc-text-secondary);
-  line-height: 1.6;
-  max-width: 44ch;
-  margin: 0;
+  font-size: 0.9rem;
+  color: var(--lc-text-muted);
+  line-height: 1.5;
   word-break: break-word;
 }
 
-/* ── Info cards (right aside) ── */
-.redeem__info-card {
-  padding: var(--space-4) var(--space-5);
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: 12px;
-}
-
-.redeem__info-card-title {
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-sm);
-  font-weight: 600;
-  color: var(--og-gold-bright);
-  margin: 0 0 var(--space-2);
-  letter-spacing: 0;
-}
-
-.redeem__info-card-text {
-  margin: 0;
-  font-size: var(--lc-text-xs);
-  color: var(--lc-text-secondary);
-  line-height: 1.55;
-}
-
-/* ── Mobile ── */
-@media (max-width: 900px) {
-  .redeem__grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-5);
-  }
-}
-
 @media (max-width: 640px) {
+  .redeem {
+    padding: 1.25rem 0.75rem;
+  }
+
   .redeem__card {
-    padding: var(--space-5);
+    padding: 1.1rem;
   }
 
   .redeem__balance-value {
-    font-size: var(--lc-text-2xl);
+    font-size: 1.55rem;
+  }
+
+  .redeem__rate {
+    font-size: 0.76rem;
+    line-height: 1.45;
+    word-break: break-word;
   }
 
   .redeem__chain-picker {
@@ -456,27 +227,18 @@
   }
 
   .redeem__submit {
-    min-height: 52px;
-  }
-
-  .redeem__success {
-    padding: var(--space-8) var(--space-5);
-  }
-
-  .redeem__success-icon {
-    width: 4rem;
-    height: 4rem;
+    font-size: 0.85rem;
+    min-height: 2.85rem;
+    line-height: 1.2;
   }
 }
 
 @media (max-width: 360px) {
   .redeem__balance-value {
-    font-size: var(--lc-text-xl);
+    font-size: 1.35rem;
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  .redeem__success-icon {
-    animation: none;
+  .redeem__card {
+    padding: 0.9rem;
   }
 }

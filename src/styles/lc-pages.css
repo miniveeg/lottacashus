@@ -1,35 +1,27 @@
-/* ════════════════════════════════════════════════════════════════
-   LottaCash — Shared page layout, panels, buttons, tabs, alerts, stats
-   "Obsidian Gold" — premium, spacious, cohesive.
-   THE most impactful file: defines the visual rhythm of every page.
-   Think: high-end casino — gold accents on obsidian black, generous
-   spacing, Inter typography, clean hierarchy.
-   ════════════════════════════════════════════════════════════════ */
+/* LottaCash — Redesigned shared page layout, panels, buttons, tabs, game chrome */
 
-/* ── Main scroll area background ── */
+/* ── Main scroll area ── */
 .app-shell__main {
   background:
-    radial-gradient(ellipse 100% 55% at 50% -5%,
-      rgba(245, 185, 66, 0.04) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 45% at 85% 95%,
-      rgba(139, 92, 246, 0.025) 0%, transparent 50%),
-    var(--bg-base);
+    radial-gradient(ellipse 100% 55% at 50% -5%, rgba(220, 20, 60, 0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 45% at 85% 85%, rgba(139, 92, 246, 0.025) 0%, transparent 50%),
+    var(--lc-bg-base);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Page shell
-   ════════════════════════════════════════════════════════════════ */
+/* ── Page shell ── */
 .lc-page {
-  --lc-page-pad-x: clamp(var(--space-4), 3vw, var(--space-6));
+  --lc-page-pad-x: clamp(1rem, 3vw, 1.5rem);
+  --lc-page-pad-y: clamp(1.25rem, 3vw, 1.75rem);
+  --lc-page-pad-b: clamp(2rem, 5vw, 3.5rem);
   width: 100%;
-  max-width: var(--lc-page-max, 1280px);
+  max-width: var(--lc-page-max, 1120px);
   margin: 0 auto;
-  padding: var(--space-8) var(--lc-page-pad-x) var(--space-16);
+  padding: var(--lc-page-pad-y) var(--lc-page-pad-x) var(--lc-page-pad-b);
 }
 
-.lc-page--narrow { --lc-page-max: 560px; }
-.lc-page--medium { --lc-page-max: 880px; }
-.lc-page--wide   { --lc-page-max: 1280px; }
+.lc-page--narrow  { --lc-page-max: 720px; }
+.lc-page--medium  { --lc-page-max: 900px; }
+.lc-page--wide    { --lc-page-max: 1180px; }
 
 .lc-page--auth {
   max-width: none;
@@ -37,108 +29,102 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-8) var(--lc-page-pad-x);
+  padding: 2rem var(--lc-page-pad-x);
 }
 
 /* ── Page header ── */
-.lc-page__header {
-  margin-bottom: var(--space-8);
-}
+.lc-page__header { margin-bottom: 1.85rem; }
 
 .lc-page__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  background: rgba(245, 185, 66, 0.08);
-  border: 1px solid var(--border-gold);
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  font-weight: 600;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(220, 20, 60, 0.08);
+  border: 1px solid rgba(220, 20, 60, 0.2);
+  font-family: var(--lc-font-display);
+  font-size: 0.62rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-gold);
+  letter-spacing: 0.14em;
+  /* crimson-soft (~5.4:1 on dark) instead of base crimson (~3.9:1)
+     so the small eyebrow text passes WCAG AA. */
+  color: var(--lc-crimson-soft);
 }
 
 .lc-page__title {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: var(--text-3xl);
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  margin: 0 0 var(--space-2);
+  font-family: var(--lc-font-display);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  margin: 0 0 0.4rem;
 }
 
 .lc-page__subtitle {
   margin: 0;
-  font-size: var(--text-base);
-  font-weight: 400;
+  font-size: 0.97rem;
+  font-weight: 500;
   line-height: 1.6;
-  color: var(--text-secondary);
-  max-width: 60ch;
+  color: var(--lc-text-secondary);
+  max-width: 52ch;
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Panels
-   ════════════════════════════════════════════════════════════════ */
+/* ── Panels ── */
 .lc-panel {
-  padding: var(--space-6);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  padding: 1.4rem 1.5rem;
+  background: var(--lc-bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-xl);
+  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
 }
 
-.lc-panel + .lc-panel { margin-top: var(--space-4); }
+.lc-panel + .lc-panel { margin-top: 1rem; }
 
 .lc-panel__title {
-  font-family: var(--font-sans);
+  font-family: var(--lc-font-display);
   font-weight: 700;
-  font-size: var(--text-lg);
+  font-size: 1.05rem;
   letter-spacing: -0.01em;
-  margin: 0 0 var(--space-4);
+  margin: 0 0 0.8rem;
 }
 
 .lc-panel__desc {
-  margin: calc(var(--space-3) * -1) 0 var(--space-4);
-  font-size: var(--text-sm);
-  font-weight: 400;
-  line-height: 1.6;
-  color: var(--text-muted);
+  margin: -0.35rem 0 1rem;
+  font-size: 0.87rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--lc-text-muted);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Buttons (shared variants — also used by per-page classes)
-   ════════════════════════════════════════════════════════════════ */
+/* ── Buttons ── */
 .lc-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  letter-spacing: 0;
+  gap: 0.4rem;
+  padding: 0.68rem 1.3rem;
+  border-radius: var(--lc-radius-md);
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.02em;
   line-height: 1.2;
   border: 1px solid transparent;
-  transition: transform var(--lc-transition), filter var(--lc-transition),
-              background var(--lc-transition), border-color var(--lc-transition),
-              color var(--lc-transition), box-shadow var(--lc-transition);
+  transition: transform var(--lc-transition-spring), filter var(--lc-transition), background var(--lc-transition), border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
 .lc-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none !important;
-  filter: none !important;
 }
 
-/* ── Primary: GOLD gradient + glow on hover ── */
+/* Primary gold */
 .lc-btn--primary,
 .home__btn--gold,
 .wallet__btn:not(.wallet__btn--ghost),
@@ -153,12 +139,9 @@
 .cb-page__btn-primary,
 .cb-page__primary-btn,
 .cbh__join-btn {
-  background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold-deep) 100%);
-  color: #1a1208;
-  font-weight: 700;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset,
-              0 2px 14px var(--gold-glow),
-              var(--lc-shadow-inset);
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
+  color: #fff;
+  box-shadow: 0 2px 16px var(--lc-crimson-glow), var(--lc-shadow-inset);
 }
 
 .lc-btn--primary:hover:not(:disabled),
@@ -175,244 +158,175 @@
 .bj__deal-btn:hover:not(:disabled),
 .cb-page__btn-primary:hover,
 .cb-page__primary-btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset,
-              0 6px 24px var(--gold-glow-strong),
-              var(--lc-shadow-inset);
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 28px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
 }
 
-/* ── Secondary: subtle border + light bg on hover ── */
+/* Secondary outline */
 .lc-btn--secondary,
-.lc-btn--outline,
 .home__btn--outline,
-.wallet__btn--ghost {
-  border: 1px solid var(--border-strong);
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.02);
+.wallet__btn--ghost,
+.lc-btn--outline {
+  border: 1px solid var(--lc-border-strong);
+  color: var(--lc-text-primary);
+  background: rgba(255,255,255,0.03);
 }
 
 .lc-btn--secondary:hover:not(:disabled),
-.lc-btn--outline:hover:not(:disabled),
 .home__btn--outline:hover,
 .wallet__btn--ghost:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--border-gold);
+  background: var(--lc-bg-hover);
+  border-color: var(--lc-border-accent);
   transform: translateY(-1px);
 }
 
-/* ── Ghost: transparent, text-color change on hover ── */
+/* Ghost */
 .lc-btn--ghost,
 .home__btn--ghost {
-  color: var(--text-secondary);
+  color: var(--lc-text-secondary);
   background: transparent;
   border-color: transparent;
-  padding-left: var(--space-3);
-  padding-right: var(--space-3);
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
 }
 
 .lc-btn--ghost:hover:not(:disabled),
-.home__btn--ghost:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.03);
-}
+.home__btn--ghost:hover { color: var(--lc-crimson-soft); }
 
-/* ── Danger: crimson (used sparingly — destructive CTAs) ── */
-.lc-btn--danger {
-  background: linear-gradient(135deg, var(--crimson) 0%, #9f1239 100%);
-  color: #fff;
-  font-weight: 700;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.15) inset,
-              0 2px 14px var(--crimson-glow),
-              var(--lc-shadow-inset);
-}
-
-.lc-btn--danger:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset,
-              0 6px 24px rgba(225, 29, 72, 0.4),
-              var(--lc-shadow-inset);
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Tabs
-   ════════════════════════════════════════════════════════════════ */
+/* ── Tabs ── */
 .lc-tabs,
 .wallet__tabs,
 .help__tabs {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  margin-bottom: var(--space-6);
+  gap: 0.35rem;
+  padding: 0.25rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
+  margin-bottom: 1.35rem;
 }
 
 .lc-tab,
 .wallet__tab,
 .help__tab,
 .wallet__chain-btn {
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  letter-spacing: 0;
-  color: var(--text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: var(--lc-radius-md);
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+  color: var(--lc-text-secondary);
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
-  transition: background var(--lc-transition), color var(--lc-transition),
-              border-color var(--lc-transition);
+  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
 }
 
 .lc-tab:hover,
 .wallet__tab:not(.wallet__tab--active):hover,
 .help__tab:not(.help__tab--active):hover {
-  color: var(--text-primary);
-  background: var(--bg-surface-2);
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-hover);
 }
 
-/* Active = GOLD gradient (premium casino feel) */
 .lc-tab--active,
 .wallet__tab--active,
 .help__tab--active,
 .wallet__chain-btn--active {
-  color: #1a1208 !important;
-  background: linear-gradient(135deg, var(--gold-bright), var(--gold-deep)) !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim)) !important;
   border-color: transparent !important;
-  box-shadow: 0 2px 10px var(--gold-glow);
+  box-shadow: 0 2px 12px var(--lc-crimson-glow);
 }
 
 .wallet__chain-picker {
-  padding: var(--space-1);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  padding: 0.25rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Alerts
-   ════════════════════════════════════════════════════════════════ */
+/* ── Alerts ── */
 .lc-alert {
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: 500;
+  padding: 0.75rem 1rem;
+  border-radius: var(--lc-radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
   line-height: 1.5;
 }
 
-/* Danger = red */
-.lc-alert--error,
-.auth-error,
-.admin__banner--error,
-.cb-page__error,
-.cb__error,
-.keno__error,
-.mines__error,
-.limbo__error,
-.bj__error,
-.wallet__error,
-.sidebar-chat__error,
-.settings__error {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
+.lc-alert--error, .auth-error, .admin__banner--error, .cb-page__error, .cb__error,
+.keno__error, .mines__error, .limbo__error, .bj__error, .wallet__error,
+.sidebar-chat__error, .settings__error {
+  background: rgba(255,59,92,0.1);
+  border: 1px solid rgba(255,59,92,0.3);
+  color: #ff8fa3;
 }
 
-/* Success = emerald */
-.lc-alert--success,
-.auth-success,
-.admin__banner--success,
-.settings__success {
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #6ee7b7;
+.lc-alert--success, .auth-success, .admin__banner--success, .settings__success {
+  background: rgba(0,232,122,0.1);
+  border: 1px solid rgba(0,232,122,0.3);
+  color: #4dffa0;
 }
 
-/* Warn = gold */
-.lc-alert--warn,
-.auth-config-warning {
-  background: rgba(245, 185, 66, 0.08);
-  border: 1px solid var(--border-gold);
-  color: var(--text-gold);
+.lc-alert--warn, .auth-config-warning {
+  background: rgba(220, 20, 60, 0.08);
+  border: 1px solid rgba(220, 20, 60, 0.25);
+  color: var(--lc-crimson-soft);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Stat grid
-   ════════════════════════════════════════════════════════════════ */
+/* ── Stat cards ── */
 .lc-stat-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
 }
 
-.lc-stat,
-.admin__stat {
-  padding: var(--space-4) var(--space-5);
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  transition: border-color var(--lc-transition), transform var(--lc-transition);
+.lc-stat, .admin__stat {
+  padding: 1.1rem 1.2rem;
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
+  transition: border-color var(--lc-transition);
 }
 
-.lc-stat:hover,
-.admin__stat:hover {
-  border-color: var(--border-gold);
-  transform: translateY(-1px);
+.lc-stat:hover, .admin__stat:hover {
+  border-color: var(--lc-border-strong);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Game pages — shared shell (each game's own CSS handles stage)
-   ════════════════════════════════════════════════════════════════ */
-.lc-game-page,
-.lc-game-page.keno,
-.lc-game-page.mines,
-.lc-game-page.limbo,
-.lc-game-page.roulette,
-.keno,
-.mines,
-.limbo,
-.roulette {
+/* ── Game pages ── */
+.lc-game-page.keno, .lc-game-page.mines, .lc-game-page.limbo,
+.lc-game-page.roulette, .keno, .mines, .limbo, .roulette {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.35rem clamp(1rem, 3vw, 1.5rem) 3rem;
+}
+
+.lc-game-page.bj, .bj {
   max-width: 1280px;
   margin: 0 auto;
-  padding: var(--space-6) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12);
+  padding: 1.35rem clamp(1rem, 3vw, 1.5rem) 3rem;
 }
 
-.lc-game-page.bj,
-.bj {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: var(--space-6) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12);
+.keno__board-panel, .mines__panel, .limbo__panel,
+.roulette__board-panel, .bj__table-area, .game-controls {
+  border-radius: var(--lc-radius-xl);
 }
 
-.keno__board-panel,
-.mines__panel,
-.limbo__panel,
-.roulette__board-panel,
-.bj__table-area,
-.game-controls {
-  border-radius: var(--radius-xl);
+.keno__cell, .mines__tile {
+  border-radius: var(--lc-radius-sm);
+  transition: transform var(--lc-transition), border-color var(--lc-transition), background var(--lc-transition), box-shadow var(--lc-transition);
 }
 
-.keno__cell,
-.mines__tile {
-  border-radius: var(--radius-md);
-  transition: transform var(--lc-transition), border-color var(--lc-transition),
-              background var(--lc-transition), box-shadow var(--lc-transition);
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Auth
-   ════════════════════════════════════════════════════════════════ */
+/* ── Auth ── */
 .auth-page {
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(245, 185, 66, 0.06), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(139, 92, 246, 0.04), transparent 50%),
-    var(--bg-base);
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,204,68,0.07), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(155,114,255,0.04), transparent 50%),
+    var(--lc-bg-base);
 }
 
 .auth-card {
@@ -421,654 +335,123 @@
 }
 
 .auth-card code {
-  font-family: var(--font-mono);
+  font-family: var(--lc-font-mono);
   font-size: 0.82em;
   padding: 0.1em 0.35em;
-  border-radius: var(--radius-sm);
-  background: var(--bg-elevated);
-  color: var(--text-gold);
+  border-radius: var(--lc-radius-sm);
+  background: var(--lc-bg-elevated);
+  color: var(--lc-gold);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Section cards (settings, wallet, help, admin)
-   ════════════════════════════════════════════════════════════════ */
-.settings__section,
-.wallet__section,
-.help__panel,
-.admin__section {
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+/* ── Section cards ── */
+.settings__section, .wallet__section, .help__panel, .admin__section {
+  border-radius: var(--lc-radius-xl);
+  box-shadow: var(--lc-shadow-sm);
 }
 
-.settings__section,
-.wallet__section {
+.settings__section, .wallet__section {
   transition: border-color var(--lc-transition);
 }
 
-.settings__section:hover,
-.wallet__section:hover {
-  border-color: var(--border-gold);
+.settings__section:hover, .wallet__section:hover {
+  border-color: var(--lc-border-strong);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Tables
-   ════════════════════════════════════════════════════════════════ */
-.settings__tx-table th,
-.admin__table th {
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  font-weight: 600;
+/* ── Tables ── */
+.settings__tx-table th, .admin__table th {
+  font-family: var(--lc-font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  color: var(--lc-text-muted);
 }
 
-.settings__tx-row,
-.admin__table tr {
+.settings__tx-row, .admin__table tr {
   transition: background var(--lc-transition);
 }
 
-.settings__tx-row:hover,
-.admin__table tbody tr:hover {
-  background: var(--bg-surface-2);
+.settings__tx-row:hover, .admin__table tbody tr:hover {
+  background: var(--lc-bg-hover);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Originals & Home
-   ════════════════════════════════════════════════════════════════ */
-.originals__card,
-.home__pillar {
-  border-radius: var(--radius-lg);
+/* ── Originals ── */
+.originals__card, .home__pillar {
+  border-radius: var(--lc-radius-xl);
 }
 
 .home__hero {
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-md);
+  border-radius: var(--lc-radius-2xl);
+  box-shadow: var(--lc-shadow-md);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Empty & loading states
-   ════════════════════════════════════════════════════════════════ */
+/* ── Empty states ── */
 .lc-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-12) var(--space-4) var(--space-16);
+  gap: 0.85rem;
+  padding: 2rem 1rem 2.5rem;
   text-align: center;
 }
 
-.lc-empty .lc-alert,
-.lc-empty .cb-page__error {
+.lc-empty .lc-alert, .lc-empty .cb-page__error {
   margin: 0;
   max-width: 40ch;
 }
 
-.admin-route-loading,
-.cbr__loading { min-height: 14rem; }
+.admin-route-loading, .cbr__loading { min-height: 14rem; }
 
 .cbr__loading-pulse {
-  border-radius: var(--radius-md);
+  border-radius: var(--lc-radius-md);
   border: none;
-  background: linear-gradient(135deg, rgba(245, 185, 66, 0.2), rgba(245, 185, 66, 0.08));
+  background: linear-gradient(135deg, rgba(255,204,68,0.2), rgba(0,212,255,0.1));
   animation: lc-loading-pulse 1.4s ease-in-out infinite;
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Text inputs (page-scoped)
-   ════════════════════════════════════════════════════════════════ */
-.wallet__input,
-.admin__input,
-.settings__input {
-  min-height: 44px;
-  padding: var(--space-2) var(--space-3);
-  font-family: var(--font-sans);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--text-primary);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
+/* ── Focus ──
+   The global :focus-visible rule in global.css supplies the outline;
+   here we only suppress the legacy duplicate so the higher-contrast
+   crimson-soft indicator wins everywhere. */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) { outline: none; }
+
+/* ── Text inputs ── */
+.wallet__input, .admin__input, .settings__input {
+  min-height: 2.6rem;
+  padding: 0.55rem 0.9rem;
+  font-family: var(--lc-font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-md);
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
-.wallet__input:focus,
-.admin__input:focus,
-.settings__input:focus {
+.wallet__input:focus, .admin__input:focus, .settings__input:focus {
   outline: none;
-  border-color: var(--gold);
+  border-color: var(--lc-border-accent);
   box-shadow: var(--lc-focus-ring);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Focus management — legacy duplicate suppression
-   The global :focus-visible rule in global.css supplies the outline.
-   ════════════════════════════════════════════════════════════════ */
-button:focus:not(:focus-visible),
-a:focus:not(:focus-visible) {
-  outline: none;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Mobile breakpoints
-   ════════════════════════════════════════════════════════════════ */
-@media (max-width: 768px) {
+/* ── Mobile ── */
+@media (max-width: 900px) {
   .lc-page {
-    padding: var(--space-4) var(--space-4) var(--space-12);
+    --lc-page-pad-x: 1rem;
+    --lc-page-pad-y: 1rem;
+    --lc-page-pad-b: 2rem;
   }
-  .lc-page--auth { padding: var(--space-5) var(--space-4); }
-  .lc-page__header { margin-bottom: var(--space-6); }
-  .lc-panel { padding: var(--space-5); }
-  .lc-game-page,
-  .lc-game-page.keno,
-  .lc-game-page.mines,
-  .lc-game-page.limbo,
-  .lc-game-page.roulette,
-  .keno, .mines, .limbo, .roulette,
-  .lc-game-page.bj, .bj {
-    padding: var(--space-4) var(--space-4) var(--space-10);
-  }
+  .lc-page--auth { padding: 1.25rem 1rem; }
+  .lc-game-page.keno, .lc-game-page.mines, .lc-game-page.limbo,
+  .lc-game-page.roulette, .keno, .mines, .limbo, .roulette,
+  .lc-game-page.bj, .bj { padding: 1rem 1rem 2.5rem; }
   .game-controls { position: static; }
 }
 
 @media (max-width: 480px) {
-  .lc-page {
-    padding: var(--space-3) var(--space-3) var(--space-10);
-  }
-  .lc-page__header { margin-bottom: var(--space-5); }
-  .lc-panel { padding: var(--space-4); }
-  .lc-tabs,
-  .wallet__tabs,
-  .help__tabs { margin-bottom: var(--space-4); }
-}
-
-/* ════════════════════════════════════════════════════════════════
-   v3 "Command Center" — new structural classes
-   These support the structural redesign done by Agents 1–4. All
-   existing classes above are kept untouched for backward compat.
-   New classes use token names with literal fallbacks so they still
-   render correctly even if theme.css fails to load.
-   ════════════════════════════════════════════════════════════════ */
-
-/* ── App shell navigation (Agent 1) ──
-   Floating desktop pill dock + mobile bottom tab bar. */
-
-.dock {
-  position: fixed;
-  left: 50%;
-  bottom: var(--space-5, 1.25rem);
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: var(--space-1, 0.25rem);
-  padding: var(--space-2, 0.5rem);
-  background: var(--bg-glass, rgba(17, 17, 24, 0.8));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-strong, rgba(255, 255, 255, 0.14));
-  border-radius: var(--radius-full, 9999px);
-  box-shadow: var(--shadow-lg, 0 12px 40px rgba(0, 0, 0, 0.5));
-  z-index: var(--z-sticky, 50);
-}
-
-.dock__item {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2, 0.5rem);
-  min-width: 44px;
-  min-height: 44px;
-  padding: var(--space-3, 0.75rem);
-  border-radius: var(--radius-full, 9999px);
-  color: var(--text-secondary, #a1a1aa);
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-size: var(--text-sm, 0.875rem);
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  text-decoration: none;
-  transition: background 200ms var(--ease-smooth, ease),
-              color 200ms var(--ease-smooth, ease),
-              transform 200ms var(--ease-smooth, ease);
-}
-
-.dock__item:hover {
-  background: var(--bg-surface-2, #16161f);
-  color: var(--text-primary, #fafafa);
-}
-
-.dock__item--active {
-  background: linear-gradient(135deg, var(--gold-bright, #fcd34d), var(--gold-deep, #d97706));
-  color: #000;
-}
-
-.dock__label {
-  max-width: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-width 220ms var(--ease-out, ease),
-              opacity 220ms var(--ease-out, ease);
-}
-
-.dock__item:hover .dock__label,
-.dock__item--active .dock__label {
-  max-width: 120px;
-  opacity: 1;
-}
-
-@media (max-width: 768px) {
-  .dock { display: none; }
-}
-
-.mobile-tabs {
-  display: none;
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--mobile-tabs-height, calc(60px + env(safe-area-inset-bottom, 0px)));
-  padding-bottom: var(--safe-bottom, env(safe-area-inset-bottom, 0px));
-  background: var(--bg-glass, rgba(17, 17, 24, 0.92));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  align-items: stretch;
-  z-index: var(--z-topbar, 200);
-}
-
-.mobile-tabs__item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: var(--space-2, 0.5rem) 0;
-  color: var(--text-muted, #71717a);
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-size: var(--text-xs, 0.75rem);
-  font-weight: 600;
-  text-decoration: none;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  transition: color 200ms var(--ease-smooth, ease);
-}
-
-.mobile-tabs__item--active {
-  color: var(--gold, #f5b942);
-}
-
-@media (max-width: 768px) {
-  .mobile-tabs { display: flex; }
-}
-
-/* ── Home dashboard (Agent 2) ──
-   Welcome strip + game launcher grid + live feed (right column). */
-
-.home-dashboard {
-  width: 100%;
-  max-width: var(--lc-page-max, 1280px);
-  margin: 0 auto;
-  padding: var(--space-6, 1.5rem) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12, 3rem);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: var(--space-6, 1.5rem);
-  align-items: start;
-}
-
-.home-dashboard__main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6, 1.5rem);
-  min-width: 0;
-}
-
-.home-dashboard__aside {
-  position: sticky;
-  top: calc(var(--topbar-height, 56px) + var(--space-4, 1rem));
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4, 1rem);
-  min-width: 0;
-}
-
-.home-welcome {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4, 1rem);
-  padding: var(--space-5, 1.25rem) var(--space-6, 1.5rem);
-  background: linear-gradient(135deg, var(--bg-surface, #111118), var(--bg-surface-2, #16161f));
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-radius: var(--radius-xl, 20px);
-  flex-wrap: wrap;
-}
-
-.home-welcome__title {
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-weight: 700;
-  font-size: var(--text-2xl, 1.5rem);
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-.home-welcome__subtitle {
-  margin: var(--space-1, 0.25rem) 0 0;
-  font-size: var(--text-sm, 0.875rem);
-  color: var(--text-secondary, #a1a1aa);
-}
-
-.home-welcome__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3, 0.75rem);
-  flex-wrap: wrap;
-}
-
-.home-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--space-4, 1rem);
-}
-
-.home-launcher {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3, 0.75rem);
-  padding: var(--space-5, 1.25rem);
-  background: var(--bg-surface, #111118);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-radius: var(--radius-lg, 14px);
-  text-align: left;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-  overflow: hidden;
-  transition: transform 200ms var(--ease-out, ease),
-              border-color 200ms var(--ease-smooth, ease),
-              box-shadow 200ms var(--ease-smooth, ease);
-}
-
-.home-launcher:hover {
-  transform: translateY(-2px);
-  border-color: var(--border-gold, rgba(245, 185, 66, 0.3));
-  box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.4));
-}
-
-.home-launcher__title {
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-weight: 700;
-  font-size: var(--text-lg, 1.125rem);
-  letter-spacing: -0.01em;
-  color: var(--text-primary, #fafafa);
-}
-
-.home-launcher__meta {
-  font-size: var(--text-xs, 0.75rem);
-  color: var(--text-muted, #71717a);
-}
-
-.home-feed {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2, 0.5rem);
-  padding: var(--space-4, 1rem);
-  background: var(--bg-surface, #111118);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-radius: var(--radius-lg, 14px);
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-@media (max-width: 1024px) {
-  .home-dashboard {
-    grid-template-columns: 1fr;
-  }
-  .home-dashboard__aside {
-    position: static;
-  }
-}
-
-/* ── Game page (Agent 3) ──
-   Full-width stage + sticky bottom action bar + collapsible side
-   panel. The action bar lives in game-controls.css. */
-
-.game-page {
-  width: 100%;
-  max-width: var(--lc-page-max, 1280px);
-  margin: 0 auto;
-  padding: var(--space-5, 1.25rem) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12, 3rem);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5, 1.25rem);
-}
-
-.game-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4, 1rem);
-  flex-wrap: wrap;
-}
-
-.game-header__title {
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-weight: 700;
-  font-size: var(--text-2xl, 1.5rem);
-  letter-spacing: -0.02em;
-  margin: 0;
-  color: var(--text-primary, #fafafa);
-}
-
-.game-header__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2, 0.5rem);
-}
-
-.game-stage {
-  position: relative;
-  width: 100%;
-  min-height: 360px;
-  background: var(--bg-surface, #111118);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-radius: var(--radius-xl, 20px);
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.game-panel {
-  background: var(--bg-surface, #111118);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-radius: var(--radius-lg, 14px);
-  padding: var(--space-4, 1rem);
-}
-
-.game-panel__title {
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-weight: 700;
-  font-size: var(--text-sm, 0.875rem);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted, #71717a);
-  margin: 0 0 var(--space-3, 0.75rem);
-}
-
-.game-panel--collapsible {
-  transition: max-height 250ms var(--ease-out, ease),
-              opacity 250ms var(--ease-smooth, ease);
-  overflow: hidden;
-}
-
-.game-panel--collapsed {
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-  opacity: 0;
-  border-color: transparent;
-}
-
-@media (max-width: 768px) {
-  .game-stage { min-height: 280px; }
-}
-
-/* ── Account / Settings (Agent 4) ──
-   Tabbed single-page layouts. The .settings-* classes are scoped to
-   account pages; the generic .tabbed-layout / .wallet-layout /
-   .auth-split below cover Settings, Wallet, and Auth. */
-
-.settings-page {
-  width: 100%;
-  max-width: var(--lc-page-max, 1280px);
-  margin: 0 auto;
-  padding: var(--space-6, 1.5rem) clamp(var(--space-4), 3vw, var(--space-6)) var(--space-12, 3rem);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6, 1.5rem);
-}
-
-.settings-tabs {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1, 0.25rem);
-  padding: var(--space-2, 0.5rem);
-  background: var(--bg-surface, #111118);
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
-  border-radius: var(--radius-lg, 14px);
-  min-width: 200px;
-  align-self: start;
-}
-
-.settings-tab {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2, 0.5rem);
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  border-radius: var(--radius-md, 10px);
-  color: var(--text-secondary, #a1a1aa);
-  font-family: var(--font-sans, system-ui, sans-serif);
-  font-size: var(--text-sm, 0.875rem);
-  font-weight: 500;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  width: 100%;
-  transition: background 200ms var(--ease-smooth, ease),
-              color 200ms var(--ease-smooth, ease);
-}
-
-.settings-tab:hover {
-  background: var(--bg-surface-2, #16161f);
-  color: var(--text-primary, #fafafa);
-}
-
-.settings-tab--active {
-  background: var(--bg-elevated, #1c1c28);
-  color: var(--gold, #f5b942);
-}
-
-.settings-content {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4, 1rem);
-}
-
-@media (max-width: 768px) {
-  .settings-tabs {
-    flex-direction: row;
-    overflow-x: auto;
-    min-width: 0;
-    gap: var(--space-1, 0.25rem);
-    padding: var(--space-1, 0.25rem);
-  }
-  .settings-tab {
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-}
-
-/* Tabbed layout (used by Settings, Profile, Admin) */
-.tabbed-layout {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: var(--space-6);
-}
-
-.tabbed-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.tabbed-nav__item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  text-align: left;
-  transition: all 200ms;
-  cursor: pointer;
-}
-
-.tabbed-nav__item--active {
-  background: var(--bg-surface);
-  color: var(--gold);
-}
-
-@media (max-width: 768px) {
-  .tabbed-layout { grid-template-columns: 1fr; }
-  .tabbed-nav {
-    flex-direction: row;
-    overflow-x: auto;
-    gap: var(--space-2);
-    padding-bottom: var(--space-2);
-  }
-  .tabbed-nav__item { white-space: nowrap; }
-}
-
-/* Two-column wallet layout (Deposit, Withdraw, Redeem) */
-.wallet-layout {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: var(--space-6);
-}
-
-@media (max-width: 768px) {
-  .wallet-layout { grid-template-columns: 1fr; }
-}
-
-/* Split-screen auth */
-.auth-split {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: calc(100dvh - var(--topbar-height, 56px));
-}
-
-.auth-split__visual {
-  display: grid;
-  place-items: center;
-  padding: var(--space-12);
-  background: linear-gradient(135deg, var(--bg-surface), var(--bg-base));
-}
-
-.auth-split__form {
-  display: grid;
-  place-items: center;
-  padding: var(--space-8);
-}
-
-@media (max-width: 768px) {
-  .auth-split { grid-template-columns: 1fr; }
-  .auth-split__visual { display: none; }
+  .lc-page { --lc-page-pad-x: 0.75rem; }
+  .lc-page__header { margin-bottom: 1.25rem; }
+  .lc-panel { padding: 1rem 1.1rem; }
 }

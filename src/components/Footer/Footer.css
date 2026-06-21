@@ -1,106 +1,97 @@
-/* ════════════════════════════════════════════════════════════════
-   LottaCash Footer — v3 "Command Center" redesign (MINIMAL)
-   ───────────────────────────────────────────────────────────────
-   The dock now handles navigation, so the footer is just:
-     • Brand + tagline (left)
-     • Legal links (right, inline row)
-     • Responsible gaming notice + copyright (bottom bar)
-   No more 3-column nav grid — the dock + topbar search + avatar
-   dropdown cover all navigation needs.
-   ════════════════════════════════════════════════════════════════ */
-
 .site-footer {
-  --sf-bg: var(--bg-surface, #111118);
-  --sf-border: var(--border, rgba(255, 255, 255, 0.08));
-  --sf-gold: var(--gold, #f5b942);
-  --sf-gold-bright: var(--gold-bright, #fcd34d);
-  --sf-text: var(--text-primary, #fafafa);
-  --sf-text-2: var(--text-secondary, #a1a1aa);
-  --sf-text-muted: var(--text-muted, #71717a);
-
   margin-top: auto;
-  padding: var(--space-8, 2rem) var(--space-6, 1.5rem);
-  border-top: 1px solid var(--sf-border);
-  background: var(--sf-bg);
+  padding: 3rem 2rem 1.5rem;
+  border-top: 1px solid var(--lc-border);
+  background: var(--lc-bg-elevated);
 }
 
 .site-footer__inner {
-  max-width: var(--page-max, 1200px);
+  max-width: var(--lc-page-max);
   margin: 0 auto;
   display: flex;
+  gap: 3rem;
   flex-wrap: wrap;
-  align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-6, 1.5rem);
 }
 
 .site-footer__brand {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2, 0.5rem);
-  min-width: 0;
-  max-width: 420px;
+  gap: 0.5rem;
+  min-width: 200px;
 }
 
 .site-footer__logo-link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
-  color: var(--sf-text);
-  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
-  font-weight: 800;
-  font-size: 1.15rem;
-  letter-spacing: -0.02em;
+  color: var(--lc-text-primary);
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: var(--lc-text-lg);
 }
 
 .site-footer__logo {
   border-radius: 4px;
-  filter: drop-shadow(0 0 10px var(--gold-glow, rgba(245, 185, 66, 0.15)));
 }
 
-/* Gold-gradient brand wordmark */
 .site-footer__name {
-  background: linear-gradient(135deg, var(--sf-gold-bright) 0%, var(--sf-gold) 55%, var(--gold-deep, #d97706) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--lc-text-primary);
 }
 
 .site-footer__tagline {
-  margin: 0;
-  color: var(--sf-text-muted);
-  font-size: var(--text-sm, 0.875rem);
+  color: var(--lc-text-muted);
+  font-size: var(--lc-text-sm);
   line-height: 1.5;
+  max-width: 260px;
 }
 
-/* Legal links — inline row on desktop, wraps on mobile */
-.site-footer__legal {
+.site-footer__nav {
   display: flex;
+  gap: 2.5rem;
   flex-wrap: wrap;
-  gap: 0.5rem 1.25rem;
-  justify-content: flex-end;
-  align-items: center;
-  flex: 1;
-  min-width: 200px;
+}
+
+.site-footer__col {
+  min-width: 130px;
+}
+
+.site-footer__heading {
+  font-family: var(--lc-font-display);
+  font-size: var(--lc-text-sm);
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  margin: 0 0 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.site-footer__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .site-footer__link {
-  color: var(--sf-text-muted);
+  color: var(--lc-text-muted);
   text-decoration: none;
-  font-size: var(--text-sm, 0.875rem);
-  transition: color var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  font-size: var(--lc-text-sm);
+  transition: color var(--lc-transition);
 }
 
 .site-footer__link:hover {
-  color: var(--sf-gold-bright);
+  color: var(--lc-crimson-soft);
 }
 
 .site-footer__bottom {
-  max-width: var(--page-max, 1200px);
-  margin: var(--space-6, 1.5rem) auto 0;
-  padding-top: var(--space-5, 1.25rem);
-  border-top: 1px solid var(--sf-border);
+  max-width: var(--lc-page-max);
+  margin: 2rem auto 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--lc-border);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -109,8 +100,8 @@
 }
 
 .site-footer__responsible {
-  color: var(--sf-text-muted);
-  font-size: var(--text-xs, 0.75rem);
+  color: var(--lc-text-muted);
+  font-size: var(--lc-text-xs);
   display: flex;
   gap: 0.75rem;
   align-items: center;
@@ -119,39 +110,63 @@
 }
 
 .site-footer__ncpg-link {
-  color: var(--sf-gold);
+  color: var(--lc-crimson-soft);
   text-decoration: none;
-  font-weight: 600;
-  transition: color var(--duration-normal, 250ms) var(--ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+  font-weight: 500;
+  transition: opacity var(--lc-transition);
 }
 
 .site-footer__ncpg-link:hover {
-  color: var(--sf-gold-bright);
+  opacity: 0.8;
   text-decoration: underline;
 }
 
 .site-footer__copyright {
-  color: var(--sf-text-muted);
-  font-size: var(--text-xs, 0.75rem);
+  color: var(--lc-text-muted);
+  font-size: var(--lc-text-xs);
 }
 
-/* ── Tablet / mobile ── */
+/* ── Mobile ── */
 @media (max-width: 768px) {
-  .site-footer { padding: var(--space-8, 2rem) var(--space-5, 1.25rem) var(--space-5, 1.25rem); }
+  .site-footer {
+    padding: 2.25rem 1.25rem 1.25rem;
+  }
   .site-footer__inner {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-5, 1.25rem);
+    gap: 1.75rem;
   }
-  .site-footer__brand { max-width: none; }
-  .site-footer__legal {
-    justify-content: flex-start;
+  .site-footer__brand {
+    min-width: 0;
+    flex: 1 1 100%;
   }
-  .site-footer__bottom { margin-top: var(--space-5, 1.25rem); padding-top: var(--space-4, 1rem); }
+  .site-footer__tagline {
+    max-width: none;
+  }
+  .site-footer__nav {
+    gap: 1.5rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .site-footer__col {
+    min-width: 0;
+    flex: 1 1 30%;
+  }
+  .site-footer__bottom {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+  }
 }
 
 @media (max-width: 480px) {
-  .site-footer { padding: var(--space-6, 1.5rem) var(--space-4, 1rem) var(--space-5, 1.25rem); }
+  .site-footer {
+    padding: 2rem 1rem 1.25rem;
+  }
+  .site-footer__nav {
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .site-footer__col {
+    flex: 1 1 100%;
+  }
   .site-footer__responsible {
     flex-direction: column;
     gap: 0.4rem;

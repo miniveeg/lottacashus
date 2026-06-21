@@ -1,256 +1,182 @@
-/* ════════════════════════════════════════════════════════════════
-   LottaCash — Keyframe animations · "Obsidian Gold"
-   Subtle, purposeful. Each animation serves feedback, orientation,
-   or delight. All have reduced-motion overrides.
-   ════════════════════════════════════════════════════════════════ */
+/* LottaCash — Cracked Obsidian Animations */
 
-/* ── Loading pulse (spinner placeholder) ── */
-@keyframes lc-loading-pulse {
-  0%, 100% { opacity: 0.4; transform: scale(0.92) rotate(0deg); }
-  50%      { opacity: 1;   transform: scale(1)    rotate(6deg); }
-}
-
-/* ── Fade up (reveal on mount / scroll) ── */
-@keyframes lc-fade-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ── Shimmer (skeleton loading) ── */
-@keyframes lc-shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-/* ── Subtle gold glow pulse for CTAs (very subtle, 2s ease-in-out) ── */
-@keyframes lc-glow-pulse {
-  from { box-shadow: 0 0 0 0 var(--gold-glow-faint), 0 0 12px var(--gold-glow-faint); }
-  to   { box-shadow: 0 0 0 1px var(--gold-glow),       0 0 22px var(--gold-glow); }
-}
-
-/* ── Slide down (dropdowns, notifications) ── */
-@keyframes lc-slide-down {
-  from { opacity: 0; transform: translateY(-6px) scaleY(0.96); transform-origin: top; }
-  to   { opacity: 1; transform: translateY(0)    scaleY(1);    transform-origin: top; }
-}
-
-/* ── Shake (error feedback) ── */
-@keyframes lc-shake {
-  0%, 100%   { transform: translateX(0); }
-  20%, 60%   { transform: translateX(-4px); }
-  40%, 80%   { transform: translateX(4px); }
-}
-
-/* ── Scale in (modal/pop-in) ── */
-@keyframes lc-scale-in {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-/* ── Spin (rotation, e.g. spinners) ── */
-@keyframes lc-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-
-/* ── Float (subtle hover bob) ── */
-@keyframes lc-float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-4px); }
-}
-
-/* ── Count pop (number counter feel) ── */
-@keyframes lc-count-pop {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.12); }
-  100% { transform: scale(1); }
-}
-
-/* ── Fog drift (slow atmospheric movement) ── */
-@keyframes lc-fog-drift {
-  0%   { transform: translateY(0) scale(1);    opacity: 0.9; }
-  100% { transform: translateY(-2%) scale(1.02); opacity: 1; }
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Animation utility classes (apply directly)
-   ════════════════════════════════════════════════════════════════ */
-
-.anim-fade-in-up,
-.anim-fade-up {
-  animation: lc-fade-up 0.4s var(--ease-out) both;
-}
-
-.anim-fade-in-scale,
-.anim-scale-in {
-  animation: lc-scale-in 0.32s var(--ease-out) both;
-}
-
-.anim-fade-in {
-  animation: lc-fade-up 0.28s ease both;
-  animation-name: lc-fade-up;
-}
-
-.anim-glow-pulse {
-  animation: lc-glow-pulse 2s ease-in-out infinite alternate;
-}
-
-.anim-float {
-  animation: lc-float 4s ease-in-out infinite;
-}
-
-.anim-shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--bg-surface) 25%,
-    var(--bg-surface-2) 50%,
-    var(--bg-surface) 75%
-  );
-  background-size: 200% 100%;
-  animation: lc-shimmer 1.6s ease-in-out infinite;
-}
-
-.anim-fog-drift {
-  animation: lc-fog-drift 24s ease-in-out infinite alternate;
-  will-change: transform, opacity;
-}
-
-.anim-scale-bounce {
-  animation: lc-scale-in 0.55s var(--ease-spring) both;
-}
-
-.anim-count-pop {
-  animation: lc-count-pop 0.3s var(--ease-spring);
-}
-
-.anim-spin {
-  animation: lc-spin 1s linear infinite;
-}
-
-.anim-shake {
-  animation: lc-shake 0.4s ease-in-out;
-}
-
-.anim-slide-down {
-  animation: lc-slide-down 0.22s var(--ease-out) both;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   Backwards-compat keyframe aliases
-   Other agents' code references these legacy names directly. Kept
-   here so removing them from this file won't break unowned files.
-   ════════════════════════════════════════════════════════════════ */
+/* ── Fade In Up ── */
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes fade-in-scale {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
+.anim-fade-in-up {
+  animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ── Fade In Scale ── */
+@keyframes fade-in-scale {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.anim-fade-in-scale {
+  animation: fade-in-scale 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Fade In ── */
 @keyframes fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+.anim-fade-in {
+  animation: fade-in 0.35s ease both;
+}
 
+/* ── Slide In Left ── */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.anim-slide-in-left {
+  animation: slide-in-left 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Slide In Right ── */
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.anim-slide-in-right {
+  animation: slide-in-right 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Glow Pulse (crimson ambient breathing) ── */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px var(--lc-crimson-glow); }
+  50%      { box-shadow: 0 0 40px var(--lc-crimson-glow-strong), 0 0 60px rgba(220,38,38,0.08); }
+}
+.anim-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* ── Subtle Float ── */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.anim-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* ── Shimmer (loading skeleton) ── */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
-
-@keyframes glow-pulse {
-  from { box-shadow: 0 0 0 0 var(--gold-glow-faint), 0 0 12px var(--gold-glow-faint); }
-  to   { box-shadow: 0 0 0 1px var(--gold-glow),       0 0 22px var(--gold-glow); }
+.anim-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--lc-bg-panel) 25%,
+    var(--lc-bg-hover) 50%,
+    var(--lc-bg-panel) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-4px); }
-}
-
+/* ── Fog Drift (slow atmospheric movement) ── */
 @keyframes fog-drift {
-  0%   { transform: translateY(0) scale(1);    opacity: 0.9; }
-  100% { transform: translateY(-2%) scale(1.02); opacity: 1; }
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  33%  { transform: translate(30px, -15px) scale(1.05); opacity: 0.3; }
+  66%  { transform: translate(-20px, 10px) scale(0.98); opacity: 0.4; }
+  100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+}
+.anim-fog-drift {
+  animation: fog-drift 25s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
 @keyframes fog-drift-reverse {
-  0%   { transform: translate(0, 0) scale(1);    opacity: 0.4; }
-  50%  { transform: translate(-15px, 10px) scale(1.02); opacity: 0.25; }
-  100% { transform: translate(0, 0) scale(1);    opacity: 0.4; }
+  0%   { transform: translate(0, 0) scale(1); opacity: 0.4; }
+  33%  { transform: translate(-25px, 20px) scale(1.03); opacity: 0.25; }
+  66%  { transform: translate(15px, -12px) scale(0.97); opacity: 0.35; }
+  100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+}
+.anim-fog-drift-reverse {
+  animation: fog-drift-reverse 30s ease-in-out infinite;
+  will-change: transform, opacity;
 }
 
+/* ── Scale Bounce (for game results) ── */
 @keyframes scale-bounce {
-  0%   { transform: scale(0.96); opacity: 0; }
-  60%  { transform: scale(1.04); }
-  100% { transform: scale(1);    opacity: 1; }
+  0%   { transform: scale(0.5); opacity: 0; }
+  60%  { transform: scale(1.1); }
+  80%  { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.anim-scale-bounce {
+  animation: scale-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
+/* ── Count Up (number counter feel) ── */
 @keyframes count-pop {
   0%   { transform: scale(1); }
-  50%  { transform: scale(1.12); }
+  50%  { transform: scale(1.15); }
   100% { transform: scale(1); }
 }
+.anim-count-pop {
+  animation: count-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
+/* ── Rotate (for spinners) ── */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
-
-@keyframes border-pulse {
-  0%, 100% { border-color: var(--border); }
-  50%      { border-color: var(--gold); }
+.anim-spin {
+  animation: spin 1s linear infinite;
 }
 
+/* ── Crimson Border Pulse ── */
+@keyframes border-pulse {
+  0%, 100% { border-color: var(--lc-border); }
+  50%      { border-color: var(--lc-crimson); }
+}
+.anim-border-pulse {
+  animation: border-pulse 2s ease-in-out infinite;
+}
+
+/* ── Slide Up (for toasts/modals) ── */
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(100%); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes slide-in-left {
-  from { opacity: 0; transform: translateX(-16px); }
-  to   { opacity: 1; transform: translateX(0); }
+.anim-slide-up {
+  animation: slide-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-@keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(16px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-/* Legacy alias used by other agents — kept verbatim. */
-.anim-slide-in-left  { animation: slide-in-left  0.4s var(--ease-out) both; }
-.anim-slide-in-right { animation: slide-in-right 0.4s var(--ease-out) both; }
-.anim-slide-up       { animation: slide-up       0.4s var(--ease-out) both; }
-.anim-border-pulse   { animation: border-pulse   2s ease-in-out infinite; }
-.anim-fog-drift-reverse { animation: fog-drift-reverse 30s ease-in-out infinite; will-change: transform, opacity; }
-
-/* ── Stagger children (≤8 items) ── */
+/* ── Stagger children ── */
 .anim-stagger > *:nth-child(1) { animation-delay: 0ms; }
-.anim-stagger > *:nth-child(2) { animation-delay: 50ms; }
-.anim-stagger > *:nth-child(3) { animation-delay: 100ms; }
-.anim-stagger > *:nth-child(4) { animation-delay: 150ms; }
-.anim-stagger > *:nth-child(5) { animation-delay: 200ms; }
-.anim-stagger > *:nth-child(6) { animation-delay: 250ms; }
-.anim-stagger > *:nth-child(7) { animation-delay: 300ms; }
-.anim-stagger > *:nth-child(8) { animation-delay: 350ms; }
+.anim-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.anim-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.anim-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.anim-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.anim-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.anim-stagger > *:nth-child(7) { animation-delay: 360ms; }
+.anim-stagger > *:nth-child(8) { animation-delay: 420ms; }
 
-/* ── Reduced motion ── */
+/* ── Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
   .anim-fade-in-up,
-  .anim-fade-up,
   .anim-fade-in-scale,
-  .anim-scale-in,
   .anim-fade-in,
+  .anim-slide-in-left,
+  .anim-slide-in-right,
   .anim-glow-pulse,
   .anim-float,
   .anim-shimmer,
   .anim-fog-drift,
+  .anim-fog-drift-reverse,
   .anim-scale-bounce,
   .anim-count-pop,
   .anim-spin,
-  .anim-shake,
-  .anim-slide-down {
+  .anim-border-pulse,
+  .anim-slide-up {
     animation: none !important;
   }
 }

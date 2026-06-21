@@ -8,7 +8,7 @@ import {
   LIMBO_MIN_TARGET,
   limboWinChance,
 } from "../../lib/games/limbo";
-import { coinsToUsd, formatCoins, formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import {
   fetchLimboPfState,
   placeLimboBet,
@@ -17,10 +17,11 @@ import {
 import "../../styles/game-controls.css";
 import "./Limbo.css";
 
+const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
 const TARGET_PRESETS = [1.5, 2, 3, 5, 10, 25, 50, 100];
 const REVEAL_DELAY_MS = 1500;
 const POP_DURATION_MS = 600;
-const HISTORY_MAX = 10;
+const HISTORY_MAX = 8;
 
 type HistoryEntry = { result: number; won: boolean };
 
@@ -53,20 +54,17 @@ export function Limbo() {
     payout: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
+  const [showFairness, setShowFairness] = useState(false);
 
   const winChance = useMemo(() => limboWinChance(target), [target]);
   const potentialWin = useMemo(
     () => Math.round(wager * target * 100) / 100,
     [wager, target]
   );
-
-  const activeBalance =
-    coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchLimboPfState();
@@ -100,6 +98,7 @@ export function Limbo() {
       setError("Log in to play.");
       return;
     }
+    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
@@ -151,251 +150,228 @@ export function Limbo() {
   };
 
   return (
-    <div className="game-page limbo">
-      <header className="game-header">
-        <h1 className="game-header__title">Limbo</h1>
-        <span className="game-header__rtp">99% RTP</span>
-        <span className="game-header__spacer" />
-        <button
-          type="button"
-          className={`game-header__panel-toggle${panelOpen ? " game-header__panel-toggle--open" : ""}`}
-          onClick={() => setPanelOpen((v) => !v)}
-          aria-label="Toggle stats panel"
-          aria-expanded={panelOpen}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="18" y1="20" x2="18" y2="10" />
-            <line x1="12" y1="20" x2="12" y2="4" />
-            <line x1="6" y1="20" x2="6" y2="14" />
-          </svg>
-        </button>
+    <div className="limbo lc-game-page">
+      <header className="limbo__header">
+        <h1 className="limbo__title">Limbo</h1>
+        <p className="limbo__subtitle">
+          Set a target multiplier. If the round result is equal or higher, you win bet × target.
+          Provably fair — 94.5% RTP.
+        </p>
       </header>
 
-      <div className="game-stage">
-        <div
-          className={`limbo__display${rolling ? " limbo__display--rolling" : ""}${lastResult?.won ? " limbo__display--win" : lastResult && !lastResult.won ? " limbo__display--loss" : ""}`}
-          aria-live="polite"
-        >
-          <span className="limbo__display-label">Result multiplier</span>
-          <span
-            className={[
-              "limbo__display-value",
-              showResult && popIn && "limbo__display-value--pop",
-              !showResult && "limbo__display-value--waiting",
-            ]
-              .filter(Boolean)
-              .join(" ")}
+      <div className="limbo__layout">
+        <section className="limbo__stage-panel">
+          <div
+            className={`limbo__display${rolling ? " limbo__display--rolling" : ""}${lastResult?.won ? " limbo__display--win" : lastResult && !lastResult.won ? " limbo__display--loss" : ""}`}
+            aria-live="polite"
           >
-            {showResult ? `${formatMultiplier(displayMult)}×` : "···"}
-          </span>
-          <div className="limbo__display-meta">
+            <span className="limbo__display-label">Result</span>
+            <span
+              className={[
+                "limbo__display-value",
+                showResult && popIn && "limbo__display-value--pop",
+                !showResult && "limbo__display-value--waiting",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            >
+              {showResult ? `${formatMultiplier(displayMult)}×` : "···"}
+            </span>
             <span className="limbo__display-target">
               Target {formatMultiplier(target)}×
             </span>
-            <span className="limbo__display-chance">
-              Win chance {(winChance * 100).toFixed(2)}%
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {panelOpen && (
-        <div className="game-panel" role="complementary" aria-label="Limbo stats">
-          <div className="game-panel__head">
-            <h2 className="game-panel__title">Round info</h2>
-            <button
-              type="button"
-              className="game-panel__close"
-              onClick={() => setPanelOpen(false)}
-              aria-label="Close panel"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
           </div>
 
           {lastResult && !rolling && (
-            <div className="game-panel__section">
-              <h3 className="game-panel__section-title">Last roll</h3>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Result</span>
-                <span
-                  className={`game-panel__row-value${
-                    lastResult.won
-                      ? " game-panel__row-value--win"
-                      : " game-panel__row-value--loss"
-                  }`}
-                >
-                  {formatMultiplier(lastResult.result)}×
-                </span>
-              </div>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Payout</span>
-                <span
-                  className={`game-panel__row-value${
-                    lastResult.won
-                      ? " game-panel__row-value--win"
-                      : " game-panel__row-value--loss"
-                  }`}
-                >
-                  {lastResult.won
-                    ? formatCoins(lastResult.payout, coinType)
-                    : "No win"}
-                </span>
-              </div>
+            <div
+              className={`limbo__outcome${lastResult.won ? " limbo__outcome--win" : " limbo__outcome--loss"}`}
+              role="status"
+              aria-live="polite"
+            >
+              {lastResult.won ? (
+                <p>
+                  Hit <strong>{formatMultiplier(lastResult.result)}×</strong> — won{" "}
+                  <strong>{formatCoins(lastResult.payout, coinType)}</strong>
+                </p>
+              ) : (
+                <p>
+                  Landed <strong>{formatMultiplier(lastResult.result)}×</strong> — below target
+                </p>
+              )}
             </div>
           )}
 
-          <div className="game-panel__section">
-            <h3 className="game-panel__section-title">History</h3>
-            {history.length > 0 ? (
-              <div className="limbo__history" aria-label="Recent results">
-                {history.map((h, i) => (
-                  <span
-                    key={`${h.result}-${i}`}
-                    className={`limbo__history-chip${h.won ? " limbo__history-chip--win" : " limbo__history-chip--loss"}`}
-                    title={`${formatMultiplier(h.result)}× — ${h.won ? "win" : "loss"}`}
+          {history.length > 0 && (
+            <div className="limbo__history" aria-label="Recent results">
+              {history.map((h, i) => (
+                <span
+                  key={`${h.result}-${i}`}
+                  className={`limbo__history-chip${h.won ? " limbo__history-chip--win" : " limbo__history-chip--loss"}`}
+                  title={`${formatMultiplier(h.result)}× — ${h.won ? "win" : "loss"}`}
+                >
+                  {formatMultiplier(h.result)}×
+                </span>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <aside className="limbo__controls game-controls">
+          <div className="game-controls__options">
+            <div className="game-controls__option">
+              <label className="game-controls__option-label" htmlFor="limbo-target">
+                Target multiplier
+              </label>
+              <input
+                id="limbo-target"
+                type="text"
+                inputMode="decimal"
+                className="game-controls__wager-input"
+                value={targetInput}
+                onChange={(e) => setTargetInput(e.target.value)}
+                onBlur={() => {
+                  const parsed = parseFloat(targetInput.replace(/,/g, ""));
+                  applyTarget(Number.isFinite(parsed) ? parsed : LIMBO_MIN_TARGET);
+                }}
+                disabled={rolling}
+              />
+              <div className="game-controls__presets limbo__target-presets">
+                {TARGET_PRESETS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className={`game-controls__preset${target === t ? " game-controls__preset--active" : ""}`}
+                    onClick={() => applyTarget(t)}
+                    disabled={rolling}
                   >
-                    {formatMultiplier(h.result)}×
-                  </span>
+                    {t}×
+                  </button>
                 ))}
               </div>
-            ) : (
-              <p className="game-history__empty">No rolls yet.</p>
-            )}
+              <p className="game-controls__option-hint">
+                Win chance ≈ {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
+              </p>
+            </div>
           </div>
 
-          <div className="game-panel__section game-panel__section--bare">
-            <details className="game-fair">
-              <summary className="game-fair__summary">Provably Fair</summary>
-              <div className="game-fair__body">
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Server seed (hash)</span>
-                  <code className="game-fair__code">{pfHash ?? "…"}</code>
-                </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Next nonce</span>
-                  <code className="game-fair__code">{pfNonce}</code>
-                </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Client seed</span>
+          <div className="game-controls__wager-block">
+            <label className="game-controls__wager-label" htmlFor="limbo-wager">
+              Bet amount ({coinLabel})
+            </label>
+            <div className="game-controls__wager-row">
+              <input
+                id="limbo-wager"
+                type="text"
+                inputMode="decimal"
+                className="game-controls__wager-input"
+                value={wagerInput}
+                onChange={(e) => setWagerInput(e.target.value)}
+                onBlur={() => {
+                  const parsed = parseFloat(wagerInput.replace(/,/g, ""));
+                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                }}
+                disabled={rolling}
+              />
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={() => applyWager(wager / 2)}
+                disabled={rolling}
+                aria-label="Half bet"
+              >
+                ½
+              </button>
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={() => applyWager(wager * 2)}
+                disabled={rolling}
+                aria-label="Double bet"
+              >
+                2×
+              </button>
+            </div>
+            <div className="game-controls__presets">
+              {BET_PRESETS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
+                  onClick={() => applyWager(p)}
+                  disabled={rolling}
+                >
+                  ${p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <p className="limbo__error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="button"
+            className="limbo__bet-btn"
+            onClick={handleBet}
+            disabled={rolling || !user}
+            aria-busy={rolling}
+          >
+            {rolling ? (
+              <>
+                <span className="limbo__spinner" aria-hidden="true" />
+                <span>Rolling…</span>
+              </>
+            ) : (
+              "Bet"
+            )}
+          </button>
+
+          <p className="limbo__hint">
+            Need funds? <Link to="/deposit">Deposit</Link>
+          </p>
+
+          <div className="limbo__fairness">
+            <button
+              type="button"
+              className="limbo__fairness-toggle"
+              onClick={() => setShowFairness((v) => !v)}
+            >
+              {showFairness ? "Hide" : "Show"} provably fair
+            </button>
+            {showFairness && (
+              <div className="limbo__fairness-body">
+                <p>
+                  <span className="limbo__fairness-k">Server seed (hash)</span>
+                  <code className="limbo__hash">{pfHash ?? "…"}</code>
+                </p>
+                <p>
+                  <span className="limbo__fairness-k">Next nonce</span>
+                  <code>{pfNonce}</code>
+                </p>
+                <label className="limbo__seed-label">
+                  Client seed
                   <input
                     type="text"
-                    className="game-fair__input"
+                    className="limbo__seed-input"
                     value={clientSeed}
                     maxLength={64}
                     onChange={(e) => setClientSeed(e.target.value)}
                     disabled={rolling}
                   />
-                </div>
-                <button
-                  type="button"
-                  className="game-fair__save"
-                  onClick={saveClientSeed}
-                  disabled={rolling}
-                >
+                </label>
+                <button type="button" className="limbo__tool-btn" onClick={saveClientSeed} disabled={rolling}>
                   Save client seed
                 </button>
-                <p className="game-fair__note">
+                <p className="limbo__fairness-note">
                   HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — 94.5% RTP via win odds.
                 </p>
               </div>
-            </details>
+            )}
           </div>
-
-          <p className="game-actionbar__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
-        </div>
-      )}
-
-      <div className="game-actionbar">
-        <div className="game-actionbar__balance">
-          <span className="game-actionbar__balance-label">{coinLabel}</span>
-          <span className="game-actionbar__balance-value">{formatCoins(activeBalance, coinType)}</span>
-          <span className="game-actionbar__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
-        </div>
-
-        <div className="limbo__target">
-          <span className="limbo__target-label">Target</span>
-          <input
-            id="limbo-target"
-            type="text"
-            inputMode="decimal"
-            className="limbo__target-input"
-            value={targetInput}
-            onChange={(e) => setTargetInput(e.target.value)}
-            onBlur={() => {
-              const parsed = parseFloat(targetInput.replace(/,/g, ""));
-              applyTarget(Number.isFinite(parsed) ? parsed : LIMBO_MIN_TARGET);
-            }}
-            disabled={rolling}
-            aria-label="Target multiplier"
-          />
-        </div>
-
-        <div className="game-actionbar__wager">
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            onClick={() => applyWager(wager / 2)}
-            disabled={rolling}
-            aria-label="Half bet"
-          >
-            ½
-          </button>
-          <input
-            id="limbo-wager"
-            type="text"
-            inputMode="decimal"
-            className="game-actionbar__input"
-            value={wagerInput}
-            onChange={(e) => setWagerInput(e.target.value)}
-            onBlur={() => {
-              const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-              applyWager(Number.isFinite(parsed) ? parsed : 0.01);
-            }}
-            disabled={rolling}
-            aria-label="Bet amount"
-          />
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            onClick={() => applyWager(wager * 2)}
-            disabled={rolling}
-            aria-label="Double bet"
-          >
-            2×
-          </button>
-        </div>
-
-        <div className="game-actionbar__presets">
-          {TARGET_PRESETS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              className={`game-actionbar__preset${target === t ? " game-actionbar__preset--active" : ""}`}
-              onClick={() => applyTarget(t)}
-              disabled={rolling}
-            >
-              {t}×
-            </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          className="game-actionbar__play"
-          onClick={handleBet}
-          disabled={rolling || !user}
-          aria-busy={rolling}
-        >
-          {rolling ? "Rolling…" : `Play · ${formatCoins(potentialWin, coinType)}`}
-        </button>
-
-        {error && <p className="game-actionbar__error" role="alert">{error}</p>}
+        </aside>
       </div>
     </div>
   );

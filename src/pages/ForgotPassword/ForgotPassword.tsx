@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
 import { useAuth } from "../../contexts/AuthContext";
 import { requestPasswordResetCode, resetPasswordWithCode } from "../../lib/passwordReset";
@@ -26,11 +25,9 @@ export function ForgotPassword() {
   if (authLoading) {
     return (
       <div className="auth-page lc-page--auth">
-        <div className="auth-form-side">
-          <div className="lc-loading">
-            <div className="lc-loading__pulse" aria-hidden />
-            <p>Loading…</p>
-          </div>
+        <div className="lc-loading">
+          <div className="lc-loading__pulse" aria-hidden />
+          <p>Loading…</p>
         </div>
       </div>
     );
@@ -112,48 +109,14 @@ export function ForgotPassword() {
 
   return (
     <div className="auth-page lc-page--auth">
-      <aside className="auth-visual" aria-hidden="true">
-        <div className="auth-visual__inner">
-          <BrandLogo className="auth-visual__logo" size={56} />
-          <h2 className="auth-visual__headline">Reset your<br />password.</h2>
-          <p className="auth-visual__lede">
-            Enter your email and we&apos;ll send a 6-digit verification code so you can set a new
-            password. Your funds and history stay safe.
-          </p>
-          <div className="auth-visual__props">
-            <div className="auth-prop">
-              <div className="auth-prop__icon"><Mail size={18} /></div>
-              <div className="auth-prop__text">
-                <p className="auth-prop__title">Email verification</p>
-                <p className="auth-prop__desc">A 6-digit code keeps your account safe.</p>
-              </div>
-            </div>
-            <div className="auth-prop">
-              <div className="auth-prop__icon"><KeyRound size={18} /></div>
-              <div className="auth-prop__text">
-                <p className="auth-prop__title">New password</p>
-                <p className="auth-prop__desc">Choose a fresh password (min 6 chars).</p>
-              </div>
-            </div>
-            <div className="auth-prop">
-              <div className="auth-prop__icon"><ShieldCheck size={18} /></div>
-              <div className="auth-prop__text">
-                <p className="auth-prop__title">Auto sign-in</p>
-                <p className="auth-prop__desc">We log you back in once it&apos;s updated.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </aside>
-      <div className="auth-form-side">
       <div className="auth-card">
-        <BrandLogo className="auth-card__logo" size={48} />
+        <BrandLogo className="auth-card__logo" size={72} />
         <h1 className="auth-card__title">Reset password</h1>
         <p className="auth-card__subtitle">
-          {step === "email" && "Enter your account email to receive a reset code."}
+          {step === "email" && "Enter your account email"}
           {step === "code" && `Enter the code we sent to ${email}`}
-          {step === "password" && "Choose a new password for your account."}
-          {step === "done" && "You're all set."}
+          {step === "password" && "Choose a new password"}
+          {step === "done" && "You're all set"}
         </p>
 
         {!configured && (
@@ -164,11 +127,7 @@ export function ForgotPassword() {
 
         {step === "email" && (
           <form className="auth-form" onSubmit={handleSendCode} noValidate>
-            {error && (
-              <p className="auth-error" role="alert" id="reset-error">
-                {error}
-              </p>
-            )}
+            {error && <p className="auth-error" role="alert" id="reset-error">{error}</p>}
             <div className="auth-field">
               <label htmlFor="reset-email">Email</label>
               <input
@@ -192,16 +151,8 @@ export function ForgotPassword() {
 
         {step === "code" && (
           <form className="auth-form" onSubmit={handleCodeContinue} noValidate>
-            {error && (
-              <p className="auth-error" role="alert" id="reset-code-error">
-                {error}
-              </p>
-            )}
-            {info && (
-              <p className="auth-success" role="status">
-                {info}
-              </p>
-            )}
+            {error && <p className="auth-error" role="alert" id="reset-code-error">{error}</p>}
+            {info && <p className="auth-success" role="status">{info}</p>}
             <p className="auth-hint">Code expires in 10 minutes.</p>
             <div className="auth-field">
               <label htmlFor="reset-code">Reset code</label>
@@ -242,11 +193,7 @@ export function ForgotPassword() {
 
         {step === "password" && (
           <form className="auth-form" onSubmit={handleResetPassword} noValidate>
-            {error && (
-              <p className="auth-error" role="alert" id="reset-pwd-error">
-                {error}
-              </p>
-            )}
+            {error && <p className="auth-error" role="alert" id="reset-pwd-error">{error}</p>}
             <p className="auth-hint">
               For security, your old password cannot be shown. Set a new one below.
             </p>
@@ -313,7 +260,6 @@ export function ForgotPassword() {
         <p className="auth-footer">
           <Link to="/login">← Back to log in</Link>
         </p>
-      </div>
       </div>
     </div>
   );

@@ -1,16 +1,54 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import "./PageTransition.css";
 
-type TransitionKind = "initial" | "major" | "same";
+const SECTIONS: Record<string, string> = {
+  "/": "home",
+  "/originals": "originals",
+  "/keno": "originals",
+  "/mines": "originals",
+  "/limbo": "originals",
+  "/roulette": "originals",
+  "/blackjack": "originals",
+  "/crash": "originals",
+  "/case-battles": "battles",
+  "/deposit": "wallet",
+  "/withdraw": "wallet",
+  "/settings": "settings",
+  "/profile": "settings",
+  "/leaderboard": "promotions",
+  "/login": "auth",
+  "/signup": "auth",
+  "/forgot-password": "auth",
+  "/promotions": "promotions",
+  "/help": "help",
+  "/admin": "admin",
+};
 
-/* Clean opacity-only fade — 0.2s in, 0.15s out. No transform, no blur.
-   Reduced motion renders the children with no wrapper animation. */
-const fadeVariants: Variants = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } },
-  exit: { opacity: 0, transition: { duration: 0.15, ease: [0.4, 0, 0.2, 1] } },
+function getSection(path: string): string {
+  if (SECTIONS[path]) return SECTIONS[path]!;
+  for (const [prefix, section] of Object.entries(SECTIONS)) {
+    if (prefix !== "/" && path.startsWith(prefix)) return section;
+  }
+  return "other";
+}
+
+type TransitionKind = "initial" | "major" | "minor" | "same";
+
+/* Local variants — intentionally avoid `filter: blur()` because blurring
+   the entire page wrapper on every route change triggers a full-content
+   repaint on the GPU and is the main source of jank during navigation.
+   Opacity + a small translate is perceptually equivalent and far cheaper. */
+const majorVariants: Variants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } },
+};
+
+const minorVariants: Variants = {
+  initial: { opacity: 0, y: 6 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, y: -4, transition: { duration: 0.16, ease: [0.4, 0, 0.2, 1] } },
 };
 
 interface PageTransitionProps {
@@ -30,7 +68,9 @@ export function PageTransition({ children }: PageTransitionProps) {
   } else if (prevPath.current === location.pathname) {
     kind = "same";
   } else {
-    kind = "major";
+    const fromSection = getSection(prevPath.current ?? "");
+    const toSection = getSection(location.pathname);
+    kind = fromSection === toSection ? "minor" : "major";
   }
 
   useEffect(() => {
@@ -38,13 +78,10 @@ export function PageTransition({ children }: PageTransitionProps) {
     isFirst.current = false;
   }, [location.pathname]);
 
-  if (reduceMotion) {
-    return <div className="lc-page-transition">{children}</div>;
-  }
+  const variants =
+    kind === "minor" || kind === "same" ? minorVariants : majorVariants;
 
-  /* Same-route revisit: no animation, just render children in a stable
-     wrapper so the layout doesn't shift. */
-  if (kind === "same") {
+  if (reduceMotion) {
     return <div className="lc-page-transition">{children}</div>;
   }
 
@@ -53,10 +90,10 @@ export function PageTransition({ children }: PageTransitionProps) {
       <motion.div
         key={location.pathname}
         className="lc-page-transition"
-        initial="initial"
+        initial={kind === "same" ? false : "initial"}
         animate="animate"
         exit="exit"
-        variants={fadeVariants}
+        variants={variants}
       >
         {children}
       </motion.div>

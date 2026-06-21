@@ -1,5 +1,5 @@
 import { useRef, type ReactNode } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { fadeUpVariants } from "../../lib/motion";
 
 type ScrollRevealProps = {
@@ -9,30 +9,13 @@ type ScrollRevealProps = {
   as?: "div" | "section" | "article" | "li";
 };
 
-/**
- * Fades + slides a section into view the first time it enters the
- * viewport. Uses `fadeUpVariants` from `../../lib/motion` (opacity
- * 0 → 1, y 16 → 0, 0.4s ease-out). Respects `prefers-reduced-motion`
- * by rendering the children with no transform.
- */
 export function ScrollReveal({ children, className, delay = 0, as = "div" }: ScrollRevealProps) {
   // Use `any` for the ref because framer-motion's `motion[as]` produces a
-  // union of distinct element-specific ref types (HTMLDivElement,
-  // HTMLLIElement, etc.) that TypeScript cannot reconcile with a single
-  // `HTMLElement` ref.
+  // union of distinct element-specific ref types (HTMLDivElement, HTMLLIElement, etc.)
+  // that TypeScript cannot reconcile with a single `HTMLElement` ref.
   const ref = useRef<any>(null);
   const inView = useInView(ref, { once: true, margin: "-8% 0px" });
-  const reduceMotion = useReducedMotion();
   const MotionTag = motion[as];
-
-  if (reduceMotion) {
-    const Tag = as as any;
-    return (
-      <Tag ref={ref} className={className}>
-        {children}
-      </Tag>
-    );
-  }
 
   return (
     <MotionTag

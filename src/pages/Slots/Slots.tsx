@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { useToast } from "../../contexts/ToastContext";
-import { coinsToUsd, formatCoins, formatUsd } from "../../lib/format";
 import {
   fetchSlotsPfState,
   placeSlotsBet,
@@ -15,7 +13,10 @@ import "../../styles/game-controls.css";
 import "./Slots.css";
 
 const REVEAL_DELAY_MS = 1200;
+// Per-reel landing stagger — each reel stops shortly after the previous one
+// for a satisfying left-to-right settle effect.
 const REEL_STOP_STAGGER_MS = 180;
+// Symbol cycle rate during the spin animation. Lower = faster visual flicker.
 const SYMBOL_CYCLE_MS = 55;
 
 const SYMBOL_GLYPH: Record<number, string> = {
@@ -42,26 +43,24 @@ export default function Slots() {
   const [wagerInput, setWagerInput] = useState("1");
   const [rolling, setRolling] = useState(false);
   const [reels, setReels] = useState<number[]>([-1, -1, -1]);
+  // Per-reel spin state — each reel moves through spinning → landed independently
+  // so we can stagger the visual landing for a more authentic slot feel.
   const [reelStates, setReelStates] = useState<ReelState[]>(["idle", "idle", "idle"]);
   const [lastResult, setLastResult] = useState<SlotsBetResult | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState<number | null>(null);
   const [clientSeed, setClientSeed] = useState("");
+  const [showFairness, setShowFairness] = useState(false);
 
   const rafRef = useRef<number>(0);
   const lastCycleRef = useRef<number>(0);
   const reelStatesRef = useRef<ReelState[]>(["idle", "idle", "idle"]);
   const landingTimersRef = useRef<number[]>([]);
 
-  const activeBalance = useMemo(() => {
-    if (!user) return 0;
-    return coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-  }, [user, coinType, profile]);
-
+  // Keep ref in sync so the rAF closure always sees the latest reel states.
   useEffect(() => {
     reelStatesRef.current = reelStates;
   }, [reelStates]);
@@ -70,6 +69,11 @@ export default function Slots() {
     for (const t of landingTimersRef.current) window.clearTimeout(t);
     landingTimersRef.current = [];
   }, []);
+
+  const activeBalance = useMemo(() => {
+    if (!user) return 0;
+    return coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+  }, [user, coinType, profile]);
 
   useEffect(() => {
     fetchSlotsPfState().then(({ data }) => {
@@ -102,6 +106,7 @@ export default function Slots() {
     lastCycleRef.current = performance.now();
 
     const tick = (now: number) => {
+      // Only update visuals while at least one reel is still spinning.
       if (!reelStatesRef.current.some((s) => s === "spinning")) return;
       if (now - lastCycleRef.current >= SYMBOL_CYCLE_MS) {
         lastCycleRef.current = now;
@@ -119,6 +124,7 @@ export default function Slots() {
   }
 
   function stopRollAnimation(finalReels: number[]) {
+    // Land each reel in sequence so the user sees a satisfying left-to-right settle.
     finalReels.forEach((sym, i) => {
       const t = window.setTimeout(() => {
         setReels((prev) => {
@@ -172,9 +178,11 @@ export default function Slots() {
       return;
     }
 
+    // Stop the free-running spin rAF; reel landing timers will settle each reel.
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     stopRollAnimation(data.reels);
 
+    // Wait for the final reel to land before showing the outcome.
     const lastReelDelay = (data.reels.length - 1) * REEL_STOP_STAGGER_MS + 220;
     await new Promise((r) => setTimeout(r, lastReelDelay));
 
@@ -201,6 +209,7 @@ export default function Slots() {
     });
   }
 
+  // Cleanup any pending rAF / landing timers when the component unmounts.
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -209,241 +218,225 @@ export default function Slots() {
   }, [clearLandingTimers]);
 
   return (
-    <div className="game-page slots">
-      <header className="game-header">
-        <h1 className="game-header__title">Slots</h1>
-        <span className="game-header__rtp">~95% RTP</span>
-        <span className="game-header__spacer" />
-        <button
-          type="button"
-          className={`game-header__panel-toggle${panelOpen ? " game-header__panel-toggle--open" : ""}`}
-          onClick={() => setPanelOpen((v) => !v)}
-          aria-label="Toggle stats panel"
-          aria-expanded={panelOpen}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="18" y1="20" x2="18" y2="10" />
-            <line x1="12" y1="20" x2="12" y2="4" />
-            <line x1="6" y1="20" x2="6" y2="14" />
-          </svg>
-        </button>
-      </header>
-
-      <div className="game-stage">
-        <div
-          className={`slots__reels${
-            !rolling && showResult && lastResult?.won ? " slots__reels--win" : ""
-          }`}
-          role="img"
-          aria-label="Slot machine reels"
-        >
-          {reels.map((symbol, i) => {
-            const state = reelStates[i];
-            const isWinning =
-              !rolling && showResult && lastResult?.won && state === "landed";
-            const isLoss =
-              !rolling && showResult && lastResult && !lastResult.won && state === "landed";
-            return (
-              <div
-                key={i}
-                className={`slots__reel${
-                  state === "spinning" ? " slots__reel--rolling" : ""
-                }${isWinning ? " slots__reel--win" : ""}${isLoss ? " slots__reel--loss" : ""}${
-                  state === "landed" ? " slots__reel--landed" : ""
-                }`}
-              >
-                {symbol >= 0 ? (
-                  <span className="slots__symbol">
-                    {SYMBOL_GLYPH[symbol] ?? symbol}
-                  </span>
-                ) : (
-                  <span className="slots__symbol slots__symbol--empty" aria-label="Empty">
-                    —
-                  </span>
-                )}
-              </div>
-            );
-          })}
-          <div className="slots__win-line" aria-hidden="true" />
-        </div>
-
-        {showResult && lastResult && (
-          <div className="slots__outcome" role="status" aria-live="polite">
-            {lastResult.won ? (
-              <>
-                <p className="slots__outcome-multiplier">
-                  {lastResult.multiplier}× · {lastResult.symbols.join(" ")} win!
-                </p>
-                <p className="slots__outcome-payout">
-                  +{formatCoins(lastResult.payout, coinType)}
-                </p>
-              </>
-            ) : (
-              <p className="slots__outcome-loss">No match · try again!</p>
-            )}
-          </div>
-        )}
+    <div className="slots lc-game-page">
+      <div className="slots__header">
+        <h1>Slots</h1>
+        <p>Spin the reels and match symbols to win!</p>
       </div>
 
-      {panelOpen && (
-        <div className="game-panel" role="complementary" aria-label="Slots stats">
-          <div className="game-panel__head">
-            <h2 className="game-panel__title">Spin info</h2>
-            <button
-              type="button"
-              className="game-panel__close"
-              onClick={() => setPanelOpen(false)}
-              aria-label="Close panel"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-
-          {lastResult && (
-            <div className="game-panel__section">
-              <h3 className="game-panel__section-title">Last spin</h3>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Symbols</span>
-                <span className="game-panel__row-value game-panel__row-value--gold">
-                  {lastResult.symbols.join(" ")}
-                </span>
-              </div>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Multiplier</span>
-                <span className="game-panel__row-value game-panel__row-value--gold">
-                  {lastResult.multiplier}×
-                </span>
-              </div>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Payout</span>
-                <span
-                  className={`game-panel__row-value${
-                    lastResult.won
-                      ? " game-panel__row-value--win"
-                      : " game-panel__row-value--loss"
+      <div className="slots__layout">
+        <section className="slots__stage">
+          <div
+            className={`slots__reels${
+              !rolling && showResult && lastResult?.won ? " slots__reels--win" : ""
+            }`}
+            role="img"
+            aria-label="Slot machine reels"
+          >
+            {reels.map((symbol, i) => {
+              const state = reelStates[i];
+              const isWinning =
+                !rolling && showResult && lastResult?.won && state === "landed";
+              const isLoss =
+                !rolling && showResult && lastResult && !lastResult.won && state === "landed";
+              return (
+                <div
+                  key={i}
+                  className={`slots__reel${
+                    state === "spinning" ? " slots__reel--rolling" : ""
+                  }${isWinning ? " slots__reel--win" : ""}${isLoss ? " slots__reel--loss" : ""}${
+                    state === "landed" ? " slots__reel--landed" : ""
                   }`}
                 >
-                  {lastResult.won
-                    ? `+${formatCoins(lastResult.payout, coinType)}`
-                    : "No win"}
-                </span>
-              </div>
+                  {symbol >= 0 ? (
+                    <span className="slots__reel-inner">
+                      <span className="slots__symbol">
+                        {SYMBOL_GLYPH[symbol] ?? symbol}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="slots__symbol" aria-label="Empty">
+                      —
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+            {/* Horizontal win-line indicator across the center row */}
+            <div className="slots__win-line" aria-hidden="true" />
+          </div>
+
+          {showResult && lastResult && (
+            <div className="slots__outcome" role="status" aria-live="polite">
+              {lastResult.won ? (
+                <>
+                  <p className="slots__outcome-multiplier">
+                    {lastResult.multiplier}x &mdash;{" "}
+                    {lastResult.symbols.join(" ")}{" "}
+                    win!
+                  </p>
+                  <p className="slots__outcome-payout">
+                    +{coinLabel} {lastResult.payout.toFixed(2)}
+                  </p>
+                </>
+              ) : (
+                <p className="slots__outcome-loss">No match &mdash; try again!</p>
+              )}
             </div>
           )}
+        </section>
 
-          <div className="game-panel__section game-panel__section--bare">
-            <details className="game-fair">
-              <summary className="game-fair__summary">Provably Fair</summary>
-              <div className="game-fair__body">
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Server seed (hash)</span>
-                  <code className="game-fair__code">{pfHash ?? "—"}</code>
+        <aside className="slots__controls game-controls">
+          <div className="game-controls__options">
+            <div className="game-controls__option">
+              <span className="game-controls__option-label">Wager ({coinLabel})</span>
+              <div className="game-controls__wager-block">
+                <div className="game-controls__wager-row">
+                  <input
+                    className="game-controls__wager-input"
+                    type="text"
+                    inputMode="decimal"
+                    value={wagerInput}
+                    onChange={(e) => setWagerInput(e.target.value)}
+                    onBlur={() => applyWager(wagerInput)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") applyWager(wagerInput);
+                    }}
+                    disabled={rolling}
+                  />
+                  <button
+                    type="button"
+                    className="game-controls__wager-half"
+                    disabled={rolling}
+                    onClick={() => {
+                      const half = wager / 2;
+                      const clamped = Math.max(half, 0.01);
+                      setWager(clamped);
+                      setWagerInput(String(clamped));
+                    }}
+                  >
+                    1/2
+                  </button>
+                  <button
+                    type="button"
+                    className="game-controls__wager-double"
+                    disabled={rolling}
+                    onClick={() => {
+                      const doubled = wager * 2;
+                      const clamped = Math.min(doubled, 100000);
+                      setWager(clamped);
+                      setWagerInput(String(clamped));
+                    }}
+                  >
+                    2x
+                  </button>
                 </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Next nonce</span>
-                  <code className="game-fair__code">{pfNonce ?? "—"}</code>
-                </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Client seed</span>
+              </div>
+            </div>
+
+            <div className="game-controls__option">
+              <span className="game-controls__option-label">Quick bet</span>
+              <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+                {BET_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    disabled={rolling}
+                    className={`game-controls__preset${wager === preset ? " game-controls__preset--active" : ""}`}
+                    onClick={() => {
+                      setWager(preset);
+                      setWagerInput(String(preset));
+                    }}
+                  >
+                    {coinLabel} {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {error && (
+            <p className="game-controls__error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="button"
+            className="game-controls__play"
+            disabled={rolling}
+            onClick={handleSpin}
+          >
+            {rolling ? "Spinning\u2026" : "Spin"}
+          </button>
+
+          <div className="game-controls__stats">
+            <div className="game-controls__stat-row">
+              <span className="game-controls__stat-label">Balance ({coinLabel})</span>
+              <span className="game-controls__stat-value">
+                {activeBalance.toFixed(2)}
+              </span>
+            </div>
+            {lastResult && (
+              <div className="game-controls__stat-row">
+                <span className="game-controls__stat-label">Last payout</span>
+                <span
+                  className={`game-controls__stat-value${
+                    lastResult.won ? " game-controls__stat-value--win" : " game-controls__stat-value--loss"
+                  }`}
+                >
+                  {lastResult.won ? `+${lastResult.payout.toFixed(2)}` : "0.00"}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <details
+            className="slots__fairness"
+            open={showFairness}
+            onToggle={(e) => setShowFairness((e.target as HTMLDetailsElement).open)}
+          >
+            <summary>Provably Fair</summary>
+            <div className="slots__fairness-body">
+              <label className="slots__fairness-label">
+                Server seed hash
+                <input
+                  type="text"
+                  className="game-controls__wager-input slots__fairness-input slots__fairness-input--hash"
+                  readOnly
+                  value={pfHash ?? "—"}
+                />
+              </label>
+              <label className="slots__fairness-label">
+                Next nonce
+                <input
+                  type="text"
+                  className="game-controls__wager-input slots__fairness-input slots__fairness-input--hash"
+                  readOnly
+                  value={pfNonce ?? "—"}
+                />
+              </label>
+              <label className="slots__fairness-label">
+                Client seed
+                <div className="slots__fairness-row">
                   <input
                     type="text"
-                    className="game-fair__input"
+                    className="game-controls__wager-input slots__fairness-input"
                     value={clientSeed}
                     onChange={(e) => setClientSeed(e.target.value)}
                   />
+                  <button
+                    type="button"
+                    className="game-controls__play slots__fairness-save-btn"
+                    onClick={handleSaveClientSeed}
+                  >
+                    Save
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="game-fair__save"
-                  onClick={handleSaveClientSeed}
-                >
-                  Save client seed
-                </button>
-                <p className="game-fair__note">
-                  HMAC-SHA256 — 3 reels drawn independently per spin.
-                </p>
-              </div>
-            </details>
-          </div>
-
-          <p className="game-actionbar__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
-        </div>
-      )}
-
-      <div className="game-actionbar">
-        <div className="game-actionbar__balance">
-          <span className="game-actionbar__balance-label">{coinLabel}</span>
-          <span className="game-actionbar__balance-value">{formatCoins(activeBalance, coinType)}</span>
-          <span className="game-actionbar__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
-        </div>
-
-        <div className="game-actionbar__wager">
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            disabled={rolling}
-            onClick={() => applyWager(String(Math.max(wager / 2, 0.01)))}
-            aria-label="Half bet"
-          >
-            ½
-          </button>
-          <input
-            id="slots-wager"
-            type="text"
-            inputMode="decimal"
-            className="game-actionbar__input"
-            value={wagerInput}
-            onChange={(e) => setWagerInput(e.target.value)}
-            onBlur={() => applyWager(wagerInput)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") applyWager(wagerInput);
-            }}
-            disabled={rolling}
-            aria-label="Bet amount"
-          />
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            disabled={rolling}
-            onClick={() => applyWager(String(Math.min(wager * 2, 100000)))}
-            aria-label="Double bet"
-          >
-            2×
-          </button>
-        </div>
-
-        <div className="game-actionbar__presets">
-          {BET_PRESETS.map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              disabled={rolling}
-              className={`game-actionbar__preset${wager === preset ? " game-actionbar__preset--active" : ""}`}
-              onClick={() => {
-                setWager(preset);
-                setWagerInput(String(preset));
-              }}
-            >
-              {preset}
-            </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          className="game-actionbar__play"
-          disabled={rolling}
-          onClick={handleSpin}
-        >
-          {rolling ? "Spinning…" : "Spin"}
-        </button>
-
-        {error && <p className="game-actionbar__error" role="alert">{error}</p>}
+              </label>
+            </div>
+          </details>
+        </aside>
       </div>
     </div>
   );

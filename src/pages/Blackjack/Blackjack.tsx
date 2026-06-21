@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { cardRank, cardSuit, handValue, isRedCard } from "../../lib/games/blackjack";
-import { coinsToUsd, formatCoins, formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import {
   doubleBlackjack,
   fetchActiveBlackjack,
@@ -24,13 +24,7 @@ const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
 
 function CardView({ card, hidden, index = 0 }: { card?: number; hidden?: boolean; index?: number }) {
   if (hidden) {
-    return (
-      <div
-        className="bj__card bj__card--hidden"
-        aria-hidden="true"
-        style={{ ["--card-deal-delay" as string]: `${index * 0.12}s` }}
-      />
-    );
+    return <div className="bj__card bj__card--hidden" aria-hidden="true" style={{ ["--card-deal-delay" as string]: `${index * 0.12}s` }} />;
   }
   if (card === undefined) return null;
   const rank = cardRank(card);
@@ -46,7 +40,9 @@ function CardView({ card, hidden, index = 0 }: { card?: number; hidden?: boolean
         <span className="bj__card-rank">{rank}</span>
         <span className="bj__card-suit">{suit}</span>
       </span>
-      <span className="bj__card-center" aria-hidden="true">{suit}</span>
+      <span className="bj__card-center" aria-hidden="true">
+        {suit}
+      </span>
       <span className="bj__card-corner bj__card-corner--br" aria-hidden="true">
         <span className="bj__card-rank">{rank}</span>
         <span className="bj__card-suit">{suit}</span>
@@ -83,21 +79,16 @@ export function Blackjack() {
   const [error, setError] = useState<string | null>(null);
   const [hand, setHand] = useState<BlackjackActionResult | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
+  const [showFairness, setShowFairness] = useState(false);
 
   const insuranceOffer = hand?.status === "insurance_offer";
   const playing = hand?.status === "player_turn" || insuranceOffer;
   const settled = hand?.status === "settled";
   const showTable = Boolean(hand);
-
-  const activeBalance = useMemo(
-    () => (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)),
-    [coinType, profile]
-  );
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchBlackjackPfState();
@@ -139,7 +130,7 @@ export function Blackjack() {
 
   const finishSettled = (data: BlackjackActionResult) => {
     setLastMessage(
-      `${outcomeLabel(data.outcome)}${data.payout ? ` · ${formatCoins(data.payout, coinType)}` : ""}`
+      `${outcomeLabel(data.outcome)}${data.payout ? ` — ${formatCoins(data.payout, coinType)}` : ""}`
     );
     applyHand({ ...data, status: "settled" });
   };
@@ -149,6 +140,7 @@ export function Blackjack() {
       setError("Log in to play.");
       return;
     }
+    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
@@ -222,146 +214,247 @@ export function Blackjack() {
           ]
         : [];
 
+  const tableOutcomeClass =
+    settled && hand?.outcome ? ` bj__table-panel--${hand.outcome}` : "";
+
   return (
-    <div className="game-page bj">
-      <header className="game-header">
-        <h1 className="game-header__title">Blackjack</h1>
-        <span className="game-header__rtp">99.5% RTP</span>
-        <span className="game-header__spacer" />
-        <button
-          type="button"
-          className={`game-header__panel-toggle${panelOpen ? " game-header__panel-toggle--open" : ""}`}
-          onClick={() => setPanelOpen((v) => !v)}
-          aria-label="Toggle stats panel"
-          aria-expanded={panelOpen}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="18" y1="20" x2="18" y2="10" />
-            <line x1="12" y1="20" x2="12" y2="4" />
-            <line x1="6" y1="20" x2="6" y2="14" />
-          </svg>
-        </button>
+    <div className="bj lc-game-page">
+      <header className="bj__header">
+        <h1 className="bj__title">Blackjack</h1>
+        <p className="bj__subtitle">
+          Dealer hits soft 17. Blackjack pays 3:2. Split pairs and insurance — 94.5% RTP.
+        </p>
       </header>
 
-      <div className="game-stage">
-        {settled && lastMessage && (
-          <div className="bj__result-banner" role="status" aria-live="polite">
-            <span className="bj__result-text">{lastMessage}</span>
-          </div>
-        )}
-
-        {showTable ? (
-          <div className="bj__table">
-            <div className="bj__hand bj__hand--dealer">
-              <div className="bj__hand-head">
-                <span className="bj__hand-label">Dealer</span>
-                <span className="bj__hand-total">{dealerTotal || "—"}</span>
+      <div className="bj__layout">
+        <section className={`bj__table-panel${tableOutcomeClass}`}>
+          <div className="bj__table-inner">
+            {settled && lastMessage && (
+              <div className="bj__result-banner" role="status" aria-live="polite">
+                <span className="bj__result-text">{lastMessage}</span>
               </div>
-              <div className="bj__cards">
-                {hand?.dealerCards.map((c, i) => (
-                  <CardView key={`d-${i}`} card={c} index={i} />
-                ))}
-                {hiddenDealerSlots > 0 && <CardView hidden index={(hand?.dealerCards.length ?? 0)} />}
-              </div>
-            </div>
+            )}
 
-            <div className={`bj__player-zone${hand?.isSplit ? " bj__player-zone--split" : ""}`}>
-              {displayHands.map((line, index) => {
-                const active =
-                  !settled &&
-                  hand?.isSplit &&
-                  index === hand.activeHandIndex &&
-                  !line.finished;
-                return (
-                  <div
-                    key={`player-${index}`}
-                    className={`bj__hand bj__hand--player${active ? " bj__hand--active" : ""}${line.finished && !settled ? " bj__hand--finished" : ""}`}
-                  >
-                    <div className="bj__hand-head">
-                      <span className="bj__hand-label">
-                        {hand?.isSplit ? `Hand ${index + 1}` : "You"}
-                      </span>
-                      <span className="bj__hand-total">{line.total || "—"}</span>
-                      {line.doubled && <span className="bj__hand-tag">Doubled</span>}
-                    </div>
-                    <div className="bj__cards">
-                      {line.cards.map((c, i) => (
-                        <CardView key={`p-${index}-${i}`} card={c} index={i} />
-                      ))}
-                    </div>
+            {showTable ? (
+              <div className="bj__table-play">
+                <div className="bj__hand bj__hand--dealer">
+                  <p className="bj__hand-label">
+                    Dealer <span className="bj__hand-total">{dealerTotal || "—"}</span>
+                  </p>
+                  <div className="bj__cards">
+                    {hand?.dealerCards.map((c, i) => (
+                      <CardView key={`d-${i}`} card={c} index={i} />
+                    ))}
+                    {hiddenDealerSlots > 0 && <CardView hidden index={(hand?.dealerCards.length ?? 0)} />}
                   </div>
-                );
-              })}
+                </div>
+
+                <div
+                  className={`bj__player-zone${hand?.isSplit ? " bj__player-zone--split" : ""}`}
+                >
+                  {displayHands.map((line, index) => {
+                    const active =
+                      !settled &&
+                      hand?.isSplit &&
+                      index === hand.activeHandIndex &&
+                      !line.finished;
+                    return (
+                      <div
+                        key={`player-${index}`}
+                        className={`bj__hand bj__hand--player${active ? " bj__hand--active" : ""}${line.finished && !settled ? " bj__hand--finished" : ""}`}
+                      >
+                        <p className="bj__hand-label">
+                          {hand?.isSplit ? `Hand ${index + 1}` : "You"}
+                          <span className="bj__hand-total">{line.total || "—"}</span>
+                          {line.doubled && <span className="bj__hand-tag">Doubled</span>}
+                        </p>
+                        <div className="bj__cards">
+                          {line.cards.map((c, i) => (
+                            <CardView key={`p-${index}-${i}`} card={c} index={i} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p className="bj__hint-center">Place a bet to receive your cards.</p>
+            )}
+          </div>
+        </section>
+
+        <aside className="bj__controls game-controls">
+          <div className="game-controls__wager-block">
+            <label className="game-controls__wager-label" htmlFor="bj-wager">
+              Bet amount ({coinLabel})
+            </label>
+            <div className="game-controls__wager-row">
+              <input
+                id="bj-wager"
+                type="text"
+                inputMode="decimal"
+                className="game-controls__wager-input"
+                value={wagerInput}
+                onChange={(e) => setWagerInput(e.target.value)}
+                onBlur={() => {
+                  const parsed = parseFloat(wagerInput.replace(/,/g, ""));
+                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                }}
+                disabled={playing || busy}
+              />
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={() => applyWager(wager / 2)}
+                disabled={playing || busy}
+                aria-label="Half bet"
+              >
+                ½
+              </button>
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={() => applyWager(wager * 2)}
+                disabled={playing || busy}
+                aria-label="Double bet"
+              >
+                2×
+              </button>
+            </div>
+            <div className="game-controls__presets">
+              {BET_PRESETS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
+                  onClick={() => applyWager(p)}
+                  disabled={playing || busy}
+                >
+                  ${p}
+                </button>
+              ))}
             </div>
           </div>
-        ) : (
-          <p className="bj__hint-center">Place a bet to receive your cards.</p>
-        )}
-      </div>
 
-      {panelOpen && (
-        <div className="game-panel" role="complementary" aria-label="Blackjack stats">
-          <div className="game-panel__head">
-            <h2 className="game-panel__title">Hand info</h2>
+          {error && (
+            <p className="bj__error" role="alert">
+              {error}
+            </p>
+          )}
+
+          {!playing ? (
             <button
               type="button"
-              className="game-panel__close"
-              onClick={() => setPanelOpen(false)}
-              aria-label="Close panel"
+              className="bj__deal-btn"
+              onClick={handleStart}
+              disabled={busy || !user}
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              {busy ? "Dealing…" : showTable && settled ? "New hand" : "Deal"}
             </button>
-          </div>
-
-          {settled && lastMessage && (
-            <div className="game-panel__section">
-              <h3 className="game-panel__section-title">Last hand</h3>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Outcome</span>
-                <span
-                  className={`game-panel__row-value${
-                    hand?.outcome === "win" || hand?.outcome === "blackjack"
-                      ? " game-panel__row-value--win"
-                      : hand?.outcome === "push"
-                        ? ""
-                        : " game-panel__row-value--loss"
-                  }`}
+          ) : insuranceOffer ? (
+            <div className="bj__insurance">
+              <p className="bj__insurance-text">
+                Dealer shows Ace. Take insurance for {formatCoins(hand?.insuranceAmount ?? 0, coinType)}?
+              </p>
+              <div className="bj__actions">
+                <button
+                  type="button"
+                  className="bj__action-btn bj__action-btn--insurance"
+                  onClick={() => runAction("insurance", true)}
+                  disabled={
+                    busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.insuranceAmount ?? 0)
+                  }
                 >
-                  {outcomeLabel(hand?.outcome)}
-                </span>
+                  Insurance
+                </button>
+                <button
+                  type="button"
+                  className="bj__action-btn bj__action-btn--stand"
+                  onClick={() => runAction("insurance", false)}
+                  disabled={busy}
+                >
+                  No thanks
+                </button>
               </div>
+            </div>
+          ) : (
+            <div className="bj__actions">
+              <button
+                type="button"
+                className="bj__action-btn"
+                onClick={() => runAction("hit")}
+                disabled={busy}
+              >
+                Hit
+              </button>
+              <button
+                type="button"
+                className="bj__action-btn bj__action-btn--stand"
+                onClick={() => runAction("stand")}
+                disabled={busy}
+              >
+                Stand
+              </button>
+              {hand?.canDouble && (
+                <button
+                  type="button"
+                  className="bj__action-btn bj__action-btn--double"
+                  onClick={() => runAction("double")}
+                  disabled={busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.wager ?? 0)}
+                >
+                  Double
+                </button>
+              )}
+              {hand?.canSplit && (
+                <button
+                  type="button"
+                  className="bj__action-btn bj__action-btn--split"
+                  onClick={() => runAction("split")}
+                  disabled={busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.wager ?? 0)}
+                >
+                  Split
+                </button>
+              )}
             </div>
           )}
 
-          <div className="game-panel__section game-panel__section--bare">
-            <details className="game-fair">
-              <summary className="game-fair__summary">Provably Fair</summary>
-              <div className="game-fair__body">
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Server seed (hash)</span>
-                  <code className="game-fair__code">{pfHash ?? "…"}</code>
-                </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Next nonce</span>
-                  <code className="game-fair__code">{pfNonce}</code>
-                </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Client seed</span>
+          <p className="bj__hint">
+            Need funds? <Link to="/deposit">Deposit</Link>
+          </p>
+
+          <div className="bj__fairness">
+            <button
+              type="button"
+              className="bj__fairness-toggle"
+              onClick={() => setShowFairness((v) => !v)}
+            >
+              {showFairness ? "Hide" : "Show"} provably fair
+            </button>
+            {showFairness && (
+              <div className="bj__fairness-body">
+                <p>
+                  <span className="bj__fairness-k">Server seed (hash)</span>
+                  <code className="bj__hash">{pfHash ?? "…"}</code>
+                </p>
+                <p>
+                  <span className="bj__fairness-k">Next nonce</span>
+                  <code>{pfNonce}</code>
+                </p>
+                <label className="bj__seed-label">
+                  Client seed
                   <input
                     type="text"
-                    className="game-fair__input"
+                    className="bj__seed-input"
                     value={clientSeed}
                     maxLength={64}
                     onChange={(e) => setClientSeed(e.target.value)}
                     disabled={playing}
                   />
-                </div>
+                </label>
                 <button
                   type="button"
-                  className="game-fair__save"
+                  className="bj__tool-btn"
                   onClick={async () => {
                     const { error: e } = await setBlackjackClientSeed(clientSeed);
                     if (e) setError(e);
@@ -371,147 +464,13 @@ export function Blackjack() {
                 >
                   Save client seed
                 </button>
-                <p className="game-fair__note">
+                <p className="bj__fairness-note">
                   Fisher-Yates shuffle from HMAC-SHA256 (Stake card order).
                 </p>
               </div>
-            </details>
-          </div>
-
-          <p className="game-actionbar__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
-        </div>
-      )}
-
-      <div className="game-actionbar">
-        <div className="game-actionbar__balance">
-          <span className="game-actionbar__balance-label">{coinLabel}</span>
-          <span className="game-actionbar__balance-value">{formatCoins(activeBalance, coinType)}</span>
-          <span className="game-actionbar__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
-        </div>
-
-        <div className="game-actionbar__wager">
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            onClick={() => applyWager(wager / 2)}
-            disabled={playing || busy}
-            aria-label="Half bet"
-          >
-            ½
-          </button>
-          <input
-            id="bj-wager"
-            type="text"
-            inputMode="decimal"
-            className="game-actionbar__input"
-            value={wagerInput}
-            onChange={(e) => setWagerInput(e.target.value)}
-            onBlur={() => {
-              const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-              applyWager(Number.isFinite(parsed) ? parsed : 0.01);
-            }}
-            disabled={playing || busy}
-            aria-label="Bet amount"
-          />
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            onClick={() => applyWager(wager * 2)}
-            disabled={playing || busy}
-            aria-label="Double bet"
-          >
-            2×
-          </button>
-        </div>
-
-        {!playing && (
-          <div className="game-actionbar__presets">
-            {BET_PRESETS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                className={`game-actionbar__preset${wager === p ? " game-actionbar__preset--active" : ""}`}
-                onClick={() => applyWager(p)}
-                disabled={playing || busy}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {!playing ? (
-          <button
-            type="button"
-            className="game-actionbar__play"
-            onClick={handleStart}
-            disabled={busy || !user}
-          >
-            {busy ? "Dealing…" : showTable && settled ? "New hand" : "Deal"}
-          </button>
-        ) : insuranceOffer ? (
-          <div className="game-actionbar__actions">
-            <button
-              type="button"
-              className="game-actionbar__play"
-              onClick={() => runAction("insurance", true)}
-              disabled={busy || activeBalance < (hand?.insuranceAmount ?? 0)}
-            >
-              Insurance · {formatCoins(hand?.insuranceAmount ?? 0, coinType)}
-            </button>
-            <button
-              type="button"
-              className="game-actionbar__action"
-              onClick={() => runAction("insurance", false)}
-              disabled={busy}
-            >
-              No thanks
-            </button>
-          </div>
-        ) : (
-          <div className="game-actionbar__actions">
-            <button
-              type="button"
-              className="game-actionbar__action"
-              onClick={() => runAction("hit")}
-              disabled={busy}
-            >
-              Hit
-            </button>
-            <button
-              type="button"
-              className="game-actionbar__action"
-              onClick={() => runAction("stand")}
-              disabled={busy}
-            >
-              Stand
-            </button>
-            {hand?.canDouble && (
-              <button
-                type="button"
-                className="game-actionbar__action"
-                onClick={() => runAction("double")}
-                disabled={busy || activeBalance < (hand?.wager ?? 0)}
-              >
-                Double
-              </button>
-            )}
-            {hand?.canSplit && (
-              <button
-                type="button"
-                className="game-actionbar__action"
-                onClick={() => runAction("split")}
-                disabled={busy || activeBalance < (hand?.wager ?? 0)}
-              >
-                Split
-              </button>
             )}
           </div>
-        )}
-
-        {error && <p className="game-actionbar__error" role="alert">{error}</p>}
+        </aside>
       </div>
     </div>
   );

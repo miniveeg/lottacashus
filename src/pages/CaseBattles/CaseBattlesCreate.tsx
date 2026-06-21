@@ -258,6 +258,16 @@ export function CaseBattlesCreate() {
         backTo="/case-battles"
         backLabel="Battles"
         title="Create"
+        actions={
+          <button
+            type="button"
+            className="cb-page__btn-primary"
+            disabled={!canCreate}
+            onClick={() => void handleCreate()}
+          >
+            {busy ? "…" : `Create ${formatCoins(upfrontCost, "balance")}`}
+          </button>
+        }
       />
 
       {error && (

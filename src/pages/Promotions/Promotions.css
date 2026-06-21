@@ -1,734 +1,408 @@
-/* ════════════════════════════════════════════════════════════════
-   PROMOTIONS — "Obsidian Gold" ground-up redesign
-   Gold-accented affiliate panel, clean stat grid.
-   ════════════════════════════════════════════════════════════════ */
-
-.promotions-page {
-  /* Obsidian Gold — page-local palette */
-  --og-gold: #f5b942;
-  --og-gold-bright: #fcd34d;
-  --og-gold-deep: #d97706;
-  --og-gold-glow: rgba(245, 185, 66, 0.15);
-  --og-gold-glow-strong: rgba(245, 185, 66, 0.30);
-  --og-bg-surface: #111118;
-  --og-bg-surface-2: #16161f;
-  --og-bg-elevated: #1c1c28;
-  --og-border: rgba(255, 255, 255, 0.08);
-  --og-border-strong: rgba(255, 255, 255, 0.14);
-  --og-border-gold: rgba(245, 185, 66, 0.30);
-  --og-text-primary: #fafafa;
-  --og-text-secondary: #a1a1aa;
-  --og-text-muted: #71717a;
-  --og-text-gold: #fcd34d;
-  --og-sc-color: #10b981;
-  --og-shadow-gold: 0 0 24px rgba(245, 185, 66, 0.15);
+.promos__header {
+  margin-bottom: 1.5rem;
 }
 
-/* ── Header ── */
-.promotions-page__header {
-  margin-bottom: var(--space-10);
-  max-width: 720px;
+.promos__affiliate {
+  margin-bottom: 2.5rem;
 }
 
-.promotions-page__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  background: rgba(245, 185, 66, 0.08);
-  border: 1px solid var(--og-border-gold);
-  font-family: var(--lc-font-display);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--og-text-gold);
-}
-
-.promotions-page__eyebrow svg {
-  color: var(--og-gold-bright);
-}
-
-.promotions-page__title {
-  font-family: var(--lc-font-display);
-  font-weight: 700;
-  font-size: var(--lc-text-3xl);
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-  color: var(--og-text-primary);
-  margin: 0 0 var(--space-2);
-}
-
-.promotions-page__subtitle {
-  margin: 0;
-  font-size: var(--lc-text-base);
-  font-weight: 400;
-  line-height: 1.6;
-  color: var(--og-text-secondary);
-  max-width: 60ch;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   AFFILIATE PANEL
-   ════════════════════════════════════════════════════════════════ */
-.promotions-affiliate {
-  position: relative;
-  margin-bottom: var(--space-6);
-  padding: var(--space-8);
-  background:
-    radial-gradient(ellipse 50% 80% at 0% 0%, var(--og-gold-glow) 0%, transparent 60%),
-    var(--og-bg-surface);
-  border: 1px solid var(--og-border-gold);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--og-shadow-gold), 0 12px 40px rgba(0, 0, 0, 0.45);
-  overflow: hidden;
-}
-
-.promotions-affiliate__head {
+.promos__affiliate-head {
   display: flex;
-  gap: var(--space-5);
+  gap: 1.5rem;
   align-items: flex-start;
-  margin-bottom: var(--space-6);
+  margin-bottom: 1.25rem;
 }
 
-.promotions-affiliate__icon {
-  display: grid;
-  place-items: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  flex-shrink: 0;
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at 30% 30%, rgba(245, 185, 66, 0.22) 0%, rgba(245, 185, 66, 0.04) 70%),
-    rgba(245, 185, 66, 0.08);
-  border: 1px solid var(--og-border-gold);
-  color: var(--og-gold-bright);
+.promos__affiliate-icon {
+  background: linear-gradient(145deg, rgba(120, 200, 140, 0.12), transparent);
 }
 
-.promotions-affiliate__title {
-  margin: 0 0 var(--space-2);
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-xl);
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--og-text-primary);
-}
-
-.promotions-affiliate__intro {
-  margin: 0;
-  font-size: var(--lc-text-sm);
-  line-height: 1.65;
-  color: var(--og-text-secondary);
-  max-width: 60ch;
-}
-
-.promotions-affiliate__intro strong {
-  color: var(--og-text-gold);
-  font-weight: 700;
-}
-
-/* Rate list */
-.promotions-affiliate__rates {
-  list-style: none;
-  margin: 0 0 var(--space-6);
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: var(--space-3);
-}
-
-.promotions-affiliate__rates li {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--og-border);
-  background: rgba(0, 0, 0, 0.20);
-}
-
-.promotions-affiliate__rate-label {
-  font-family: var(--lc-font-display);
-  font-size: 0.68rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--og-text-muted);
-  font-weight: 700;
-}
-
-.promotions-affiliate__rate-value {
-  font-family: var(--lc-font-display);
-  font-weight: 700;
-  font-size: var(--lc-text-base);
-  color: var(--og-text-gold);
-}
-
-/* Status messages */
-.promotions-affiliate__muted {
-  margin: 0;
-  color: var(--og-text-secondary);
-  font-size: var(--lc-text-sm);
-  line-height: 1.55;
-}
-
-.promotions-affiliate__error {
-  margin: 0;
-  color: #fca5a5;
-  font-size: var(--lc-text-sm);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  background: rgba(239, 68, 68, 0.10);
-  border: 1px solid rgba(239, 68, 68, 0.30);
-}
-
-.promotions-affiliate__success {
-  margin: 0 0 var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  background: rgba(16, 185, 129, 0.10);
-  border: 1px solid rgba(16, 185, 129, 0.30);
-  color: #6ee7b7;
-  font-size: var(--lc-text-sm);
+.promos__affiliate-intro strong {
+  color: var(--lc-gold);
   font-weight: 600;
 }
 
-/* Referral box */
-.promotions-affiliate__referral-box {
-  margin-bottom: var(--space-5);
-  padding: var(--space-5);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--og-border);
-  background: rgba(0, 0, 0, 0.18);
+.promos__rate-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
 }
 
-.promotions-affiliate__referral-title {
-  margin: 0 0 var(--space-2);
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-base);
-  font-weight: 700;
-  color: var(--og-text-primary);
-}
-
-.promotions-affiliate__referral-text {
-  margin: 0 0 var(--space-4);
-  font-size: var(--lc-text-sm);
-  color: var(--og-text-secondary);
-  line-height: 1.55;
-}
-
-.promotions-affiliate__referral-row {
+.promos__rate-list li {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.15);
 }
 
-.promotions-affiliate__referral-row .promotions-affiliate__input {
-  flex: 1 1 10rem;
-}
-
-.promotions-affiliate__referrer-set {
-  margin: 0 0 var(--space-5);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--og-border);
-  background: rgba(16, 185, 129, 0.06);
-  font-size: var(--lc-text-sm);
-  color: var(--og-text-secondary);
-}
-
-.promotions-affiliate__referrer-set strong {
-  color: var(--og-sc-color);
-  font-weight: 700;
-}
-
-/* Label & code */
-.promotions-affiliate__label {
-  margin: 0 0 var(--space-2);
-  font-family: var(--lc-font-display);
-  font-size: 0.68rem;
-  font-weight: 700;
+.promos__rate-label {
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--og-text-muted);
+  letter-spacing: 0.05em;
+  color: var(--lc-text-muted);
+  font-weight: 600;
 }
 
-.promotions-affiliate__code-row {
+.promos__rate-value {
+  font-weight: 600;
+  color: var(--lc-text-primary);
+}
+
+.promos__affiliate-muted {
+  margin: 0;
+  color: var(--lc-text-secondary);
+  font-size: 0.9rem;
+}
+
+.promos__affiliate-error {
+  margin: 0;
+  color: var(--lc-error, #f87171);
+  font-size: 0.9rem;
+}
+
+.promos__affiliate-success {
+  margin: 0 0 1rem;
+  color: var(--lc-gold);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.promos__affiliate-claim {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-5);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--lc-radius-lg);
+  border: 1px solid var(--lc-gold-dim);
+  background: linear-gradient(145deg, rgba(245, 185, 66, 0.1), transparent);
 }
 
-.promotions-affiliate__code {
+.promos__affiliate-claim-amount {
   margin: 0;
-  font-family: var(--lc-font-mono, ui-monospace, monospace);
-  font-size: var(--lc-text-xl);
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--og-text-gold);
-  text-transform: uppercase;
-}
-
-.promotions-affiliate__link-row {
-  margin-bottom: var(--space-6);
-}
-
-.promotions-affiliate__link-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.promotions-affiliate__input {
-  flex: 1 1 12rem;
-  min-width: 0;
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--og-border-strong);
-  background: var(--og-bg-elevated);
-  color: var(--og-text-secondary);
-  font-size: 0.82rem;
-  font-family: var(--lc-font-mono, ui-monospace, monospace);
-  text-transform: uppercase;
-  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
-}
-
-.promotions-affiliate__input:focus {
-  outline: none;
-  border-color: var(--og-border-gold);
-  box-shadow: 0 0 0 3px var(--og-gold-glow);
-}
-
-/* Claim card */
-.promotions-affiliate__claim {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-  padding: var(--space-5) var(--space-6);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--og-border-gold);
-  background:
-    radial-gradient(ellipse 70% 100% at 0% 0%, var(--og-gold-glow) 0%, transparent 60%),
-    rgba(0, 0, 0, 0.20);
-}
-
-.promotions-affiliate__claim-amount {
-  margin: 0;
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-2xl);
+  font-size: 1.75rem;
   font-weight: 800;
-  color: var(--og-text-gold);
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  color: var(--lc-gold);
+  line-height: 1.2;
 }
 
-.promotions-affiliate__claim-hint {
-  margin: var(--space-1) 0 0;
-  font-size: 0.78rem;
-  color: var(--og-text-secondary);
+.promos__affiliate-claim-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--lc-text-secondary);
 }
 
-.promotions-affiliate__claim-btn {
+.promos__affiliate-claim-btn {
   min-width: 10rem;
 }
 
-.promotions-affiliate__claim-btn:disabled {
+.promos__affiliate-claim-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-/* Stats grid */
-.promotions-affiliate__stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: var(--space-3);
-  margin-bottom: var(--space-6);
+.promos__affiliate-referral {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.12);
 }
 
-.promotions-affiliate__stat {
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--og-border);
-  background: rgba(0, 0, 0, 0.18);
+.promos__affiliate-referral-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.promos__affiliate-referral-text {
+  margin: 0 0 0.85rem;
+  font-size: 0.875rem;
+  color: var(--lc-text-secondary);
+  line-height: 1.5;
+}
+
+.promos__affiliate-referral-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.promos__affiliate-referral-row .promos__affiliate-link-input {
+  flex: 1 1 10rem;
+}
+
+.promos__affiliate-referrer-set {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: rgba(120, 200, 140, 0.08);
+  font-size: 0.875rem;
+  color: var(--lc-text-secondary);
+}
+
+.promos__affiliate-referrer-set strong {
+  color: var(--lc-gold);
+  font-weight: 600;
+}
+
+.promos__affiliate-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lc-text-muted);
+}
+
+.promos__affiliate-code-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.promos__affiliate-code {
+  margin: 0;
+  font-family: var(--lc-font-mono, ui-monospace, monospace);
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lc-gold);
+  text-transform: uppercase;
+}
+
+.promos__affiliate-link-input,
+.promos__affiliate-referral-row input {
+  text-transform: uppercase;
+}
+
+.promos__affiliate-link-row {
+  margin-bottom: 1.5rem;
+}
+
+.promos__affiliate-link-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.promos__affiliate-link-input {
+  flex: 1 1 12rem;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: var(--lc-bg-base);
+  color: var(--lc-text-secondary);
+  font-size: 0.8rem;
+}
+
+.promos__affiliate-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.promos__affiliate-stat {
+  padding: 0.9rem 1rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: 0.15rem;
 }
 
-.promotions-affiliate__stat > svg {
-  color: var(--og-gold);
-  margin-bottom: var(--space-1);
-}
-
-.promotions-affiliate__stat-value {
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-base);
+.promos__affiliate-stat-value {
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--og-text-primary);
 }
 
-.promotions-affiliate__stat-label {
-  font-size: 0.72rem;
-  color: var(--og-text-secondary);
-  letter-spacing: 0.04em;
+.promos__affiliate-stat-label {
+  font-size: 0.75rem;
+  color: var(--lc-text-secondary);
 }
 
-/* Recent commissions */
-.promotions-affiliate__recent-title {
-  margin: 0 0 var(--space-3);
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-sm);
-  font-weight: 700;
-  color: var(--og-text-primary);
+.promos__affiliate-recent-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
 }
 
-.promotions-affiliate__recent-list {
+.promos__affiliate-recent-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 0.5rem;
 }
 
-.promotions-affiliate__recent-item {
+.promos__affiliate-recent-item {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--og-border);
-  background: var(--og-bg-elevated);
-  font-size: var(--lc-text-sm);
-  transition: border-color var(--lc-transition);
+  gap: 0.5rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid var(--lc-border);
+  font-size: 0.875rem;
 }
 
-.promotions-affiliate__recent-item:hover {
-  border-color: var(--og-border-strong);
-}
-
-.promotions-affiliate__recent-meta {
-  color: var(--og-text-muted);
+.promos__affiliate-recent-meta {
+  color: var(--lc-text-muted);
   font-weight: 400;
 }
 
-.promotions-affiliate__recent-right {
+.promos__affiliate-recent-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.15rem;
 }
 
-.promotions-affiliate__recent-amount {
-  font-family: var(--lc-font-display);
+.promos__affiliate-recent-amount {
   font-weight: 700;
-  color: var(--og-sc-color);
+  color: var(--lc-gold);
 }
 
-.promotions-affiliate__recent-date {
-  font-size: 0.72rem;
-  color: var(--og-text-muted);
+.promos__affiliate-recent-date {
+  font-size: 0.75rem;
+  color: var(--lc-text-muted);
 }
 
-/* CTA row */
-.promotions-affiliate__cta-row {
+.promos__hero {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-/* ════════════════════════════════════════════════════════════════
-   MORE REWARDS BANNER
-   ════════════════════════════════════════════════════════════════ */
-.promotions-banner {
-  display: flex;
-  gap: var(--space-5);
+  gap: 1.5rem;
   align-items: flex-start;
-  margin-bottom: var(--space-10);
-  padding: var(--space-6) var(--space-8);
-  background: var(--og-bg-surface);
-  border: 1px solid var(--og-border);
-  border-radius: var(--radius-xl);
+  margin-bottom: 2.5rem;
 }
 
-.promotions-banner__icon {
+.promos__hero-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 4rem;
+  height: 4rem;
   display: grid;
   place-items: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  flex-shrink: 0;
-  border-radius: var(--radius-lg);
-  background:
-    radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.22) 0%, rgba(139, 92, 246, 0.04) 70%),
-    rgba(139, 92, 246, 0.08);
-  border: 1px solid rgba(139, 92, 246, 0.30);
-  color: #c4b5fd;
+  border-radius: var(--lc-radius-lg);
+  background: linear-gradient(145deg, rgba(245, 185, 66, 0.15), transparent);
+  border: 1px solid var(--lc-border);
 }
 
-.promotions-banner__title {
-  margin: 0 0 var(--space-2);
+.promos__hero-title {
+  margin: 0 0 0.5rem;
   font-family: var(--lc-font-display);
-  font-size: var(--lc-text-xl);
+  font-size: 1.25rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--og-text-primary);
 }
 
-.promotions-banner__text {
-  margin: 0 0 var(--space-4);
-  color: var(--og-text-secondary);
-  font-size: var(--lc-text-sm);
-  line-height: 1.6;
-  max-width: 56ch;
-}
-
-.promotions-banner__cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-/* ════════════════════════════════════════════════════════════════
-   BUTTONS
-   ════════════════════════════════════════════════════════════════ */
-.promotions-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  font-family: var(--lc-font-display);
-  font-weight: 700;
-  font-size: var(--lc-text-sm);
-  letter-spacing: 0.02em;
-  border: 1px solid transparent;
-  text-decoration: none;
-  cursor: pointer;
-  transition:
-    transform var(--lc-transition),
-    filter var(--lc-transition),
-    background var(--lc-transition),
-    border-color var(--lc-transition);
-}
-
-/* Gold — overrides shared crimson */
-.promotions-page .promotions-btn--gold,
-.promotions-page .promotions-btn--gold.lc-motion-btn--primary {
-  background: linear-gradient(135deg, var(--og-gold) 0%, var(--og-gold-deep) 100%);
-  color: #1a1208;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.25) inset,
-    0 2px 16px var(--og-gold-glow-strong),
-    var(--lc-shadow-inset);
-}
-
-.promotions-page .promotions-btn--gold:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.08);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.30) inset,
-    0 6px 24px var(--og-gold-glow-strong),
-    var(--lc-shadow-inset);
-}
-
-.promotions-page .promotions-btn--outline,
-.promotions-page .promotions-btn--outline.lc-motion-btn--secondary {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: var(--og-border-strong);
-  color: var(--og-text-primary);
-}
-
-.promotions-page .promotions-btn--outline:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--og-border-gold);
-  color: var(--og-text-gold);
-  transform: translateY(-1px);
-}
-
-.promotions-btn--ghost {
-  color: var(--og-text-secondary);
-  border-color: transparent;
-  background: transparent;
-}
-
-.promotions-btn--ghost:hover {
-  color: var(--og-text-gold);
-  background: rgba(245, 185, 66, 0.06);
-}
-
-/* ════════════════════════════════════════════════════════════════
-   ROADMAP CARDS
-   ════════════════════════════════════════════════════════════════ */
-.promotions-roadmap__head {
-  margin-bottom: var(--space-6);
-}
-
-.promotions-roadmap__kicker {
-  display: inline-block;
-  margin-bottom: var(--space-2);
-  font-family: var(--lc-font-display);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--og-text-gold);
-}
-
-.promotions-roadmap__title {
-  margin: 0;
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-2xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--og-text-primary);
-}
-
-.promotions-roadmap__flow {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.promotions-roadmap__banner {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-6) var(--space-8);
-  background:
-    radial-gradient(ellipse 40% 100% at 0% 50%, var(--og-gold-glow) 0%, transparent 60%),
-    var(--og-bg-surface);
-  border: 1px solid var(--og-border);
-  border-left: 3px solid var(--og-gold);
-  border-radius: var(--radius-xl);
-  transition:
-    transform var(--lc-transition),
-    border-color var(--lc-transition),
-    box-shadow var(--lc-transition);
-}
-
-.promotions-roadmap__banner:hover {
-  transform: translateX(2px);
-  border-color: var(--og-border-gold);
-  border-left-color: var(--og-gold-bright);
-  box-shadow: var(--og-shadow-gold);
-}
-
-.promotions-roadmap__banner-head {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-}
-
-.promotions-roadmap__card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: var(--space-6) var(--space-5) var(--space-5);
-  background: var(--og-bg-surface);
-  border: 1px solid var(--og-border);
-  border-radius: var(--radius-xl);
-  transition:
-    transform var(--lc-transition),
-    border-color var(--lc-transition),
-    box-shadow var(--lc-transition);
-}
-
-.promotions-roadmap__card:hover {
-  transform: translateY(-3px);
-  border-color: var(--og-border-gold);
-  box-shadow: var(--og-shadow-gold);
-}
-
-.promotions-roadmap__badge {
-  align-self: flex-start;
-  margin-bottom: var(--space-3);
-  font-family: var(--lc-font-display);
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--og-text-gold);
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--radius-full);
-  border: 1px solid var(--og-border-gold);
-  background: rgba(245, 185, 66, 0.06);
-}
-
-.promotions-roadmap__card-title {
-  margin: 0 0 var(--space-2);
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-base);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--og-text-primary);
-}
-
-.promotions-roadmap__card-desc {
-  margin: 0 0 var(--space-4);
-  font-size: var(--lc-text-sm);
+.promos__hero-text {
+  margin: 0 0 1rem;
+  color: var(--lc-text-secondary);
   line-height: 1.55;
-  color: var(--og-text-secondary);
-  flex: 1;
+  max-width: 52ch;
 }
 
-.promotions-roadmap__card-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  font-family: var(--lc-font-display);
-  font-size: 0.85rem;
+.promos__hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.promos__btn {
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--lc-radius-md);
   font-weight: 600;
-  color: var(--og-text-gold);
-  text-decoration: none;
-  transition: gap var(--lc-transition);
+  font-size: 0.875rem;
 }
 
-.promotions-roadmap__card-link:hover {
-  gap: var(--space-2);
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.promos__btn--gold {
+  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
+  color: var(--lc-bg-base);
 }
 
-/* ── Responsive ── */
-@media (max-width: 640px) {
-  .promotions-affiliate__head,
-  .promotions-banner {
+.promos__btn--ghost {
+  color: var(--lc-text-secondary);
+  border: 1px solid var(--lc-border);
+}
+
+.promos__btn--ghost:hover {
+  color: var(--lc-text-primary);
+  border-color: var(--lc-gold-dim);
+}
+
+.promos__section-title {
+  margin: 0 0 1rem;
+  font-family: var(--lc-font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.promos__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.promos__card {
+  position: relative;
+  padding: 1.25rem 1.2rem;
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
+  transition: border-color var(--lc-transition);
+}
+
+.promos__card:hover {
+  border-color: var(--lc-border-strong);
+}
+
+.promos__card-title {
+  margin: 0 0 0.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.promos__card-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--lc-text-secondary);
+  line-height: 1.5;
+  padding-right: 4rem;
+}
+
+.promos__card-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--lc-gold);
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--lc-gold-dim);
+}
+
+@media (max-width: 600px) {
+  .promos__hero {
     flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .promotions-affiliate__icon,
-  .promotions-banner__icon {
-    width: 3rem;
-    height: 3rem;
-  }
-
-  .promotions-affiliate {
-    padding: var(--space-5);
-  }
-
-  .promotions-page__title {
-    font-size: var(--lc-text-2xl);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .promotions-roadmap__card,
-  .promotions-btn,
-  .promotions-affiliate__recent-item {
-    transition: none;
   }
 }

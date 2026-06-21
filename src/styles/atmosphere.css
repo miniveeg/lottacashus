@@ -1,9 +1,4 @@
-/* ════════════════════════════════════════════════════════════════
-   LottaCash — Background atmosphere layer · "Obsidian Gold"
-   Subtle gold + violet radials over deep obsidian. Fixed,
-   pointer-events:none, z-index:0 so content sits above. Low
-   opacity — atmospheric, not distracting.
-   ════════════════════════════════════════════════════════════════ */
+/* Atmospheric layers — obsidian, fog, noise */
 
 .lc-atmosphere {
   position: fixed;
@@ -13,82 +8,65 @@
   overflow: hidden;
 }
 
-/* Optional 3D canvas (kept for legacy component compat) */
 .lc-atmosphere__canvas {
   position: absolute;
   inset: 0;
-  opacity: 0.4;
+  opacity: 0.55;
 }
 
-/* Subtle radial glows — GOLD at top center, violet at bottom-right */
 .lc-atmosphere__fog {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 120% 70% at 50% -10%,
-      rgba(245, 185, 66, 0.03) 0%,
-      transparent 55%),
-    radial-gradient(ellipse 80% 60% at 92% 90%,
-      rgba(139, 92, 246, 0.02) 0%,
-      transparent 50%),
-    radial-gradient(ellipse 60% 45% at 8% 80%,
-      rgba(245, 185, 66, 0.015) 0%,
-      transparent 45%);
-  animation: lc-fog-drift 28s ease-in-out infinite alternate;
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(220, 20, 60, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 90% 70%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 50% at 10% 80%, rgba(56, 189, 248, 0.03) 0%, transparent 45%);
+  animation: lc-fog-drift 24s ease-in-out infinite alternate;
   will-change: transform, opacity;
 }
 
-/* Fine noise — breaks up flat colors, very subtle */
 .lc-atmosphere__noise {
   position: absolute;
   inset: 0;
-  opacity: 0.025;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px 180px;
 }
 
-/* Vignette: subtle darkening at edges (≤0.3 opacity) */
 .lc-atmosphere__vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    ellipse 90% 80% at 50% 50%,
-    transparent 50%,
-    rgba(0, 0, 0, 0.3) 100%
-  );
+  /* Subtle vignette so edges don't feel overwhelming; kept under 0.55
+     so content near the viewport edges stays legible. */
+  background: radial-gradient(ellipse 85% 75% at 50% 50%, transparent 45%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+@keyframes lc-fog-drift {
+  0% { transform: translateY(0) scale(1); opacity: 0.9; }
+  100% { transform: translateY(-2%) scale(1.02); opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lc-atmosphere__fog {
-    animation: none;
-  }
+  .lc-atmosphere__fog { animation: none; }
 }
 
-/* ── Glass surface utility ── */
+/* Glass surface utility */
 .lc-glass {
-  background: var(--bg-glass);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--shadow-sm), var(--glass-highlight);
+  background: var(--lc-bg-glass);
+  backdrop-filter: blur(var(--lc-glass-blur));
+  -webkit-backdrop-filter: blur(var(--lc-glass-blur));
+  border: 1px solid var(--lc-glass-border);
+  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
 }
 
-/* Fallback when backdrop-filter is unavailable (older Firefox,
-   disabled-GPU contexts): use a more opaque surface. */
+/* Graceful fallback when backdrop-filter is unavailable (older Firefox,
+   disabled-GPU contexts): use a more opaque surface so text stays
+   legible without the blur. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .lc-glass {
-    background: var(--bg-surface);
-  }
+  .lc-glass { background: var(--lc-bg-panel); }
 }
 
-/* Gold-tinted glass — premium panels, hero CTAs */
-.lc-glass--gold {
-  border-color: var(--border-gold);
-  box-shadow: var(--shadow-sm), 0 0 24px var(--gold-glow), var(--glass-highlight);
-}
-
-/* Crimson-tinted glass — live indicators, errors (compat alias) */
 .lc-glass--crimson {
-  border-color: var(--crimson-glow);
-  box-shadow: var(--shadow-sm), 0 0 24px rgba(225, 29, 72, 0.08), var(--glass-highlight);
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-shadow-sm), 0 0 24px rgba(220, 20, 60, 0.08), var(--lc-glass-highlight);
 }

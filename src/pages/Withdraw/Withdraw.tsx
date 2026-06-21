@@ -57,7 +57,7 @@ export function Withdraw() {
 
   if (authLoading) {
     return (
-      <div className="wallet lc-page lc-page--medium">
+      <div className="wallet lc-page lc-page--narrow">
         <div className="lc-loading">
           <div className="lc-loading__pulse" aria-hidden />
           <p>Loading…</p>
@@ -121,12 +121,12 @@ export function Withdraw() {
     Number.isFinite(parsedSc) && parsedSc > 0 ? coinsToUsd(parsedSc, "sweeps_coins") : 0;
 
   return (
-    <div className="wallet lc-page lc-page--medium">
+    <div className="wallet lc-page lc-page--narrow">
       <header className="lc-page__header">
         <h1 className="lc-page__title wallet__title">Withdraw</h1>
         <p className="lc-page__subtitle wallet__subtitle">
-          Cash out your Sweeps Coins (SC) as cryptocurrency. Minimum withdrawal:{" "}
-          {MIN_WITHDRAW_SC} SC ({formatUsd(MIN_WITHDRAW_SC / SC_PER_USD)}).
+          Withdraw your Sweeps Coins (SC) as cryptocurrency. 100 SC = $1 USD. Minimum withdrawal: 10 SC
+          ($0.10).
         </p>
       </header>
 
@@ -139,112 +139,104 @@ export function Withdraw() {
         </Link>
       </div>
 
-      <div className="wallet__grid">
-        {/* Left column — form & balance */}
-        <div className="wallet__aside">
-          <section className="wallet__balance-panel" aria-label="Available Sweeps Coins">
-            <p className="wallet__balance-label">Available Sweeps Coins (SC)</p>
-            <p className="wallet__balance-value">{formatCoins(scBalance, "sweeps_coins")}</p>
-            <p className="wallet__balance-usd">
-              &asymp; {formatUsd(coinsToUsd(scBalance, "sweeps_coins"))}
-            </p>
-          </section>
+      <section className="wallet__balance-panel" aria-label="Available Sweeps Coins">
+        <p className="wallet__balance-label">Available Sweeps Coins (SC)</p>
+        <p className="wallet__balance-value">{formatCoins(scBalance, "sweeps_coins")}</p>
+        <p className="wallet__balance-usd">&asymp; {formatUsd(coinsToUsd(scBalance, "sweeps_coins"))}</p>
+      </section>
 
-          <p className="wallet__hint wallet__hint--balance">
-            Sweeps Coins (SC) are redeemable for cash. Gold Coins (GC) are play money and cannot be
-            withdrawn. Current GC balance:{" "}
-            <strong>{formatCoinsWithUsd(profile?.balance ?? 0, "balance")}</strong>.
-          </p>
+      <p className="wallet__hint wallet__hint--balance">
+        Sweeps Coins (SC) are redeemable for cash. Gold Coins (GC) are play money and cannot be
+        withdrawn. Current GC balance:{" "}
+        <strong>{formatCoinsWithUsd(profile?.balance ?? 0, "balance")}</strong>.
+      </p>
 
-          <section className="wallet__section wallet__section--primary">
-            {error && <p className="wallet__error" role="alert">{error}</p>}
-            {success && <p className="wallet__success" role="status">{success}</p>}
+      <section className="wallet__section">
+        {error && <p className="wallet__error" role="alert">{error}</p>}
+        {success && <p className="wallet__success" role="status">{success}</p>}
 
-            <form onSubmit={handleSubmit} noValidate>
-              <div className="wallet__chain-picker">
-                {CRYPTO_CHAINS.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className={`wallet__chain-btn${chain === c.id ? " wallet__chain-btn--active" : ""}`}
-                    onClick={() => setChain(c.id)}
-                  >
-                    {c.symbol}
-                  </button>
-                ))}
-              </div>
-
-              <div className="wallet__field">
-                <label htmlFor="withdraw-address">Destination {chain.toUpperCase()} address</label>
-                <input
-                  id="withdraw-address"
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  placeholder="Your external wallet address"
-                  required
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              </div>
-
-              <div className="wallet__field">
-                <label htmlFor="withdraw-amount">Amount (SC)</label>
-                <input
-                  id="withdraw-amount"
-                  type="number"
-                  min={MIN_WITHDRAW_SC}
-                  step="0.01"
-                  value={scAmount}
-                  onChange={(e) => setScAmount(e.target.value)}
-                  placeholder={`Min ${MIN_WITHDRAW_SC} SC`}
-                  required
-                />
-                <p className="wallet__hint wallet__hint--meta">
-                  {Number.isFinite(parsedSc) && parsedSc > 0
-                    ? `${formatCoins(parsedSc, "sweeps_coins")} = ${formatUsd(previewUsd)}`
-                    : `100 SC = ${formatUsd(1)} · 10 SC = ${formatUsd(0.1)}`}
-                </p>
-              </div>
-
-              <button type="submit" className="wallet__btn" disabled={submitting}>
-                {submitting && <span className="wallet__btn__spinner" aria-hidden="true" />}
-                {submitting ? "Submitting…" : "Request withdrawal"}
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="wallet__chain-picker">
+            {CRYPTO_CHAINS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                className={`wallet__chain-btn${chain === c.id ? " wallet__chain-btn--active" : ""}`}
+                onClick={() => setChain(c.id)}
+              >
+                {c.symbol}
               </button>
-            </form>
+            ))}
+          </div>
 
-            <p className="wallet__hint wallet__hint--note">
-              Withdrawals are queued and sent manually or automatically from treasury wallets. Processing
-              times vary by network. GC cannot be withdrawn — only SC is redeemable for cash.
+          <div className="wallet__field">
+            <label htmlFor="withdraw-address">Destination {chain.toUpperCase()} address</label>
+            <input
+              id="withdraw-address"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              placeholder="Your external wallet address"
+              required
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+
+          <div className="wallet__field">
+            <label htmlFor="withdraw-amount">Amount (SC)</label>
+            <input
+              id="withdraw-amount"
+              type="number"
+              min={MIN_WITHDRAW_SC}
+              step="0.01"
+              value={scAmount}
+              onChange={(e) => setScAmount(e.target.value)}
+              placeholder={`Min ${MIN_WITHDRAW_SC} SC`}
+              required
+            />
+            <p className="wallet__hint wallet__hint--meta">
+              {Number.isFinite(parsedSc) && parsedSc > 0
+                ? `${formatCoins(parsedSc, "sweeps_coins")} = ${formatUsd(previewUsd)}`
+                : `100 SC = ${formatUsd(1)} · 10 SC = ${formatUsd(0.1)}`}
             </p>
-          </section>
-        </div>
+          </div>
 
-        {/* Right column — recent withdrawals */}
-        <section className="wallet__section wallet__section--secondary">
-          <h2 className="wallet__list-title">Recent withdrawals</h2>
-          {withdrawals.length === 0 ? (
-            <div className="wallet__empty">
-              <Banknote size={28} aria-hidden="true" />
-              <p>No withdrawals yet</p>
-              <p className="wallet__empty-hint">Your withdrawal history will appear here once you cash out.</p>
-            </div>
-          ) : (
-            withdrawals.map((w) => (
-              <div key={w.id} className="wallet__deposit-item">
-                <div className="wallet__deposit-row">
-                  <span>
-                    <strong>{w.chain.toUpperCase()}</strong> · {formatUsd(w.usd_amount)}
-                  </span>
-                  <span className={`wallet__status wallet__status--${w.status}`}>{w.status}</span>
-                </div>
-                <p className="wallet__hint wallet__hint--meta">
-                  {w.destination_address}
-                </p>
+          <button type="submit" className="wallet__btn" disabled={submitting}>
+            {submitting && <span className="wallet__btn__spinner" aria-hidden="true" />}
+            {submitting ? "Submitting…" : "Request withdrawal"}
+          </button>
+        </form>
+
+        <p className="wallet__hint wallet__hint--note">
+          Withdrawals are queued and sent manually or automatically from treasury wallets. Processing
+          times vary by network.
+        </p>
+      </section>
+
+      <section className="wallet__section">
+        <h2 className="wallet__list-title">Recent withdrawals</h2>
+        {withdrawals.length === 0 ? (
+          <div className="wallet__empty">
+            <Banknote size={28} aria-hidden="true" />
+            <p>No withdrawals yet</p>
+            <p className="wallet__empty-hint">Your withdrawal history will appear here once you cash out.</p>
+          </div>
+        ) : (
+          withdrawals.map((w) => (
+            <div key={w.id} className="wallet__deposit-item">
+              <div className="wallet__deposit-row">
+                <span>
+                  <strong>{w.chain.toUpperCase()}</strong> · {formatUsd(w.usd_amount)}
+                </span>
+                <span className={`wallet__status wallet__status--${w.status}`}>{w.status}</span>
               </div>
-            ))
-          )}
-        </section>
-      </div>
+              <p className="wallet__hint wallet__hint--meta">
+                {w.destination_address}
+              </p>
+            </div>
+          ))
+        )}
+      </section>
     </div>
   );
 }

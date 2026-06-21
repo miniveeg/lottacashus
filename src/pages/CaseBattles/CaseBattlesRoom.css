@@ -24,20 +24,17 @@
 .cbr__result-pill {
   display: inline-block;
   margin-top: 0.75rem;
-  padding: 0.55rem 1.4rem;
+  padding: 0.5rem 1.25rem;
   border-radius: 999px;
-  font-family: var(--lc-font-display);
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  background: rgba(225, 29, 72, 0.12);
-  border: 1px solid rgba(225, 29, 72, 0.4);
-  color: var(--lc-crimson-soft);
+  font-weight: 700;
+  background: rgba(245, 185, 66, 0.15);
+  border: 1px solid rgba(245, 185, 66, 0.4);
+  color: var(--lc-gold);
 }
 
 .cbr__result-pill--win {
-  background: rgba(0, 232, 122, 0.12);
-  border-color: rgba(0, 232, 122, 0.45);
-  color: var(--lc-emerald);
+  border-color: rgba(34, 197, 94, 0.45);
+  color: #86efac;
 }
 
 .cbr__result-pill--neutral {
@@ -71,14 +68,13 @@
 
 .cbr__arena {
   border: 1px solid var(--cb-panel-border);
-  border-radius: var(--lc-radius-xl);
+  border-radius: var(--lc-radius-lg);
   background:
-    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(225, 29, 72, 0.1), transparent 60%),
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(56, 189, 248, 0.1), transparent 60%),
     var(--cb-panel);
-  padding: 1.5rem 1.65rem 1.75rem;
+  padding: 1.25rem 1.35rem 1.5rem;
   overflow: visible;
   position: relative;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 /* Phase accent — colored top stripe that telegraphs current battle phase. */
@@ -138,15 +134,15 @@
 }
 
 .cbr__badge--phase-running {
-  background: rgba(225, 29, 72, 0.12);
-  color: var(--lc-crimson-soft);
-  border-color: rgba(225, 29, 72, 0.45);
+  background: rgba(56, 189, 248, 0.12);
+  color: #7dd3fc;
+  border-color: rgba(56, 189, 248, 0.45);
 }
 
 .cbr__badge--phase-running::before {
   content: "●";
   margin-right: 0.3rem;
-  color: var(--lc-crimson-soft);
+  color: #7dd3fc;
   animation: cbr-pulse 1.4s ease-in-out infinite;
 }
 
@@ -183,7 +179,7 @@
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  border: 2px solid rgba(225, 29, 72, 0.15);
+  border: 2px solid rgba(56, 189, 248, 0.15);
   border-top-color: var(--cb-accent);
   animation: cbr-eos-spin 0.9s linear infinite;
 }
@@ -238,8 +234,8 @@
 }
 
 .cbr__badge--fast {
-  border-color: rgba(225, 29, 72, 0.35);
-  color: var(--lc-crimson-soft);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #7dd3fc;
 }
 
 .cbr__arena-meta,
@@ -374,8 +370,8 @@
 }
 
 .cbr__slot--you {
-  border-color: rgba(225, 29, 72, 0.55);
-  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.15);
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.15);
 }
 
 .cbr__slot-index {
@@ -407,7 +403,7 @@
 }
 
 .cbr__slot-tag--you {
-  color: var(--lc-crimson-soft);
+  color: #7dd3fc;
 }
 
 .cbr__slot-add-bot {
@@ -416,16 +412,16 @@
   font-weight: 700;
   font-size: 0.78rem;
   border-radius: var(--lc-radius-sm);
-  border: 1px solid rgba(225, 29, 72, 0.45);
-  background: rgba(225, 29, 72, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.12);
   color: #93c5fd;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .cbr__slot-add-bot:hover:not(:disabled) {
-  background: rgba(225, 29, 72, 0.2);
-  border-color: rgba(225, 29, 72, 0.65);
+  background: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.65);
 }
 
 .cbr__slot-add-bot:disabled {
@@ -549,7 +545,7 @@
 }
 
 .cbr__reel-col--you .cbr__reel-col-head {
-  border-color: rgba(225, 29, 72, 0.45);
+  border-color: rgba(56, 189, 248, 0.45);
 }
 
 .cbr__reel-col-head {
@@ -607,7 +603,7 @@
 
 .cbr__pulls-col--you {
   border-radius: var(--lc-radius-md);
-  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.2);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
 }
 
 .cbr__pulls-col--winner .cbr__pulls-col-head {
@@ -710,8 +706,8 @@
 
 .cbr__round-chip--active {
   border-color: var(--cb-accent);
-  color: var(--lc-crimson-soft);
-  box-shadow: 0 0 12px rgba(225, 29, 72, 0.25);
+  color: #7dd3fc;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
 }
 
 .cbr__round-chip--done {
@@ -730,7 +726,7 @@
 }
 
 .cbr__player-panel--you {
-  border-color: rgba(225, 29, 72, 0.45);
+  border-color: rgba(56, 189, 248, 0.45);
 }
 
 .cbr__player-panel--winner {
@@ -831,8 +827,8 @@
   padding: 1.75rem 1.25rem;
   margin: 0.5rem 0 1rem;
   border-radius: var(--lc-radius-md);
-  border: 1px solid rgba(225, 29, 72, 0.25);
-  background: rgba(225, 29, 72, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(56, 189, 248, 0.06);
   overflow: hidden;
 }
 
@@ -858,7 +854,7 @@
   margin: 0 0 0.35rem;
   font-weight: 800;
   font-size: 1rem;
-  color: var(--lc-crimson-soft);
+  color: #7dd3fc;
 }
 
 .cbr__eos-desc,
@@ -880,7 +876,7 @@
   position: absolute;
   inset: auto 30% -2rem;
   height: 4rem;
-  background: radial-gradient(ellipse, rgba(225, 29, 72, 0.35), transparent 70%);
+  background: radial-gradient(ellipse, rgba(56, 189, 248, 0.35), transparent 70%);
   animation: cbr-eos-pulse 1.6s ease-in-out infinite;
 }
 
@@ -900,8 +896,8 @@
   margin: 1rem 0;
   padding: 1rem 1.1rem;
   border-radius: var(--lc-radius-md);
-  border: 1px solid rgba(225, 29, 72, 0.35);
-  background: rgba(225, 29, 72, 0.06);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.06);
   text-align: center;
 }
 
@@ -943,7 +939,7 @@
 }
 
 .cbr__join-toggle-track--on {
-  background: rgba(225, 29, 72, 0.55);
+  background: rgba(56, 189, 248, 0.55);
 }
 
 .cbr__join-toggle-thumb {
@@ -967,7 +963,7 @@
   gap: 0.5rem;
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--lc-crimson-soft);
+  color: #7dd3fc;
 }
 
 .cbr__join-borrow-slider--off {
@@ -1034,7 +1030,7 @@
 }
 
 .cbr__result-col--you .cbr__result-col-head {
-  border-color: rgba(225, 29, 72, 0.45);
+  border-color: rgba(56, 189, 248, 0.45);
 }
 
 .cbr__result-col--winner .cbr__result-col-head {
@@ -1116,7 +1112,7 @@
   margin: 0;
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--lc-crimson);
+  color: #38bdf8;
 }
 
 .cbr__result-col-borrow {
@@ -1192,7 +1188,7 @@
 }
 
 .cbr__results-row--you {
-  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.2);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
 }
 
 .cbr__results-player {
@@ -1234,7 +1230,7 @@
 .cbr__results-jp-pct {
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--lc-crimson);
+  color: #38bdf8;
 }
 
 .cbr__results-borrow {
@@ -1279,10 +1275,10 @@
 }
 
 .cbr__p-col--you {
-  border-color: rgba(225, 29, 72, 0.5);
+  border-color: rgba(56, 189, 248, 0.5);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 0 0 1px rgba(225, 29, 72, 0.12);
+    0 0 0 1px rgba(56, 189, 248, 0.12);
 }
 
 .cbr__p-col--winner {
@@ -1342,16 +1338,16 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   border-radius: var(--lc-radius-sm);
-  border: 1px solid rgba(225, 29, 72, 0.5);
-  background: rgba(225, 29, 72, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  background: rgba(56, 189, 248, 0.14);
   color: #93c5fd;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
 
 .cbr__p-col-call-bot:hover:not(:disabled) {
-  background: rgba(225, 29, 72, 0.22);
-  border-color: rgba(225, 29, 72, 0.7);
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.7);
 }
 
 .cbr__p-col-call-bot:disabled {
@@ -1405,7 +1401,7 @@
 
 .cbr__pulls-col--you {
   border-radius: var(--lc-radius-md);
-  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.15);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.15);
 }
 
 .cbr__pulls-col--winner .cbr__pulls-col-head {
@@ -1545,7 +1541,7 @@
 .cbr__final-jackpot {
   margin: 0.5rem 0 0;
   font-size: 0.82rem;
-  color: var(--lc-crimson-soft);
+  color: #7dd3fc;
 }
 
 .cbr__final-jackpot strong {
@@ -1589,7 +1585,7 @@
 }
 
 .cbr__final-card--you {
-  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.2);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
 }
 
 .cbr__final-card-top {
@@ -1648,7 +1644,7 @@
   margin: 0;
   font-size: 0.62rem;
   font-weight: 700;
-  color: var(--lc-crimson);
+  color: #38bdf8;
 }
 
 .cbr__final-card-borrow {
@@ -1707,7 +1703,7 @@
 
 .cbr__p-col-spin {
   border-radius: var(--lc-radius-sm);
-  border: 1px solid rgba(225, 29, 72, 0.35);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   background: rgba(0, 0, 0, 0.45);
   overflow: hidden;
   min-height: 5.5rem;
@@ -1747,7 +1743,7 @@
 .cbr__p-result-jp {
   font-size: 0.68rem;
   font-weight: 700;
-  color: var(--lc-crimson);
+  color: #38bdf8;
 }
 
 .cbr__p-result-borrow {

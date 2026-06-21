@@ -1,24 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  Bell,
-  ChevronDown,
-  CreditCard,
-  LogIn,
-  LogOut,
-  Search,
-  Settings as SettingsIcon,
-  User as UserIcon,
-  UserPlus,
-  Wallet,
-  X,
-} from "lucide-react";
+import { Bell, LogIn, LogOut, Menu, Search, UserPlus, X } from "lucide-react";
 import { NotificationsPanel } from "../NotificationsPanel/NotificationsPanel";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
+import { useSidebar } from "../../contexts/SidebarContext";
 import { useToast } from "../../contexts/ToastContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
 import { formatUsd, formatCoins, coinsToUsd, type CoinType } from "../../lib/format";
@@ -34,40 +23,24 @@ function searchCategoryLabel(category: SiteSearchItem["category"]): string {
   return category === "game" ? "Game" : "Page";
 }
 
-type UserMenuItem = {
-  label: string;
-  href: string;
-  icon: typeof UserIcon;
-};
-
-const USER_MENU_ITEMS: UserMenuItem[] = [
-  { label: "Profile", href: "/profile", icon: UserIcon },
-  { label: "Settings", href: "/settings", icon: SettingsIcon },
-  { label: "Deposit", href: "/deposit", icon: CreditCard },
-  { label: "Withdraw", href: "/withdraw", icon: Wallet },
-  { label: "Redeem", href: "/redeem", icon: Wallet },
-];
-
 export function Topbar() {
   const { user, loading, signOut } = useAuth();
   const { profile, profileLoading } = useProfile();
-  const { coinType, setCoinType } = usePlayMode();
+  const { coinType, setCoinType, label: coinLabel } = usePlayMode();
   const { pathname } = useLocation();
   const { unreadCount } = useNotifications();
+  const { toggleMobile } = useSidebar();
   const toast = useToast();
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [highlightIndex, setHighlightIndex] = useState(0);
   const searchWrapRef = useRef<HTMLDivElement>(null);
-  const userMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const searchResults = searchSite(searchQuery);
-  const isSweeps = coinType === "sweeps_coins";
 
   const displayName =
     profile?.username ??
@@ -77,11 +50,12 @@ export function Topbar() {
 
   const activeBalance = !user
     ? 0
-    : isSweeps
+    : coinType === "sweeps_coins"
       ? (profile?.sweepsCoins ?? 0)
       : (profile?.balance ?? 0);
 
-  // "10,000.00 GC" — formatCoins includes the symbol.
+  // Show the coin amount with its symbol (e.g. "10,000.00 GC") plus a small
+  // USD-equivalent line so users always know the real-world value.
   const balanceDisplay = !user
     ? formatCoins(0, coinType as CoinType)
     : profileLoading
@@ -90,13 +64,7 @@ export function Topbar() {
 
   const balanceUsd = coinsToUsd(activeBalance, coinType as CoinType);
 
-  function avatarLetter(name: string) {
-    const trimmed = name.trim();
-    return trimmed ? trimmed.charAt(0).toUpperCase() : "?";
-  }
-
   async function handleSignOut() {
-    setUserMenuOpen(false);
     await signOut();
     analytics.logout();
     analytics.reset();
@@ -142,12 +110,11 @@ export function Topbar() {
     setHighlightIndex(0);
   }, [searchQuery]);
 
-  // Close the mobile search overlay + user menu whenever the route changes.
+  // Close the mobile search overlay whenever the route changes.
   useEffect(() => {
     setMobileSearchOpen(false);
     setSearchOpen(false);
     setSearchQuery("");
-    setUserMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -155,15 +122,13 @@ export function Topbar() {
       if (searchWrapRef.current && !searchWrapRef.current.contains(ev.target as Node)) {
         setSearchOpen(false);
       }
-      if (userMenuRef.current && !userMenuRef.current.contains(ev.target as Node)) {
-        setUserMenuOpen(false);
-      }
     }
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
 
-  // Auto-focus the search input when the mobile search overlay opens.
+  // Auto-focus the search input when the mobile search overlay opens so the
+  // keyboard appears immediately and the user can start typing.
   useEffect(() => {
     if (mobileSearchOpen) {
       const id = window.setTimeout(() => searchInputRef.current?.focus(), 60);
@@ -171,21 +136,31 @@ export function Topbar() {
     }
   }, [mobileSearchOpen]);
 
-  const userMenuItems: UserMenuItem[] = profile?.isAdmin
-    ? [...USER_MENU_ITEMS, { label: "Admin", href: "/admin", icon: SettingsIcon }]
-    : USER_MENU_ITEMS;
-
   return (
     <header className={`topbar${mobileSearchOpen ? " topbar--search-open" : ""}`}>
       <div className="topbar__start">
+        <motion.button
+          type="button"
+          className="topbar__menu-btn"
+          aria-label="Open menu"
+          onClick={toggleMobile}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Menu size={20} aria-hidden />
+        </motion.button>
         <Link to="/" className="topbar__brand">
-          <BrandLogo className="topbar__logo" size={28} alt="" />
+          <BrandLogo className="topbar__logo" size={40} alt="" />
           <span className="topbar__name">LottaCash</span>
         </Link>
       </div>
 
       <div className="topbar__search-wrap" ref={searchWrapRef}>
-        <form className="topbar__search" role="search" onSubmit={handleSearchSubmit}>
+        <form
+          className="topbar__search"
+          role="search"
+          onSubmit={handleSearchSubmit}
+        >
           <Search size={16} aria-hidden className="topbar__search-icon" />
           <input
             ref={searchInputRef}
@@ -247,42 +222,39 @@ export function Topbar() {
           {mobileSearchOpen ? <X size={18} aria-hidden /> : <Search size={18} aria-hidden />}
         </motion.button>
 
-        {/* Balance + coin toggle (only when logged in) */}
-        {user && (
-          <div className="topbar__balance-group" data-coin={isSweeps ? "sc" : "gc"}>
-            <Link
-              to="/settings"
-              className={`topbar__balance${isSweeps ? " topbar__balance--sc" : " topbar__balance--gc"}`}
-              title={profileLoading ? "Loading…" : `${formatCoins(activeBalance, coinType as CoinType)} = ${formatUsd(balanceUsd)}`}
-              aria-busy={profileLoading || undefined}
-              aria-label={profileLoading ? "Loading balance" : `${formatCoins(activeBalance, coinType as CoinType)}${user ? `, equivalent to ${formatUsd(balanceUsd)}` : ""}`}
-            >
-              <span className="topbar__balance-value">
-                {profileLoading ? (
-                  <span className="visually-hidden">Loading balance</span>
-                ) : null}
-                {balanceDisplay}
-              </span>
-              {user && !profileLoading && (
-                <span className="topbar__balance-usd">{formatUsd(balanceUsd)}</span>
-              )}
-            </Link>
-            <motion.button
-              type="button"
-              className={`topbar__coin-toggle${isSweeps ? " topbar__coin-toggle--sc" : " topbar__coin-toggle--gc"}`}
-              aria-label={`Switch to ${isSweeps ? "Gold Coins" : "Sweeps Coins"} (currently ${isSweeps ? "Sweeps Coins" : "Gold Coins"})`}
-              aria-pressed={isSweeps}
-              onClick={() => setCoinType(isSweeps ? "balance" : "sweeps_coins")}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title={isSweeps ? "Showing Sweeps Coins — click to show Gold Coins" : "Showing Gold Coins — click to show Sweeps Coins"}
-            >
-              <span className="topbar__coin-toggle-label" aria-hidden="true">
-                {isSweeps ? "SC" : "GC"}
-              </span>
-            </motion.button>
-          </div>
-        )}
+        <div className="topbar__balance-group">
+          <Link
+            to={user ? "/settings" : loginUrl(pathname)}
+            className="topbar__balance"
+            title={profileLoading ? "Loading…" : `${formatCoins(activeBalance, coinType as CoinType)} = ${formatUsd(balanceUsd)}`}
+            aria-busy={profileLoading || undefined}
+          >
+            <span className="topbar__balance-label">{coinLabel}</span>
+            <span className="topbar__balance-value">
+              {profileLoading ? (
+                <span className="visually-hidden">Loading balance</span>
+              ) : null}
+              {balanceDisplay}
+            </span>
+            {user && !profileLoading && (
+              <span className="topbar__balance-usd">{formatUsd(balanceUsd)}</span>
+            )}
+          </Link>
+          <motion.button
+            type="button"
+            className="topbar__coin-toggle"
+            aria-label={`Switch to ${coinType === "balance" ? "Sweeps Coins" : "Gold Coins"} (currently ${coinType === "balance" ? "Gold Coins" : "Sweeps Coins"})`}
+            aria-pressed={coinType === "sweeps_coins"}
+            onClick={() => setCoinType(coinType === "balance" ? "sweeps_coins" : "balance")}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            title={coinType === "balance" ? "Showing Gold Coins — click to show Sweeps Coins" : "Showing Sweeps Coins — click to show Gold Coins"}
+          >
+            <span className="topbar__coin-toggle-label" aria-hidden="true">
+              {coinType === "balance" ? "GC" : "SC"}
+            </span>
+          </motion.button>
+        </div>
 
         {loading ? (
           <span className="topbar__loading">…</span>
@@ -294,69 +266,16 @@ export function Topbar() {
               totalWagered={profile?.totalWagered ?? 0}
               loading={profileLoading}
             />
-
-            {/* User avatar dropdown — replaces the sidebar account section */}
-            <div className="topbar__user-menu" ref={userMenuRef}>
-              <motion.button
-                type="button"
-                className={`topbar__avatar${userMenuOpen ? " topbar__avatar--open" : ""}`}
-                onClick={() => setUserMenuOpen((open) => !open)}
-                aria-haspopup="menu"
-                aria-expanded={userMenuOpen}
-                aria-label={`Account menu for ${displayName}`}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-              >
-                <span className="topbar__avatar-letter" aria-hidden="true">
-                  {avatarLetter(displayName)}
-                </span>
-                <ChevronDown
-                  size={14}
-                  className="topbar__avatar-caret"
-                  aria-hidden="true"
-                />
-              </motion.button>
-
-              {userMenuOpen && (
-                <div className="topbar__user-dropdown" role="menu">
-                  <div className="topbar__user-dropdown-header">
-                    <span className="topbar__user-dropdown-name">{displayName}</span>
-                    {user.email ? (
-                      <span className="topbar__user-dropdown-email">{user.email}</span>
-                    ) : null}
-                  </div>
-                  <ul className="topbar__user-dropdown-list">
-                    {userMenuItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <li key={item.href}>
-                          <Link
-                            to={item.href}
-                            className="topbar__user-dropdown-item"
-                            role="menuitem"
-                            onClick={() => setUserMenuOpen(false)}
-                          >
-                            <Icon size={16} aria-hidden />
-                            <span>{item.label}</span>
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                  <div className="topbar__user-dropdown-footer">
-                    <button
-                      type="button"
-                      className="topbar__user-dropdown-item topbar__user-dropdown-item--danger"
-                      role="menuitem"
-                      onClick={handleSignOut}
-                    >
-                      <LogOut size={16} aria-hidden />
-                      <span>Log out</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <motion.button
+              type="button"
+              className="topbar__btn topbar__btn--ghost topbar__btn--logout"
+              onClick={handleSignOut}
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <LogOut size={14} aria-hidden />
+              Log out
+            </motion.button>
           </>
         ) : (
           <>

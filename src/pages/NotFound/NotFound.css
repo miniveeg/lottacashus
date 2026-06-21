@@ -1,187 +1,95 @@
-/* ════════════════════════════════════════════════════════════════
-   404 NOT FOUND — "Obsidian Gold" ground-up redesign
-   Giant gold-gradient 404, centered card on full-height layout.
-   ════════════════════════════════════════════════════════════════ */
-
-.not-found-page {
-  /* Obsidian Gold — page-local palette */
-  --og-gold: #f5b942;
-  --og-gold-bright: #fcd34d;
-  --og-gold-deep: #d97706;
-  --og-gold-glow: rgba(245, 185, 66, 0.15);
-  --og-gold-glow-strong: rgba(245, 185, 66, 0.30);
-  --og-bg-base: #0a0a0f;
-  --og-bg-surface: #111118;
-  --og-border: rgba(255, 255, 255, 0.08);
-  --og-border-strong: rgba(255, 255, 255, 0.14);
-  --og-border-gold: rgba(245, 185, 66, 0.30);
-  --og-text-primary: #fafafa;
-  --og-text-secondary: #a1a1aa;
-  --og-text-muted: #71717a;
-  --og-text-gold: #fcd34d;
-
-  position: relative;
+.not-found {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100dvh - var(--lc-topbar-height, 64px) - 4rem);
-  padding: var(--space-12) var(--space-5);
-  overflow: hidden;
-  isolation: isolate;
+  min-height: calc(100dvh - var(--lc-topbar-height) - 4rem);
 }
 
-/* Background gold glow at top center */
-.not-found-page__glow {
-  position: absolute;
-  top: -20%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90%;
-  height: 80%;
-  background:
-    radial-gradient(ellipse 50% 60% at 50% 0%,
-      var(--og-gold-glow) 0%,
-      rgba(245, 185, 66, 0.06) 30%,
-      transparent 60%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.not-found-page__card {
-  position: relative;
-  z-index: 1;
+.not-found__card {
   text-align: center;
-  max-width: 540px;
-  width: 100%;
-  padding: clamp(2.25rem, 5vw, 3.5rem) clamp(1.5rem, 4vw, 2.5rem);
-  background:
-    radial-gradient(ellipse 60% 80% at 50% 0%, var(--og-gold-glow) 0%, transparent 65%),
-    var(--og-bg-surface);
-  border: 1px solid var(--og-border-gold);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 0 24px var(--og-gold-glow), 0 24px 64px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
-  isolation: isolate;
+  max-width: 480px;
+  padding: 2.5rem 2rem;
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-xl);
+  box-shadow: var(--lc-shadow-md);
 }
 
-/* Giant gold gradient 404 */
-.not-found-page__code {
+.not-found__code {
+  margin: 0 0 0.5rem;
   font-family: var(--lc-font-display);
   font-weight: 800;
-  font-size: clamp(5rem, 14vw, 9rem);
-  line-height: 0.9;
-  letter-spacing: -0.06em;
-  margin: 0 0 var(--space-4);
-  background: linear-gradient(
-    135deg,
-    var(--og-gold-bright) 0%,
-    var(--og-gold) 40%,
-    var(--og-gold-deep) 80%,
-    rgba(255, 255, 255, 0.3) 100%
-  );
+  font-size: 4rem;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-text-muted) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 8px 32px var(--og-gold-glow-strong));
 }
 
-.not-found-page__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-full);
-  background: rgba(245, 185, 66, 0.08);
-  border: 1px solid var(--og-border-gold);
+.not-found__title {
+  margin: 0 0 0.75rem;
   font-family: var(--lc-font-display);
-  font-size: 0.65rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--og-text-gold);
 }
 
-.not-found-page__eyebrow svg {
-  color: var(--og-gold-bright);
+.not-found__text {
+  margin: 0 0 1.5rem;
+  color: var(--lc-text-secondary);
+  line-height: 1.55;
 }
 
-.not-found-page__title {
-  margin: 0 0 var(--space-3);
-  font-family: var(--lc-font-display);
-  font-size: var(--lc-text-2xl);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--og-text-primary);
-}
-
-.not-found-page__text {
-  margin: 0 0 var(--space-8);
-  color: var(--og-text-secondary);
-  font-size: var(--lc-text-sm);
-  line-height: 1.7;
-  max-width: 42ch;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.not-found-page__actions {
+.not-found__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  gap: 0.75rem;
   justify-content: center;
 }
 
-/* Override MotionLink primary with gold */
-.not-found-page .not-found-btn--gold,
-.not-found-page .not-found-btn--gold.lc-motion-btn--primary {
-  background: linear-gradient(135deg, var(--og-gold) 0%, var(--og-gold-deep) 100%);
-  color: #1a1208;
-  font-weight: 700;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.25) inset,
-    0 2px 18px var(--og-gold-glow-strong),
-    var(--lc-shadow-inset);
+.not-found__btn {
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--lc-radius-md);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: transform var(--lc-transition), filter var(--lc-transition);
 }
 
-.not-found-page .not-found-btn--gold:hover {
-  filter: brightness(1.06);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.30) inset,
-    0 6px 28px var(--og-gold-glow-strong),
-    var(--lc-shadow-inset);
+.not-found__btn:hover {
+  transform: translateY(-1px);
 }
 
-.not-found-page .not-found-btn--outline,
-.not-found-page .not-found-btn--outline.lc-motion-btn--secondary {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--og-border-strong);
-  color: var(--og-text-primary);
+.not-found__btn--gold {
+  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
+  color: var(--lc-bg-base);
 }
 
-.not-found-page .not-found-btn--outline:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--og-border-gold);
-  color: var(--og-text-gold);
+.not-found__btn--outline {
+  border: 1px solid var(--lc-border-strong);
+  color: var(--lc-text-primary);
 }
 
-/* ── Responsive ── */
-@media (max-width: 480px) {
-  .not-found-page__actions {
+.not-found__btn--outline:hover {
+  border-color: var(--lc-gold-dim);
+}
+
+@media (max-width: 640px) {
+  .not-found__card {
+    padding: 2rem 1.25rem;
+    margin: 0 0.5rem;
+  }
+
+  .not-found__code {
+    font-size: 3rem;
+  }
+
+  .not-found__actions {
     flex-direction: column;
     width: 100%;
   }
 
-  .not-found-page__actions .lc-motion-btn {
+  .not-found__btn {
     width: 100%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .not-found-page__card,
-  .not-found-page__code,
-  .not-found-page__glow {
-    animation: none !important;
-    transition: none !important;
+    min-height: 2.75rem;
   }
 }

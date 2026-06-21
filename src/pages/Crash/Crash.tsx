@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
-import { coinsToUsd, formatCoins, formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import {
   fetchCrashPfState,
   placeCrashBet,
@@ -15,17 +15,10 @@ import "../../styles/game-controls.css";
 import "./Crash.css";
 
 const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+// Animation rate — multiplier grows ~9%/frame at 60fps (exponential, crash-like).
 const ANIMATION_GROWTH = 1.009;
-const HISTORY_MAX = 10;
-
-type CrashPhaseLocal = "idle" | "running" | "crashed" | "cashed_out";
-type HistoryEntry = { crashedAt: number };
-
-function historyChipClass(crashedAt: number): string {
-  if (crashedAt >= 2) return "crash__history-chip--high";
-  if (crashedAt >= 1.4) return "crash__history-chip--mid";
-  return "crash__history-chip--low";
-}
+const CANVAS_BASE_WIDTH = 600;
+const CANVAS_BASE_HEIGHT = 320;
 
 export function Crash() {
   const { user } = useAuth();
@@ -47,19 +40,17 @@ export function Crash() {
     payout: number;
     cashedAt: number | null;
   } | null>(null);
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [panelOpen, setPanelOpen] = useState(false);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
+  const [showFairness, setShowFairness] = useState(false);
   const [betId, setBetId] = useState<string | null>(null);
 
   const historyRef = useRef<{ x: number; y: number }[]>([{ x: 0, y: 1 }]);
 
-  const activeBalance =
-    coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+  type CrashPhaseLocal = "idle" | "running" | "crashed" | "cashed_out";
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchCrashPfState();
@@ -85,17 +76,19 @@ export function Crash() {
     [wager, multiplier]
   );
 
+  /** Resolve theme color for the chart line so it stays consistent with the site palette. */
   function resolveChartColor(): { line: string; fill: string; crashed: string } {
     if (typeof window === "undefined") {
-      return { line: "#f5b942", fill: "rgba(245,185,66,0.08)", crashed: "#ef4444" };
+      return { line: "#22c55e", fill: "rgba(34,197,94,0.08)", crashed: "#ef4444" };
     }
     const styles = getComputedStyle(document.documentElement);
-    const line = styles.getPropertyValue("--lc-crimson").trim() || "#f5b942";
+    const line = styles.getPropertyValue("--lc-emerald").trim() || "#22c55e";
     const ruby = styles.getPropertyValue("--lc-ruby").trim() || "#ef4444";
+    // Convert hex to rgba with low alpha for the area fill.
     const fillAlpha = "0.10";
     const fill = line.startsWith("#") && line.length === 7
       ? `rgba(${parseInt(line.slice(1, 3), 16)}, ${parseInt(line.slice(3, 5), 16)}, ${parseInt(line.slice(5, 7), 16)}, ${fillAlpha})`
-      : "rgba(245, 185, 66, 0.10)";
+      : "rgba(34, 197, 94, 0.10)";
     return { line, fill, crashed: ruby };
   }
 
@@ -121,6 +114,7 @@ export function Crash() {
 
     const colors = resolveChartColor();
 
+    // Horizontal grid lines + labels
     ctx.beginPath();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
     ctx.lineWidth = 1;
@@ -133,6 +127,7 @@ export function Crash() {
 
     if (pts.length === 0) return;
 
+    // Area fill under the line
     ctx.beginPath();
     for (let i = 0; i < pts.length; i++) {
       const px = mapX(pts[i].x);
@@ -146,6 +141,7 @@ export function Crash() {
     ctx.fillStyle = crashed ? "rgba(239, 68, 68, 0.10)" : colors.fill;
     ctx.fill();
 
+    // Chart line
     ctx.beginPath();
     ctx.strokeStyle = crashed ? colors.crashed : colors.line;
     ctx.lineWidth = 3;
@@ -159,6 +155,7 @@ export function Crash() {
     }
     ctx.stroke();
 
+    // Y-axis labels
     ctx.fillStyle = "rgba(255, 255, 255, 0.32)";
     ctx.font = "11px system-ui, sans-serif";
     ctx.textBaseline = "middle";
@@ -173,6 +170,7 @@ export function Crash() {
     if (!canvas) return;
     const ctxRaw = canvas.getContext("2d");
     if (!ctxRaw) return;
+    // Capture the non-null context so closures don't re-widen the type.
     const ctx: CanvasRenderingContext2D = ctxRaw;
 
     const w = canvas.width;
@@ -188,7 +186,8 @@ export function Crash() {
     function tick() {
       if (phaseRef.current !== "running") return;
 
-      elapsed += 1 / 60;
+      elapsed += 1 / 60; // seconds, ~60fps
+      // Exponential growth — feels like a real crash multiplier.
       current = Math.pow(ANIMATION_GROWTH, elapsed * 60);
       const truncated = truncateCrashMultiplier(current);
 
@@ -205,7 +204,6 @@ export function Crash() {
           payout: 0,
           cashedAt: prev?.cashedAt ?? null,
         }));
-        setHistory((h2) => [{ crashedAt: crashPt }, ...h2].slice(0, HISTORY_MAX));
         return;
       }
 
@@ -226,6 +224,8 @@ export function Crash() {
     }
   }
 
+  // Responsive canvas: scale the backing store to match the displayed size × DPR
+  // for crisp chart rendering on retina/mobile displays.
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -242,6 +242,7 @@ export function Crash() {
     const ctxRaw = canvas.getContext("2d");
     if (!ctxRaw) return;
     const ctx: CanvasRenderingContext2D = ctxRaw;
+    // Redraw the current history at the new resolution.
     const crashed = phaseRef.current === "idle" && phase === "crashed";
     drawGraph(ctx, canvas.width, canvas.height, historyRef.current, multiplier, crashed);
   }, [multiplier, phase]);
@@ -264,6 +265,7 @@ export function Crash() {
       setError("Log in to play.");
       return;
     }
+    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
@@ -314,7 +316,6 @@ export function Crash() {
       payout: data.payout,
       cashedAt: cashedAtMult,
     });
-    setHistory((h) => [{ crashedAt: crashPointRef.current }, ...h].slice(0, HISTORY_MAX));
     await refreshProfile();
   };
 
@@ -328,252 +329,174 @@ export function Crash() {
   };
 
   return (
-    <div className="game-page crash">
-      <header className="game-header">
-        <h1 className="game-header__title">Crash</h1>
-        <span className="game-header__rtp">99% RTP</span>
-        <span className="game-header__spacer" />
-        <button
-          type="button"
-          className={`game-header__panel-toggle${panelOpen ? " game-header__panel-toggle--open" : ""}`}
-          onClick={() => setPanelOpen((v) => !v)}
-          aria-label="Toggle stats panel"
-          aria-expanded={panelOpen}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="18" y1="20" x2="18" y2="10" />
-            <line x1="12" y1="20" x2="12" y2="4" />
-            <line x1="6" y1="20" x2="6" y2="14" />
-          </svg>
-        </button>
+    <div className="crash lc-game-page">
+      <header className="crash__header">
+        <h1 className="crash__title">Crash</h1>
+        <p className="crash__subtitle">
+          Watch the multiplier rise. Cash out before it crashes to lock in your winnings.
+          Provably fair — {((1 - 0.01) * 100).toFixed(1)}% RTP.
+        </p>
       </header>
 
-      <div className="game-stage">
-        <div
-          className={[
-            "crash__canvas-wrap",
-            phase === "running" && "crash__canvas-wrap--running",
-            phase === "crashed" && "crash__canvas-wrap--crashed",
-            phase === "cashed_out" && "crash__canvas-wrap--win",
-          ]
-            .filter(Boolean)
-            .join(" ")}
-        >
-          <canvas
-            ref={canvasRef}
-            className="crash__canvas"
-            aria-label={`Crash multiplier ${multiplier.toFixed(2)}x`}
-          />
-          <div className="crash__multiplier-overlay" aria-live="polite" aria-atomic="true">
-            <span
-              className={[
-                "crash__mult-value",
-                phase === "crashed" && "crash__mult-value--crashed",
-                phase === "cashed_out" && "crash__mult-value--win",
-                phase === "running" && "crash__mult-value--running",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              {multiplier.toFixed(2)}×
-            </span>
-            {phase === "idle" && (
-              <span className="crash__mult-label">Place a bet to start</span>
-            )}
-            {phase === "crashed" && (
-              <span className="crash__mult-label crash__mult-label--crashed">Crashed</span>
-            )}
-            {phase === "cashed_out" && (
-              <span className="crash__mult-label crash__mult-label--win">
-                Cashed out · won {formatCoins(lastResult?.payout ?? 0, coinType)}
+      <div className="crash__layout">
+        <section className="crash__stage-panel">
+          <div className={`crash__canvas-wrap${phase === "running" ? " crash__canvas-wrap--running" : ""}${phase === "crashed" ? " crash__canvas-wrap--crashed" : ""}${phase === "cashed_out" ? " crash__canvas-wrap--win" : ""}`}>
+            <canvas
+              ref={canvasRef}
+              className="crash__canvas"
+              width={CANVAS_BASE_WIDTH}
+              height={CANVAS_BASE_HEIGHT}
+              aria-label={`Crash multiplier ${multiplier.toFixed(2)}x`}
+            />
+            <div className="crash__multiplier-overlay" aria-live="polite" aria-atomic="true">
+              <span className={`crash__mult-value${phase === "crashed" ? " crash__mult-value--crashed" : ""}${phase === "cashed_out" ? " crash__mult-value--win" : ""}`}>
+                {multiplier.toFixed(2)}x
               </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {panelOpen && (
-        <div className="game-panel" role="complementary" aria-label="Crash stats">
-          <div className="game-panel__head">
-            <h2 className="game-panel__title">Round info</h2>
-            <button
-              type="button"
-              className="game-panel__close"
-              onClick={() => setPanelOpen(false)}
-              aria-label="Close panel"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+              {phase === "idle" && (
+                <span className="crash__mult-label">Place a bet to start</span>
+              )}
+              {phase === "crashed" && (
+                <span className="crash__mult-label crash__mult-label--crashed">Crashed</span>
+              )}
+              {phase === "cashed_out" && (
+                <span className="crash__mult-label crash__mult-label--win">
+                  Cashed out — won {formatCoins(lastResult?.payout ?? 0, coinType)}
+                </span>
+              )}
+            </div>
           </div>
 
-          {lastResult && phase !== "running" && (
-            <div className="game-panel__section">
-              <h3 className="game-panel__section-title">Last round</h3>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Crash point</span>
-                <span className="game-panel__row-value game-panel__row-value--gold">
-                  {lastResult.crashedAt.toFixed(2)}×
-                </span>
-              </div>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Outcome</span>
-                <span
-                  className={`game-panel__row-value${
-                    lastResult.won
-                      ? " game-panel__row-value--win"
-                      : " game-panel__row-value--loss"
-                  }`}
-                >
-                  {lastResult.won
-                    ? `Won ${formatCoins(lastResult.payout, coinType)}`
-                    : `Lost at ${lastResult.crashedAt.toFixed(2)}×`}
-                </span>
-              </div>
+          {lastResult && phase === "crashed" && (
+            <div className="crash__outcome crash__outcome--loss" role="status" aria-live="assertive">
+              <p>
+                Crashed at <strong>{lastResult.crashedAt.toFixed(2)}x</strong> — lost{" "}
+                <strong>{formatCoins(wager, coinType)}</strong>
+              </p>
             </div>
           )}
+        </section>
 
-          <div className="game-panel__section">
-            <h3 className="game-panel__section-title">History</h3>
-            {history.length > 0 ? (
-              <div className="crash__history" aria-label="Recent crash points">
-                {history.map((h, i) => (
-                  <span
-                    key={`${h.crashedAt}-${i}`}
-                    className={`crash__history-chip ${historyChipClass(h.crashedAt)}`}
-                    title={`Crashed at ${h.crashedAt.toFixed(2)}×`}
-                  >
-                    {h.crashedAt.toFixed(2)}×
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="game-history__empty">No rounds yet.</p>
-            )}
+        <aside className="crash__controls game-controls">
+          <div className="game-controls__wager-block">
+            <label className="game-controls__wager-label" htmlFor="crash-wager">
+              Bet amount ({coinLabel})
+            </label>
+            <div className="game-controls__wager-row">
+              <input
+                id="crash-wager"
+                type="text"
+                inputMode="decimal"
+                className="game-controls__wager-input"
+                value={wagerInput}
+                onChange={(e) => setWagerInput(e.target.value)}
+                onBlur={() => {
+                  const parsed = parseFloat(wagerInput.replace(/,/g, ""));
+                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                }}
+                disabled={phase === "running"}
+              />
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={() => applyWager(wager / 2)}
+                disabled={phase === "running"}
+                aria-label="Half bet"
+              >
+                &frac12;
+              </button>
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={() => applyWager(wager * 2)}
+                disabled={phase === "running"}
+                aria-label="Double bet"
+              >
+                2&times;
+              </button>
+            </div>
+            <div className="game-controls__presets">
+              {BET_PRESETS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
+                  onClick={() => applyWager(p)}
+                  disabled={phase === "running"}
+                >
+                  ${p}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="game-panel__section game-panel__section--bare">
-            <details className="game-fair">
-              <summary className="game-fair__summary">Provably Fair</summary>
-              <div className="game-fair__body">
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Server seed (hash)</span>
-                  <code className="game-fair__code">{pfHash ?? "…"}</code>
-                </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Next nonce</span>
-                  <code className="game-fair__code">{pfNonce}</code>
-                </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Client seed</span>
+          {phase === "running" ? (
+            <button
+              type="button"
+              className="crash__cashout-btn"
+              onClick={handleCashOut}
+            >
+              Cash out at {multiplier.toFixed(2)}x ({formatCoins(potentialPayout, coinType)})
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="crash__bet-btn"
+              onClick={handleBet}
+              disabled={!user}
+            >
+              {phase === "crashed" || phase === "cashed_out" ? "Bet again" : "Bet"}
+            </button>
+          )}
+
+          {error && (
+            <p className="crash__error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <p className="crash__hint">
+            Need funds? <Link to="/deposit">Deposit</Link>
+          </p>
+
+          <div className="crash__fairness">
+            <button
+              type="button"
+              className="crash__fairness-toggle"
+              onClick={() => setShowFairness((v) => !v)}
+            >
+              {showFairness ? "Hide" : "Show"} provably fair
+            </button>
+            {showFairness && (
+              <div className="crash__fairness-body">
+                <p>
+                  <span className="crash__fairness-k">Server seed (hash)</span>
+                  <code className="crash__hash">{pfHash ?? "\u2026"}</code>
+                </p>
+                <p>
+                  <span className="crash__fairness-k">Next nonce</span>
+                  <code>{pfNonce}</code>
+                </p>
+                <label className="crash__seed-label">
+                  Client seed
                   <input
                     type="text"
-                    className="game-fair__input"
+                    className="crash__seed-input"
                     value={clientSeed}
                     maxLength={64}
                     onChange={(e) => setClientSeed(e.target.value)}
                     disabled={phase === "running"}
                   />
-                </div>
-                <button
-                  type="button"
-                  className="game-fair__save"
-                  onClick={saveClientSeed}
-                  disabled={phase === "running"}
-                >
+                </label>
+                <button type="button" className="crash__tool-btn" onClick={saveClientSeed} disabled={phase === "running"}>
                   Save client seed
                 </button>
-                <p className="game-fair__note">
-                  HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — provably fair.
+                <p className="crash__fairness-note">
+                  HMAC-SHA256 &rarr; 4-byte float &rarr; 2&sup2;&#8304;/(n+1)&times;0.99 &mdash; provably fair.
                 </p>
               </div>
-            </details>
+            )}
           </div>
-
-          <p className="game-actionbar__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
-        </div>
-      )}
-
-      <div className="game-actionbar">
-        <div className="game-actionbar__balance">
-          <span className="game-actionbar__balance-label">{coinLabel}</span>
-          <span className="game-actionbar__balance-value">{formatCoins(activeBalance, coinType)}</span>
-          <span className="game-actionbar__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
-        </div>
-
-        <div className="game-actionbar__wager">
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            onClick={() => applyWager(wager / 2)}
-            disabled={phase === "running"}
-            aria-label="Half bet"
-          >
-            ½
-          </button>
-          <input
-            id="crash-wager"
-            type="text"
-            inputMode="decimal"
-            className="game-actionbar__input"
-            value={wagerInput}
-            onChange={(e) => setWagerInput(e.target.value)}
-            onBlur={() => {
-              const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-              applyWager(Number.isFinite(parsed) ? parsed : 0.01);
-            }}
-            disabled={phase === "running"}
-            aria-label="Bet amount"
-          />
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            onClick={() => applyWager(wager * 2)}
-            disabled={phase === "running"}
-            aria-label="Double bet"
-          >
-            2×
-          </button>
-        </div>
-
-        <div className="game-actionbar__presets">
-          {BET_PRESETS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              className={`game-actionbar__preset${wager === p ? " game-actionbar__preset--active" : ""}`}
-              onClick={() => applyWager(p)}
-              disabled={phase === "running"}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-
-        {phase === "running" ? (
-          <button
-            type="button"
-            className="game-actionbar__play game-actionbar__play--cashout"
-            onClick={handleCashOut}
-          >
-            Cash out · {multiplier.toFixed(2)}× · {formatCoins(potentialPayout, coinType)}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="game-actionbar__play"
-            onClick={handleBet}
-            disabled={!user}
-          >
-            {phase === "crashed" || phase === "cashed_out" ? "Bet again" : "Play"}
-          </button>
-        )}
-
-        {error && <p className="game-actionbar__error" role="alert">{error}</p>}
+        </aside>
       </div>
     </div>
   );

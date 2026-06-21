@@ -9,7 +9,7 @@ import {
   KENO_RISKS,
   type KenoRisk,
 } from "../../lib/games/keno";
-import { coinsToUsd, formatCoins, formatUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import { fetchKenoPfState, placeKenoBet, setKenoClientSeed } from "../../lib/keno";
 import "../../styles/game-controls.css";
 import "./Keno.css";
@@ -48,21 +48,17 @@ export function Keno() {
     payout: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showPaytable, setShowPaytable] = useState(true);
-  const [panelOpen, setPanelOpen] = useState(false);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
+  const [showFairness, setShowFairness] = useState(false);
 
   const pickCount = selected.length;
   const paytable = useMemo(
     () => (pickCount > 0 ? getPaytableRow(pickCount, risk) : []),
     [pickCount, risk]
   );
-
-  const activeBalance =
-    coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
 
   const loadPf = useCallback(async () => {
     const { data, error: pfErr } = await fetchKenoPfState();
@@ -111,6 +107,9 @@ export function Keno() {
     setWagerInput(v.toFixed(2));
   };
 
+  const halfWager = () => applyWager(wager / 2);
+  const doubleWager = () => applyWager(wager * 2);
+
   const handleBet = async () => {
     if (!user) {
       setError("Log in to play.");
@@ -120,6 +119,8 @@ export function Keno() {
       setError("Select at least one number.");
       return;
     }
+
+    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (wager > activeBalance) {
       setError("Insufficient balance.");
       return;
@@ -144,6 +145,7 @@ export function Keno() {
       return;
     }
 
+    // Reveal drawn numbers one-by-one for satisfying stagger.
     setDrawn(data.drawn);
     data.drawn.forEach((_, i) => {
       window.setTimeout(() => {
@@ -174,32 +176,20 @@ export function Keno() {
   const revealComplete = drawn !== null && revealCount >= drawn.length;
 
   return (
-    <div className="game-page keno">
-      <header className="game-header">
-        <h1 className="game-header__title">Keno</h1>
-        <span className="game-header__rtp">94.5% RTP</span>
-        <span className="game-header__spacer" />
-        <button
-          type="button"
-          className={`game-header__panel-toggle${panelOpen ? " game-header__panel-toggle--open" : ""}`}
-          onClick={() => setPanelOpen((v) => !v)}
-          aria-label="Toggle stats panel"
-          aria-expanded={panelOpen}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="18" y1="20" x2="18" y2="10" />
-            <line x1="12" y1="20" x2="12" y2="4" />
-            <line x1="6" y1="20" x2="6" y2="14" />
-          </svg>
-        </button>
+    <div className="keno lc-game-page">
+      <header className="keno__header">
+        <h1 className="keno__title">Keno</h1>
+        <p className="keno__subtitle">
+          Pick 1–10 numbers from 40, 10 drawn per round. Provably fair — 94.5% RTP.
+        </p>
       </header>
 
-      <div className="game-stage">
-        <div className="keno__toolbar">
-          <span className="keno__pick-count">
-            <strong>{pickCount}</strong>/{MAX_PICKS} selected
-          </span>
-          <div className="keno__toolbar-actions">
+      <div className="keno__layout">
+        <section className="keno__board-panel">
+          <div className="keno__board-toolbar">
+            <span className="keno__pick-count">
+              {pickCount}/{MAX_PICKS} selected
+            </span>
             <button
               type="button"
               className="keno__tool-btn"
@@ -217,232 +207,217 @@ export function Keno() {
               Clear
             </button>
           </div>
-        </div>
 
-        <div className="keno__grid" role="group" aria-label="Keno number grid">
-          {Array.from({ length: GRID_SIZE }, (_, i) => i + 1).map((n) => {
-            const isSelected = selectedSet.has(n);
-            const isDrawn = drawnSet?.has(n);
-            const isHit = isSelected && isDrawn;
-            return (
-              <button
-                key={n}
-                type="button"
-                className={[
-                  "keno__cell",
-                  isSelected && "keno__cell--selected",
-                  isDrawn && "keno__cell--drawn",
-                  isHit && "keno__cell--hit",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={() => toggleNumber(n)}
-                disabled={drawing}
-                aria-pressed={isSelected}
-              >
-                <span>{n}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {panelOpen && (
-        <div className="game-panel" role="complementary" aria-label="Keno stats">
-          <div className="game-panel__head">
-            <h2 className="game-panel__title">Round info</h2>
-            <button
-              type="button"
-              className="game-panel__close"
-              onClick={() => setPanelOpen(false)}
-              aria-label="Close panel"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+          <div className="keno__grid" role="group" aria-label="Keno number grid">
+            {Array.from({ length: GRID_SIZE }, (_, i) => i + 1).map((n) => {
+              const isSelected = selectedSet.has(n);
+              const isDrawn = drawnSet?.has(n);
+              const isHit = isSelected && isDrawn;
+              return (
+                <button
+                  key={n}
+                  type="button"
+                  className={[
+                    "keno__cell",
+                    isSelected && "keno__cell--selected",
+                    isDrawn && "keno__cell--drawn",
+                    isHit && "keno__cell--hit",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                  onClick={() => toggleNumber(n)}
+                  disabled={drawing}
+                  aria-pressed={isSelected}
+                >
+                  <span className="keno__cell-num">{n}</span>
+                  {isHit && <span className="keno__cell-gem" aria-hidden="true" />}
+                </button>
+              );
+            })}
           </div>
 
-          {lastResult && drawn && (
-            <div className="game-panel__section">
-              <h3 className="game-panel__section-title">Last result</h3>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Hits</span>
-                <span className="game-panel__row-value game-panel__row-value--gold">
-                  {lastResult.hits} · {lastResult.multiplier}×
-                </span>
-              </div>
-              <div className="game-panel__row">
-                <span className="game-panel__row-label">Payout</span>
-                <span
-                  className={`game-panel__row-value${
-                    lastResult.payout > 0
-                      ? " game-panel__row-value--win"
-                      : " game-panel__row-value--loss"
-                  }`}
-                >
-                  {lastResult.payout > 0
-                    ? formatCoins(lastResult.payout, coinType)
-                    : "No win"}
-                </span>
+          {pickCount > 0 && (
+            <div className="keno__paytable-wrap">
+              <p className="keno__paytable-title">Payout table ({pickCount} picks)</p>
+              <div className="keno__paytable">
+                {paytable.map((mult, hits) => (
+                  <div
+                    key={hits}
+                    className={[
+                      "keno__paytable-cell",
+                      lastResult?.hits === hits && drawn && "keno__paytable-cell--active",
+                      mult > 0 && "keno__paytable-cell--pays",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    <span className="keno__paytable-hits">{hits}</span>
+                    <span className="keno__paytable-mult">
+                      {mult > 0 ? `${mult}×` : "—"}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
+        </section>
 
-          {pickCount > 0 && (
-            <div className="game-panel__section">
+        <aside className="keno__controls game-controls">
+          <div className="game-controls__options">
+            <div className="game-controls__option">
+              <span className="game-controls__option-label" id="keno-risk-label">
+                Risk
+              </span>
+              <LcSelect
+                value={risk}
+                options={KENO_RISKS}
+                onChange={setRisk}
+                disabled={drawing}
+                aria-label="Keno risk level"
+              />
+            </div>
+          </div>
+
+          <div className="game-controls__wager-block">
+            <label className="game-controls__wager-label" htmlFor="keno-wager">
+              Bet amount ({coinLabel})
+            </label>
+            <div className="game-controls__wager-row">
+              <input
+                id="keno-wager"
+                type="text"
+                inputMode="decimal"
+                className="game-controls__wager-input"
+                value={wagerInput}
+                onChange={(e) => setWagerInput(e.target.value)}
+                onBlur={() => {
+                  const parsed = parseFloat(wagerInput.replace(/,/g, ""));
+                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                }}
+                disabled={drawing}
+              />
               <button
                 type="button"
-                className="keno__paytable-toggle"
-                aria-expanded={showPaytable}
-                onClick={() => setShowPaytable((v) => !v)}
+                className="game-controls__wager-adj"
+                onClick={halfWager}
+                disabled={drawing}
+                aria-label="Half bet"
               >
-                <span>Payouts · {pickCount} picks · {risk}</span>
-                <span className="keno__paytable-toggle-icon" aria-hidden>▾</span>
+                ½
               </button>
-              {showPaytable && (
-                <div className="keno__paytable">
-                  {paytable.map((mult, hits) => (
-                    <div
-                      key={hits}
-                      className={[
-                        "keno__paytable-cell",
-                        lastResult?.hits === hits && drawn && "keno__paytable-cell--active",
-                        mult > 0 && "keno__paytable-cell--pays",
-                      ]
-                        .filter(Boolean)
-                        .join(" ")}
-                    >
-                      <span className="keno__paytable-hits">{hits}</span>
-                      <span className="keno__paytable-mult">
-                        {mult > 0 ? `${mult}×` : "—"}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={doubleWager}
+                disabled={drawing}
+                aria-label="Double bet"
+              >
+                2×
+              </button>
+            </div>
+            <div className="game-controls__presets">
+              {BET_PRESETS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`game-controls__preset${wager === p ? " game-controls__preset--active" : ""}`}
+                  onClick={() => applyWager(p)}
+                  disabled={drawing}
+                >
+                  ${p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {error && (
+            <p className="keno__error" role="alert">
+              {error}
+            </p>
+          )}
+
+          {lastResult && drawn && (
+            <div
+              className={`keno__result${lastResult.payout > 0 ? " keno__result--win" : " keno__result--loss"}`}
+              role="status"
+              aria-live="polite"
+            >
+              <p>
+                <strong>{lastResult.hits}</strong> hit
+                {lastResult.hits !== 1 ? "s" : ""} —{" "}
+                <strong>{lastResult.multiplier}×</strong>
+              </p>
+              <p className="keno__result-payout">
+                {lastResult.payout > 0
+                  ? `Won ${formatCoins(lastResult.payout, coinType)}`
+                  : "No win this round"}
+              </p>
             </div>
           )}
 
-          <div className="game-panel__section game-panel__section--bare">
-            <details className="game-fair">
-              <summary className="game-fair__summary">Provably Fair</summary>
-              <div className="game-fair__body">
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Server seed (hash)</span>
-                  <code className="game-fair__code">{pfHash ?? "…"}</code>
-                </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Next nonce</span>
-                  <code className="game-fair__code">{pfNonce}</code>
-                </div>
-                <div className="game-fair__row">
-                  <span className="game-fair__k">Client seed</span>
+          <button
+            type="button"
+            className={`keno__bet-btn${drawing ? " keno__bet-btn--busy" : ""}`}
+            onClick={handleBet}
+            disabled={drawing || pickCount < 1 || !user}
+            aria-busy={drawing}
+          >
+            {drawing ? (
+              <>
+                <span className="keno__spinner" aria-hidden="true" />
+                <span>{revealComplete ? "Done…" : "Drawing…"}</span>
+              </>
+            ) : (
+              "Bet"
+            )}
+          </button>
+
+          <p className="keno__hint">
+            Need funds? <Link to="/deposit">Deposit</Link>
+          </p>
+
+          <div className="keno__fairness">
+            <button
+              type="button"
+              className="keno__fairness-toggle"
+              onClick={() => setShowFairness((v) => !v)}
+            >
+              {showFairness ? "Hide" : "Show"} provably fair
+            </button>
+            {showFairness && (
+              <div className="keno__fairness-body">
+                <p>
+                  <span className="keno__fairness-k">Server seed (hash)</span>
+                  <code className="keno__hash">{pfHash ?? "…"}</code>
+                </p>
+                <p>
+                  <span className="keno__fairness-k">Next nonce</span>
+                  <code>{pfNonce}</code>
+                </p>
+                <label className="keno__seed-label">
+                  Client seed
                   <input
                     type="text"
-                    className="game-fair__input"
+                    className="keno__seed-input"
                     value={clientSeed}
                     maxLength={64}
                     onChange={(e) => setClientSeed(e.target.value)}
                   />
-                </div>
+                </label>
                 <button
                   type="button"
-                  className="game-fair__save"
+                  className="keno__tool-btn"
                   onClick={saveClientSeed}
                 >
                   Save client seed
                 </button>
-                <p className="game-fair__note">
+                <p className="keno__fairness-note">
                   Draws use HMAC-SHA256 with Fisher-Yates selection (Stake Keno).
                 </p>
               </div>
-            </details>
+            )}
           </div>
-
-          <p className="game-actionbar__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
-        </div>
-      )}
-
-      <div className="game-actionbar">
-        <div className="game-actionbar__balance">
-          <span className="game-actionbar__balance-label">{coinLabel}</span>
-          <span className="game-actionbar__balance-value">{formatCoins(activeBalance, coinType)}</span>
-          <span className="game-actionbar__balance-usd">{formatUsd(coinsToUsd(activeBalance, coinType))}</span>
-        </div>
-
-        <LcSelect
-          className="game-actionbar__select"
-          value={risk}
-          options={KENO_RISKS}
-          onChange={setRisk}
-          disabled={drawing}
-          aria-label="Keno risk level"
-        />
-
-        <div className="game-actionbar__wager">
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            onClick={() => applyWager(wager / 2)}
-            disabled={drawing}
-            aria-label="Half bet"
-          >
-            ½
-          </button>
-          <input
-            id="keno-wager"
-            type="text"
-            inputMode="decimal"
-            className="game-actionbar__input"
-            value={wagerInput}
-            onChange={(e) => setWagerInput(e.target.value)}
-            onBlur={() => {
-              const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-              applyWager(Number.isFinite(parsed) ? parsed : 0.01);
-            }}
-            disabled={drawing}
-            aria-label="Bet amount"
-          />
-          <button
-            type="button"
-            className="game-actionbar__adj"
-            onClick={() => applyWager(wager * 2)}
-            disabled={drawing}
-            aria-label="Double bet"
-          >
-            2×
-          </button>
-        </div>
-
-        <div className="game-actionbar__presets">
-          {BET_PRESETS.map((p) => (
-            <button
-              key={p}
-              type="button"
-              className={`game-actionbar__preset${wager === p ? " game-actionbar__preset--active" : ""}`}
-              onClick={() => applyWager(p)}
-              disabled={drawing}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          className="game-actionbar__play"
-          onClick={handleBet}
-          disabled={drawing || pickCount < 1 || !user}
-          aria-busy={drawing}
-        >
-          {drawing ? (revealComplete ? "Done…" : "Drawing…") : "Play"}
-        </button>
-
-        {error && <p className="game-actionbar__error" role="alert">{error}</p>}
+        </aside>
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 @import "./CaseBattlesPages.css";
 
 .cbc__layout {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr minmax(220px, 260px);
   gap: 0.85rem;
-  align-items: stretch;
+  align-items: start;
 }
 
 .cbc__config-row {
@@ -50,68 +50,78 @@
   margin-top: 0;
 }
 
+@media (max-width: 900px) {
+  .cbc__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .cbc__main {
   min-width: 0;
 }
 
-/* Sticky bottom action bar — always visible (stage-centric) */
 .cbc__summary {
   position: sticky;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 55;
+  top: 4.25rem;
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem 1.25rem;
-  padding: 0.85rem clamp(1rem, 3vw, 1.5rem) calc(0.85rem + var(--lc-safe-bottom, 0px));
-  border-top: 1px solid var(--lc-border);
-  background: rgba(12, 15, 22, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-.cbc {
-  padding-bottom: 2rem;
+@media (max-width: 900px) {
+  .cbc__summary {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    z-index: 55;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+    padding: 0.85rem 1.25rem calc(0.85rem + var(--lc-safe-bottom));
+    border-top: 1px solid var(--lc-border);
+    background: rgba(12, 15, 22, 0.95);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .cbc {
+    padding-bottom: 7rem;
+  }
 }
 
 .cbc__summary-card {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-}
-
-.cbc__summary-card--details {
-  display: block;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--lc-radius-lg);
+  border: 1px solid var(--cb-panel-border);
+  background: var(--cb-panel);
 }
 
 .cbc__summary-title {
-  display: none;
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--lc-text-muted);
 }
 
 .cbc__summary-rows {
   margin: 0;
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.4rem 1.25rem;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .cbc__summary-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
   color: var(--lc-text-muted);
-  white-space: nowrap;
 }
 
 .cbc__summary-row dt {
@@ -123,26 +133,25 @@
   margin: 0;
   font-weight: 700;
   color: var(--lc-text-primary);
+  text-align: right;
 }
 
 .cbc__summary-row--total dd {
-  font-family: var(--lc-font-mono);
-  font-size: 1rem;
+  font-family: var(--lc-font-display);
+  font-size: 1.1rem;
   color: var(--cb-accent);
 }
 
 .cbc__summary-row--pot dd {
-  color: var(--lc-crimson-soft);
-  font-family: var(--lc-font-mono);
+  color: var(--lc-gold);
 }
 
 .cbc__summary-create {
-  flex-shrink: 0;
-  min-width: 10rem;
-  padding: 0.75rem 1.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
   font-family: var(--lc-font-display);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1rem;
   border: none;
   border-radius: var(--lc-radius-md);
   background: linear-gradient(180deg, var(--cb-accent), var(--cb-accent-2));
@@ -150,13 +159,6 @@
   cursor: pointer;
   box-shadow: 0 4px 24px var(--cb-accent-glow);
   transition: filter 0.15s, transform 0.15s;
-}
-
-@media (max-width: 768px) {
-  .cbc__summary-create {
-    flex: 1;
-    min-width: 8rem;
-  }
 }
 
 .cbc__summary-create:hover:not(:disabled) {
@@ -171,9 +173,14 @@
   transform: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .cbc__summary-card--details {
     display: none;
+  }
+
+  .cbc__summary-create {
+    flex: 1;
+    min-width: 10rem;
   }
 }
 
@@ -213,13 +220,13 @@
 }
 
 .cbc__mode-card:hover:not(:disabled) {
-  border-color: rgba(225, 29, 72, 0.45);
+  border-color: rgba(56, 189, 248, 0.45);
 }
 
 .cbc__mode-card--active {
   border-color: var(--cb-accent);
   background: var(--cb-accent-dim);
-  box-shadow: 0 0 0 1px rgba(225, 29, 72, 0.2);
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.2);
 }
 
 .cbc__mode-card--soon {
@@ -269,13 +276,13 @@
 }
 
 .cbc__player-btn:hover {
-  border-color: rgba(225, 29, 72, 0.4);
+  border-color: rgba(56, 189, 248, 0.4);
 }
 
 .cbc__player-btn--active {
   border-color: var(--cb-accent);
   background: var(--cb-accent-dim);
-  color: var(--lc-crimson-soft);
+  color: #7dd3fc;
 }
 
 .cbc__toggles {
@@ -542,7 +549,7 @@
 
 .cbc__case-slot--add:hover {
   border-color: var(--cb-accent);
-  color: var(--lc-crimson-soft);
+  color: #7dd3fc;
   background: var(--cb-accent-dim);
 }
 
@@ -829,7 +836,7 @@
 .cbc-modal__sort-opt--active {
   background: var(--cb-accent-dim);
   color: var(--cb-accent);
-  box-shadow: inset 0 0 0 1px rgba(225, 29, 72, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.35);
 }
 
 .cbc-modal__sort-opt:focus-visible {
@@ -894,7 +901,7 @@
 
 .cbc-modal__case-count {
   font-size: 0.68rem;
-  color: var(--lc-crimson-soft);
+  color: var(--lc-gold);
   margin-bottom: 0.35rem;
 }
 

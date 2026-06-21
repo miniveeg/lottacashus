@@ -1,269 +1,114 @@
-/* ════════════════════════════════════════════════════════════════
-   LottaCash — Design Tokens · "Obsidian Gold"
-   Premium casino aesthetic: deep obsidian black, gold primary accent,
-   emerald for Sweeps Coins (real money), crimson used sparingly for
-   CTAs / errors / live indicators.
-   ════════════════════════════════════════════════════════════════ */
+/* LottaCash — Obsidian Luxury Design Tokens */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  /* ── Backgrounds — deep obsidian ── */
-  --bg-void: #050507;
-  --bg-base: #0a0a0f;
-  --bg-surface: #111118;
-  --bg-surface-2: #16161f;
-  --bg-elevated: #1c1c28;
-  --bg-glass: rgba(17, 17, 24, 0.8);
+  /* ── Obsidian surfaces ── */
+  --lc-bg: #040406;
+  --lc-bg-base: #040406;
+  --lc-bg-elevated: #0a0a10;
+  --lc-bg-panel: #0e0e16;
+  --lc-bg-hover: #14141f;
+  --lc-bg-active: #1a1a28;
+  --lc-bg-glass: rgba(14, 14, 22, 0.72);
 
-  /* ── Borders ── */
-  --border-subtle: rgba(255, 255, 255, 0.04);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --border-gold: rgba(245, 185, 66, 0.3);
+  /* ── Layout ── */
+  --lc-topbar-height: 64px;
+  --lc-sidebar-width: 252px;
+  --lc-sidebar-collapsed: 72px;
 
-  /* ── Primary: GOLD (premium casino) ── */
-  --gold: #f5b942;
-  --gold-bright: #fcd34d;
-  --gold-deep: #d97706;
-  --gold-glow: rgba(245, 185, 66, 0.15);
-  --gold-glow-strong: rgba(245, 185, 66, 0.3);
-  --gold-glow-faint: rgba(245, 185, 66, 0.06);
+  /* ── Crimson accent (primary) ── */
+  --lc-crimson: #dc143c;
+  --lc-crimson-dim: #a81030;
+  --lc-crimson-soft: #ff2d55;
+  --lc-crimson-glow: rgba(220, 20, 60, 0.22);
+  --lc-crimson-glow-strong: rgba(220, 20, 60, 0.45);
 
-  /* ── Accent: Crimson (CTAs, errors, live — used sparingly) ── */
-  --crimson: #e11d48;
-  --crimson-glow: rgba(225, 29, 72, 0.2);
+  /* Legacy gold aliases → crimson for backward compat */
+  --lc-gold: var(--lc-crimson);
+  --lc-gold-dim: var(--lc-crimson-dim);
+  --lc-gold-soft: var(--lc-crimson-soft);
+  --lc-gold-glow: var(--lc-crimson-glow);
+  --lc-gold-glow-strong: var(--lc-crimson-glow-strong);
 
-  /* ── Semantic ── */
-  --success: #10b981;
-  --success-glow: rgba(16, 185, 129, 0.15);
-  --danger: #ef4444;
-  --danger-glow: rgba(239, 68, 68, 0.15);
-  --info: #3b82f6;
+  /* ── Semantic colors ── */
+  --lc-emerald: #00e87a;
+  --lc-emerald-dim: #00b85e;
+  --lc-emerald-glow: rgba(0, 232, 122, 0.18);
 
-  /* ── Text ── */
-  --text-primary: #fafafa;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
-  --text-gold: #fcd34d;
+  --lc-ruby: #ff3b5c;
+  --lc-ruby-glow: rgba(255, 59, 92, 0.25);
 
-  /* ── Currency colors ──
-     GC = Gold Coins (play money) → gold
-     SC = Sweeps Coins (real money) → emerald */
-  --gc-color: #f5b942;
-  --gc-glow: rgba(245, 185, 66, 0.12);
-  --sc-color: #10b981;
-  --sc-glow: rgba(16, 185, 129, 0.15);
-
-  /* ── Typography ── */
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Roboto Mono', ui-monospace, monospace;
-
-  /* ── Type scale ── */
-  --text-xs: 0.75rem;     /* 12px — labels, badges */
-  --text-sm: 0.875rem;    /* 14px — secondary text */
-  --text-base: 1rem;      /* 16px — body */
-  --text-lg: 1.125rem;    /* 18px — emphasis */
-  --text-xl: 1.25rem;     /* 20px — card titles */
-  --text-2xl: 1.5rem;     /* 24px — section titles */
-  --text-3xl: 2rem;       /* 32px — page titles */
-  --text-4xl: 2.5rem;     /* 40px — hero */
-  --text-5xl: clamp(2.5rem, 5vw, 4rem);
-
-  /* ── Spacing ── */
-  --space-1: 0.25rem;   /*  4px */
-  --space-2: 0.5rem;    /*  8px */
-  --space-3: 0.75rem;   /* 12px */
-  --space-4: 1rem;      /* 16px */
-  --space-5: 1.25rem;   /* 20px */
-  --space-6: 1.5rem;    /* 24px */
-  --space-8: 2rem;      /* 32px */
-  --space-10: 2.5rem;   /* 40px */
-  --space-12: 3rem;     /* 48px */
-  --space-16: 4rem;     /* 64px */
-  --space-20: 5rem;     /* 80px */
-
-  /* ── Radius ── */
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 20px;
-  --radius-2xl: 28px;
-  --radius-full: 9999px;
-
-  /* ── Shadows ── */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.5);
-  --shadow-gold: 0 0 24px rgba(245, 185, 66, 0.15);
-  --shadow-crimson: 0 0 24px rgba(225, 29, 72, 0.2);
-
-  /* ── Motion ── */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
-  --duration-slow: 400ms;
-
-  /* ── Layout (consumed by Agent 2's layout.css) ──
-     v3 "Command Center" paradigm: slimmer topbar (no sidebar) so the
-     floating dock + bottom tab bar can breathe without crowding. */
-  --topbar-height: 56px;
-  --sidebar-width: 240px;       /* legacy — kept for compat, no longer rendered */
-  --sidebar-collapsed: 68px;    /* legacy — kept for compat */
-  --drawer-width: min(280px, 85vw);
-  --page-max: 1280px;
-  --dock-height: 64px;
-  --mobile-tabs-height: calc(60px + env(safe-area-inset-bottom, 0px));
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-
-  /* ── Glass ── */
-  --glass-blur: 18px;
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
-
-  /* ── Z-index scale ── */
-  --z-base: 0;
-  --z-content: 1;
-  --z-sticky: 50;
-  --z-overlay: 100;
-  --z-topbar: 200;
-  --z-modal: 1000;
-  --z-toast: 1100;
-
-  /* ── Breakpoints (informational — use directly in media queries) ── */
-  --bp-sm: 640px;
-  --bp-md: 768px;
-  --bp-lg: 1024px;
-
-  /* ════════════════════════════════════════════════════════════════
-     Backward-compat aliases (so existing code doesn't break)
-     Other agents' files reference these `--lc-*` names. Kept in sync
-     with the new token names above.
-     ════════════════════════════════════════════════════════════════ */
-
-  /* Backgrounds */
-  --lc-bg-base: var(--bg-base);
-  --lc-bg: var(--bg-base);
-  --lc-bg-elevated: var(--bg-elevated);
-  --lc-bg-panel: var(--bg-surface);
-  --lc-bg-hover: var(--bg-surface-2);
-  --lc-bg-active: var(--bg-elevated);
-  --lc-bg-glass: var(--bg-glass);
-
-  /* Crimson (accent) */
-  --lc-crimson: var(--crimson);
-  --lc-crimson-glow: var(--crimson-glow);
-  --lc-crimson-glow-faint: rgba(225, 29, 72, 0.06);
-  --lc-crimson-glow-strong: rgba(225, 29, 72, 0.32);
-  --lc-crimson-soft: #fb7185;
-  --lc-crimson-dim: #9f1239;
-
-  /* Gold (primary) */
-  --lc-gold: var(--gold);
-  --lc-gold-soft: var(--gold-bright);
-  --lc-gold-dim: var(--gold-deep);
-  --lc-gold-glow: var(--gold-glow);
-  --lc-gold-glow-strong: var(--gold-glow-strong);
-  --lc-gold-glow-faint: var(--gold-glow-faint);
-  --lc-gold-premium: var(--gold-bright);
-
-  /* Emerald / Ruby / Violet / Cyan (kept for compat) */
-  --lc-emerald: var(--success);
-  --lc-emerald-dim: #047857;
-  --lc-emerald-glow: var(--success-glow);
-  --lc-ruby: var(--danger);
-  --lc-ruby-glow: var(--danger-glow);
+  --lc-fog: rgba(180, 180, 200, 0.06);
+  --lc-fog-strong: rgba(180, 180, 200, 0.12);
   --lc-violet: #8b5cf6;
-  --lc-violet-glow: rgba(139, 92, 246, 0.14);
+  --lc-violet-glow: rgba(139, 92, 246, 0.15);
   --lc-cyan: #38bdf8;
   --lc-cyan-glow: rgba(56, 189, 248, 0.12);
 
-  /* Text */
-  --lc-text: var(--text-primary);
-  --lc-text-primary: var(--text-primary);
-  --lc-text-secondary: var(--text-secondary);
-  --lc-text-muted: var(--text-muted);
-  --lc-text-xs: var(--text-xs);
-  --lc-text-sm: var(--text-sm);
-  --lc-text-base: var(--text-base);
-  --lc-text-lg: var(--text-lg);
-  --lc-text-xl: var(--text-xl);
-  --lc-text-2xl: var(--text-2xl);
-  --lc-text-3xl: var(--text-3xl);
-  --lc-text-4xl: var(--text-4xl);
-  --lc-text-5xl: var(--text-5xl);
+  /* ── Text ──
+     Contrast verified against --lc-bg-base (#040406):
+       primary   ~18.4:1   (AAA)
+       secondary ~6.9:1    (AAA)
+       muted     ~4.9:1    (AA for normal text) */
+  --lc-text-primary: #f2f2f8;
+  --lc-text-secondary: #9494b0;
+  --lc-text-muted: #7a7a98;
 
-  /* Borders */
-  --lc-border: var(--border);
-  --lc-border-strong: var(--border-strong);
-  --lc-border-accent: var(--border-gold);
-  --lc-border-crimson: var(--crimson-glow);
-  --lc-border-gold: var(--border-gold);
-  --lc-fog: var(--border);
-  --lc-fog-strong: var(--border-strong);
+  /* ── Borders ── */
+  --lc-border: rgba(255, 255, 255, 0.05);
+  --lc-border-strong: rgba(255, 255, 255, 0.09);
+  --lc-border-accent: rgba(220, 20, 60, 0.32);
+  --lc-border-gold: var(--lc-border-accent);
 
-  /* Glass */
-  --lc-glass-blur: var(--glass-blur);
-  --lc-glass-border: var(--glass-border);
-  --lc-glass-highlight: var(--glass-highlight);
+  /* ── Glass ── */
+  --lc-glass-blur: 20px;
+  --lc-glass-border: rgba(255, 255, 255, 0.08);
+  --lc-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
-  /* Radius */
-  --lc-radius-sm: var(--radius-sm);
-  --lc-radius-md: var(--radius-md);
-  --lc-radius-lg: var(--radius-lg);
-  --lc-radius-xl: var(--radius-xl);
-  --lc-radius-2xl: var(--radius-2xl);
-  --lc-radius-full: var(--radius-full);
+  /* ── Shadows & glow ── */
+  --lc-shadow-sm: 0 2px 16px rgba(0, 0, 0, 0.55);
+  --lc-shadow-md: 0 8px 40px rgba(0, 0, 0, 0.7);
+  --lc-shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.85);
+  --lc-shadow-crimson: 0 0 40px var(--lc-crimson-glow), 0 0 80px rgba(220, 20, 60, 0.08);
+  --lc-shadow-gold: var(--lc-shadow-crimson);
+  --lc-shadow-emerald: 0 0 30px var(--lc-emerald-glow);
+  --lc-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 
-  /* Fonts */
-  --lc-font-display: var(--font-sans);
-  --lc-font-body: var(--font-sans);
-  --lc-font-mono: var(--font-mono);
+  /* ── Radii ── */
+  --lc-radius-sm: 8px;
+  --lc-radius-md: 12px;
+  --lc-radius-lg: 18px;
+  --lc-radius-xl: 24px;
+  --lc-radius-2xl: 32px;
 
-  /* Layout */
-  --lc-topbar-height: var(--topbar-height);
-  --lc-sidebar-width: var(--sidebar-width);
-  --lc-sidebar-collapsed: var(--sidebar-collapsed);
-  --lc-drawer-width: var(--drawer-width);
-  --lc-page-max: var(--page-max);
-  --lc-safe-bottom: var(--safe-bottom);
-  --lc-dock-height: var(--dock-height);
-  --lc-mobile-tabs-height: var(--mobile-tabs-height);
-  --lc-page-pad-x: clamp(var(--space-4), 3vw, var(--space-6));
+  /* ── Typography ── */
+  --lc-font-display: 'Syne', system-ui, sans-serif;
+  --lc-font-body: 'Rajdhani', system-ui, sans-serif;
+  --lc-font-mono: 'JetBrains Mono', monospace;
 
-  /* Motion */
-  --lc-transition-fast: var(--duration-fast) var(--ease-smooth);
-  --lc-transition: var(--duration-normal) var(--ease-out);
-  --lc-transition-slow: var(--duration-slow) var(--ease-out);
-  --lc-transition-spring: 420ms var(--ease-spring);
-  --lc-ease-out: var(--ease-out);
-  --lc-ease-spring: var(--ease-spring);
+  --lc-text-xs: clamp(0.72rem, 0.68rem + 0.2vw, 0.8rem);
+  --lc-text-sm: clamp(0.85rem, 0.8rem + 0.25vw, 0.95rem);
+  --lc-text-base: clamp(1rem, 0.92rem + 0.35vw, 1.1rem);
+  --lc-text-lg: clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem);
+  --lc-text-xl: clamp(1.6rem, 1.35rem + 1vw, 2.2rem);
+  --lc-text-2xl: clamp(2rem, 1.6rem + 1.8vw, 3.2rem);
+  --lc-text-3xl: clamp(2.5rem, 2rem + 2.5vw, 4.5rem);
 
-  /* Focus */
-  --lc-focus-ring: 0 0 0 3px var(--gold-glow);
-  --lc-focus-outline: 2px solid var(--gold);
-  --lc-focus-outline-offset: 2px;
+  /* ── Motion ── */
+  --lc-transition: 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  --lc-transition-slow: 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  --lc-transition-spring: 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* Shadows */
-  --lc-shadow-sm: var(--shadow-sm);
-  --lc-shadow-md: var(--shadow-md);
-  --lc-shadow-lg: var(--shadow-lg);
-  --lc-shadow-gold: var(--shadow-gold);
-  --lc-shadow-crimson: var(--shadow-crimson);
-  --lc-shadow-emerald: 0 0 24px var(--success-glow);
-  --lc-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  /* ── Layout constraints ── */
+  --lc-page-max: 1120px;
+  --lc-focus-ring: 0 0 0 3px var(--lc-crimson-glow);
+  --lc-focus-outline: 2px solid var(--lc-crimson-soft);
 
-  /* Z-index */
-  --lc-z-base: var(--z-base);
-  --lc-z-content: var(--z-content);
-  --lc-z-sticky: var(--z-sticky);
-  --lc-z-overlay: var(--z-overlay);
-  --lc-z-topbar: var(--z-topbar);
-  --lc-z-modal: var(--z-modal);
-  --lc-z-toast: var(--z-toast);
+  /* ── Breakpoints ── */
+  --lc-bp-sm: 640px;
+  --lc-bp-md: 768px;
+  --lc-bp-lg: 900px;
 
-  /* Breakpoints */
-  --lc-bp-sm: var(--bp-sm);
-  --lc-bp-md: var(--bp-md);
-  --lc-bp-lg: var(--bp-lg);
+  --lc-drawer-width: min(280px, 85vw);
+  --lc-safe-bottom: env(safe-area-inset-bottom, 0px);
 }

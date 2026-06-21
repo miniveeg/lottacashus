@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Navigate, useLocation, useSearchParams } from "react-router-dom";
-import { Inbox, Receipt, Shield, User, MessageCircle } from "lucide-react";
+import { Inbox } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -13,9 +13,12 @@ import {
 } from "../../lib/discord";
 import { createUserNotification } from "../../lib/notifications";
 import {
+  formatCoins,
   formatCoinsWithUsd,
   formatUsd,
+  GC_USD_RATE,
   getCashFlowTally,
+  SC_USD_RATE,
 } from "../../lib/format";
 import { supabase } from "../../lib/supabase";
 import {
@@ -35,15 +38,6 @@ import {
   type DepositLimits,
 } from "../../lib/responsibleGaming";
 import "./Settings.css";
-
-type TabId = "account" | "gaming" | "discord" | "history";
-
-const TABS: { id: TabId; label: string; icon: typeof User }[] = [
-  { id: "account", label: "Account", icon: User },
-  { id: "gaming", label: "Responsible Gaming", icon: Shield },
-  { id: "discord", label: "Discord", icon: MessageCircle },
-  { id: "history", label: "Transactions", icon: Receipt },
-];
 
 function formatTxDate(iso: string) {
   return new Intl.DateTimeFormat(undefined, {
@@ -72,8 +66,6 @@ export function Settings() {
   const { pathname } = useLocation();
   const { profile, profileLoading, updateUsername, refreshProfile } = useProfile();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const [activeTab, setActiveTab] = useState<TabId>("account");
 
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -162,7 +154,6 @@ export function Settings() {
 
     setDiscordBusy(true);
     setSearchParams({}, { replace: true });
-    setActiveTab("discord");
 
     linkDiscordAccount(code).then(async ({ data, error: linkError }) => {
       setDiscordBusy(false);
@@ -228,548 +219,508 @@ export function Settings() {
         ? "settings__tally-value--negative"
         : "settings__tally-value--neutral";
 
-  const netPL = (profile?.totalWins ?? 0) - (profile?.totalLosses ?? 0);
-
   return (
     <div className="settings lc-page lc-page--medium">
-      <header className="settings__header lc-page__header">
-        <h1 className="lc-page__title">Settings</h1>
-        <p className="lc-page__subtitle">
-          Manage your account, balances, limits, and transaction history.
-        </p>
+      <header className="lc-page__header">
+        <h1 className="lc-page__title settings__title">Settings</h1>
+        <p className="lc-page__subtitle settings__subtitle">Your LottaCash account overview</p>
       </header>
 
       {error && <p className="settings__error" role="alert">{error}</p>}
       {success && <p className="settings__success" role="status">{success}</p>}
 
-      <div className="settings-layout">
-        <nav className="settings-tabs" aria-label="Settings sections">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                className={`settings-tab${activeTab === tab.id ? " settings-tab--active" : ""}`}
-                onClick={() => setActiveTab(tab.id)}
-                aria-selected={activeTab === tab.id}
-                role="tab"
-              >
-                <Icon size={16} aria-hidden="true" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+      {/* 1. Account & stats */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">Account</h2>
 
-        <div className="settings-content" role="tabpanel">
-          {activeTab === "account" && (
-            <div className="settings__section lc-panel">
-              <h2 className="settings__section-title">Account</h2>
-              <p className="settings__section-desc">
-                Your sign-in details and current balances.
-              </p>
-
-              <div className="settings__balance-grid">
-                <div className="settings__balance-card settings__balance-card--gc">
-                  <span className="settings__balance-label">Gold Coins (GC)</span>
-                  <span className="settings__balance-value">
-                    {profileLoading ? "…" : formatCoinsWithUsd(profile?.balance ?? 0, "balance")}
-                  </span>
-                  <span className="settings__balance-note">Play money — no redemption value</span>
-                </div>
-                <div className="settings__balance-card settings__balance-card--sc">
-                  <span className="settings__balance-label">Sweeps Coins (SC)</span>
-                  <span className="settings__balance-value">
-                    {profileLoading ? "…" : formatCoinsWithUsd(profile?.sweepsCoins ?? 0, "sweeps_coins")}
-                  </span>
-                  <span className="settings__balance-note">Redeemable for cash</span>
-                </div>
-              </div>
-
-              <dl className="settings__meta-grid">
-                <div className="settings__meta-item">
-                  <dt>Email</dt>
-                  <dd>{user?.email ?? profile?.email ?? "—"}</dd>
-                </div>
-                <div className="settings__meta-item">
-                  <dt>Username</dt>
-                  <dd>{profile?.username ?? "—"}</dd>
-                </div>
-              </dl>
-
-              <form onSubmit={handleSaveUsername} className="settings__username-form" noValidate>
-                <div className="settings__field">
-                  <label htmlFor="settings-username">Change username</label>
-                  <input
-                    id="settings-username"
-                    className="settings__input"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    maxLength={MAX_USERNAME_LENGTH}
-                    aria-describedby="settings-username-hint"
-                  />
-                  <p className="settings__hint" id="settings-username-hint">
-                    {username.length}/{MAX_USERNAME_LENGTH} characters
-                  </p>
-                </div>
-                <button type="submit" className="settings__btn" disabled={saving || profileLoading}>
-                  {saving && <span className="settings__btn__spinner" aria-hidden="true" />}
-                  {saving ? "Saving…" : "Save username"}
-                </button>
-              </form>
-
-              <h3 className="settings__subsection-title settings__subsection-title--top">
-                Player Level
-              </h3>
-              <p className="settings__section-desc">
-                Progress through tiers by wagering. Higher tiers unlock perks and rewards.
-              </p>
-
-              <div className="settings__level-wrap">
-                <SettingsLevelSection
-                  totalWagered={profile?.totalWagered ?? 0}
-                  loading={profileLoading}
-                />
-              </div>
-
-              <h3 className="settings__subsection-title settings__subsection-title--top">
-                Statistics
-              </h3>
-              <p className="settings__section-desc">
-                Lifetime totals across deposits, withdrawals, wins, and losses.
-              </p>
-
-              <div className="settings__stats-grid">
-                <div className="settings__stat">
-                  <span className="settings__stat-label">Wagered</span>
-                  <span className="settings__stat-value">
-                    {profileLoading ? "…" : formatUsd(profile?.totalWagered ?? 0)}
-                  </span>
-                </div>
-                <div className="settings__stat">
-                  <span className="settings__stat-label">Deposited</span>
-                  <span className="settings__stat-value">
-                    {profileLoading ? "…" : formatUsd(profile?.totalDeposited ?? 0)}
-                  </span>
-                </div>
-                <div className="settings__stat">
-                  <span className="settings__stat-label">Withdrawn</span>
-                  <span className="settings__stat-value">
-                    {profileLoading ? "…" : formatUsd(profile?.totalWithdrawn ?? 0)}
-                  </span>
-                </div>
-                <div className="settings__stat">
-                  <span className="settings__stat-label">Wins</span>
-                  <span className="settings__stat-value settings__stat-value--win">
-                    {profileLoading ? "…" : formatUsd(profile?.totalWins ?? 0)}
-                  </span>
-                </div>
-                <div className="settings__stat">
-                  <span className="settings__stat-label">Losses</span>
-                  <span className="settings__stat-value settings__stat-value--loss">
-                    {profileLoading ? "…" : formatUsd(profile?.totalLosses ?? 0)}
-                  </span>
-                </div>
-                <div className="settings__stat">
-                  <span className="settings__stat-label">Net P/L</span>
-                  <span
-                    className={`settings__stat-value ${
-                      netPL >= 0 ? "settings__stat-value--win" : "settings__stat-value--loss"
-                    }`}
-                  >
-                    {profileLoading ? "…" : `${netPL >= 0 ? "+" : ""}${formatUsd(netPL)}`}
-                  </span>
-                </div>
-              </div>
-
-              <div className="settings__tally">
-                <p className="settings__tally-label">Net cash flow (withdrawn − deposited)</p>
-                <p className={`settings__tally-value ${tallyClass}`}>
-                  {profileLoading ? "…" : cashFlow.formatted}
-                </p>
-                <p className="settings__tally-hint">{cashFlow.label}</p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "gaming" && (
-            <div className="settings__section lc-panel">
-              <h2 className="settings__section-title">Responsible Gaming</h2>
-              <p className="settings__section-desc">
-                Set limits on your play and take breaks when needed. All settings can be adjusted at any
-                time. If you need help, visit{" "}
-                <a
-                  href="https://www.ncpgambling.org/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="settings__link"
-                >
-                  National Council on Problem Gambling
-                </a>
-                .
-              </p>
-
-              <h3 className="settings__subsection-title">Deposit limits</h3>
-              <p className="settings__hint">
-                Set maximum deposit amounts. Leave empty for no limit.
-              </p>
-              <div className="settings__limit-row">
-                <div className="settings__field settings__field--small">
-                  <label htmlFor="dl-daily">Daily limit ($)</label>
-                  <input
-                    id="dl-daily"
-                    className="settings__input"
-                    type="number"
-                    min="0"
-                    step="10"
-                    placeholder="No limit"
-                    value={dlDaily}
-                    onChange={(e) => setDlDaily(e.target.value)}
-                    disabled={dlBusy}
-                  />
-                </div>
-                <div className="settings__field settings__field--small">
-                  <label htmlFor="dl-weekly">Weekly limit ($)</label>
-                  <input
-                    id="dl-weekly"
-                    className="settings__input"
-                    type="number"
-                    min="0"
-                    step="10"
-                    placeholder="No limit"
-                    value={dlWeekly}
-                    onChange={(e) => setDlWeekly(e.target.value)}
-                    disabled={dlBusy}
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="settings__btn"
-                disabled={dlBusy}
-                onClick={async () => {
-                  setError(null);
-                  setSuccess(null);
-                  setDlBusy(true);
-                  const daily = dlDaily.trim() ? parseFloat(dlDaily) : null;
-                  const weekly = dlWeekly.trim() ? parseFloat(dlWeekly) : null;
-                  const { error: limitError } = await setDepositLimits(daily, weekly);
-                  setDlBusy(false);
-                  if (limitError) setError(limitError);
-                  else {
-                    setSuccess("Deposit limits updated.");
-                    fetchDepositLimits().then((limits) => {
-                      setDepositLimitsState(limits);
-                      if (limits) {
-                        setDlDaily(limits.daily != null ? String(limits.daily) : "");
-                        setDlWeekly(limits.weekly != null ? String(limits.weekly) : "");
-                      }
-                    });
-                  }
-                }}
-              >
-                {dlBusy && <span className="settings__btn__spinner" aria-hidden="true" />}
-                {dlBusy ? "Saving…" : "Save limits"}
-              </button>
-
-              {depositLimits && (depositLimits.daily != null || depositLimits.weekly != null) && (
-                <div className="settings__limit-usage" aria-live="polite">
-                  <p className="settings__hint" style={{ margin: 0 }}>
-                    Current period usage:
-                  </p>
-                  <ul className="settings__limit-usage-list">
-                    {depositLimits.daily != null && (
-                      <li>
-                        <span>
-                          <strong>Today:</strong> {formatUsd(depositLimits.dailyUsed)} / {depositLimits.daily === 0 ? "blocked" : formatUsd(depositLimits.daily)}
-                        </span>
-                        {depositLimits.daily > 0 && (() => {
-                          const pct = Math.min(100, (depositLimits.dailyUsed / depositLimits.daily) * 100);
-                          const over = depositLimits.dailyUsed >= depositLimits.daily;
-                          return (
-                            <span
-                              className={`settings__limit-bar${over ? " settings__limit-bar--over" : ""}`}
-                              role="progressbar"
-                              aria-valuenow={Math.round(pct)}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                            >
-                              <span
-                                className={`settings__limit-bar-fill${over ? " settings__limit-bar-fill--over" : ""}`}
-                                style={{ width: `${pct}%` }}
-                              />
-                            </span>
-                          );
-                        })()}
-                      </li>
-                    )}
-                    {depositLimits.weekly != null && (
-                      <li>
-                        <span>
-                          <strong>This week:</strong> {formatUsd(depositLimits.weeklyUsed)} / {depositLimits.weekly === 0 ? "blocked" : formatUsd(depositLimits.weekly)}
-                        </span>
-                        {depositLimits.weekly > 0 && (() => {
-                          const pct = Math.min(100, (depositLimits.weeklyUsed / depositLimits.weekly) * 100);
-                          const over = depositLimits.weeklyUsed >= depositLimits.weekly;
-                          return (
-                            <span
-                              className={`settings__limit-bar${over ? " settings__limit-bar--over" : ""}`}
-                              role="progressbar"
-                              aria-valuenow={Math.round(pct)}
-                              aria-valuemin={0}
-                              aria-valuemax={100}
-                            >
-                              <span
-                                className={`settings__limit-bar-fill${over ? " settings__limit-bar-fill--over" : ""}`}
-                                style={{ width: `${pct}%` }}
-                              />
-                            </span>
-                          );
-                        })()}
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              )}
-
-              <h3 className="settings__subsection-title settings__subsection-title--top">
-                Self-exclusion
-              </h3>
-              {selfExclusion && new Date(selfExclusion.expiresAt) > new Date() ? (
-                <div className="settings__se-active">
-                  <p>
-                    You are currently self-excluded until{" "}
-                    <strong>
-                      {new Intl.DateTimeFormat(undefined, {
-                        dateStyle: "long",
-                      }).format(new Date(selfExclusion.expiresAt))}
-                    </strong>
-                    .
-                  </p>
-                  <p className="settings__hint">
-                    Your account functions will be restricted during this period. This cannot be undone
-                    early.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <p className="settings__hint">
-                    Self-exclusion bans you from the platform for a set period. During this time, you
-                    cannot play, deposit, or withdraw. This action is irreversible until the period ends.
-                  </p>
-                  <div className="settings__field">
-                    <label htmlFor="se-duration">Duration</label>
-                    <select
-                      id="se-duration"
-                      className="settings__input settings__select"
-                      value={seDuration}
-                      onChange={(e) => setSeDuration(Number(e.target.value) as 30 | 90 | 180)}
-                      disabled={seBusy}
-                    >
-                      <option value={30}>30 days</option>
-                      <option value={90}>90 days</option>
-                      <option value={180}>180 days</option>
-                    </select>
-                  </div>
-                  <div className="settings__field">
-                    <label htmlFor="se-reason">Reason (optional)</label>
-                    <input
-                      id="se-reason"
-                      className="settings__input"
-                      type="text"
-                      placeholder="Optional reason"
-                      value={seReason}
-                      onChange={(e) => setSeReason(e.target.value)}
-                      disabled={seBusy}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    className="settings__btn settings__btn--danger"
-                    disabled={seBusy}
-                    onClick={async () => {
-                      if (
-                        !window.confirm(
-                          `Are you sure? You will be excluded for ${seDuration} days. This cannot be undone.`
-                        )
-                      )
-                        return;
-                      setError(null);
-                      setSuccess(null);
-                      setSeBusy(true);
-                      const { error: seError } = await createSelfExclusion(
-                        seDuration,
-                        seReason.trim() || undefined
-                      );
-                      setSeBusy(false);
-                      if (seError) setError(seError);
-                      else {
-                        setSuccess(`Self-exclusion activated for ${seDuration} days.`);
-                        fetchSelfExclusion().then(setSelfExclusion);
-                      }
-                    }}
-                  >
-                    {seBusy && <span className="settings__btn__spinner" aria-hidden="true" />}
-                    {seBusy ? "Activating…" : "Activate self-exclusion"}
-                  </button>
-                </>
-              )}
-            </div>
-          )}
-
-          {activeTab === "discord" && (
-            <div className="settings__section lc-panel">
-              <h2 className="settings__section-title">Discord</h2>
-              <p className="settings__section-desc">
-                Link Discord for future rewards, levelling, and server perks when the LottaCash Discord launches.
-              </p>
-
-              {profile?.discordId ? (
-                <div className="settings__discord">
-                  <div className="settings__discord-linked">
-                    {profile.discordAvatar && (
-                      <img
-                        src={profile.discordAvatar}
-                        alt=""
-                        className="settings__discord-avatar"
-                        width={48}
-                        height={48}
-                      />
-                    )}
-                    <div>
-                      <p className="settings__discord-name">{profile.discordUsername}</p>
-                      <p className="settings__discord-status">Connected</p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="settings__btn settings__btn--ghost"
-                    onClick={handleUnlinkDiscord}
-                    disabled={discordBusy}
-                  >
-                    Unlink Discord
-                  </button>
-                </div>
-              ) : (
-                <div className="settings__discord settings__discord--unlinked">
-                  <p className="settings__hint settings__hint--flex">
-                    No Discord account linked yet.
-                  </p>
-                  <button
-                    type="button"
-                    className="settings__btn settings__btn--discord"
-                    onClick={handleLinkDiscord}
-                    disabled={discordBusy || !isDiscordConfigured}
-                  >
-                    {discordBusy ? "Linking…" : "Link Discord"}
-                  </button>
-                </div>
-              )}
-              {!isDiscordConfigured && (
-                <p className="settings__hint settings__hint--top">
-                  Add <code>VITE_DISCORD_CLIENT_ID</code> and deploy the <code>link-discord</code> Edge Function with Discord secrets.
-                </p>
-              )}
-            </div>
-          )}
-
-          {activeTab === "history" && (
-            <div className="settings__section lc-panel">
-              <h2 className="settings__section-title">Transactions</h2>
-              <p className="settings__section-desc">
-                Deposits, withdrawals, wagers, and wins. Each bet shows the wager before the result.
-              </p>
-
-              {txLoading ? (
-                <div className="lc-loading">
-                  <div className="lc-loading__pulse" />
-                  <span>Loading transactions…</span>
-                </div>
-              ) : transactions.length === 0 ? (
-                <div className="settings__tx-empty">
-                  <Inbox size={28} aria-hidden="true" />
-                  <p>No transactions yet.</p>
-                  <p className="settings__tx-empty-hint">
-                    Your activity history will show up here automatically.
-                  </p>
-                </div>
-              ) : (
-                <div className="settings__tx-table-wrap">
-                  <table className="settings__tx-table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Amount</th>
-                        <th>Balance after</th>
-                        <th>Note</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map((tx) => (
-                        <tr key={tx.id} className="settings__tx-row">
-                          <td>{formatTxDate(tx.created_at)}</td>
-                          <td>
-                            <span className={`settings__tx-type settings__tx-type--${tx.type}`}>
-                              {TRANSACTION_LABELS[tx.type]}
-                            </span>{" "}
-                            <span
-                              className={`settings__tx-coin-badge ${
-                                txCoinType(tx.type) === "sweeps_coins"
-                                  ? "settings__tx-coin-badge--sc"
-                                  : "settings__tx-coin-badge--gc"
-                              }`}
-                              title={
-                                txCoinType(tx.type) === "sweeps_coins"
-                                  ? "Sweeps Coins transaction (redeemable for cash)"
-                                  : "Gold Coins transaction (play money)"
-                              }
-                            >
-                              {txCoinType(tx.type) === "sweeps_coins" ? "SC" : "GC"}
-                            </span>
-                          </td>
-                          <td className={txAmountClass(tx.type, tx.amount)}>
-                            {formatUsd(Math.abs(tx.amount))}
-                          </td>
-                          <td>{tx.balance_after != null ? formatUsd(tx.balance_after) : "—"}</td>
-                          <td>{tx.description ?? "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {!txLoading && txTotal > TRANSACTIONS_PAGE_SIZE && (
-                <div className="settings__tx-pagination">
-                  <button
-                    type="button"
-                    className="settings__tx-page-btn"
-                    disabled={txPage <= 0}
-                    onClick={() => setTxPage((p) => Math.max(0, p - 1))}
-                  >
-                    Previous
-                  </button>
-                  <span className="settings__tx-page-info">
-                    Page {txPage + 1} of {txPageCount}
-                  </span>
-                  <button
-                    type="button"
-                    className="settings__tx-page-btn"
-                    disabled={txPage + 1 >= txPageCount}
-                    onClick={() => setTxPage((p) => p + 1)}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+        <div className="settings__account-header">
+          <div className="settings__account-item">
+            <label>Email</label>
+            <span>{user?.email ?? profile?.email ?? "—"}</span>
+          </div>
+          <div className="settings__account-item">
+            <label>Username</label>
+            <span>{profile?.username ?? "—"}</span>
+          </div>
+          <div className="settings__account-item settings__account-item--balance">
+            <label>Gold Coins (GC)</label>
+            <span className="settings__balance-inline settings__balance-inline--gc">
+              {profileLoading ? "…" : formatCoinsWithUsd(profile?.balance ?? 0, "balance")}
+            </span>
+            <span className="settings__balance-note">Play money — no redemption value</span>
+          </div>
+          <div className="settings__account-item settings__account-item--balance">
+            <label>Sweeps Coins (SC)</label>
+            <span className="settings__balance-inline settings__balance-inline--sc">
+              {profileLoading ? "…" : formatCoinsWithUsd(profile?.sweepsCoins ?? 0, "sweeps_coins")}
+            </span>
+            <span className="settings__balance-note">Redeemable for cash</span>
+          </div>
         </div>
-      </div>
+
+        <div className="settings__level-wrap">
+          <h3 className="settings__level-heading">Player level</h3>
+          <SettingsLevelSection
+            totalWagered={profile?.totalWagered ?? 0}
+            loading={profileLoading}
+          />
+        </div>
+
+        <div className="settings__stats-grid">
+          <div className="settings__stat">
+            <p className="settings__stat-label">Gold Coins (GC)</p>
+            <p className="settings__stat-value">
+              {profileLoading ? "…" : formatCoins(profile?.balance ?? 0, "balance")}
+            </p>
+            <p className="settings__stat-sub">
+              ≈ {formatUsd((profile?.balance ?? 0) * GC_USD_RATE)} · Play money
+            </p>
+          </div>
+          <div className="settings__stat">
+            <p className="settings__stat-label">Sweeps Coins (SC)</p>
+            <p className="settings__stat-value settings__stat-value--win">
+              {profileLoading ? "…" : formatCoins(profile?.sweepsCoins ?? 0, "sweeps_coins")}
+            </p>
+            <p className="settings__stat-sub">
+              ≈ {formatUsd((profile?.sweepsCoins ?? 0) * SC_USD_RATE)} · Redeemable
+            </p>
+          </div>
+          <div className="settings__stat">
+            <p className="settings__stat-label">Total wagered</p>
+            <p className="settings__stat-value">
+              {profileLoading ? "…" : formatUsd(profile?.totalWagered ?? 0)}
+            </p>
+          </div>
+          <div className="settings__stat">
+            <p className="settings__stat-label">Total deposited</p>
+            <p className="settings__stat-value">
+              {profileLoading ? "…" : formatUsd(profile?.totalDeposited ?? 0)}
+            </p>
+          </div>
+          <div className="settings__stat">
+            <p className="settings__stat-label">Total withdrawn</p>
+            <p className="settings__stat-value">
+              {profileLoading ? "…" : formatUsd(profile?.totalWithdrawn ?? 0)}
+            </p>
+          </div>
+          <div className="settings__stat">
+            <p className="settings__stat-label">Total wins</p>
+            <p className="settings__stat-value settings__stat-value--win">
+              {profileLoading ? "…" : formatUsd(profile?.totalWins ?? 0)}
+            </p>
+          </div>
+          <div className="settings__stat">
+            <p className="settings__stat-label">Total losses</p>
+            <p className="settings__stat-value settings__stat-value--loss">
+              {profileLoading ? "…" : formatUsd(profile?.totalLosses ?? 0)}
+            </p>
+          </div>
+        </div>
+
+        <div className="settings__tally">
+          <p className="settings__tally-label">Deposit / withdraw tally</p>
+          <p className={`settings__tally-value ${tallyClass}`}>
+            {profileLoading ? "…" : cashFlow.formatted}
+          </p>
+          <p className="settings__tally-hint">{cashFlow.label}</p>
+          <p className="settings__tally-hint">
+            Positive means you withdrew more than you deposited; negative means you deposited more.
+          </p>
+        </div>
+
+        <form onSubmit={handleSaveUsername} className="settings__username-form" noValidate>
+          <div className="settings__field">
+            <label htmlFor="settings-username">Change username</label>
+            <input
+              id="settings-username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              maxLength={MAX_USERNAME_LENGTH}
+              aria-describedby="settings-username-hint"
+            />
+            <p className="settings__hint" id="settings-username-hint">
+              {username.length}/{MAX_USERNAME_LENGTH} characters
+            </p>
+          </div>
+          <button type="submit" className="settings__btn" disabled={saving || profileLoading}>
+            {saving && <span className="settings__btn__spinner" aria-hidden="true" />}
+            {saving ? "Saving…" : "Save username"}
+          </button>
+        </form>
+      </section>
+
+      {/* 2. Discord */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">Discord</h2>
+        <p className="settings__section-desc">
+          Link Discord for future rewards, levelling, and server perks when the LottaCash Discord launches.
+        </p>
+
+        {profile?.discordId ? (
+          <div className="settings__discord">
+            <div className="settings__discord-linked">
+              {profile.discordAvatar && (
+                <img
+                  src={profile.discordAvatar}
+                  alt=""
+                  className="settings__discord-avatar"
+                  width={48}
+                  height={48}
+                />
+              )}
+              <div>
+                <p className="settings__discord-name">{profile.discordUsername}</p>
+                <p className="settings__discord-status">Connected</p>
+              </div>
+            </div>
+            <div className="settings__btn-row">
+              <button
+                type="button"
+                className="settings__btn settings__btn--ghost"
+                onClick={handleUnlinkDiscord}
+                disabled={discordBusy}
+              >
+                Unlink Discord
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="settings__discord">
+              <p className="settings__hint settings__hint--flex">
+              No Discord account linked yet.
+            </p>
+            <button
+              type="button"
+              className="settings__btn settings__btn--discord"
+              onClick={handleLinkDiscord}
+              disabled={discordBusy || !isDiscordConfigured}
+            >
+              {discordBusy ? "Linking…" : "Link Discord"}
+            </button>
+          </div>
+        )}
+        {!isDiscordConfigured && (
+          <p className="settings__hint settings__hint--top">
+            Add <code>VITE_DISCORD_CLIENT_ID</code> and deploy the <code>link-discord</code> Edge Function with Discord secrets.
+          </p>
+        )}
+      </section>
+
+      {/* 3. Responsible Gaming */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">Responsible Gaming</h2>
+        <p className="settings__section-desc">
+          Set limits on your play and take breaks when needed. All settings can be adjusted at any
+          time. If you need help, visit{" "}
+          <a
+            href="https://www.ncpgambling.org/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="settings__link"
+          >
+            National Council on Problem Gambling
+          </a>
+          .
+        </p>
+
+        <h3 className="settings__subsection-title">Deposit limits</h3>
+        <p className="settings__hint">
+          Set maximum deposit amounts. Leave empty for no limit.
+        </p>
+        <div className="settings__limit-row">
+          <div className="settings__field settings__field--small">
+            <label htmlFor="dl-daily">Daily limit ($)</label>
+            <input
+              id="dl-daily"
+              type="number"
+              min="0"
+              step="10"
+              placeholder="No limit"
+              value={dlDaily}
+              onChange={(e) => setDlDaily(e.target.value)}
+              disabled={dlBusy}
+            />
+          </div>
+          <div className="settings__field settings__field--small">
+            <label htmlFor="dl-weekly">Weekly limit ($)</label>
+            <input
+              id="dl-weekly"
+              type="number"
+              min="0"
+              step="10"
+              placeholder="No limit"
+              value={dlWeekly}
+              onChange={(e) => setDlWeekly(e.target.value)}
+              disabled={dlBusy}
+            />
+          </div>
+        </div>
+        <button
+          type="button"
+          className="settings__btn"
+          disabled={dlBusy}
+          onClick={async () => {
+            setError(null);
+            setSuccess(null);
+            setDlBusy(true);
+            const daily = dlDaily.trim() ? parseFloat(dlDaily) : null;
+            const weekly = dlWeekly.trim() ? parseFloat(dlWeekly) : null;
+            const { error: limitError } = await setDepositLimits(daily, weekly);
+            setDlBusy(false);
+            if (limitError) setError(limitError);
+            else {
+              setSuccess("Deposit limits updated.");
+              fetchDepositLimits().then((limits) => {
+                setDepositLimitsState(limits);
+                if (limits) {
+                  setDlDaily(limits.daily != null ? String(limits.daily) : "");
+                  setDlWeekly(limits.weekly != null ? String(limits.weekly) : "");
+                }
+              });
+            }
+          }}
+        >
+          {dlBusy && <span className="settings__btn__spinner" aria-hidden="true" />}
+          {dlBusy ? "Saving…" : "Save limits"}
+        </button>
+
+        {depositLimits && (depositLimits.daily != null || depositLimits.weekly != null) && (
+          <div className="settings__limit-usage" aria-live="polite">
+            <p className="settings__hint" style={{ margin: 0 }}>
+              Current period usage:
+            </p>
+            <ul className="settings__limit-usage-list">
+              {depositLimits.daily != null && (
+                <li>
+                  <span>
+                    <strong>Today:</strong> {formatUsd(depositLimits.dailyUsed)} / {depositLimits.daily === 0 ? "blocked" : formatUsd(depositLimits.daily)}
+                  </span>
+                  {depositLimits.daily > 0 && (() => {
+                    const pct = Math.min(100, (depositLimits.dailyUsed / depositLimits.daily) * 100);
+                    const over = depositLimits.dailyUsed >= depositLimits.daily;
+                    return (
+                      <span
+                        className={`settings__limit-bar${over ? " settings__limit-bar--over" : ""}`}
+                        role="progressbar"
+                        aria-valuenow={Math.round(pct)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <span
+                          className={`settings__limit-bar-fill${over ? " settings__limit-bar-fill--over" : ""}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </span>
+                    );
+                  })()}
+                </li>
+              )}
+              {depositLimits.weekly != null && (
+                <li>
+                  <span>
+                    <strong>This week:</strong> {formatUsd(depositLimits.weeklyUsed)} / {depositLimits.weekly === 0 ? "blocked" : formatUsd(depositLimits.weekly)}
+                  </span>
+                  {depositLimits.weekly > 0 && (() => {
+                    const pct = Math.min(100, (depositLimits.weeklyUsed / depositLimits.weekly) * 100);
+                    const over = depositLimits.weeklyUsed >= depositLimits.weekly;
+                    return (
+                      <span
+                        className={`settings__limit-bar${over ? " settings__limit-bar--over" : ""}`}
+                        role="progressbar"
+                        aria-valuenow={Math.round(pct)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                      >
+                        <span
+                          className={`settings__limit-bar-fill${over ? " settings__limit-bar-fill--over" : ""}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </span>
+                    );
+                  })()}
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
+
+        <h3 className="settings__subsection-title settings__subsection-title--top">
+          Self-exclusion
+        </h3>
+        {selfExclusion && new Date(selfExclusion.expiresAt) > new Date() ? (
+          <div className="settings__se-active">
+            <p>
+              You are currently self-excluded until{" "}
+              <strong>
+                {new Intl.DateTimeFormat(undefined, {
+                  dateStyle: "long",
+                }).format(new Date(selfExclusion.expiresAt))}
+              </strong>
+              .
+            </p>
+            <p className="settings__hint">
+              Your account functions will be restricted during this period. This cannot be undone
+              early.
+            </p>
+          </div>
+        ) : (
+          <>
+            <p className="settings__hint">
+              Self-exclusion bans you from the platform for a set period. During this time, you
+              cannot play, deposit, or withdraw. This action is irreversible until the period ends.
+            </p>
+            <div className="settings__field">
+              <label htmlFor="se-duration">Duration</label>
+              <select
+                id="se-duration"
+                className="settings__select"
+                value={seDuration}
+                onChange={(e) => setSeDuration(Number(e.target.value) as 30 | 90 | 180)}
+                disabled={seBusy}
+              >
+                <option value={30}>30 days</option>
+                <option value={90}>90 days</option>
+                <option value={180}>180 days</option>
+              </select>
+            </div>
+            <div className="settings__field">
+              <label htmlFor="se-reason">Reason (optional)</label>
+              <input
+                id="se-reason"
+                type="text"
+                placeholder="Optional reason"
+                value={seReason}
+                onChange={(e) => setSeReason(e.target.value)}
+                disabled={seBusy}
+              />
+            </div>
+            <button
+              type="button"
+              className="settings__btn settings__btn--danger"
+              disabled={seBusy}
+              onClick={async () => {
+                if (
+                  !window.confirm(
+                    `Are you sure? You will be excluded for ${seDuration} days. This cannot be undone.`
+                  )
+                )
+                  return;
+                setError(null);
+                setSuccess(null);
+                setSeBusy(true);
+                const { error: seError } = await createSelfExclusion(
+                  seDuration,
+                  seReason.trim() || undefined
+                );
+                setSeBusy(false);
+                if (seError) setError(seError);
+                else {
+                  setSuccess(
+                    `Self-exclusion activated for ${seDuration} days.`
+                  );
+                  fetchSelfExclusion().then(setSelfExclusion);
+                }
+              }}
+            >
+              {seBusy && <span className="settings__btn__spinner" aria-hidden="true" />}
+              {seBusy ? "Activating…" : "Activate self-exclusion"}
+            </button>
+          </>
+        )}
+      </section>
+
+      {/* 4. Transactions */}
+      <section className="settings__section">
+        <h2 className="settings__section-title">Transactions</h2>
+        <p className="settings__section-desc">
+          Deposits, withdrawals, wagers, and wins. Each bet shows the wager before the result.
+        </p>
+
+        {txLoading ? (
+          <div className="lc-loading">
+            <div className="lc-loading__pulse" />
+            <span>Loading transactions…</span>
+          </div>
+        ) : transactions.length === 0 ? (
+          <div className="settings__tx-empty">
+            <Inbox size={28} aria-hidden="true" />
+            <p>No transactions yet.</p>
+            <p className="settings__tx-empty-hint">
+              Your activity history will show up here automatically.
+            </p>
+          </div>
+        ) : (
+          <div className="settings__tx-table-wrap">
+            <table className="settings__tx-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Balance after</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.map((tx) => (
+                  <tr key={tx.id}>
+                    <td>{formatTxDate(tx.created_at)}</td>
+                    <td>
+                      <span className={`settings__tx-type settings__tx-type--${tx.type}`}>
+                        {TRANSACTION_LABELS[tx.type]}
+                      </span>{" "}
+                      <span
+                        className={`settings__tx-coin-badge ${
+                          txCoinType(tx.type) === "sweeps_coins"
+                            ? "settings__tx-coin-badge--sc"
+                            : "settings__tx-coin-badge--gc"
+                        }`}
+                        title={
+                          txCoinType(tx.type) === "sweeps_coins"
+                            ? "Sweeps Coins transaction (redeemable for cash)"
+                            : "Gold Coins transaction (play money)"
+                        }
+                      >
+                        {txCoinType(tx.type) === "sweeps_coins" ? "SC" : "GC"}
+                      </span>
+                    </td>
+                    <td className={txAmountClass(tx.type, tx.amount)}>
+                      {formatUsd(Math.abs(tx.amount))}
+                    </td>
+                    <td>{tx.balance_after != null ? formatUsd(tx.balance_after) : "—"}</td>
+                    <td>{tx.description ?? "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {!txLoading && txTotal > TRANSACTIONS_PAGE_SIZE && (
+          <div className="settings__tx-pagination">
+            <button
+              type="button"
+              className="settings__tx-page-btn"
+              disabled={txPage <= 0}
+              onClick={() => setTxPage((p) => Math.max(0, p - 1))}
+            >
+              Previous
+            </button>
+            <span className="settings__tx-page-info">
+              Page {txPage + 1} of {txPageCount}
+            </span>
+            <button
+              type="button"
+              className="settings__tx-page-btn"
+              disabled={txPage + 1 >= txPageCount}
+              onClick={() => setTxPage((p) => p + 1)}
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

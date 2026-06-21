@@ -34,7 +34,7 @@
 }
 
 .cb-jackpot-reel__eos code {
-  color: var(--lc-crimson-soft);
+  color: #7dd3fc;
 }
 
 .cb-jackpot-reel__frame {
@@ -113,7 +113,7 @@
   border-radius: var(--lc-radius-sm);
   background: rgba(255, 255, 255, 0.04);
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid var(--jp-color, var(--lc-crimson));
+  border-top: 3px solid var(--jp-color, #38bdf8);
   transition:
     border-color 0.35s ease,
     box-shadow 0.35s ease,
@@ -147,7 +147,7 @@
 .cb-jackpot-reel__pct {
   font-size: 0.62rem;
   font-weight: 800;
-  color: var(--jp-color, var(--lc-crimson));
+  color: var(--jp-color, #38bdf8);
 }
 
 .cb-jackpot-reel__val {

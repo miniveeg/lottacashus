@@ -1,35 +1,22 @@
-/* ════════════════════════════════════════════════════════════════
-   LottaCash — Motion utility classes & motion-button system
-   "Obsidian Gold" variant. Gold primary gradient, clean hover
-   (scale only, no y-translate). Reduced-motion aware.
-   ════════════════════════════════════════════════════════════════ */
-
-/* ── Motion button base ──
-   Min-height 44px (WCAG touch target), Inter font, gold-tuned
-   transitions. The MotionButton / MotionLink React components
-   apply `whileHover: scale 1.02` and `whileTap: scale 0.98`
-   directly — CSS only handles the visual surface. */
+/* Motion button system */
 .lc-motion-btn {
   position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-md);
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: var(--text-sm);
-  letter-spacing: 0;
+  gap: 0.45rem;
+  padding: 0.72rem 1.35rem;
+  border-radius: var(--lc-radius-md);
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.03em;
   line-height: 1.2;
   border: 1px solid transparent;
   overflow: hidden;
   cursor: pointer;
   text-decoration: none;
-  transition: box-shadow var(--lc-transition), filter var(--lc-transition),
-              background var(--lc-transition), border-color var(--lc-transition),
-              color var(--lc-transition);
+  transition: box-shadow var(--lc-transition), filter var(--lc-transition);
 }
 
 .lc-motion-btn:disabled {
@@ -41,14 +28,9 @@
 .lc-motion-btn__shine {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 40%,
-    rgba(255, 255, 255, 0.18) 50%,
-    transparent 60%
-  );
+  background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
   transform: translateX(-120%);
-  transition: transform 0.6s var(--ease-out);
+  transition: transform 0.6s ease;
   pointer-events: none;
 }
 
@@ -56,83 +38,46 @@
   transform: translateX(120%);
 }
 
-/* ── Primary: GOLD gradient + subtle glow on hover ── */
 .lc-motion-btn--primary {
-  background: linear-gradient(135deg, var(--gold-bright) 0%, var(--gold-deep) 100%);
-  color: #1a1208;
-  font-weight: 700;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset,
-              0 2px 16px var(--gold-glow),
-              var(--lc-shadow-inset);
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
+  color: #fff;
+  box-shadow: 0 2px 20px var(--lc-crimson-glow), var(--lc-shadow-inset);
 }
 
 .lc-motion-btn--primary:hover {
-  filter: brightness(1.06);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.3) inset,
-              0 4px 24px var(--gold-glow-strong),
-              var(--lc-shadow-inset);
+  box-shadow: 0 6px 32px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
 }
 
-/* ── Secondary: subtle border + light bg on hover ── */
 .lc-motion-btn--secondary {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--lc-border-strong);
+  color: var(--lc-text-primary);
 }
 
 .lc-motion-btn--secondary:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--border-gold);
+  border-color: var(--lc-border-accent);
+  background: var(--lc-bg-hover);
 }
 
-/* ── Ghost: transparent, text-color change on hover ── */
 .lc-motion-btn--ghost {
   background: transparent;
-  color: var(--text-secondary);
-  padding-left: var(--space-3);
-  padding-right: var(--space-3);
+  color: var(--lc-text-secondary);
 }
 
 .lc-motion-btn--ghost:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.03);
+  color: var(--lc-crimson-soft);
 }
 
-/* ── Glow (subtle gold breathing for CTAs) ── */
 .lc-motion-btn--glow {
-  animation: lc-glow-pulse 2s ease-in-out infinite alternate;
+  animation: lc-btn-glow 3s ease-in-out infinite;
 }
 
-/* ════════════════════════════════════════════════════════════════
-   Motion utility classes (apply to any element)
-   ════════════════════════════════════════════════════════════════ */
-.lc-motion-fade-up {
-  animation: lc-fade-up 0.4s var(--ease-out) both;
+@keyframes lc-btn-glow {
+  0%, 100% { box-shadow: 0 2px 20px var(--lc-crimson-glow); }
+  50% { box-shadow: 0 4px 36px var(--lc-crimson-glow-strong); }
 }
 
-.lc-motion-scale-in {
-  animation: lc-scale-in 0.32s var(--ease-out) both;
-}
-
-.lc-motion-slide-down {
-  animation: lc-slide-down 0.22s var(--ease-out) both;
-}
-
-.lc-motion-glow {
-  animation: lc-glow-pulse 2s ease-in-out infinite alternate;
-}
-
-/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .lc-motion-btn--glow,
-  .lc-motion-fade-up,
-  .lc-motion-scale-in,
-  .lc-motion-slide-down,
-  .lc-motion-glow {
-    animation: none !important;
-  }
-
-  .lc-motion-btn__shine {
-    display: none;
-  }
+  .lc-motion-btn--glow { animation: none; }
+  .lc-motion-btn__shine { display: none; }
 }

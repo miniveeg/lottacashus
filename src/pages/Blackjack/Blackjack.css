@@ -22,7 +22,7 @@
 
 .bj__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
   gap: 1.25rem;
   align-items: stretch;
 }

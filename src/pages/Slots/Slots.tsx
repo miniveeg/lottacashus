@@ -219,10 +219,10 @@ export default function Slots() {
 
   return (
     <div className="slots lc-game-page">
-      <div className="slots__header">
-        <h1>Slots</h1>
-        <p>Spin the reels and match symbols to win!</p>
-      </div>
+      <header className="slots__header">
+        <h1 className="slots__title">Slots</h1>
+        <p className="slots__subtitle">Spin the reels and match symbols to win!</p>
+      </header>
 
       <div className="slots__layout">
         <section className="slots__stage">

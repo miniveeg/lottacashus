@@ -2888,7 +2888,7 @@ begin
     where id = p_user_id;
   else
     update public.profiles
-    set balance = new_balance, total_wagered = total_wagered + p_wager,
+    set balance = new_balance,
         total_wins = total_wins + case when won then p_payout else 0 end,
         total_losses = total_losses + case when not won then p_wager else 0 end,
         updated_at = now()
@@ -3087,7 +3087,7 @@ begin
     where id = p_user_id;
   else
     update public.profiles
-    set balance = new_balance, total_wagered = total_wagered + p_wager,
+    set balance = new_balance,
         total_wins = total_wins + case when p_won then p_payout else 0 end,
         total_losses = total_losses + case when not p_won then p_wager else 0 end,
         updated_at = now()
@@ -3203,7 +3203,7 @@ begin
   if p_coin_type = 'sweeps_coins' then
     update public.profiles set sweeps_coins = new_balance, total_wagered = total_wagered + p_wager, updated_at = now() where id = p_user_id;
   else
-    update public.profiles set balance = new_balance, total_wagered = total_wagered + p_wager, updated_at = now() where id = p_user_id;
+    update public.profiles set balance = new_balance, updated_at = now() where id = p_user_id;
   end if;
 
   insert into public.mines_games (user_id, wager, mine_count, mine_tiles, revealed_tiles, gems_revealed, multiplier, status, nonce)
@@ -3544,7 +3544,7 @@ begin
   if p_coin_type = 'sweeps_coins' then
     update public.profiles set sweeps_coins = new_balance, total_wagered = total_wagered + p_total_wager, updated_at = now() where id = p_user_id;
   else
-    update public.profiles set balance = new_balance, total_wagered = total_wagered + p_total_wager, updated_at = now() where id = p_user_id;
+    update public.profiles set balance = new_balance, updated_at = now() where id = p_user_id;
   end if;
 
   insert into public.blackjack_hands (user_id, wager, total_wager, doubled, shoe, shoe_index, player_cards, dealer_cards, dealer_revealed, status, outcome, payout, nonce, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, completed_at)
@@ -3660,7 +3660,7 @@ begin
   if p_coin_type = 'sweeps_coins' then
     update public.profiles set sweeps_coins = new_balance, total_wagered = total_wagered + p_extra_wager, updated_at = now() where id = p_user_id;
   else
-    update public.profiles set balance = new_balance, total_wagered = total_wagered + p_extra_wager, updated_at = now() where id = p_user_id;
+    update public.profiles set balance = new_balance, updated_at = now() where id = p_user_id;
   end if;
 
   insert into public.transactions (user_id, type, amount, balance_after, description)
@@ -3881,7 +3881,6 @@ begin
   update public.profiles p
   set
     balance = new_balance,
-    total_wagered = total_wagered + actual_cost,
     updated_at = now()
   where p.id = p_user_id;
 
@@ -4388,7 +4387,7 @@ begin
   if p_coin_type = 'sweeps_coins' then
     update public.profiles set sweeps_coins = new_balance, total_wagered = total_wagered + p_wager, updated_at = now() where id = p_user_id;
   else
-    update public.profiles set balance = new_balance, total_wagered = total_wagered + p_wager, updated_at = now() where id = p_user_id;
+    update public.profiles set balance = new_balance, updated_at = now() where id = p_user_id;
   end if;
 
   insert into public.crash_bets (user_id, wager, crash_point, won, payout, coin_type, nonce)
@@ -4543,7 +4542,7 @@ begin
       total_losses = total_losses + case when not p_won then p_wager else 0 end,
       updated_at = now() where id = p_user_id;
   else
-    update public.profiles set balance = new_balance, total_wagered = total_wagered + p_wager,
+    update public.profiles set balance = new_balance,
       total_wins = total_wins + case when p_won then coalesce(p_payout, 0) else 0 end,
       total_losses = total_losses + case when not p_won then p_wager else 0 end,
       updated_at = now() where id = p_user_id;

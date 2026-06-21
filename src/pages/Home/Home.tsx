@@ -34,7 +34,7 @@ const pillars = [
   },
   {
     title: "House originals",
-    desc: "Keno, Mines, Limbo, Blackjack, and Case Battles — provably fair, one wallet, wager-based levels.",
+    desc: "Keno, Mines, Limbo, Blackjack, and Case Battles — provably fair, one wallet, SC-wager-based levels.",
     icon: Dices,
   },
 ];

@@ -187,32 +187,12 @@
   align-items: start;
 }
 
-.slots__header {
-  grid-column: 1 / -1;
-  margin-bottom: 0;
-}
-
 .slots__stage {
   min-width: 0;
 }
 
 .slots__controls {
-  position: sticky;
-  top: calc(var(--lc-topbar-height) + 1rem);
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  padding: 1.25rem;
-  box-shadow: var(--lc-shadow-sm);
-}
-
-@media (max-width: 900px) {
-  .slots__layout {
-    grid-template-columns: 1fr;
-  }
-  .slots__controls {
-    position: static;
-  }
+  /* unified via lc-pages.css */
 }
 
 .slots__fairness {

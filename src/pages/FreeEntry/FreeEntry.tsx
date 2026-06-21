@@ -14,7 +14,25 @@ export function FreeEntry() {
       </header>
 
       <section className="free-entry__section lc-panel">
-        <h2 className="free-entry__section-title">How it works</h2>
+        <h2 className="free-entry__section-title">Sign up bonus — 10,000 GC + 1 SC Free</h2>
+        <p className="free-entry__text">
+          Every new player receives <strong>10,000 Gold Coins (GC)</strong> and{" "}
+          <strong>1 Sweeps Coin (SC)</strong> just for creating an account — no purchase
+          necessary. Use your GC for fun play across all games, and your free SC to play for a
+          chance to win real money. Any winnings from SC are yours to redeem.
+        </p>
+        <p className="free-entry__text">
+          Simply{" "}
+          <Link to={signupUrl("/free-entry")} className="free-entry__link">
+            sign up
+          </Link>
+          , verify your email, and the 10,000 GC and 1 SC will be credited to your account
+          automatically.
+        </p>
+      </section>
+
+      <section className="free-entry__section lc-panel">
+        <h2 className="free-entry__section-title">Mail-in free entry</h2>
         <ol className="free-entry__steps">
           <li>
             <strong>Write a letter</strong> — Handwrite a physical letter that includes your

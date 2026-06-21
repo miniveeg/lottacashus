@@ -17,7 +17,7 @@ import {
 import "../../styles/game-controls.css";
 import "./Limbo.css";
 
-const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 const TARGET_PRESETS = [1.5, 2, 3, 5, 10, 25, 50, 100];
 const REVEAL_DELAY_MS = 1500;
 const POP_DURATION_MS = 600;
@@ -80,7 +80,7 @@ export function Limbo() {
   }, [user, loadPf]);
 
   const applyWager = (value: number) => {
-    const v = Math.max(0.01, Math.min(100_000, value));
+    const v = Math.max(1, Math.min(100_000, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -151,9 +151,9 @@ export function Limbo() {
 
   return (
     <div className="limbo lc-game-page">
-      <header className="limbo__header">
-        <h1 className="limbo__title">Limbo</h1>
-        <p className="limbo__subtitle">
+      <header className="lc-page__header">
+        <h1 className="lc-page__title">Limbo</h1>
+        <p className="lc-page__subtitle">
           Set a target multiplier. If the round result is equal or higher, you win bet × target.
           Provably fair — 94.5% RTP.
         </p>
@@ -268,7 +268,7 @@ export function Limbo() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                  applyWager(Number.isFinite(parsed) ? parsed : 1);
                 }}
                 disabled={rolling}
               />
@@ -300,7 +300,7 @@ export function Limbo() {
                   onClick={() => applyWager(p)}
                   disabled={rolling}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>

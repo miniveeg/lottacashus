@@ -32,13 +32,13 @@ export function LevelDetailPanel({ totalWagered, variant = "popover" }: Props) {
             {formatLevelAmount(progress.wagerInCurrentLevel)} /{" "}
             {formatLevelAmount(progress.wagerNeededForNextLevel)}
           </strong>{" "}
-          USD wagered this level
+          SC wagered this level
         </p>
       )}
 
       <dl className="level-detail__stats">
         <div className="level-detail__row">
-          <dt>Total wagered</dt>
+          <dt>Total SC wagered</dt>
           <dd>{formatUsd(progress.totalWagered)}</dd>
         </div>
         <div className="level-detail__row">

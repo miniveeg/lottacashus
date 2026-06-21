@@ -111,8 +111,8 @@ export function validateMinesStart(mineCount: number, wager: number): string | n
   if (!Number.isInteger(mineCount) || mineCount < MINES_MIN_COUNT || mineCount > MINES_MAX_COUNT) {
     return "Select 1 to 24 mines.";
   }
-  if (!Number.isFinite(wager) || wager < 0.01) {
-    return "Minimum bet is $0.01.";
+  if (!Number.isFinite(wager) || wager < 1) {
+    return "Minimum bet is 1 SC or GC.";
   }
   if (wager > 100_000) {
     return "Maximum bet is $100,000.";

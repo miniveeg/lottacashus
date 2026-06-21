@@ -28,9 +28,9 @@ export function Leaderboard() {
 
   return (
     <div className="lc-page leaderboard-page">
-      <header className="leaderboard-header">
-        <h1 className="leaderboard-header__title">Leaderboard</h1>
-        <p className="leaderboard-header__subtitle">Top players on LottaCash</p>
+      <header className="lc-page__header">
+        <h1 className="lc-page__title">Leaderboard</h1>
+        <p className="lc-page__subtitle">Top players on LottaCash</p>
       </header>
 
       <div className="lc-tabs" role="tablist" aria-label="Leaderboard categories">

@@ -34,9 +34,7 @@
 }
 
 .limbo__stage-panel {
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
+  /* unified via lc-pages.css — overridden padding below for display area */
   padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -246,21 +244,7 @@
 }
 
 .limbo__controls {
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  position: sticky;
-  top: calc(var(--lc-topbar-height) + 1rem);
-}
-
-@media (max-width: 900px) {
-  .limbo__controls {
-    position: static;
-  }
+  /* unified via lc-pages.css */
 }
 
 .limbo__target-presets {

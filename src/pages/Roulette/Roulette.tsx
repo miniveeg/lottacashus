@@ -19,7 +19,7 @@ import { RouletteWheel } from "./RouletteWheel";
 import "../../styles/game-controls.css";
 import "./Roulette.css";
 
-const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 const SPIN_DELAY_MS = 1600;
 const HISTORY_MAX = 8;
 
@@ -79,7 +79,7 @@ export function Roulette() {
   }, [user, loadPf]);
 
   const applyWager = (value: number) => {
-    const v = Math.max(0.01, Math.min(100_000, value));
+    const v = Math.max(1, Math.min(100_000, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -142,9 +142,9 @@ export function Roulette() {
 
   return (
     <div className="roulette lc-game-page">
-      <header className="roulette__header">
-        <h1 className="roulette__title">Roulette</h1>
-        <p className="roulette__subtitle">
+      <header className="lc-page__header">
+        <h1 className="lc-page__title">Roulette</h1>
+        <p className="lc-page__subtitle">
           European wheel — bet red, black, or zero. Provably fair — 94.5% RTP.
         </p>
       </header>
@@ -250,7 +250,7 @@ export function Roulette() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                  applyWager(Number.isFinite(parsed) ? parsed : 1);
                 }}
                 disabled={spinning}
               />
@@ -282,7 +282,7 @@ export function Roulette() {
                   onClick={() => applyWager(p)}
                   disabled={spinning}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>

@@ -1,6 +1,6 @@
 import { GAME_RTP } from "../rtp";
 
-export const CRASH_MIN_WAGER = 0.1;
+export const CRASH_MIN_WAGER = 1;
 export const CRASH_MAX_WAGER = 10000;
 export const CRASH_RTP = GAME_RTP;
 export const CRASH_HOUSE_EDGE = 0.01;

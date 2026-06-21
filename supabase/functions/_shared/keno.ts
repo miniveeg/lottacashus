@@ -211,8 +211,8 @@ export function validateKenoBet(picks: number[], wager: number, risk: string): s
       return "Numbers must be between 1 and 40";
     }
   }
-  if (!Number.isFinite(wager) || wager < 0.01) {
-    return "Minimum bet is $0.01";
+  if (!Number.isFinite(wager) || wager < 1) {
+    return "Minimum bet is 1 SC or GC";
   }
   if (wager > 100_000) {
     return "Maximum bet is $100,000";

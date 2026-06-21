@@ -1,4 +1,4 @@
-/** Wager-based player level (0–100). Level 100 ≈ $500k total wagered. */
+/** Wager-based player level (0–100). Level 100 ≈ $500k total SC wagered. GC wagers do not count. */
 export const MAX_LEVEL = 100;
 export const MAX_WAGER_FOR_MAX_LEVEL = 500_000;
 

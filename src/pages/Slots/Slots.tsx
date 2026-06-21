@@ -29,7 +29,7 @@ const SYMBOL_GLYPH: Record<number, string> = {
   6: "\u{1F451}",
 };
 
-const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 
 type ReelState = "idle" | "spinning" | "landed";
 
@@ -92,7 +92,7 @@ export default function Slots() {
         setWager(1);
         setWagerInput("1");
       } else {
-        const clamped = Math.min(Math.max(parsed, 0.01), 100000);
+        const clamped = Math.min(Math.max(parsed, 1), 100000);
         setWager(clamped);
         setWagerInput(String(clamped));
       }
@@ -219,9 +219,9 @@ export default function Slots() {
 
   return (
     <div className="slots lc-game-page">
-      <header className="slots__header">
-        <h1 className="slots__title">Slots</h1>
-        <p className="slots__subtitle">Spin the reels and match symbols to win!</p>
+      <header className="lc-page__header">
+        <h1 className="lc-page__title">Slots</h1>
+        <p className="lc-page__subtitle">Spin the reels and match symbols to win!</p>
       </header>
 
       <div className="slots__layout">
@@ -310,7 +310,7 @@ export default function Slots() {
                     disabled={rolling}
                     onClick={() => {
                       const half = wager / 2;
-                      const clamped = Math.max(half, 0.01);
+                      const clamped = Math.max(half, 1);
                       setWager(clamped);
                       setWagerInput(String(clamped));
                     }}

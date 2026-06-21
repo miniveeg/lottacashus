@@ -14,7 +14,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "How do I create an account?",
     answer:
-      "Click Sign up, choose a username (up to 16 characters), enter your email, and set a password. We send a 6-digit verification code to your email; enter it within 10 minutes to activate your account. New accounts receive 1,000 GC and 10 SC as a welcome bonus. You can reset your password from the forgot-password page if needed.",
+      "Click Sign up, choose a username (up to 16 characters), enter your email, and set a password. We send a 6-digit verification code to your email; enter it within 10 minutes to activate your account. New accounts receive 10,000 GC and 1 SC as a welcome bonus — no purchase necessary. You can reset your password from the forgot-password page if needed.",
   },
   {
     question: "How do deposits work?",
@@ -34,7 +34,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "How does leveling work?",
     answer:
-      "Your level (0–100) is based on lifetime amount wagered in USD across both GC and SC play. Early levels require relatively little volume; later levels require much more. Level 100 is designed around $500,000 total wagered. View your level and progress in the top bar or under Account in Settings.",
+      "Your level (0–100) is based on lifetime SC (Sweeps Coins) wagered only — GC wagers do not count toward leveling. Early levels require relatively little volume; later levels require much more. Level 100 is designed around $500,000 total SC wagered. View your level and progress in the top bar or under Account in Settings.",
   },
   {
     question: "Can I link Discord?",
@@ -90,7 +90,7 @@ Gold Coin balances are displayed in USD for convenience. Sweeps Coin balances ar
 You are solely responsible for sending assets to the correct address and network. Transactions sent to wrong addresses or chains may be unrecoverable. Network fees and confirmation times are outside our control.
 
 7. Wagering and leveling
-Wagers on house originals affect your balance and wager-based level as described on the site. Levels are calculated from lifetime wager volume and may be adjusted if we detect abuse, collusion, or technical errors.
+Levels are calculated from lifetime SC (Sweeps Coins) wager volume only; GC wagers do not contribute to leveling. Levels may be adjusted if we detect abuse, collusion, or technical errors.
 
 8. Prohibited conduct
 You may not: use the Service where prohibited by law; launder funds; use bots or exploits; create multiple accounts to abuse promotions; harass staff or other users; or attempt to compromise the platform. We may suspend or terminate accounts and withhold balances involved in violations, subject to applicable law.

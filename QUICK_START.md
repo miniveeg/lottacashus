@@ -112,7 +112,7 @@ VITE_DISCORD_CLIENT_ID=optional
 ---
 
 ## ✅ Done! Test these:
-- [ ] Sign up → get 10,000 GC + 100 SC
+- [ ] Sign up → get 10,000 GC + 1 SC
 - [ ] Play Keno/Mines/Limbo/Roulette/Blackjack/Crash/Slots
 - [ ] Toggle GC/SC in topbar
 - [ ] Deposit page generates an address

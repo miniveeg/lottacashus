@@ -33,7 +33,7 @@ This guide walks you through setting up the entire LottaCash casino platform fro
 
 ## Step 2: Run the database migration
 
-This is the most important step. The file `supabase/lottacash-complete-setup.sql` contains the entire database schema — all 24 tables, 88 functions, 29 RLS policies, 6 triggers, and the dual-currency starting balances (10,000 GC + 100 SC per new user).
+This is the most important step. The file `supabase/lottacash-complete-setup.sql` contains the entire database schema — all 24 tables, 88 functions, 29 RLS policies, 6 triggers, and the dual-currency starting balances (10,000 GC + 1 SC per new user).
 
 1. In your Supabase dashboard, click **SQL Editor** in the left sidebar.
 2. Click **+ New query**.
@@ -385,7 +385,7 @@ If you want users to link their Discord accounts:
 ### Signup doesn't send a verification email
 → Check SMTP secrets are set correctly (Step 4). Check Edge Function logs in Supabase Dashboard → Edge Functions → `send-signup-code` → Logs.
 
-### New users don't get 10,000 GC + 100 SC
+### New users don't get 10,000 GC + 1 SC
 → The auth trigger is missing. Run the SQL in Step 7 to recreate it.
 
 ### Deposit address doesn't generate
@@ -442,7 +442,7 @@ lottacash/
 ## You're done! 🎉
 
 Your LottaCash casino is now live with:
-- ✅ Dual currency (10,000 GC + 100 SC welcome bonus)
+- ✅ Dual currency (10,000 GC + 1 SC welcome bonus)
 - ✅ 7 provably-fair games (Keno, Mines, Limbo, Roulette, Blackjack, Crash, Slots)
 - ✅ Case Battles with multiple modes
 - ✅ Crypto deposits (SOL, LTC, ETH) with auto-sweeping

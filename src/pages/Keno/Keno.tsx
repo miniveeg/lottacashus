@@ -16,7 +16,7 @@ import "./Keno.css";
 
 const GRID_SIZE = 40;
 const MAX_PICKS = 10;
-const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 const REVEAL_STAGGER_MS = 110;
 
 function randomPick(count: number): number[] {
@@ -102,7 +102,7 @@ export function Keno() {
   };
 
   const applyWager = (value: number) => {
-    const v = Math.max(0.01, Math.min(100_000, value));
+    const v = Math.max(1, Math.min(100_000, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -177,9 +177,9 @@ export function Keno() {
 
   return (
     <div className="keno lc-game-page">
-      <header className="keno__header">
-        <h1 className="keno__title">Keno</h1>
-        <p className="keno__subtitle">
+      <header className="lc-page__header">
+        <h1 className="lc-page__title">Keno</h1>
+        <p className="lc-page__subtitle">
           Pick 1–10 numbers from 40, 10 drawn per round. Provably fair — 94.5% RTP.
         </p>
       </header>
@@ -292,7 +292,7 @@ export function Keno() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                  applyWager(Number.isFinite(parsed) ? parsed : 1);
                 }}
                 disabled={drawing}
               />
@@ -324,7 +324,7 @@ export function Keno() {
                   onClick={() => applyWager(p)}
                   disabled={drawing}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>

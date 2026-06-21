@@ -330,18 +330,5 @@
 }
 
 .crash__controls {
-  min-width: 0;
-  overflow: hidden;
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  padding: 1.25rem;
-  position: sticky;
-  top: calc(var(--lc-topbar-height) + 1rem);
-}
-
-@media (max-width: 900px) {
-  .crash__controls {
-    position: static;
-  }
+  /* unified via lc-pages.css */
 }

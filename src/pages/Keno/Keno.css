@@ -36,10 +36,7 @@
 }
 
 .keno__board-panel {
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  padding: 1rem;
+  /* unified via lc-pages.css */
 }
 
 .keno__board-toolbar {
@@ -228,21 +225,7 @@
 }
 
 .keno__controls {
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  position: sticky;
-  top: calc(var(--lc-topbar-height) + 1rem);
-}
-
-@media (max-width: 900px) {
-  .keno__controls {
-    position: static;
-  }
+  /* unified via lc-pages.css */
 }
 
 .keno__error {

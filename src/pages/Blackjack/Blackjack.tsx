@@ -20,7 +20,7 @@ import {
 import "../../styles/game-controls.css";
 import "./Blackjack.css";
 
-const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 
 function CardView({ card, hidden, index = 0 }: { card?: number; hidden?: boolean; index?: number }) {
   if (hidden) {
@@ -123,7 +123,7 @@ export function Blackjack() {
   }, [user, loadPf, resume]);
 
   const applyWager = (value: number) => {
-    const v = Math.max(0.01, Math.min(100_000, value));
+    const v = Math.max(1, Math.min(100_000, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -219,9 +219,9 @@ export function Blackjack() {
 
   return (
     <div className="bj lc-game-page">
-      <header className="bj__header">
-        <h1 className="bj__title">Blackjack</h1>
-        <p className="bj__subtitle">
+      <header className="lc-page__header">
+        <h1 className="lc-page__title">Blackjack</h1>
+        <p className="lc-page__subtitle">
           Dealer hits soft 17. Blackjack pays 3:2. Split pairs and insurance — 94.5% RTP.
         </p>
       </header>
@@ -299,7 +299,7 @@ export function Blackjack() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                  applyWager(Number.isFinite(parsed) ? parsed : 1);
                 }}
                 disabled={playing || busy}
               />
@@ -331,7 +331,7 @@ export function Blackjack() {
                   onClick={() => applyWager(p)}
                   disabled={playing || busy}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>

@@ -14,7 +14,7 @@ import { truncateCrashMultiplier } from "../../lib/games/crash";
 import "../../styles/game-controls.css";
 import "./Crash.css";
 
-const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 // Animation rate — multiplier grows ~9%/frame at 60fps (exponential, crash-like).
 const ANIMATION_GROWTH = 1.009;
 const CANVAS_BASE_WIDTH = 600;
@@ -66,7 +66,7 @@ export function Crash() {
   }, [user, loadPf]);
 
   const applyWager = (value: number) => {
-    const v = Math.max(0.01, Math.min(100_000, value));
+    const v = Math.max(1, Math.min(100_000, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -330,9 +330,9 @@ export function Crash() {
 
   return (
     <div className="crash lc-game-page">
-      <header className="crash__header">
-        <h1 className="crash__title">Crash</h1>
-        <p className="crash__subtitle">
+      <header className="lc-page__header">
+        <h1 className="lc-page__title">Crash</h1>
+        <p className="lc-page__subtitle">
           Watch the multiplier rise. Cash out before it crashes to lock in your winnings.
           Provably fair — {((1 - 0.01) * 100).toFixed(1)}% RTP.
         </p>
@@ -391,7 +391,7 @@ export function Crash() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                  applyWager(Number.isFinite(parsed) ? parsed : 1);
                 }}
                 disabled={phase === "running"}
               />
@@ -423,7 +423,7 @@ export function Crash() {
                   onClick={() => applyWager(p)}
                   disabled={phase === "running"}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>

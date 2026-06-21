@@ -22,7 +22,7 @@ import {
 import "../../styles/game-controls.css";
 import "./Mines.css";
 
-const BET_PRESETS = [0.1, 0.5, 1, 5, 10, 25, 50, 100];
+const BET_PRESETS = [1, 5, 10, 25, 50, 100];
 const TILES = Array.from({ length: 25 }, (_, i) => i);
 
 function randomUnrevealedTile(revealed: Set<number>): number | null {
@@ -104,7 +104,7 @@ export function Mines() {
   };
 
   const applyWager = (value: number) => {
-    const v = Math.max(0.01, Math.min(100_000, value));
+    const v = Math.max(1, Math.min(100_000, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -236,9 +236,9 @@ export function Mines() {
 
   return (
     <div className="mines lc-game-page">
-      <header className="mines__header">
-        <h1 className="mines__title">Mines</h1>
-        <p className="mines__subtitle">
+      <header className="lc-page__header">
+        <h1 className="lc-page__title">Mines</h1>
+        <p className="lc-page__subtitle">
           5×5 grid, 1–24 mines. Reveal gems to raise your multiplier — cash out anytime or risk it all.
           Provably fair — 94.5% RTP.
         </p>
@@ -341,7 +341,7 @@ export function Mines() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 0.01);
+                  applyWager(Number.isFinite(parsed) ? parsed : 1);
                 }}
                 disabled={playing || busy}
               />
@@ -373,7 +373,7 @@ export function Mines() {
                   onClick={() => applyWager(p)}
                   disabled={playing || busy}
                 >
-                  ${p}
+                  {p}
                 </button>
               ))}
             </div>

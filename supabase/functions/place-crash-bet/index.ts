@@ -52,8 +52,8 @@ Deno.serve(async (req) => {
     const wager = Number(body?.wager);
     const coinType = String(body?.coinType ?? "balance");
 
-    if (!Number.isFinite(wager) || wager <= 0) {
-      return jsonResponse({ error: "Invalid wager." }, 400, req);
+    if (!Number.isFinite(wager) || wager < 1) {
+      return jsonResponse({ error: "Minimum bet is 1 SC or GC." }, 400, req);
     }
 
     const supabaseUser = createClient(

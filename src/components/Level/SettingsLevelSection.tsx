@@ -30,7 +30,7 @@ export function SettingsLevelSection({ totalWagered, loading }: Props) {
             {loading
               ? "…"
               : progress.isMaxLevel
-                ? `${formatUsd(progress.totalWagered)} wagered`
+                ? `${formatUsd(progress.totalWagered)} SC wagered`
                 : `${Math.round(progress.progressPercent)}% to level ${progress.nextLevel}`}
           </p>
         </div>

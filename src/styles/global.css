@@ -1,3 +1,14 @@
+/* NOTE on @import usage:
+   These @import statements are NOT render-blocking in production. This project
+   is bundled by Next.js/Turbopack (formerly Vite) — at build time the bundler
+   inlines each @imported file into a single concatenated stylesheet that is
+   served as one <link> tag in the document <head>. The CSS "@import is
+   render-blocking" anti-pattern only applies to runtime CSS @import chains in
+   unbundled deployments (where the browser must serially fetch each file). In
+   a bundled app, the @imports here are purely an authoring-time modularization
+   convenience. Keeping them (rather than concatenating by hand) preserves the
+   clear separation between theme tokens, page styles, atmosphere, animations,
+   and motion utilities. */
 @import "./theme.css";
 @import "./lc-pages.css";
 @import "./atmosphere.css";

@@ -43,6 +43,7 @@ export function CaseBattlesRoom() {
     cancelledRef.current = false;
     setLoading(true);
     setBattle(null);
+    setError(null);
     void loadBattle(battleId, () => cancelledRef.current);
     return () => {
       cancelledRef.current = true;
@@ -123,6 +124,7 @@ export function CaseBattlesRoom() {
         </div>
       ) : (
         <CaseBattleArena
+          key={battle.battleId}
           battle={battle!}
           userId={user?.id}
           balance={balance}

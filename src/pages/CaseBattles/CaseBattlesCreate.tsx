@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
+import { Package } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -654,7 +655,7 @@ export function CaseBattlesCreate() {
                           }}
                           aria-hidden
                         >
-                          {c?.name.charAt(0) ?? "📦"}
+                          {c?.name.charAt(0) ?? <Package size={14} aria-hidden />}
                         </span>
                         <div className="cbc__selected-info">
                           <span className="cbc__selected-name">{c?.name ?? caseId}</span>

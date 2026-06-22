@@ -1,3 +1,4 @@
+import { Package } from "lucide-react";
 import { getCaseById } from "../../lib/games/case-battles";
 
 export const VISIBLE_ROUNDS = 5;
@@ -59,7 +60,7 @@ export function CaseBattleRoundsStrip({
               style={{ borderColor: c?.accent }}
             >
               R{i + 1}
-              {variant === "create" && <span>📦</span>}
+              {variant === "create" && <Package size={11} aria-hidden />}
             </Tag>
           );
         })}

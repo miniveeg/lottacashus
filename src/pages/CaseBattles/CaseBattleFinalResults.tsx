@@ -9,6 +9,7 @@ import {
   winnerSlotShare,
   type PlayerResultLine,
 } from "./battleResultHelpers";
+import { Bot, Crown, User } from "lucide-react";
 type CaseBattleFinalResultsProps = {
   battle: CaseBattleView;
   userId: string | undefined;
@@ -44,13 +45,17 @@ function FinalPlayerCard({
         (line.isYou ? " cbr__final-card--you" : "")
       }
     >
-      {line.isWinner && <span className="cbr__final-card-crown" aria-hidden>👑</span>}
+      {line.isWinner && (
+        <span className="cbr__final-card-crown" aria-hidden>
+          <Crown size={16} />
+        </span>
+      )}
       <div className="cbr__final-card-top">
         <span
           className={"cbr__final-card-avatar" + (line.isBot ? " cbr__final-card-avatar--bot" : "")}
           aria-hidden
         >
-          {line.isBot ? "🤖" : "👤"}
+          {line.isBot ? <Bot size={14} /> : <User size={14} />}
         </span>
         <span className="cbr__final-card-name">
           {line.displayName}
@@ -114,7 +119,9 @@ export function CaseBattleFinalResults({
         <h2 className="cbr__final-title">
           {winnerLine ? (
             <>
-              <span className="cbr__final-crown" aria-hidden>👑</span>
+              <span className="cbr__final-crown" aria-hidden>
+                <Crown size={18} />
+              </span>
               <span className="cbr__final-winner-name">{winnerLine.displayName}</span>
               {winnerLine.isYou ? " (you)" : ""} wins
             </>

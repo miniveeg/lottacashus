@@ -1,5 +1,6 @@
 import type { CaseBattlePlayer, CaseBattleView } from "../../lib/caseBattles";
 import { battleSlotGroups } from "./caseBattlesUi";
+import { Bot, User } from "lucide-react";
 
 type CaseBattleLobbySlotsProps = {
   battle: CaseBattleView;
@@ -41,7 +42,7 @@ function LobbySlot({
             className={"cbr__slot-avatar" + (occupant.isBot ? " cbr__slot-avatar--bot" : "")}
             aria-hidden
           >
-            {occupant.isBot ? "🤖" : "👤"}
+            {occupant.isBot ? <Bot size={14} /> : <User size={14} />}
           </span>
           <span className="cbr__slot-name">{occupant.displayName}</span>
           {occupant.isBot && <span className="cbr__slot-tag">Bot</span>}

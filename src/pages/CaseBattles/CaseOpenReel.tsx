@@ -38,15 +38,27 @@ export function getReelSpinProfile(
   };
 }
 
+/** Pick a uniformly-random item from the case for reel filler tiles.
+ *  Uses uniform distribution (not weighted) so the reel shows a VISUALLY
+ *  diverse mix of rarities scrolling by — if we used the weighted
+ *  distribution, common items (which have ~40% weight) would dominate
+ *  and the reel would look static/samey. The actual drop is determined
+ *  by the `targetItem` (server-side provably-fair), not these filler items. */
 function pickRandomItem(lootCase: LootCase): CaseItem {
-  const total = lootCase.items.reduce((s, i) => s + i.weight, 0);
-  let r = Math.random() * total;
-  for (const item of lootCase.items) {
-    r -= item.weight;
-    if (r <= 0) return item;
-  }
-  return lootCase.items[lootCase.items.length - 1]!;
+  const items = lootCase.items;
+  return items[Math.floor(Math.random() * items.length)] ?? items[0]!;
 }
+
+/** Distinct icon per rarity so the reel scrolling is visually obvious.
+ *  Different shapes at different rarities means the user can clearly see
+ *  items changing as the reel scrolls, rather than the same ◆ repeating. */
+const RARITY_ICONS: Record<CaseRarity, string> = {
+  common: "●",
+  uncommon: "▲",
+  rare: "◆",
+  epic: "★",
+  legendary: "♛",
+};
 
 function ReelTile({
   item,
@@ -58,16 +70,23 @@ function ReelTile({
   dimmed?: boolean;
 }) {
   const color = RARITY_COLORS[item.rarity as CaseRarity] ?? "#7a7a98";
+  const icon = RARITY_ICONS[item.rarity as CaseRarity] ?? "◆";
   return (
     <div
       className={"case-reel__tile" + (dimmed ? " case-reel__tile--dim" : "")}
-      style={{ borderColor: `${color}55`, background: `linear-gradient(145deg, ${color}22, ${accent}11)` }}
+      style={{
+        borderLeft: `3px solid ${color}`,
+        borderColor: `${color}55`,
+        background: `linear-gradient(145deg, ${color}28, ${accent}08)`,
+      }}
     >
       <span className="case-reel__tile-gem" style={{ color }} aria-hidden>
-        ◆
+        {icon}
       </span>
       <span className="case-reel__tile-name">{item.name}</span>
-      <span className="case-reel__tile-value">${item.value.toLocaleString()}</span>
+      <span className="case-reel__tile-value" style={{ color }}>
+        ${item.value.toLocaleString()}
+      </span>
     </div>
   );
 }
@@ -101,6 +120,7 @@ export function CaseOpenReel({
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
   const [landed, setLanded] = useState(false);
+  const [spinning, setSpinning] = useState(false);
 
   const profile = useMemo(
     () => getReelSpinProfile(slot, round, baseDurationMs),
@@ -128,6 +148,7 @@ export function CaseOpenReel({
     const endY = -(profile.landIndex * itemHeight) + itemHeight;
     track.style.transition = "none";
     track.style.transform = "translateY(0)";
+    setSpinning(true);
 
     const raf = requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -137,6 +158,7 @@ export function CaseOpenReel({
     });
 
     const done = window.setTimeout(() => {
+      setSpinning(false);
       setLanded(true);
       onCompleteRef.current();
     }, profile.durationMs + 80);
@@ -149,7 +171,11 @@ export function CaseOpenReel({
 
   return (
     <div
-      className={"case-reel" + (landed ? " case-reel--landed" : "")}
+      className={
+        "case-reel" +
+        (spinning ? " case-reel--spinning" : "") +
+        (landed ? " case-reel--landed" : "")
+      }
       style={{
         ["--reel-accent" as string]: accent,
         ["--reel-item-h" as string]: `${itemHeight}px`,

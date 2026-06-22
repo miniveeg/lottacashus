@@ -4,7 +4,7 @@
 .app-shell__main {
   background:
     radial-gradient(ellipse 100% 55% at 50% -5%, rgba(220, 20, 60, 0.04) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 45% at 85% 85%, rgba(139, 92, 246, 0.025) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 45% at 85% 85%, rgba(220, 20, 60, 0.02) 0%, transparent 50%),
     var(--lc-bg-base);
 }
 

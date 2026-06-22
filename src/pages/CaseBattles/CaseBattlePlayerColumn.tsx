@@ -7,6 +7,7 @@ import {
 } from "../../lib/games/case-battles";
 import { formatCoins } from "../../lib/format";
 import type { CaseBattleDrop, CaseBattlePlayer, CaseBattleView } from "../../lib/caseBattles";
+import { Bot, User } from "lucide-react";
 import { CaseOpenReel } from "./CaseOpenReel";
 
 function dropToItem(drop: CaseBattleDrop, lootCase: LootCase): CaseItem {
@@ -105,7 +106,7 @@ export function CaseBattlePlayerColumn({
           }
           aria-hidden
         >
-          {filled ? (player!.isBot ? "🤖" : "👤") : "·"}
+          {filled ? (player!.isBot ? <Bot size={14} /> : <User size={14} />) : "·"}
         </span>
         <span className="cbr__p-col-name">{headerLabel}</span>
         {filled && player!.isBot && (

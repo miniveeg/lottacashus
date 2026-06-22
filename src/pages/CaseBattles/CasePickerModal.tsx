@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Package } from "lucide-react";
 import { battleEntryCostFromCaseIds } from "../../lib/games/case-battles";
 import {
   canAddCaseToSelection,
@@ -122,7 +123,7 @@ export function CasePickerModal({
                   className={`${p}__case-visual`}
                   style={{ background: `linear-gradient(145deg, ${c.accent}22, transparent)` }}
                 >
-                  <span aria-hidden>📦</span>
+                  <Package size={14} aria-hidden />
                 </div>
                 <h3 className={`${p}__case-name`}>{c.name}</h3>
                 <p className={`${p}__case-price`}>{formatCoins(c.price, "balance")}</p>

@@ -1,3 +1,5 @@
+import { createElement, type ReactNode } from "react";
+import { Target, Trophy, Users, Dice5 } from "lucide-react";
 import type { BattleGamemode } from "../../lib/games/case-battles/config";
 import { GAMEMODES, isTeamMode, teamIndexForMode } from "../../lib/games/case-battles/config";
 import type { OpenBattleRow } from "../../lib/caseBattles";
@@ -30,16 +32,26 @@ export function gamemodeLabel(id: string): string {
   return GAMEMODES.find((m) => m.id === id)?.name ?? id;
 }
 
-export function gamemodeIcon(id: string): string {
+/**
+ * Returns a decorative lucide-react icon element for a Case Battle gamemode.
+ * Icons are rendered with `aria-hidden` by the caller (they sit alongside a
+ * visible text label, so screen readers don't need them). Replaces the prior
+ * emoji-as-icon implementation (👥 🎯 🎰 🏆) which violated the
+ * "emoji used as functional icon" anti-pattern.
+ *
+ * Uses `createElement` rather than JSX because this module is `.ts` (no JSX
+ * parse) — keeps the existing file name + import paths intact.
+ */
+export function gamemodeIcon(id: string): ReactNode {
   switch (id as BattleGamemode) {
     case "group":
-      return "👥";
+      return createElement(Users, { "aria-hidden": true, size: 16 });
     case "terminal":
-      return "🎯";
+      return createElement(Target, { "aria-hidden": true, size: 16 });
     case "jackpot":
-      return "🎰";
+      return createElement(Dice5, { "aria-hidden": true, size: 16 });
     default:
-      return "🏆";
+      return createElement(Trophy, { "aria-hidden": true, size: 16 });
   }
 }
 

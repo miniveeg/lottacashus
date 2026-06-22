@@ -1,6 +1,7 @@
 import { RARITY_COLORS, type CaseRarity } from "../../lib/games/case-battles";
 import { formatCoins } from "../../lib/format";
 import type { CaseBattleDrop, CaseBattlePlayer } from "../../lib/caseBattles";
+import { Bot, User } from "lucide-react";
 
 export function PulledItemCard({ drop, round }: { drop: CaseBattleDrop; round?: number }) {
   const color = RARITY_COLORS[drop.rarity as CaseRarity] ?? "#7a7a98";
@@ -59,7 +60,7 @@ export function CaseBattlePullsColumn({
           className={"cbr__pulls-strip-avatar" + (player.isBot ? " cbr__pulls-strip-avatar--bot" : "")}
           aria-hidden
         >
-          {player.isBot ? "🤖" : "👤"}
+          {player.isBot ? <Bot size={14} /> : <User size={14} />}
         </span>
         <div className="cbr__pulls-strip-meta">
           <span className="cbr__pulls-strip-name">{player.displayName}</span>

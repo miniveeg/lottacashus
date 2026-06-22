@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatCoins } from "../../lib/format";
 import type { CaseBattlePlayer } from "../../lib/caseBattles";
+import { Bot, User } from "lucide-react";
 import "./JackpotReel.css";
 
 const REEL_COPIES = 20;
@@ -41,7 +42,9 @@ function PlayerTile({
       className={"cb-jackpot-reel__tile" + (highlight ? " cb-jackpot-reel__tile--win" : "")}
       style={{ ["--jp-color" as string]: color }}
     >
-      <span className="cb-jackpot-reel__avatar">{player.isBot ? "🤖" : "👤"}</span>
+      <span className="cb-jackpot-reel__avatar" aria-hidden>
+        {player.isBot ? <Bot size={14} /> : <User size={14} />}
+      </span>
       <span className="cb-jackpot-reel__name">{player.displayName}</span>
       <span className="cb-jackpot-reel__pct">{pct.toFixed(1)}%</span>
       <span className="cb-jackpot-reel__val">{formatCoins(player.totalValue, "balance")}</span>

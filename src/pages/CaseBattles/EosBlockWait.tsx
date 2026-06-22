@@ -1,3 +1,5 @@
+import { Dice5, Link2 } from "lucide-react";
+
 type EosBlockWaitProps = {
   targetBlockNum: number | null | undefined;
   commitBlockNum?: number | null;
@@ -27,7 +29,7 @@ export function EosBlockWait({
       }
     >
       <div className="cbr__eos-icon" aria-hidden>
-        {isJackpot ? "🎰" : "⛓"}
+        {isJackpot ? <Dice5 size={28} /> : <Link2 size={28} />}
       </div>
       <p className="cbr__eos-title">
         {isJackpot ? "Mining jackpot block" : "Waiting for EOS block"}

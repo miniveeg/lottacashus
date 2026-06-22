@@ -1,3 +1,4 @@
+import { Bot, User } from "lucide-react";
 import { formatCoins } from "../../lib/format";
 import type { CaseBattleView } from "../../lib/caseBattles";
 import { gamemodeLabel } from "./caseBattlesUi";
@@ -44,7 +45,7 @@ function PlayerResultColumn({
       }
     >
       <div className="cbr__result-col-head">
-        <span className="cbr__result-col-avatar">{line.isBot ? "🤖" : "👤"}</span>
+        <span className="cbr__result-col-avatar" aria-hidden>{line.isBot ? <Bot size={14} /> : <User size={14} />}</span>
         <span className="cbr__result-col-name">
           {line.displayName}
           {line.isYou ? " (you)" : ""}
@@ -174,7 +175,7 @@ export function CaseBattleResults({
               }
             >
               <div className="cbr__results-player">
-                <span className="cbr__results-avatar">{line.isBot ? "🤖" : "👤"}</span>
+                <span className="cbr__results-avatar" aria-hidden>{line.isBot ? <Bot size={14} /> : <User size={14} />}</span>
                 <div className="cbr__results-meta">
                   <span className="cbr__results-name">
                     {line.displayName}

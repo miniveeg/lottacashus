@@ -75,9 +75,9 @@
 }
 
 .case-reel__tile-gem {
-  font-size: 1.35rem;
+  font-size: 1.6rem;
   line-height: 1;
-  filter: drop-shadow(0 0 6px currentColor);
+  filter: drop-shadow(0 0 8px currentColor);
 }
 
 .case-reel__tile-name {
@@ -91,9 +91,9 @@
 }
 
 .case-reel__tile-value {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--lc-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--lc-font-mono);
 }
 
 /* ── Landing effects ──

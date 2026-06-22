@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Package } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { loginUrl } from "../../lib/authRedirect";
@@ -283,7 +284,9 @@ export function CaseBattlesHub() {
                                 : undefined,
                             }}
                           >
-                            <span aria-hidden>📦</span>
+                            <span aria-hidden>
+                              <Package size={14} />
+                            </span>
                           </span>
                         );
                       })}

@@ -46,7 +46,12 @@ function FinalPlayerCard({
     >
       {line.isWinner && <span className="cbr__final-card-crown" aria-hidden>👑</span>}
       <div className="cbr__final-card-top">
-        <span className="cbr__final-card-avatar">{line.isBot ? "🤖" : "👤"}</span>
+        <span
+          className={"cbr__final-card-avatar" + (line.isBot ? " cbr__final-card-avatar--bot" : "")}
+          aria-hidden
+        >
+          {line.isBot ? "🤖" : "👤"}
+        </span>
         <span className="cbr__final-card-name">
           {line.displayName}
           {line.isYou ? " (you)" : ""}

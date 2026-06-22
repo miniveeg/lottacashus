@@ -46,8 +46,14 @@ export function CaseBattleJoinPanel({
   return (
     <div className="cbr__join-panel">
       <p className="cbr__join-panel-lead">
-        Join this battle — entry {formatCoins(battle.entryCost, "balance")} full price
+        Join this battle — entry <strong>{formatCoins(battle.entryCost, "balance")}</strong> full price
       </p>
+
+      <div className="cbr__join-panel-balance" aria-label="Your balance">
+        <span className="cbr__join-panel-balance-label">Balance</span>
+        <span className="cbr__join-panel-balance-val">{formatCoins(balance, "balance")}</span>
+      </div>
+
       <div className="cbr__join-panel-borrow">
         <button
           type="button"
@@ -86,7 +92,7 @@ export function CaseBattleJoinPanel({
       )}
       <button
         type="button"
-        className="cb-page__btn-primary cbr__join-panel-btn"
+        className="cbr__join-panel-btn"
         disabled={busy || !canAfford}
         onClick={handleJoin}
       >

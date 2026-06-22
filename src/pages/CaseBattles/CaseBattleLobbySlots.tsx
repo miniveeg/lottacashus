@@ -37,7 +37,10 @@ function LobbySlot({
       <span className="cbr__slot-index">Slot {slot + 1}</span>
       {occupant ? (
         <>
-          <span className="cbr__slot-avatar" aria-hidden>
+          <span
+            className={"cbr__slot-avatar" + (occupant.isBot ? " cbr__slot-avatar--bot" : "")}
+            aria-hidden
+          >
             {occupant.isBot ? "🤖" : "👤"}
           </span>
           <span className="cbr__slot-name">{occupant.displayName}</span>

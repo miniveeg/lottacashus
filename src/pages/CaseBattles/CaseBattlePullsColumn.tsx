@@ -55,7 +55,10 @@ export function CaseBattlePullsColumn({
       }
     >
       <div className="cbr__pulls-strip-head">
-        <span className="cbr__pulls-strip-avatar" aria-hidden>
+        <span
+          className={"cbr__pulls-strip-avatar" + (player.isBot ? " cbr__pulls-strip-avatar--bot" : "")}
+          aria-hidden
+        >
           {player.isBot ? "🤖" : "👤"}
         </span>
         <div className="cbr__pulls-strip-meta">

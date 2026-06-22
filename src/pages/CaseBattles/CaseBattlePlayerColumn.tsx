@@ -98,11 +98,19 @@ export function CaseBattlePlayerColumn({
       data-phase={phase}
     >
       <header className="cbr__p-col-head">
-        <span className={"cbr__p-col-avatar" + (filled ? "" : " cbr__p-col-avatar--ghost")} aria-hidden>
+        <span
+          className={
+            "cbr__p-col-avatar" +
+            (filled ? (player!.isBot ? " cbr__p-col-avatar--bot" : "") : " cbr__p-col-avatar--ghost")
+          }
+          aria-hidden
+        >
           {filled ? (player!.isBot ? "🤖" : "👤") : "·"}
         </span>
         <span className="cbr__p-col-name">{headerLabel}</span>
-        {filled && player!.isBot && <span className="cbr__p-col-tag">Bot</span>}
+        {filled && player!.isBot && (
+          <span className="cbr__p-col-tag cbr__p-col-tag--bot">Bot</span>
+        )}
         {isYou && <span className="cbr__p-col-tag cbr__p-col-tag--you">You</span>}
       </header>
 

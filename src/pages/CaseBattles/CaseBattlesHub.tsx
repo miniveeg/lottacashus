@@ -111,24 +111,30 @@ export function CaseBattlesHub() {
         backLabel="Originals"
         title="Battles"
         actions={
-          <Link to="/case-battles/create" className="cb-page__btn-primary">
-            + Create
+          <Link to="/case-battles/create" className="cb-page__btn-primary cbh__create-btn">
+            <span className="cbh__create-icon" aria-hidden>
+              +
+            </span>
+            Create battle
           </Link>
         }
       />
 
-      <section className="cb-page__hero">
+      <section className="cb-page__hero cbh__hero">
         <div className="cb-page__hero-text">
-          <h2 className="cb-page__hero-title">PvP case opens</h2>
+          <p className="cbh__hero-eyebrow">PvP case opens</p>
+          <h2 className="cb-page__hero-title cbh__hero-title">
+            Stack cases, fill slots, <span className="cbh__hero-accent">battle for the pot</span>
+          </h2>
           <p className="cb-page__hero-lead">
-            Join a lobby, fill every slot with players or bots, then battle through your case
-            lineup. Highest total unboxed wins the pot.
+            Join an open lobby or create your own. Highest total unboxed value walks away with
+            everything.
           </p>
         </div>
-        <div className="cb-page__stats">
+        <div className="cb-page__stats cbh__stats">
           <div className="cb-page__stat">
             <span className="cb-page__stat-value">{openBattles.length}</span>
-            <span className="cb-page__stat-label">Open</span>
+            <span className="cb-page__stat-label">Open battles</span>
           </div>
           <div className="cb-page__stat">
             <span className="cb-page__stat-value">{formatCoins(totalPot, "balance")}</span>
@@ -137,8 +143,8 @@ export function CaseBattlesHub() {
         </div>
       </section>
 
-      <div className="cb-page__panel">
-        <div className="cb-page__panel-head">
+      <div className="cb-page__panel cbh__panel">
+        <div className="cb-page__panel-head cbh__panel-head">
           <p className="cb-page__section-label">
             <span className="cbh__live-dot" aria-hidden />
             Active battles
@@ -153,7 +159,7 @@ export function CaseBattlesHub() {
         </div>
 
         {error && (
-          <p className="cb-page__error" role="alert">
+          <p className="cb-page__error cbh__error" role="alert">
             {error}
           </p>
         )}
@@ -171,12 +177,22 @@ export function CaseBattlesHub() {
         ) : sortedBattles.length === 0 ? (
           <div className="cbh__empty">
             <div className="cbh__empty-icon" aria-hidden>
-              ⚔️
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5" />
+                <line x1="13" y1="19" x2="19" y2="13" />
+                <line x1="16" y1="16" x2="20" y2="20" />
+                <line x1="19" y1="21" x2="21" y2="19" />
+              </svg>
             </div>
             <p className="cbh__empty-title">No open battles</p>
-            <p>Start the action — stack cases, pick a mode, and open your lobby.</p>
-            <Link to="/case-battles/create" className="cb-page__btn-primary">
-              Create battle
+            <p className="cbh__empty-text">
+              Be the first to start the action — stack cases, pick a mode, and open your lobby.
+            </p>
+            <Link to="/case-battles/create" className="cb-page__btn-primary cbh__empty-cta">
+              <span className="cbh__create-icon" aria-hidden>
+                +
+              </span>
+              Create the first battle
             </Link>
           </div>
         ) : (
@@ -190,7 +206,6 @@ export function CaseBattlesHub() {
               const spotsLeft = max - filled;
               const isCreator = row.creator_id === user?.id;
               const entry = Number(row.entry_cost);
-              const fillPct = max > 0 ? Math.round((filled / max) * 100) : 0;
               const joinable = battleIsJoinable(row);
               const canJoin =
                 !!user &&
@@ -214,54 +229,61 @@ export function CaseBattlesHub() {
                   tabIndex={0}
                   aria-label={`Battle ${row.player_mode} ${gamemodeLabel(row.gamemode)}`}
                 >
-                  <div className="cbh__card-main">
-                    <div className="cbh__card-top">
-                      <span
-                        className={
-                          "cbh__badge cbh__badge--status" +
-                          (row.status === "completed"
-                            ? " cbh__badge--ended"
-                            : row.status === "running" || row.status === "pending_eos"
-                              ? " cbh__badge--live"
-                              : "")
-                        }
-                      >
-                        {battleStatusLabel(row.status)}
-                      </span>
-                      <span className="cbh__badge">{row.player_mode}</span>
+                  <header className="cbh__card-head">
+                    <div className="cbh__card-badges">
                       <span className="cbh__badge cbh__badge--mode">
                         <span aria-hidden>{gamemodeIcon(row.gamemode)}</span>
                         {gamemodeLabel(row.gamemode)}
                       </span>
+                      <span className="cbh__badge">{row.player_mode}</span>
                       {row.crazy_mode && (
                         <span className="cbh__badge cbh__badge--crazy">Crazy</span>
                       )}
                       {row.fast_spin && (
                         <span className="cbh__badge cbh__badge--fast">Fast</span>
                       )}
-                      {isCreator && <span className="cbh__badge cbh__badge--yours">Your battle</span>}
-                      <span className="cbh__badge cbh__badge--age">
-                        {formatBattleAge(row.created_at)}
-                      </span>
+                      {isCreator && (
+                        <span className="cbh__badge cbh__badge--yours">Yours</span>
+                      )}
                     </div>
+                    <span
+                      className={
+                        "cbh__status" +
+                        (row.status === "completed"
+                          ? " cbh__status--ended"
+                          : row.status === "running" || row.status === "pending_eos"
+                            ? " cbh__status--live"
+                            : "")
+                      }
+                    >
+                      {battleStatusLabel(row.status)}
+                    </span>
+                  </header>
 
-                    <div className="cbh__cases-stack">
+                  <div className="cbh__card-pot">
+                    <span className="cbh__card-pot-label">Pot total</span>
+                    <span className="cbh__card-pot-value">
+                      {formatCoins(row.pot_total, "balance")}
+                    </span>
+                  </div>
+
+                  {thumbs.length > 0 && (
+                    <div className="cbh__card-cases">
                       {thumbs.map((id) => {
                         const c = getCaseById(id);
                         return (
                           <span
                             key={id}
-                            className="cb-page__case-chip cb-page__case-chip--md"
+                            className="cbh__case-chip"
                             title={c?.name ?? id}
                             style={{
                               borderColor: c?.accent ?? undefined,
                               background: c
-                                ? `linear-gradient(145deg, ${c.accent}44, rgba(0,0,0,0.4))`
+                                ? `linear-gradient(145deg, ${c.accent}33, rgba(0,0,0,0.5))`
                                 : undefined,
-                              zIndex: 1,
                             }}
                           >
-                            📦
+                            <span aria-hidden>📦</span>
                           </span>
                         );
                       })}
@@ -269,41 +291,54 @@ export function CaseBattlesHub() {
                         <span className="cbh__cases-more">+{extraCases}</span>
                       )}
                     </div>
+                  )}
 
-                    <div className="cbh__card-metrics">
-                      <span className="cbh__metric">
-                        <strong>{row.rounds}</strong> rounds
-                      </span>
-                      <span className="cbh__metric">
-                        <strong>{formatCoins(entry, "balance")}</strong> / player
-                      </span>
-                      <span className="cbh__metric cbh__metric--pot">
-                        Pot <strong>{formatCoins(row.pot_total, "balance")}</strong>
+                  <div className="cbh__card-meta">
+                    <div className="cbh__meta">
+                      <span className="cbh__meta-label">Rounds</span>
+                      <span className="cbh__meta-value">{row.rounds}</span>
+                    </div>
+                    <div className="cbh__meta">
+                      <span className="cbh__meta-label">Entry</span>
+                      <span className="cbh__meta-value">
+                        {formatCoins(entry, "balance")}
                       </span>
                     </div>
+                    <div className="cbh__meta">
+                      <span className="cbh__meta-label">Age</span>
+                      <span className="cbh__meta-value">
+                        {formatBattleAge(row.created_at)}
+                      </span>
+                    </div>
+                  </div>
 
-                    <div className="cbh__fill">
-                      <div className="cbh__fill-label">
-                        <span>
-                          {filled}/{max} players
+                  <div className="cbh__card-slots">
+                    <div className="cbh__slots-head">
+                      <span className="cbh__slots-label">
+                        {filled}/{max} players
+                      </span>
+                      <span
+                        className={
+                          "cbh__slots-status" +
+                          (spotsLeft > 0 ? " cbh__slots-status--open" : " cbh__slots-status--full")
+                        }
+                      >
+                        {spotsLeft > 0 ? `${spotsLeft} open` : "Full"}
+                      </span>
+                    </div>
+                    <div className="cbh__slots" aria-hidden>
+                      {Array.from({ length: max }, (_, i) => (
+                        <span
+                          key={i}
+                          className={"cbh__slot" + (i < filled ? " cbh__slot--filled" : "")}
+                        >
+                          {i < filled && (
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                            </svg>
+                          )}
                         </span>
-                        <span>{spotsLeft > 0 ? `${spotsLeft} open` : "Full"}</span>
-                      </div>
-                      <div className="cbh__fill-bar" aria-hidden>
-                        <span style={{ width: `${fillPct}%` }} />
-                      </div>
-                      <div className="cbh__slots" aria-hidden>
-                        {Array.from({ length: max }, (_, i) => (
-                          <span
-                            key={i}
-                            className={
-                              "cbh__slot-dot" + (i < filled ? " cbh__slot-dot--filled" : "")
-                            }
-                          >
-                            {i < filled ? "✓" : ""}
-                          </span>
-                        ))}
-                      </div>
+                      ))}
                     </div>
                   </div>
 
@@ -332,18 +367,18 @@ export function CaseBattlesHub() {
                         type="button"
                         className="cbh__join-btn"
                         disabled={!canJoin}
-                      title={
-                        !joinable
+                        title={
+                          !joinable
                             ? "This battle has ended"
                             : spotsLeft <= 0
                               ? "Battle is full"
                               : balance < entry
                                 ? "Insufficient balance"
                                 : undefined
-                      }
+                        }
                         onClick={(e) => void handleJoin(e, row)}
                       >
-                        Join
+                        Join battle
                       </button>
                     )}
                     <button

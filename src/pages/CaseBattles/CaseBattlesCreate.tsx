@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
@@ -26,13 +26,13 @@ import {
 } from "../../lib/games/case-battles/config";
 import { formatCoins } from "../../lib/format";
 import { createCaseBattle } from "../../lib/caseBattles";
-import { CasePickerModal } from "./CasePickerModal";
 import { CaseBattleRoundsStrip } from "./CaseBattleRoundsStrip";
 import { CaseBattlesTopbar } from "./CaseBattlesTopbar";
 import { gamemodeIcon, gamemodeLabel } from "./caseBattlesUi";
 import "./CaseBattlesCreate.css";
 
 type GroupedCase = { caseId: string; count: number };
+type SortOrder = "asc" | "desc";
 
 function groupCaseIds(ids: string[]): GroupedCase[] {
   const order: string[] = [];
@@ -44,6 +44,10 @@ function groupCaseIds(ids: string[]): GroupedCase[] {
   return order.map((caseId) => ({ caseId, count: counts.get(caseId)! }));
 }
 
+function countCaseInList(ids: string[], caseId: string): number {
+  return ids.filter((id) => id === caseId).length;
+}
+
 export function CaseBattlesCreate() {
   const { user, loading: authLoading } = useAuth();
   const { profile, refreshProfile } = useProfile();
@@ -52,13 +56,14 @@ export function CaseBattlesCreate() {
   const [gamemode, setGamemode] = useState<BattleGamemode>("normal");
   const [playerMode, setPlayerMode] = useState<PlayerModeId>("1v1");
   const [selectedCaseIds, setSelectedCaseIds] = useState<string[]>([]);
-  const [caseModalOpen, setCaseModalOpen] = useState(false);
   const [borrow, setBorrow] = useState(false);
   const [borrowPercent, setBorrowPercent] = useState(50);
   const [fastSpin, setFastSpin] = useState(false);
   const [crazy, setCrazy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [catalogSearch, setCatalogSearch] = useState("");
+  const [catalogSort, setCatalogSort] = useState<SortOrder>("asc");
 
   const busyRef = useRef(false);
   const cancelledRef = useRef(false);
@@ -89,9 +94,31 @@ export function CaseBattlesCreate() {
   const canCreate =
     !!user && selectedCaseIds.length > 0 && balance >= upfrontCost && !busy;
 
-  const addCaseFromModal = useCallback((caseId: string) => {
+  const filteredCatalog = useMemo(() => {
+    const q = catalogSearch.trim().toLowerCase();
+    const list = CASE_CATALOG.filter(
+      (c) => !q || c.name.toLowerCase().includes(q) || c.id.toLowerCase().includes(q)
+    );
+    return [...list].sort((a, b) =>
+      catalogSort === "asc" ? a.price - b.price : b.price - a.price
+    );
+  }, [catalogSearch, catalogSort]);
+
+  const caseCountInSelection = useCallback(
+    (caseId: string) => countCaseInList(selectedCaseIds, caseId),
+    [selectedCaseIds]
+  );
+
+  const addCase = useCallback((caseId: string) => {
     setSelectedCaseIds((prev) => {
-      if (!canAddCaseToSelection(prev, caseId)) return prev;
+      if (!canAddCaseToSelection(prev, caseId)) {
+        if (prev.length >= MAX_CASES_PER_BATTLE) {
+          setError(`Maximum ${MAX_CASES_PER_BATTLE} cases per battle.`);
+        } else {
+          setError(`Maximum ${MAX_COPIES_PER_CASE_TYPE} of each case type.`);
+        }
+        return prev;
+      }
       setError(null);
       return [...prev, caseId];
     });
@@ -202,67 +229,6 @@ export function CaseBattlesCreate() {
     navigate(`/case-battles/${data.battleId}`);
   };
 
-  const summaryCard = (
-    <>
-      <div className="cbc__summary-card cbc__summary-card--details">
-        <p className="cbc__summary-title">Battle summary</p>
-        <dl className="cbc__summary-rows">
-          <div className="cbc__summary-row">
-            <dt>Mode</dt>
-            <dd>
-              {gamemodeIcon(gamemode)} {gamemodeLabel(gamemode)}
-            </dd>
-          </div>
-          <div className="cbc__summary-row">
-            <dt>Players</dt>
-            <dd>
-              {playerMode} ({maxPlayers} slots)
-            </dd>
-          </div>
-          <div className="cbc__summary-row">
-            <dt>Rounds</dt>
-            <dd>{selectedCaseIds.length || "—"}</dd>
-          </div>
-          
-          <div className="cbc__summary-row">
-            <dt>Case value</dt>
-            <dd>{formatCoins(createTotal, "balance")}</dd>
-          </div>
-          <div className="cbc__summary-row">
-            <dt>Options</dt>
-            <dd>
-              {[crazy && !isGroup ? "Crazy" : null, fastSpin ? "Fast spin" : null, effectiveBorrow > 0 ? `${effectiveBorrow}% borrow` : null]
-                .filter(Boolean)
-                .join(" · ") || "Standard"}
-            </dd>
-          </div>
-          <div className="cbc__summary-row cbc__summary-row--total">
-            <dt>Pay now</dt>
-            <dd>{formatCoins(upfrontCost, "balance")}</dd>
-          </div>
-          {effectiveBorrow > 0 && (
-            <div className="cbc__summary-row">
-              <dt>Win keep</dt>
-              <dd>{Math.round(payoutKeepMultiplier(effectiveBorrow) * 100)}%</dd>
-            </div>
-          )}
-          <div className="cbc__summary-row cbc__summary-row--pot">
-            <dt>Max pot</dt>
-            <dd>{selectedCaseIds.length ? formatCoins(maxPot, "balance") : "—"}</dd>
-          </div>
-        </dl>
-      </div>
-      <button
-        type="button"
-        className="cbc__summary-create"
-        disabled={!canCreate}
-        onClick={() => void handleCreate()}
-      >
-        {busy ? "Creating…" : `Create · ${formatCoins(upfrontCost, "balance")}`}
-      </button>
-    </>
-  );
-
   if (authLoading) {
     return (
       <div className="cb-page lc-page">
@@ -283,17 +249,8 @@ export function CaseBattlesCreate() {
       <CaseBattlesTopbar
         backTo="/case-battles"
         backLabel="Battles"
-        title="Create"
-        actions={
-          <button
-            type="button"
-            className="cb-page__btn-primary"
-            disabled={!canCreate}
-            onClick={() => void handleCreate()}
-          >
-            {busy ? "…" : `Create ${formatCoins(upfrontCost, "balance")}`}
-          </button>
-        }
+        title="Create battle"
+        subtitle={`${selectedCaseIds.length} / ${MAX_CASES_PER_BATTLE} rounds · ${formatCoins(createTotal, "balance")} per seat`}
       />
 
       {error && (
@@ -303,44 +260,209 @@ export function CaseBattlesCreate() {
       )}
 
       <div className="cbc__layout">
-        <div className="cbc__main">
-          <div className="cbc__config-row">
-            <section className="cbc__block">
-              <h2 className="cbc__section-label">Gamemode</h2>
-              <div className="cbc__mode-grid">
-                {GAMEMODES.map((m) => (
+        {/* ─────────────────────────────────────────────────────────────
+            LEFT — Case catalog grid
+            ───────────────────────────────────────────────────────────── */}
+        <main className="cbc__main">
+          <section className="cbc__catalog">
+            <div className="cbc__catalog-head">
+              <div className="cbc__catalog-head-text">
+                <h2 className="cbc__block-title">Case selection</h2>
+                <p className="cbc__block-sub">
+                  Browse {CASE_CATALOG.length} cases · tap{" "}
+                  <span className="cbc__plus-glyph" aria-hidden>
+                    +
+                  </span>{" "}
+                  to add a round
+                </p>
+              </div>
+              <div className="cbc__catalog-tools">
+                <label className="cbc__search">
+                  <span className="cbc__search-icon" aria-hidden>
+                    ⌕
+                  </span>
+                  <input
+                    type="search"
+                    placeholder="Search cases…"
+                    value={catalogSearch}
+                    onChange={(e) => setCatalogSearch(e.target.value)}
+                    aria-label="Search cases"
+                  />
+                </label>
+                <div className="cbc__sort" role="group" aria-label="Sort by price">
                   <button
-                    key={m.id}
                     type="button"
-                    disabled={!m.live}
                     className={
-                      "cbc__mode-card" +
-                      (gamemode === m.id ? " cbc__mode-card--active" : "") +
-                      (!m.live ? " cbc__mode-card--soon" : "")
+                      "cbc__sort-btn" +
+                      (catalogSort === "asc" ? " cbc__sort-btn--active" : "")
                     }
-                    onClick={() => m.live && selectGamemode(m.id)}
+                    onClick={() => setCatalogSort("asc")}
                   >
-                    <span className="cbc__mode-icon" aria-hidden>
-                      {gamemodeIcon(m.id)}
-                    </span>
+                    ↑ Low
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      "cbc__sort-btn" +
+                      (catalogSort === "desc" ? " cbc__sort-btn--active" : "")
+                    }
+                    onClick={() => setCatalogSort("desc")}
+                  >
+                    ↓ High
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="cbc__catalog-grid">
+              {filteredCatalog.map((c) => {
+                const count = caseCountInSelection(c.id);
+                const atMaxType = count >= MAX_COPIES_PER_CASE_TYPE;
+                const atMaxBattle = selectedCaseIds.length >= MAX_CASES_PER_BATTLE;
+                const isMaxed = atMaxType || atMaxBattle;
+                const cardStyle = { "--cbc-accent": c.accent } as CSSProperties;
+                return (
+                  <article
+                    key={c.id}
+                    className={
+                      "cbc__catalog-card" +
+                      (count > 0 ? " cbc__catalog-card--selected" : "")
+                    }
+                    style={cardStyle}
+                  >
+                    {count > 0 && (
+                      <span className="cbc__catalog-check" aria-hidden>
+                        ✓
+                      </span>
+                    )}
+                    <div
+                      className="cbc__catalog-art"
+                      style={{
+                        background: `radial-gradient(circle at 50% 30%, ${c.accent}33, transparent 72%)`,
+                      }}
+                    >
+                      <span className="cbc__catalog-mono" style={{ color: c.accent }}>
+                        {c.name.charAt(0)}
+                      </span>
+                      {count > 0 && (
+                        <span className="cbc__catalog-count" aria-label={`${count} added`}>
+                          {count}
+                        </span>
+                      )}
+                    </div>
+                    <div className="cbc__catalog-meta">
+                      <p className="cbc__catalog-name" title={c.name}>
+                        {c.name}
+                      </p>
+                      <p className="cbc__catalog-price">{formatCoins(c.price, "balance")}</p>
+                    </div>
+                    <div className="cbc__catalog-qty">
+                      {count > 0 ? (
+                        <>
+                          <button
+                            type="button"
+                            className="cbc__qty-btn"
+                            aria-label={`Remove one ${c.name}`}
+                            onClick={() => adjustCaseQty(c.id, -1)}
+                          >
+                            −
+                          </button>
+                          <span className="cbc__qty-val">{count}</span>
+                          <button
+                            type="button"
+                            className="cbc__qty-btn"
+                            aria-label={`Add one ${c.name}`}
+                            disabled={isMaxed}
+                            onClick={() => addCase(c.id)}
+                          >
+                            +
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="cbc__catalog-add"
+                          disabled={atMaxBattle}
+                          onClick={() => addCase(c.id)}
+                        >
+                          + Add
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+              {filteredCatalog.length === 0 && (
+                <p className="cbc__catalog-empty">
+                  No cases match “{catalogSearch}”.
+                </p>
+              )}
+            </div>
+          </section>
+        </main>
+
+        {/* ─────────────────────────────────────────────────────────────
+            RIGHT — Configuration + Selected cases + Summary + Create
+            ───────────────────────────────────────────────────────────── */}
+        <aside className="cbc__summary" aria-label="Battle configuration">
+          {/* Gamemode cards */}
+          <section className="cbc__config-block">
+            <h3 className="cbc__block-title">Gamemode</h3>
+            <div className="cbc__mode-grid">
+              {GAMEMODES.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  disabled={!m.live}
+                  className={
+                    "cbc__mode-card" +
+                    (gamemode === m.id ? " cbc__mode-card--active" : "") +
+                    (!m.live ? " cbc__mode-card--soon" : "")
+                  }
+                  onClick={() => m.live && selectGamemode(m.id)}
+                >
+                  <span className="cbc__mode-icon" aria-hidden>
+                    {gamemodeIcon(m.id)}
+                  </span>
+                  <span className="cbc__mode-text">
                     <span className="cbc__mode-name">{m.name}</span>
                     <span className="cbc__mode-desc">{m.description}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
 
-            <section className="cbc__block">
-              <h2 className="cbc__section-label">
-                {isGroup ? "Players (group)" : "Players"}
-              </h2>
+          {/* Players */}
+          <section className="cbc__config-block">
+            <h3 className="cbc__block-title">
+              {isGroup ? "Players (group)" : "Players"}
+            </h3>
+            {isGroup && (
+              <p className="cbc__block-hint">Pot split equally among all players.</p>
+            )}
+            <div className="cbc__player-panel">
               {isGroup ? (
-                <p className="cbc__block-hint">Pot split equally among all players.</p>
-              ) : null}
-              <div className="cbc__player-panel">
-                {isGroup ? (
+                <div className="cbc__player-row">
+                  {GROUP_PLAYER_MODES.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={
+                        "cbc__player-btn" +
+                        (playerMode === m.id ? " cbc__player-btn--active" : "")
+                      }
+                      onClick={() => setPlayerMode(m.id)}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  <p className="cbc__player-sub">Solo</p>
                   <div className="cbc__player-row">
-                    {GROUP_PLAYER_MODES.map((m) => (
+                    {SOLO_PLAYER_MODES.map((m) => (
                       <button
                         key={m.id}
                         type="button"
@@ -354,198 +476,193 @@ export function CaseBattlesCreate() {
                       </button>
                     ))}
                   </div>
-                ) : (
-                  <>
-                    <p className="cbc__player-sub">Solo</p>
-                    <div className="cbc__player-row">
-                      {SOLO_PLAYER_MODES.map((m) => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          className={
-                            "cbc__player-btn" +
-                            (playerMode === m.id ? " cbc__player-btn--active" : "")
-                          }
-                          onClick={() => setPlayerMode(m.id)}
-                        >
-                          {m.label}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="cbc__player-sub">Team</p>
-                    <div className="cbc__player-row">
-                      {TEAM_PLAYER_MODES.map((m) => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          className={
-                            "cbc__player-btn" +
-                            (playerMode === m.id ? " cbc__player-btn--active" : "")
-                          }
-                          onClick={() => setPlayerMode(m.id)}
-                        >
-                          {m.label}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-              <div className="cbc__toggles">
-                <div className="cbc__toggles-borrow">
-                  <button
-                    type="button"
-                    className="cbc__toggle"
-                    aria-pressed={borrow}
-                    onClick={() => setBorrow((v) => !v)}
-                  >
-                    <span
-                      className={"cbc__toggle-track" + (borrow ? " cbc__toggle-track--on" : "")}
-                      aria-hidden
-                    >
-                      <span className="cbc__toggle-thumb" />
-                    </span>
-                    Borrow
-                  </button>
-                  <label
-                    className={
-                      "cbc__borrow-slider" + (borrow ? "" : " cbc__borrow-slider--disabled")
-                    }
-                  >
-                    <span className="cbc__borrow-label">{borrowPercent}%</span>
-                    <input
-                      type="range"
-                      min={1}
-                      max={MAX_BORROW_PERCENT}
-                      value={borrowPercent}
-                      disabled={!borrow}
-                      onChange={(e) => setBorrowPercent(Number(e.target.value))}
-                    />
-                  </label>
-                </div>
-                <div className="cbc__toggles-bottom">
-                  <button
-                    type="button"
-                    className="cbc__toggle"
-                    aria-pressed={fastSpin}
-                    onClick={() => setFastSpin((v) => !v)}
-                  >
-                    <span
-                      className={
-                        "cbc__toggle-track" + (fastSpin ? " cbc__toggle-track--on" : "")
-                      }
-                      aria-hidden
-                    >
-                      <span className="cbc__toggle-thumb" />
-                    </span>
-                    Fast spin
-                  </button>
-                  <button
-                    type="button"
-                    className={
-                      "cbc__toggle" + (isGroup ? " cbc__toggle--disabled" : "")
-                    }
-                    aria-pressed={crazy}
-                    disabled={isGroup}
-                    title={
-                      isGroup
-                        ? "Not available in Group mode"
-                        : "Lowest unboxed wins (or flipped jackpot odds)"
-                    }
-                    onClick={() => !isGroup && setCrazy((v) => !v)}
-                  >
-                    <span
-                      className={"cbc__toggle-track" + (crazy ? " cbc__toggle-track--on" : "")}
-                      aria-hidden
-                    >
-                      <span className="cbc__toggle-thumb" />
-                    </span>
-                    Crazy
-                  </button>
-                </div>
-              </div>
-            </section>
-          </div>
+                  <p className="cbc__player-sub">Team</p>
+                  <div className="cbc__player-row">
+                    {TEAM_PLAYER_MODES.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        className={
+                          "cbc__player-btn" +
+                          (playerMode === m.id ? " cbc__player-btn--active" : "")
+                        }
+                        onClick={() => setPlayerMode(m.id)}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
 
-          <section className="cbc__cases-panel">
-            <div className="cbc__cases-head">
-              <h2 className="cbc__section-label">Cases</h2>
+          {/* Options */}
+          <section className="cbc__config-block">
+            <h3 className="cbc__block-title">Options</h3>
+            <div className="cbc__toggles">
+              <button
+                type="button"
+                className={"cbc__toggle" + (isGroup ? " cbc__toggle--disabled" : "")}
+                aria-pressed={crazy}
+                disabled={isGroup}
+                title={
+                  isGroup
+                    ? "Not available in Group mode"
+                    : "Lowest unboxed wins (or flipped jackpot odds)"
+                }
+                onClick={() => !isGroup && setCrazy((v) => !v)}
+              >
+                <span
+                  className={"cbc__toggle-track" + (crazy ? " cbc__toggle-track--on" : "")}
+                  aria-hidden
+                >
+                  <span className="cbc__toggle-thumb" />
+                </span>
+                <span className="cbc__toggle-label">
+                  <span className="cbc__toggle-name">Crazy mode</span>
+                  <span className="cbc__toggle-hint">
+                    {isGroup ? "Disabled in group" : "Lowest unboxed wins"}
+                  </span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="cbc__toggle"
+                aria-pressed={fastSpin}
+                onClick={() => setFastSpin((v) => !v)}
+              >
+                <span
+                  className={"cbc__toggle-track" + (fastSpin ? " cbc__toggle-track--on" : "")}
+                  aria-hidden
+                >
+                  <span className="cbc__toggle-thumb" />
+                </span>
+                <span className="cbc__toggle-label">
+                  <span className="cbc__toggle-name">Fast spin</span>
+                  <span className="cbc__toggle-hint">2s rounds instead of 5s</span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                className="cbc__toggle"
+                aria-pressed={borrow}
+                onClick={() => setBorrow((v) => !v)}
+              >
+                <span
+                  className={"cbc__toggle-track" + (borrow ? " cbc__toggle-track--on" : "")}
+                  aria-hidden
+                >
+                  <span className="cbc__toggle-thumb" />
+                </span>
+                <span className="cbc__toggle-label">
+                  <span className="cbc__toggle-name">Borrow</span>
+                  <span className="cbc__toggle-hint">Pay less now, keep less if you win</span>
+                </span>
+              </button>
+
+              {borrow && (
+                <label className="cbc__borrow-slider">
+                  <span className="cbc__borrow-label">{borrowPercent}%</span>
+                  <input
+                    type="range"
+                    min={1}
+                    max={MAX_BORROW_PERCENT}
+                    value={borrowPercent}
+                    onChange={(e) => setBorrowPercent(Number(e.target.value))}
+                    aria-label="Borrow percentage"
+                  />
+                  <span className="cbc__borrow-keep">
+                    Keep {Math.round(payoutKeepMultiplier(borrowPercent) * 100)}%
+                  </span>
+                </label>
+              )}
+            </div>
+          </section>
+
+          {/* Selected cases list */}
+          <section className="cbc__config-block">
+            <div className="cbc__block-head">
+              <h3 className="cbc__block-title">Selected cases</h3>
               {selectedCaseIds.length > 0 && (
-                <div className="cbc__cases-tools">
-                  <button type="button" className="cbc__tool-btn" onClick={sortCasesAsc}>
-                    ↑ Price
+                <div className="cbc__selected-tools">
+                  <button
+                    type="button"
+                    className="cbc__tool-btn"
+                    onClick={sortCasesAsc}
+                    title="Sort by price ascending"
+                  >
+                    ↑
                   </button>
-                  <button type="button" className="cbc__tool-btn" onClick={sortCasesDesc}>
-                    ↓ Price
+                  <button
+                    type="button"
+                    className="cbc__tool-btn"
+                    onClick={sortCasesDesc}
+                    title="Sort by price descending"
+                  >
+                    ↓
                   </button>
-                  <button type="button" className="cbc__tool-btn" onClick={randomizeCases}>
-                    Shuffle
+                  <button
+                    type="button"
+                    className="cbc__tool-btn"
+                    onClick={randomizeCases}
+                    title="Shuffle order"
+                  >
+                    ⇄
                   </button>
                   <button
                     type="button"
                     className="cbc__tool-btn cbc__tool-btn--danger"
                     onClick={() => setSelectedCaseIds([])}
+                    title="Clear all"
                   >
-                    Clear
+                    ✕
                   </button>
                 </div>
               )}
             </div>
 
-            <p className="cbc__cases-stats">
-              <strong>{selectedCaseIds.length}</strong> / {MAX_CASES_PER_BATTLE} rounds ·{" "}
-              <strong>{formatCoins(createTotal, "balance")}</strong> total case value
-            </p>
-
-            {selectedCaseIds.length > 0 && (
-              <CaseBattleRoundsStrip caseIds={selectedCaseIds} variant="create" />
-            )}
-
             {selectedCaseIds.length === 0 ? (
-              <div className="cbc__cases-empty">
-                <p>No cases selected yet. Add up to {MAX_CASES_PER_BATTLE} rounds.</p>
-                <button
-                  type="button"
-                  className="cb-page__btn-primary"
-                  onClick={() => setCaseModalOpen(true)}
-                >
-                  + Add cases
-                </button>
-              </div>
+              <p className="cbc__selected-empty">
+                No cases selected yet. Add cases from the catalog on the left.
+              </p>
             ) : (
-              <div className="cbc__cases-grid">
-                {groupedCases.map(({ caseId, count }) => {
-                  const c = getCaseById(caseId);
-                  const atMaxType = count >= MAX_COPIES_PER_CASE_TYPE;
-                  const atMaxBattle = selectedCaseIds.length >= MAX_CASES_PER_BATTLE;
-                  return (
-                    <article
-                      key={caseId}
-                      className="cbc__case-slot"
-                      style={{ borderColor: c?.accent }}
-                    >
-                      <button
-                        type="button"
-                        className="cbc__case-remove"
-                        aria-label={`Remove ${c?.name ?? caseId}`}
-                        onClick={() => removeCaseGroup(caseId)}
-                      >
-                        ×
-                      </button>
-                      <div
-                        className="cbc__case-art"
-                        style={{
-                          background: c
-                            ? `linear-gradient(145deg, ${c.accent}33, transparent)`
-                            : undefined,
-                        }}
-                      >
-                        📦
-                      </div>
-                      <div className="cbc__case-body">
-                        <p className="cbc__case-name">{c?.name ?? caseId}</p>
-                        <p className="cbc__case-price">{formatCoins(c?.price ?? 0, "balance")}</p>
-                        <div className="cbc__qty">
+              <>
+                <p className="cbc__selected-stats">
+                  <strong>{selectedCaseIds.length}</strong> / {MAX_CASES_PER_BATTLE} rounds ·{" "}
+                  <strong>{formatCoins(createTotal, "balance")}</strong> per seat
+                </p>
+
+                <CaseBattleRoundsStrip caseIds={selectedCaseIds} variant="create" />
+
+                <div className="cbc__selected-list">
+                  {groupedCases.map(({ caseId, count }) => {
+                    const c = getCaseById(caseId);
+                    const atMaxType = count >= MAX_COPIES_PER_CASE_TYPE;
+                    const atMaxBattle = selectedCaseIds.length >= MAX_CASES_PER_BATTLE;
+                    return (
+                      <div key={caseId} className="cbc__selected-item">
+                        <span
+                          className="cbc__selected-emoji"
+                          style={{
+                            borderColor: c?.accent,
+                            background: c
+                              ? `linear-gradient(145deg, ${c.accent}33, transparent)`
+                              : undefined,
+                          }}
+                          aria-hidden
+                        >
+                          {c?.name.charAt(0) ?? "📦"}
+                        </span>
+                        <div className="cbc__selected-info">
+                          <span className="cbc__selected-name">{c?.name ?? caseId}</span>
+                          <span className="cbc__selected-price">
+                            {formatCoins(c?.price ?? 0, "balance")} each
+                          </span>
+                        </div>
+                        <div className="cbc__selected-qty">
                           <button
                             type="button"
                             className="cbc__qty-btn"
@@ -566,36 +683,69 @@ export function CaseBattlesCreate() {
                             +
                           </button>
                         </div>
+                        <button
+                          type="button"
+                          className="cbc__selected-remove"
+                          aria-label={`Remove ${c?.name ?? caseId}`}
+                          onClick={() => removeCaseGroup(caseId)}
+                        >
+                          ×
+                        </button>
                       </div>
-                    </article>
-                  );
-                })}
-                {selectedCaseIds.length < MAX_CASES_PER_BATTLE && (
-                  <button
-                    type="button"
-                    className="cbc__case-slot cbc__case-slot--add"
-                    onClick={() => setCaseModalOpen(true)}
-                  >
-                    <span className="cbc__case-slot-plus">+</span>
-                    ADD CASE
-                  </button>
-                )}
-              </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </section>
-        </div>
 
-        <aside className="cbc__summary">{summaryCard}</aside>
+          {/* Summary + Create */}
+          <section className="cbc__summary-bar" aria-label="Battle cost summary">
+            <div className="cbc__summary-total">
+              <span className="cbc__summary-total-label">
+                {effectiveBorrow > 0 ? "Pay now" : "Entry cost"}
+              </span>
+              <strong className="cbc__summary-total-value">
+                {formatCoins(upfrontCost, "balance")}
+              </strong>
+            </div>
+            <div className="cbc__summary-meta">
+              <div className="cbc__summary-meta-row">
+                <span>Per seat</span>
+                <strong>{formatCoins(createTotal, "balance")}</strong>
+              </div>
+              <div className="cbc__summary-meta-row">
+                <span>
+                  Max pot <span className="cbc__summary-meta-hint">({maxPlayers} players)</span>
+                </span>
+                <strong>
+                  {selectedCaseIds.length ? formatCoins(maxPot, "balance") : "—"}
+                </strong>
+              </div>
+              <div className="cbc__summary-meta-row">
+                <span>Mode</span>
+                <strong>
+                  {gamemodeIcon(gamemode)} {gamemodeLabel(gamemode)} · {playerMode}
+                </strong>
+              </div>
+              {effectiveBorrow > 0 && (
+                <div className="cbc__summary-meta-row">
+                  <span>Win keep</span>
+                  <strong>{Math.round(payoutKeepMultiplier(effectiveBorrow) * 100)}%</strong>
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              className="cbc__summary-create"
+              disabled={!canCreate}
+              onClick={() => void handleCreate()}
+            >
+              {busy ? "Creating…" : `Create battle · ${formatCoins(upfrontCost, "balance")}`}
+            </button>
+          </section>
+        </aside>
       </div>
-
-      <CasePickerModal
-        open={caseModalOpen}
-        onClose={() => setCaseModalOpen(false)}
-        catalog={CASE_CATALOG}
-        selectedCaseIds={selectedCaseIds}
-        onAddCase={addCaseFromModal}
-        classPrefix="cbc-modal"
-      />
     </div>
   );
 }

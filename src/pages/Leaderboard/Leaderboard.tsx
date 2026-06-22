@@ -3,6 +3,7 @@ import { Trophy } from "lucide-react";
 import { formatUsd } from "../../lib/format";
 import { fetchBiggestWins, fetchMostWagered, type LeaderboardTab, type LeaderboardEntry } from "../../lib/leaderboard";
 import { useProfile } from "../../contexts/ProfileContext";
+import { Seo } from "../../components/Seo/Seo";
 import "./Leaderboard.css";
 
 export function Leaderboard() {
@@ -33,9 +34,14 @@ export function Leaderboard() {
 
   return (
     <div className="lc-page leaderboard-page">
+      <Seo
+        title="Leaderboard"
+        description="Top 50 LottaCash players by biggest single win or total volume wagered."
+        path="/leaderboard"
+      />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Leaderboard</h1>
-        <p className="lc-page__subtitle">Top players on LottaCash</p>
+        <p className="lc-page__subtitle">The top 50 players by biggest single win or total volume wagered.</p>
       </header>
 
       <div className="lc-tabs" role="tablist" aria-label="Leaderboard categories">
@@ -82,7 +88,7 @@ export function Leaderboard() {
                 ) : (
                   <>
                     <th className="leaderboard-table__amount">Total Wagered</th>
-                    <th className="leaderboard-table__secondary">Win Rate</th>
+                    <th className="leaderboard-table__secondary leaderboard-table__col--secondary">Win Rate</th>
                   </>
                 )}
               </tr>
@@ -146,7 +152,7 @@ export function Leaderboard() {
                     ) : (
                       <>
                         <td className="leaderboard-table__amount">{formatUsd(entry.value)}</td>
-                        <td className="leaderboard-table__secondary">
+                        <td className="leaderboard-table__secondary leaderboard-table__col--secondary">
                           {entry.secondary != null ? `${entry.secondary.toFixed(1)}%` : "—"}
                         </td>
                       </>

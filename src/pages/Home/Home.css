@@ -15,8 +15,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 80% at 75% 50%, rgba(220, 20, 60, 0.12) 0%, transparent 60%),
-    linear-gradient(90deg, rgba(4, 4, 6, 0.95) 0%, rgba(4, 4, 6, 0.4) 45%, transparent 70%);
+    radial-gradient(ellipse 70% 80% at 75% 50%, var(--lc-crimson-glow) 0%, transparent 60%),
+    linear-gradient(90deg, rgba(var(--lc-bg-rgb), 0.95) 0%, rgba(var(--lc-bg-rgb), 0.4) 45%, transparent 70%);
   pointer-events: none;
 }
 
@@ -112,12 +112,9 @@
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
   box-shadow: var(--lc-shadow-sm);
-  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
-}
-
-.home__pillar:hover {
-  border-color: var(--lc-border-accent);
-  box-shadow: var(--lc-shadow-md), 0 0 24px rgba(220, 20, 60, 0.08);
+  /* No hover state: these cards are informational only (no link target).
+     The 3D tilt from TiltCard provides the only visual hover feedback,
+     which is intentionally decorative rather than an affordance. */
 }
 
 .home__pillar-icon {

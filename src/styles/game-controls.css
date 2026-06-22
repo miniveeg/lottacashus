@@ -5,6 +5,18 @@
   overflow: hidden;
 }
 
+/* Shared game-page subtitle style. Game pages previously declared their own
+   `.crash__subtitle`, `.keno__subtitle`, etc. with byte-identical rules.
+   Apply `.lc-game-subtitle` alongside (or instead of) the page-specific
+   class to inherit these shared properties. */
+.lc-game-subtitle {
+  color: var(--lc-text-secondary);
+  font-size: 0.9rem;
+  max-width: 36rem;
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+
 .game-controls__options {
   display: flex;
   flex-direction: column;
@@ -51,7 +63,7 @@
 .game-controls__mines-slider {
   flex: 1;
   min-width: 0;
-  accent-color: var(--lc-gold);
+  accent-color: var(--lc-crimson);
 }
 
 .game-controls__mines-value {
@@ -60,7 +72,7 @@
   font-weight: 500;
   min-width: 1.75rem;
   text-align: center;
-  color: var(--lc-gold);
+  color: var(--lc-amber);
   font-size: 0.95rem;
 }
 
@@ -106,38 +118,15 @@
 
 .game-controls__wager-input:focus {
   outline: none;
-  border-color: var(--lc-border-gold);
-  box-shadow: 0 0 0 3px var(--lc-gold-glow);
+  border-color: var(--lc-border-accent);
+  box-shadow: 0 0 0 3px var(--lc-crimson-glow);
 }
 
-.game-controls__wager-half,
-.game-controls__wager-double {
-  min-height: 2.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--lc-radius-md);
-  font-family: var(--lc-font-display);
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--lc-text-secondary);
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border-strong);
-  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
-}
-
-.game-controls__wager-half:hover:not(:disabled),
-.game-controls__wager-double:hover:not(:disabled) {
-  background: var(--lc-bg-hover);
-  color: var(--lc-gold);
-  border-color: var(--lc-border-gold);
-}
-
-.game-controls__wager-half:disabled,
-.game-controls__wager-double:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+/* Wager half/double buttons are now styled by .game-controls__wager-adj
+   below. The old .game-controls__wager-half / .game-controls__wager-double
+   classes were byte-for-byte duplicates of .game-controls__wager-adj and
+   have been removed — game pages should use .game-controls__wager-adj for
+   all wager adjustment buttons (½, 2×, MAX). */
 
 .game-controls__play {
   width: 100%;
@@ -153,16 +142,16 @@
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #080602;
-  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
-  box-shadow: 0 2px 20px var(--lc-gold-glow), var(--lc-shadow-inset);
+  color: var(--lc-text-on-primary);
+  background: linear-gradient(135deg, var(--lc-amber) 0%, var(--lc-amber-dim) 100%);
+  box-shadow: 0 2px 20px var(--lc-amber-glow), var(--lc-shadow-inset);
   transition: transform var(--lc-transition-spring), filter var(--lc-transition), box-shadow var(--lc-transition);
 }
 
 .game-controls__play:hover:not(:disabled) {
   transform: translateY(-2px);
   filter: brightness(1.08);
-  box-shadow: 0 6px 32px var(--lc-gold-glow-strong), var(--lc-shadow-inset);
+  box-shadow: 0 6px 32px var(--lc-amber-glow-strong), var(--lc-shadow-inset);
 }
 
 .game-controls__play:disabled {
@@ -174,7 +163,7 @@
 .game-controls__play--cashout {
   background: linear-gradient(135deg, var(--lc-emerald) 0%, var(--lc-emerald-dim) 100%);
   box-shadow: 0 2px 20px var(--lc-emerald-glow);
-  color: #02160a;
+  color: var(--lc-text-on-primary);
 }
 
 .game-controls__play--cashout:hover:not(:disabled) {
@@ -210,7 +199,7 @@
 
 .game-controls__stat-value--win  { color: var(--lc-emerald); }
 .game-controls__stat-value--loss { color: var(--lc-ruby); }
-.game-controls__stat-value--gold { color: var(--lc-gold); }
+.game-controls__stat-value--gold { color: var(--lc-amber); }
 
 /* ── Wager adjustment (half/double/max) ── */
 .game-controls__wager-adj {

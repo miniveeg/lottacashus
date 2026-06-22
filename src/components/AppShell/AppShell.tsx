@@ -199,7 +199,11 @@ function AppShellInner({ children }: AppShellProps) {
         <Sidebar />
       </div>
       <SmoothScroll targetRef={mainRef} scrollKey={pathname}>
-        <main ref={mainRef} id="lc-main-content" className="app-shell__main">
+        <main
+          ref={mainRef}
+          id="lc-main-content"
+          className={`app-shell__main${showHero3d ? " app-shell__main--hero" : ""}`}
+        >
           <PageTransition>
             {showGuestBanner ? <GameGuestBanner /> : null}
             {children}

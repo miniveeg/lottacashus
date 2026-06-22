@@ -1,0 +1,35 @@
+/* Loading state — pulsing crimson/violet square with optional label.
+   Moved out of global.css so the loading pattern is co-located with its
+   component. The keyframe `lc-loading-pulse` is also defined here. */
+
+.lc-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 12rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--lc-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.lc-loading__pulse {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--lc-radius-md);
+  background: linear-gradient(135deg, rgba(220, 20, 60, 0.25), rgba(139, 92, 246, 0.12));
+  animation: lc-loading-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes lc-loading-pulse {
+  0%, 100% { opacity: 0.4; transform: scale(0.9) rotate(0deg); }
+  50%       { opacity: 1;   transform: scale(1)   rotate(6deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-loading__pulse { animation: none; opacity: 0.7; }
+}

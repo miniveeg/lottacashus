@@ -88,7 +88,7 @@ const PAGE_ITEMS: SiteSearchItem[] = [
     description: "Cash out Sweeps Coins for real money",
     href: "/redeem",
     category: "page",
-    keywords: ["redeem", "cash out", "sc", "sweeps", "paypal", "real money"],
+    keywords: ["redeem", "cash out", "sc", "sweeps", "crypto", "sol", "ltc", "eth", "real money"],
   },
   {
     id: "leaderboard",

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bell, LogIn, LogOut, Menu, UserPlus } from "lucide-react";
+import { Bell, Info, LogIn, LogOut, Menu, UserPlus } from "lucide-react";
 import { NotificationsPanel } from "../NotificationsPanel/NotificationsPanel";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/NotificationsContext";
@@ -29,6 +29,7 @@ export function Topbar() {
   const toast = useToast();
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
+  const [coinInfoOpen, setCoinInfoOpen] = useState(false);
 
   const displayName =
     profile?.username ??
@@ -101,17 +102,57 @@ export function Topbar() {
           <motion.button
             type="button"
             className="topbar__coin-toggle"
-            aria-label={`Switch to ${coinType === "balance" ? "Sweeps Coins" : "Gold Coins"} (currently ${coinType === "balance" ? "Gold Coins" : "Sweeps Coins"})`}
+            aria-label={`Switch to ${coinType === "balance" ? "Sweeps Coins" : "Gold Coins"} (currently ${coinType === "balance" ? "Gold Coins" : "Sweeps Coins"}). Press for more info.`}
             aria-pressed={coinType === "sweeps_coins"}
+            aria-expanded={coinInfoOpen}
+            aria-haspopup="dialog"
             onClick={() => setCoinType(coinType === "balance" ? "sweeps_coins" : "balance")}
+            onContextMenu={(e) => {
+              // Long-press / right-click opens the info popover on desktop.
+              e.preventDefault();
+              setCoinInfoOpen((open) => !open);
+            }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            title={coinType === "balance" ? "Showing Gold Coins — click to show Sweeps Coins" : "Showing Sweeps Coins — click to show Gold Coins"}
+            title={coinType === "balance" ? "Showing Gold Coins — click to show Sweeps Coins. Right-click for info." : "Showing Sweeps Coins — click to show Gold Coins. Right-click for info."}
           >
             <span className="topbar__coin-toggle-label" aria-hidden="true">
               {coinType === "balance" ? "GC" : "SC"}
             </span>
           </motion.button>
+          <button
+            type="button"
+            className="topbar__coin-info"
+            aria-label="What are Gold Coins and Sweeps Coins?"
+            aria-expanded={coinInfoOpen}
+            aria-haspopup="dialog"
+            onClick={() => setCoinInfoOpen((open) => !open)}
+          >
+            <Info size={14} aria-hidden />
+          </button>
+          {coinInfoOpen && (
+            <div className="topbar__coin-popover" role="dialog" aria-label="Coin types explained">
+              <button
+                type="button"
+                className="topbar__coin-popover-close"
+                aria-label="Close"
+                onClick={() => setCoinInfoOpen(false)}
+              >
+                ×
+              </button>
+              <p className="topbar__coin-popover-title">Gold Coins (GC)</p>
+              <p className="topbar__coin-popover-text">
+                Play money. No cash value, no redemption. Use GC to try games without risking real funds.
+              </p>
+              <p className="topbar__coin-popover-title">Sweeps Coins (SC)</p>
+              <p className="topbar__coin-popover-text">
+                Redeemable for real crypto (SOL, LTC, or ETH) at 100 SC = $1 USD. Minimum redemption is 100 SC.
+              </p>
+              <p className="topbar__coin-popover-hint">
+                Click the GC/SC button to switch which balance you play with.
+              </p>
+            </div>
+          )}
         </div>
 
         {loading ? (

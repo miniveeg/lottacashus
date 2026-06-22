@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
   adminCreditUser,
-  completeAdminWithdrawal,
-  failAdminWithdrawal,
   fetchAdminRecentDeposits,
   fetchAdminStats,
-  fetchAdminWithdrawals,
   fetchAdminRedemptions,
   processAdminRedemption,
   searchAdminUsers,
@@ -14,7 +11,6 @@ import {
   type AdminRedemption,
   type AdminStats,
   type AdminUserResult,
-  type AdminWithdrawal,
 } from "../../lib/admin";
 import { useAuth } from "../../contexts/AuthContext";
 import { formatUsd } from "../../lib/format";
@@ -28,7 +24,6 @@ import {
   ArrowDownLeft,
   Users,
   CreditCard,
-  Gift,
   Shield,
   AlertCircle,
   Clock,
@@ -60,7 +55,7 @@ function timeAgo(iso: string | null) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-type Tab = "overview" | "withdrawals" | "deposits" | "users" | "redemptions" | "credit";
+type Tab = "overview" | "withdrawals" | "deposits" | "users" | "credit";
 
 export function Admin() {
   const { user: currentUser } = useAuth();
@@ -68,16 +63,20 @@ export function Admin() {
 
   // Dashboard data
   const [stats, setStats] = useState<AdminStats | null>(null);
-  const [withdrawals, setWithdrawals] = useState<AdminWithdrawal[]>([]);
   const [deposits, setDeposits] = useState<AdminDeposit[]>([]);
   const [loading, setLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
+  // Withdrawals (now uses the redemptions table — SC cash-outs)
+  const [withdrawals, setWithdrawals] = useState<AdminRedemption[]>([]);
+  const [withdrawalsLoading, setWithdrawalsLoading] = useState(true);
+  const [withdrawalsError, setWithdrawalsError] = useState<string | null>(null);
+  const [approveBusy, setApproveBusy] = useState<string | null>(null);
+  const [rejectBusy, setRejectBusy] = useState<string | null>(null);
+
   // Action state
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [txHashes, setTxHashes] = useState<Record<string, string>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // User search
@@ -85,13 +84,6 @@ export function Admin() {
   const [userResults, setUserResults] = useState<AdminUserResult[]>([]);
   const [userSearchError, setUserSearchError] = useState<string | null>(null);
   const [userSearching, setUserSearching] = useState(false);
-
-  // Redemptions
-  const [redemptions, setRedemptions] = useState<AdminRedemption[]>([]);
-  const [redemptionsLoading, setRedemptionsLoading] = useState(true);
-  const [redemptionsError, setRedemptionsError] = useState<string | null>(null);
-  const [fundingApproveBusy, setFundingApproveBusy] = useState<string | null>(null);
-  const [fundingRejectBusy, setFundingRejectBusy] = useState<string | null>(null);
 
   // Credit form
   const [creditUserId, setCreditUserId] = useState("");
@@ -102,36 +94,30 @@ export function Admin() {
   const [creditIsError, setCreditIsError] = useState(false);
   const [creditBusy, setCreditBusy] = useState(false);
 
-  const loadRedemptions = useCallback(async () => {
-    setRedemptionsLoading(true);
-    setRedemptionsError(null);
+  const loadWithdrawals = useCallback(async () => {
+    setWithdrawalsLoading(true);
+    setWithdrawalsError(null);
     const { data, error: err } = await fetchAdminRedemptions("pending");
-    setRedemptionsLoading(false);
+    setWithdrawalsLoading(false);
     if (err) {
-      setRedemptionsError(err.message);
+      setWithdrawalsError(err.message);
       return;
     }
-    setRedemptions(data ?? []);
+    setWithdrawals(data ?? []);
   }, []);
 
   const loadDashboard = useCallback(async () => {
     setDashboardError(null);
     setLoading(true);
 
-    // Fetch independently so one failure doesn't hide the others.
     const statsRes = await fetchAdminStats();
-    const withdrawalsRes = await fetchAdminWithdrawals("pending");
     const depositsRes = await fetchAdminRecentDeposits();
 
-    // Apply whatever succeeded — don't let one error blank the whole dashboard.
     if (statsRes.data) setStats(statsRes.data);
-    if (withdrawalsRes.data) setWithdrawals(withdrawalsRes.data);
     if (depositsRes.data) setDeposits(depositsRes.data);
 
-    // Collect the first error (if any) for display, but still show data.
     const firstError =
       statsRes.error?.message ??
-      withdrawalsRes.error?.message ??
       depositsRes.error?.message ??
       null;
     setDashboardError(firstError);
@@ -140,8 +126,8 @@ export function Admin() {
 
   useEffect(() => {
     loadDashboard();
-    loadRedemptions();
-  }, [loadDashboard, loadRedemptions]);
+    loadWithdrawals();
+  }, [loadDashboard, loadWithdrawals]);
 
   function flashSuccess(msg: string) {
     setActionSuccess(msg);
@@ -154,46 +140,32 @@ export function Admin() {
     setActionSuccess(null);
   }
 
-  async function handleComplete(w: AdminWithdrawal) {
-    const txHash = txHashes[w.id]?.trim();
-    if (!txHash) {
-      flashError("Enter the on-chain transaction hash before marking complete.");
-      return;
-    }
-    flashError("");
-    setBusyId(w.id);
-    const { error: err } = await completeAdminWithdrawal(w.id, txHash);
-    setBusyId(null);
-    if (err) {
-      flashError(err.message);
-      return;
-    }
-    setTxHashes((prev) => {
-      if (!prev[w.id]) return prev;
-      const next = { ...prev };
-      delete next[w.id];
-      return next;
-    });
-    flashSuccess(`Withdrawal ${w.id.slice(0, 8)} marked complete.`);
-    await loadDashboard();
-  }
-
-  async function handleFail(w: AdminWithdrawal) {
+  async function handleWithdrawalAction(
+    r: AdminRedemption,
+    action: "approve" | "reject"
+  ) {
+    const verb = action === "approve" ? "Approve" : "Reject";
+    const detail =
+      action === "approve"
+        ? "The user's crypto will be sent from the treasury wallet."
+        : "The user's SC will be refunded.";
     const confirmed = window.confirm(
-      `Fail this ${formatUsd(w.usdAmount)} ${w.chain.toUpperCase()} withdrawal? Funds will be refunded to the user's balance.`
+      `${verb} ${r.scAmount} SC withdrawal for ${displayUser(r.username, r.email)}? ${detail}`
     );
     if (!confirmed) return;
 
-    flashError("");
-    setBusyId(w.id);
-    const { error: err } = await failAdminWithdrawal(w.id);
-    setBusyId(null);
+    setActionError(null);
+    if (action === "approve") setApproveBusy(r.id);
+    else setRejectBusy(r.id);
+    const { error: err } = await processAdminRedemption(r.id, action);
+    if (action === "approve") setApproveBusy(null);
+    else setRejectBusy(null);
     if (err) {
       flashError(err.message);
       return;
     }
-    flashSuccess(`Withdrawal ${w.id.slice(0, 8)} failed and refunded.`);
-    await loadDashboard();
+    flashSuccess(`Withdrawal ${r.id.slice(0, 8)} ${action === "approve" ? "approved" : "rejected"}.`);
+    await Promise.all([loadWithdrawals(), loadDashboard()]);
   }
 
   async function handleUserSearch(e: FormEvent) {
@@ -282,43 +254,13 @@ export function Admin() {
     setCreditUserId("");
   }
 
-  async function handleRedemptionAction(
-    r: AdminRedemption,
-    action: "approve" | "reject"
-  ) {
-    const verb = action === "approve" ? "Approve" : "Reject";
-    const detail =
-      action === "approve"
-        ? "The user's PayPal will be paid out."
-        : "The user's SC will be refunded.";
-    const confirmed = window.confirm(
-      `${verb} ${r.scAmount} SC redemption for ${displayUser(r.username, r.email)}? ${detail}`
-    );
-    if (!confirmed) return;
-
-    setActionError(null);
-    if (action === "approve") setFundingApproveBusy(r.id);
-    else setFundingRejectBusy(r.id);
-    const { error: err } = await processAdminRedemption(r.id, action);
-    if (action === "approve") setFundingApproveBusy(null);
-    else setFundingRejectBusy(null);
-    if (err) {
-      flashError(err.message);
-      return;
-    }
-    flashSuccess(`Redemption ${r.id.slice(0, 8)} ${action === "approve" ? "approved" : "rejected"}.`);
-    await Promise.all([loadRedemptions(), loadDashboard()]);
-  }
-
   const pendingWithdrawalsCount = withdrawals.length;
-  const pendingRedemptionsCount = redemptions.length;
 
   const tabs: { id: Tab; label: string; icon: typeof Clock; badge?: number }[] = [
     { id: "overview", label: "Overview", icon: Shield },
     { id: "withdrawals", label: "Withdrawals", icon: ArrowUpRight, badge: pendingWithdrawalsCount },
     { id: "deposits", label: "Deposits", icon: ArrowDownLeft },
     { id: "users", label: "Users", icon: Users },
-    { id: "redemptions", label: "Redemptions", icon: Gift, badge: pendingRedemptionsCount },
     { id: "credit", label: "Credit", icon: CreditCard },
   ];
 
@@ -328,12 +270,12 @@ export function Admin() {
         <div className="admin__header-row">
           <div>
             <h1 className="admin__title">Admin Dashboard</h1>
-            <p className="admin__subtitle">Manage withdrawals, deposits, users, and redemptions</p>
+            <p className="admin__subtitle">Manage withdrawals, deposits, users, and credits</p>
           </div>
           <button
             type="button"
             className="admin__refresh-btn"
-            onClick={() => { loadDashboard(); loadRedemptions(); }}
+            onClick={() => { loadDashboard(); loadWithdrawals(); }}
             disabled={loading}
             aria-label="Refresh all data"
           >
@@ -356,13 +298,13 @@ export function Admin() {
         </div>
       )}
 
-      {/* Stats bar — always visible */}
+      {/* Stats bar */}
       <div className="admin__stats-bar">
         <div className="admin__stat-card admin__stat-card--pending">
           <div className="admin__stat-icon"><Clock size={18} aria-hidden /></div>
           <div className="admin__stat-body">
             <span className="admin__stat-label">Pending Withdrawals</span>
-            <span className="admin__stat-value">{loading ? "…" : (stats?.pendingWithdrawals ?? 0)}</span>
+            <span className="admin__stat-value">{withdrawalsLoading ? "…" : pendingWithdrawalsCount}</span>
           </div>
         </div>
         <div className="admin__stat-card">
@@ -370,7 +312,7 @@ export function Admin() {
           <div className="admin__stat-body">
             <span className="admin__stat-label">Pending Volume</span>
             <span className="admin__stat-value admin__stat-value--accent">
-              {loading ? "…" : formatUsd(stats?.pendingWithdrawalsUsd ?? 0)}
+              {withdrawalsLoading ? "…" : formatUsd(withdrawals.reduce((s, w) => s + (w.scAmount / 100), 0))}
             </span>
           </div>
         </div>
@@ -428,20 +370,7 @@ export function Admin() {
                 <p className="admin__overview-count">{pendingWithdrawalsCount}</p>
                 <p className="admin__overview-meta">
                   {pendingWithdrawalsCount > 0
-                    ? `${formatUsd(withdrawals.reduce((s, w) => s + w.usdAmount, 0))} total`
-                    : "All caught up"}
-                </p>
-              </div>
-
-              <div className="admin__overview-card" onClick={() => setActiveTab("redemptions")}>
-                <div className="admin__overview-card-head">
-                  <Gift size={18} aria-hidden />
-                  <span>Pending Redemptions</span>
-                </div>
-                <p className="admin__overview-count">{pendingRedemptionsCount}</p>
-                <p className="admin__overview-meta">
-                  {pendingRedemptionsCount > 0
-                    ? `${redemptions.reduce((s, r) => s + r.scAmount, 0).toFixed(2)} SC total`
+                    ? `${formatUsd(withdrawals.reduce((s, w) => s + (w.scAmount / 100), 0))} total`
                     : "All caught up"}
                 </p>
               </div>
@@ -463,23 +392,37 @@ export function Admin() {
                 <p className="admin__overview-count">{stats?.totalUsers ?? 0}</p>
                 <p className="admin__overview-meta">Search & manage admins</p>
               </div>
+
+              <div className="admin__overview-card" onClick={() => setActiveTab("credit")}>
+                <div className="admin__overview-card-head">
+                  <CreditCard size={18} aria-hidden />
+                  <span>Credit User</span>
+                </div>
+                <p className="admin__overview-count">+</p>
+                <p className="admin__overview-meta">Manual balance credit</p>
+              </div>
             </div>
           </div>
         )}
 
-        {/* WITHDRAWALS */}
+        {/* WITHDRAWALS (merged — now uses redemptions table) */}
         {activeTab === "withdrawals" && (
           <div className="admin__panel">
             <div className="admin__panel-head">
               <h2 className="admin__panel-title">Pending Withdrawals</h2>
               <p className="admin__panel-desc">
-                Send crypto from treasury, then mark complete with the tx hash. Fail refunds the user.
+                Users withdrawing Sweeps Coins (SC) as cryptocurrency. Approve to send from treasury, reject to refund SC.
               </p>
             </div>
-            {loading ? (
+            {withdrawalsLoading ? (
               <div className="admin__loading-state">
                 <RefreshCw size={20} className="admin__spin" aria-hidden />
                 <span>Loading withdrawals…</span>
+              </div>
+            ) : withdrawalsError ? (
+              <div className="admin__alert admin__alert--error" role="alert">
+                <AlertCircle size={16} aria-hidden />
+                <span>{withdrawalsError}</span>
               </div>
             ) : withdrawals.length === 0 ? (
               <div className="admin__empty-state">
@@ -494,8 +437,8 @@ export function Admin() {
                       <div className="admin__withdrawal-user-info">
                         <p className="admin__withdrawal-user">{displayUser(w.username, w.email)}</p>
                         <p className="admin__withdrawal-meta">
-                          <span className="admin__chain-badge">{w.chain.toUpperCase()}</span>
-                          <span>{formatUsd(w.usdAmount)}</span>
+                          <span className="admin__chain-badge">{w.scAmount} SC</span>
+                          <span>{formatUsd(w.scAmount / 100)}</span>
                           <span>·</span>
                           <span>{timeAgo(w.createdAt)}</span>
                         </p>
@@ -509,55 +452,37 @@ export function Admin() {
                       <div className="admin__detail-row">
                         <span className="admin__detail-label">Destination</span>
                         <div className="admin__detail-value">
-                          <code className="admin__mono">{w.destinationAddress}</code>
+                          <code className="admin__mono">{w.paypalEmail}</code>
                           <button
                             type="button"
                             className="admin__icon-btn"
-                            onClick={() => copyText(w.destinationAddress, w.id)}
+                            onClick={() => copyText(w.paypalEmail, w.id)}
                             aria-label="Copy destination address"
                           >
                             {copiedId === w.id ? <Check size={14} /> : <Copy size={14} />}
                           </button>
                         </div>
                       </div>
-                      <div className="admin__detail-row">
-                        <span className="admin__detail-label">User balance</span>
-                        <span className="admin__detail-value">{formatUsd(w.userBalance)}</span>
-                      </div>
                     </div>
 
                     <div className="admin__withdrawal-action">
-                      <label className="admin__field-label" htmlFor={`tx-${w.id}`}>
-                        Transaction hash
-                      </label>
                       <div className="admin__tx-input-row">
-                        <input
-                          id={`tx-${w.id}`}
-                          className="admin__input"
-                          type="text"
-                          placeholder="Paste on-chain tx hash"
-                          value={txHashes[w.id] ?? ""}
-                          onChange={(e) =>
-                            setTxHashes((prev) => ({ ...prev, [w.id]: e.target.value }))
-                          }
-                          disabled={busyId === w.id}
-                        />
                         <button
                           type="button"
                           className="admin__btn admin__btn--primary"
-                          disabled={busyId === w.id || !txHashes[w.id]?.trim()}
-                          onClick={() => handleComplete(w)}
+                          disabled={approveBusy === w.id || rejectBusy === w.id}
+                          onClick={() => handleWithdrawalAction(w, "approve")}
                         >
-                          {busyId === w.id ? "Processing…" : "Mark complete"}
+                          {approveBusy === w.id ? "Processing…" : "Approve & send"}
                         </button>
                         <button
                           type="button"
                           className="admin__btn admin__btn--danger"
-                          disabled={busyId === w.id}
-                          onClick={() => handleFail(w)}
+                          disabled={approveBusy === w.id || rejectBusy === w.id}
+                          onClick={() => handleWithdrawalAction(w, "reject")}
                         >
                           <X size={14} />
-                          Fail
+                          Reject & refund
                         </button>
                       </div>
                     </div>
@@ -671,69 +596,6 @@ export function Admin() {
                     </li>
                   );
                 })}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {/* REDEMPTIONS */}
-        {activeTab === "redemptions" && (
-          <div className="admin__panel">
-            <div className="admin__panel-head">
-              <h2 className="admin__panel-title">Redemption Requests</h2>
-              <p className="admin__panel-desc">
-                Pending SC redemption requests. Approve to process payout or reject to refund.
-              </p>
-            </div>
-            {redemptionsLoading ? (
-              <div className="admin__loading-state">
-                <RefreshCw size={20} className="admin__spin" aria-hidden />
-                <span>Loading redemptions…</span>
-              </div>
-            ) : redemptionsError ? (
-              <div className="admin__alert admin__alert--error" role="alert">
-                <AlertCircle size={16} aria-hidden />
-                <span>{redemptionsError}</span>
-              </div>
-            ) : redemptions.length === 0 ? (
-              <div className="admin__empty-state">
-                <Gift size={32} aria-hidden />
-                <p>No pending redemptions</p>
-              </div>
-            ) : (
-              <ul className="admin__user-list">
-                {redemptions.map((r) => (
-                  <li key={r.id} className="admin__user-row">
-                    <div className="admin__user-info">
-                      <p className="admin__user-name">{displayUser(r.username, r.email)}</p>
-                      <p className="admin__user-meta">
-                        <span className="admin__sc-amount">{r.scAmount} SC</span>
-                        <span>·</span>
-                        <span>{r.paypalEmail}</span>
-                        <span>·</span>
-                        <span>{timeAgo(r.createdAt)}</span>
-                      </p>
-                    </div>
-                    <div className="admin__btn-group">
-                      <button
-                        type="button"
-                        className="admin__btn admin__btn--primary"
-                        disabled={fundingApproveBusy === r.id || fundingRejectBusy === r.id}
-                        onClick={() => handleRedemptionAction(r, "approve")}
-                      >
-                        {fundingApproveBusy === r.id ? "…" : "Approve"}
-                      </button>
-                      <button
-                        type="button"
-                        className="admin__btn admin__btn--danger"
-                        disabled={fundingApproveBusy === r.id || fundingRejectBusy === r.id}
-                        onClick={() => handleRedemptionAction(r, "reject")}
-                      >
-                        {fundingRejectBusy === r.id ? "…" : "Reject"}
-                      </button>
-                    </div>
-                  </li>
-                ))}
               </ul>
             )}
           </div>

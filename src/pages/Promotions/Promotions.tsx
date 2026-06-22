@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Gift, Handshake } from "lucide-react";
+import { Handshake } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
+import { Seo } from "../../components/Seo/Seo";
 import {
   claimAffiliateEarnings,
   fetchAffiliateStats,
@@ -13,21 +14,6 @@ import {
 import { buildAffiliateSignupUrl, normalizeAffiliateCode } from "../../lib/affiliateRef";
 import { formatUsd } from "../../lib/format";
 import "./Promotions.css";
-
-const upcoming = [
-  {
-    title: "Wager milestones",
-    desc: "Bonus rewards tied to your level and lifetime wager volume.",
-  },
-  {
-    title: "Discord perks",
-    desc: "Exclusive roles and giveaways for linked LottaCash accounts.",
-  },
-  {
-    title: "Deposit boosts",
-    desc: "Limited-time match offers on crypto deposits.",
-  },
-];
 
 function formatCommissionDate(iso: string) {
   if (!iso) return "";
@@ -134,8 +120,12 @@ export function Promotions() {
 
   return (
     <div className="promos lc-page">
+      <Seo
+        title="Promotions"
+        description="Earn 5% of every referral deposit and $1 per $100 wagered. Claim your affiliate balance anytime."
+        path="/promotions"
+      />
       <header className="lc-page__header promos__header">
-        <p className="lc-page__eyebrow">Rewards</p>
         <h1 className="lc-page__title">Promotions</h1>
         <p className="lc-page__subtitle">
           Earn from referrals and watch for seasonal offers. Claim affiliate earnings on this page
@@ -370,41 +360,6 @@ export function Promotions() {
         ) : null}
       </section>
 
-      <section className="promos__hero lc-panel">
-        <div className="promos__hero-icon" aria-hidden="true">
-          <Gift size={32} />
-        </div>
-        <div>
-          <h2 className="promos__hero-title">More rewards coming</h2>
-          <p className="promos__hero-text">
-            Your account, leveling, and Discord link are already in place. When new campaigns launch,
-            they&apos;ll show here and in notifications.
-          </p>
-          {!loading && user && (
-            <div className="promos__hero-cta">
-              <Link to="/settings" className="promos__btn promos__btn--gold">
-                View your account
-              </Link>
-              <Link to="/help" className="promos__btn promos__btn--ghost">
-                FAQ & Terms
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="promos__grid" aria-label="Planned promotions">
-        <h2 className="promos__section-title">On the roadmap</h2>
-        <div className="promos__cards">
-          {upcoming.map((item) => (
-            <article key={item.title} className="promos__card">
-              <h3 className="promos__card-title">{item.title}</h3>
-              <p className="promos__card-desc">{item.desc}</p>
-              <span className="promos__card-badge">Planned</span>
-            </article>
-          ))}
-        </div>
-      </section>
     </div>
   );
 }

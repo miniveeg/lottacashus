@@ -4,6 +4,7 @@ import { CheckCircle } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { loginUrl } from "../../lib/authRedirect";
+import { Seo } from "../../components/Seo/Seo";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import {
   formatCoins,
@@ -94,10 +95,16 @@ export default function Redeem() {
   if (!user) {
     return (
       <div className="redeem lc-page lc-page--medium">
+        <Seo
+          title="Redeem"
+          description="Redeem Sweeps Coins (SC) for real crypto (SOL, LTC, or ETH). 100 SC = $1 USD. Minimum redemption 100 SC."
+          path="/redeem"
+        />
         <header className="lc-page__header">
-          <h1 className="lc-page__title">Redeem</h1>
+          <h1 className="lc-page__title">Redeem Sweeps Coins</h1>
           <p className="lc-page__subtitle">
-            Log in to cash out your Sweeps Coins for cryptocurrency.
+            Sweeps Coins (SC) can be redeemed for real crypto (SOL, LTC, or ETH) at 100 SC = $1 USD.
+            Minimum redemption is 100 SC ($1). Log in to request a redemption.
           </p>
         </header>
         <p className="redeem__login-hint">
@@ -116,6 +123,11 @@ export default function Redeem() {
 
   return (
     <div className="redeem lc-page lc-page--narrow">
+      <Seo
+        title="Redeem"
+        description="Redeem Sweeps Coins (SC) for real crypto (SOL, LTC, or ETH). 100 SC = $1 USD. Minimum redemption 100 SC."
+        path="/redeem"
+      />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Redeem Sweeps Coins</h1>
         <p className="lc-page__subtitle">

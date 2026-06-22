@@ -9,6 +9,8 @@ import {
   setSlotsClientSeed,
   type SlotsBetResult,
 } from "../../lib/slots";
+import { SlotSymbol } from "./SlotSymbols";
+import { Seo } from "../../components/Seo/Seo";
 import "../../styles/game-controls.css";
 import "./Slots.css";
 
@@ -24,14 +26,14 @@ function readPrefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-const SYMBOL_GLYPH: Record<number, string> = {
-  0: "\u{1F352}",
-  1: "\u{1F514}",
-  2: "7",
-  3: "\u{1F4B0}",
-  4: "\u{1F349}",
-  5: "\u{2B50}",
-  6: "\u{1F451}",
+const SYMBOL_NAMES: Record<number, string> = {
+  0: "Cherry",
+  1: "Bell",
+  2: "Seven",
+  3: "Dollar",
+  4: "Watermelon",
+  5: "Star",
+  6: "Crown",
 };
 
 type ReelState = "idle" | "spinning" | "landed";
@@ -267,9 +269,14 @@ export default function Slots() {
 
   return (
     <div className="slots lc-game-page">
+      <Seo
+        title="Slots"
+        description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 50×, Star pays 25×."
+        path="/slots"
+      />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Slots</h1>
-        <p className="lc-page__subtitle">Spin the reels and match symbols to win!</p>
+        <p className="lc-page__subtitle">Three reels. Match symbols to win. Crown pays 50×, Star pays 25×.</p>
       </header>
 
       <div className="slots__layout">
@@ -298,8 +305,8 @@ export default function Slots() {
                 >
                   {symbol >= 0 ? (
                     <span className="slots__reel-inner">
-                      <span className="slots__symbol">
-                        {SYMBOL_GLYPH[symbol] ?? symbol}
+                      <span className="slots__symbol" aria-label={SYMBOL_NAMES[symbol] ?? `Symbol ${symbol}`}>
+                        <SlotSymbol id={symbol} size={64} />
                       </span>
                     </span>
                   ) : (
@@ -354,7 +361,7 @@ export default function Slots() {
                   />
                   <button
                     type="button"
-                    className="game-controls__wager-half"
+                    className="game-controls__wager-adj"
                     disabled={rolling}
                     onClick={() => {
                       const half = wager / 2;
@@ -367,7 +374,7 @@ export default function Slots() {
                   </button>
                   <button
                     type="button"
-                    className="game-controls__wager-double"
+                    className="game-controls__wager-adj"
                     disabled={rolling}
                     onClick={() => applyWager(String(Math.min(wager * 2, activeBalance)))}
                   >

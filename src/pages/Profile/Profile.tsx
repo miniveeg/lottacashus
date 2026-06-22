@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Navigate, useParams } from "react-router-dom";
-import { Lock } from "lucide-react";
+import { Lock, Sparkles, Gem, Crown, Calendar } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { loginUrl } from "../../lib/authRedirect";
@@ -14,16 +14,23 @@ import {
 } from "../../lib/profile";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { UiIcon } from "../../components/icons";
+import { Seo } from "../../components/Seo/Seo";
 import "./Profile.css";
 
-type Badge = { id: string; name: string; description: string; icon: string; check: (p: ProfileStats) => boolean };
+type Badge = {
+  id: string;
+  name: string;
+  description: string;
+  icon: typeof Sparkles;
+  check: (p: ProfileStats) => boolean;
+};
 
 const BADGES: Badge[] = [
-  { id: "first-bet", name: "First Bet", icon: "★", description: "Placed your first game", check: () => true },
-  { id: "high-roller", name: "High Roller", icon: "◆", description: "$1,000+ total wagered", check: (p) => p.totalWagered >= 1000 },
-  { id: "roller", name: "Roller", icon: "◆", description: "$10,000+ total wagered", check: (p) => p.totalWagered >= 10000 },
-  { id: "whale", name: "Whale", icon: "◆", description: "$100,000+ total wagered", check: (p) => p.totalWagered >= 100000 },
-  { id: "veteran", name: "Veteran", icon: "⏱", description: "Account age 30+ days", check: (p) => { if (!p.memberSince) return false; return (Date.now() - new Date(p.memberSince).getTime()) / 86400000 >= 30; } },
+  { id: "first-bet", name: "First Bet", icon: Sparkles, description: "Placed your first game", check: () => true },
+  { id: "high-roller", name: "High Roller", icon: Gem, description: "$1,000+ total wagered", check: (p) => p.totalWagered >= 1000 },
+  { id: "roller", name: "Roller", icon: Gem, description: "$10,000+ total wagered", check: (p) => p.totalWagered >= 10000 },
+  { id: "whale", name: "Whale", icon: Crown, description: "$100,000+ total wagered", check: (p) => p.totalWagered >= 100000 },
+  { id: "veteran", name: "Veteran", icon: Calendar, description: "Account age 30+ days", check: (p) => { if (!p.memberSince) return false; return (Date.now() - new Date(p.memberSince).getTime()) / 86400000 >= 30; } },
 ];
 
 function calcLevel(totalWagered: number): { level: number; xp: number; xpMax: number } {
@@ -215,6 +222,11 @@ export function ProfilePage() {
 
   return (
     <div className="lc-page profile-page">
+      <Seo
+        title="Profile"
+        description="LottaCash player profile — level, stats, badges, and referral earnings."
+        path={isOwnProfile ? "/profile" : `/profile/${routeUsername}`}
+      />
       {/* Hero */}
       <section className="profile-hero">
         <div className="profile-hero__avatar" aria-hidden="true">
@@ -286,13 +298,16 @@ export function ProfilePage() {
         <div className="profile-badges">
           {BADGES.map((badge) => {
             const earned = badge.check(badgeInput);
+            const Icon = badge.icon;
             return (
               <div
                 key={badge.id}
                 className={`profile-badge${earned ? " profile-badge--earned" : " profile-badge--locked"}`}
                 title={`${badge.name}: ${badge.description}${earned ? "" : " (locked)"}`}
               >
-                <span className="profile-badge__icon" aria-hidden="true">{badge.icon}</span>
+                <span className="profile-badge__icon" aria-hidden="true">
+                  <Icon size={16} strokeWidth={2} />
+                </span>
                 <span className="profile-badge__name">{badge.name}</span>
                 {!earned && (
                   <Lock

@@ -66,12 +66,12 @@
 }
 
 .auth-field input:focus {
-  border-color: var(--lc-gold-dim);
+  border-color: var(--lc-crimson-dim);
 }
 
 .auth-field input:focus-visible {
   outline: none;
-  border-color: var(--lc-gold-dim);
+  border-color: var(--lc-crimson-dim);
   box-shadow: var(--lc-focus-ring);
 }
 
@@ -90,6 +90,50 @@
   margin: 0;
   font-size: 0.75rem;
   color: var(--lc-text-muted);
+}
+
+/* Collapsible optional field (referral code) */
+.auth-field--optional {
+  padding: 0;
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-md);
+  overflow: hidden;
+}
+
+.auth-field__summary {
+  cursor: pointer;
+  padding: 0.65rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  background: var(--lc-bg-elevated);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-field__summary::-webkit-details-marker { display: none; }
+
+.auth-field__summary::after {
+  content: "+";
+  font-weight: 700;
+  color: var(--lc-text-muted);
+  transition: transform var(--lc-transition);
+}
+
+.auth-field--optional[open] .auth-field__summary::after {
+  content: "−";
+}
+
+.auth-field--optional input {
+  border: none;
+  border-top: 1px solid var(--lc-border);
+  border-radius: 0;
+}
+
+.auth-field--optional .auth-field-hint {
+  padding: 0.4rem 0.9rem 0.6rem;
 }
 
 .auth-error {
@@ -272,7 +316,7 @@
 .auth-checkbox input {
   width: 1rem;
   height: 1rem;
-  accent-color: var(--lc-gold);
+  accent-color: var(--lc-crimson);
 }
 
 .auth-checkbox-link {
@@ -303,10 +347,10 @@
 .auth-config-warning {
   margin-bottom: 1rem;
   padding: 0.75rem;
-  background: rgba(245, 185, 66, 0.1);
-  border: 1px solid rgba(245, 185, 66, 0.3);
+  background: var(--lc-amber-glow);
+  border: 1px solid var(--lc-border-amber);
   border-radius: var(--lc-radius-md);
-  color: var(--lc-gold);
+  color: var(--lc-amber-soft);
   font-size: 0.8rem;
   line-height: 1.45;
 }

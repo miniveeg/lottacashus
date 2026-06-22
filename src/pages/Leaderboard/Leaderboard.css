@@ -24,8 +24,8 @@
 /* ── Table ── */
 .leaderboard-table-wrap {
   background: var(--lc-bg-glass);
-  backdrop-filter: var(--lc-glass-blur);
-  -webkit-backdrop-filter: var(--lc-glass-blur);
+  backdrop-filter: blur(var(--lc-glass-blur));
+  -webkit-backdrop-filter: blur(var(--lc-glass-blur));
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-xl);
   box-shadow: var(--lc-shadow-sm);
@@ -185,7 +185,7 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-dim));
+  background: linear-gradient(135deg, var(--lc-crimson-dim) 0%, var(--lc-crimson) 100%);
   color: #fff8f6;
   font-size: 0.75rem;
   font-weight: 700;
@@ -215,11 +215,9 @@
     font-size: 0.8rem;
   }
 
-  .leaderboard-table__secondary {
-    display: none;
-  }
-
-  .leaderboard-table th:last-child {
+  /* Hide secondary columns by class, not by structural position, so
+     adding/removing columns doesn't break the responsive collapse. */
+  .leaderboard-table__col--secondary {
     display: none;
   }
 }

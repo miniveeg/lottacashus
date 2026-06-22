@@ -24,12 +24,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "How do withdrawals work?",
     answer:
-      "Crypto withdrawals: Open Withdraw, choose a chain, enter a valid destination address, and request at least $10. The amount is reserved from your balance while the withdrawal is pending. Payouts are sent from our treasury wallets after review. Sweeps Coins redemption: Visit the Redeem page to cash out SC for real money via PayPal — minimum 100 SC ($1). Redemption requests are processed within 3–5 business days.",
+      "Crypto withdrawals: Open Withdraw, choose a chain (SOL, LTC, or ETH), enter a valid destination address, and request at least $10. The amount is reserved from your balance while the withdrawal is pending. Payouts are sent from our treasury wallets after review. Sweeps Coins redemption: Visit the Redeem page to cash out SC for real crypto (SOL, LTC, or ETH) — minimum 100 SC ($1). Redemption requests are processed within 3–5 business days.",
   },
   {
     question: "How do I redeem Sweeps Coins (SC)?",
     answer:
-      "Go to the Redeem page, enter the amount of SC you want to cash out (minimum 100 SC, equivalent to $1 USD), provide your PayPal email, and submit. Your request will be reviewed and processed within 3–5 business days. The exchange rate is fixed at 1 SC = $0.01 USD (100 SC = $1).",
+      "Go to the Redeem page, enter the amount of SC you want to cash out (minimum 100 SC, equivalent to $1 USD), choose a payout chain (SOL, LTC, or ETH), enter your destination wallet address, and submit. Your request will be reviewed and processed within 3–5 business days. The exchange rate is fixed at 1 SC = $0.01 USD (100 SC = $1).",
   },
   {
     question: "How does leveling work?",

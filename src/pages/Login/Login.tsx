@@ -73,8 +73,10 @@ export function Login() {
 
         {!configured && (
           <p className="auth-config-warning" role="note">
-            Supabase is not configured. Add your project URL and anon key to the{" "}
-            <code>.env</code> file to enable authentication.
+            {import.meta.env.PROD
+              ? "Service temporarily unavailable. Please try again later."
+              : <>Supabase is not configured. Add your project URL and anon key to the{" "}
+                 <code>.env</code> file to enable authentication.</>}
           </p>
         )}
 

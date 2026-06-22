@@ -58,10 +58,10 @@ We are currently setting up our mailing address. Check back soon or contact supp
 When you purchase Gold Coins (GC), you receive a bonus allocation of Sweeps Coins at the rate specified at the time of purchase (currently 1% of the purchase amount in SC). This allocation is a promotional bonus and does not affect your odds in any sweepstakes game.
 
 5. Prizes and odds
-Sweeps Coins (SC) may be redeemed for real-money prizes at the rate of 1 SC = $0.01 USD (100 SC = $1), with a minimum redemption of 100 SC ($1 equivalent). Odds of winning depend on the game selected and are displayed within each game on the platform. All prizes are awarded as cash equivalents transferred to your designated PayPal account.
+Sweeps Coins (SC) may be redeemed for real-money prizes at the rate of 1 SC = $0.01 USD (100 SC = $1), with a minimum redemption of 100 SC ($1 equivalent). Odds of winning depend on the game selected and are displayed within each game on the platform. All prizes are awarded as cryptocurrency (SOL, LTC, or ETH) transferred to your designated wallet address at the time of redemption.
 
 6. Prize claim process
-To redeem SC for prizes, submit a redemption request through the Redeem page on the platform. Provide a valid PayPal email address. Redemptions are processed after verification and may take up to 3–5 business days. The Promoter reserves the right to verify eligibility and identity before processing any redemption.
+To redeem SC for prizes, submit a redemption request through the Redeem page on the platform. Choose a payout chain (SOL, LTC, or ETH) and provide a valid destination wallet address for that chain. Redemptions are processed after verification and may take up to 3–5 business days. The Promoter reserves the right to verify eligibility and identity before processing any redemption.
 
 7. General conditions
 The Promoter reserves the right to modify, suspend, or terminate sweepstakes at any time without prior notice. All decisions of the Promoter are final and binding. Participants agree to release and hold harmless the Promoter from any liability arising from participation or prize award.

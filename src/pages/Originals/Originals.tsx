@@ -4,6 +4,7 @@ import { Cherry, Dices, Grid3X3, Bomb, TrendingUp, CircleDot, Spade, Swords, Zap
 import { ORIGINAL_GAMES } from "../../content/originals";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
 import { TiltCard } from "../../components/ui/TiltCard";
+import { Seo } from "../../components/Seo/Seo";
 import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Originals.css";
 
@@ -21,15 +22,17 @@ const GAME_ICONS: Record<string, typeof Dices> = {
 export function Originals() {
   return (
     <div className="originals lc-page">
+      <Seo
+        title="Originals"
+        description="Eight provably fair house games: Keno, Mines, Limbo, Roulette, Blackjack, Crash, Slots, and Case Battles."
+        path="/originals"
+      />
       <motion.header
         className="lc-page__header originals__header"
         initial="hidden"
         animate="visible"
         variants={staggerContainer}
       >
-        <motion.p className="lc-page__eyebrow originals__eyebrow" variants={fadeUpVariants}>
-          House originals
-        </motion.p>
         <motion.h1 className="lc-page__title originals__title" variants={fadeUpVariants}>
           LottaCash Originals
         </motion.h1>
@@ -57,6 +60,11 @@ export function Originals() {
                 </div>
                 <h2 className="originals__card-title">{game.name}</h2>
                 <p className="originals__card-desc">{game.description}</p>
+                {game.rtp && (
+                  <p className="originals__card-rtp" title="Return to player — provably fair">
+                    {game.rtp}
+                  </p>
+                )}
                 {game.live ? (
                   <Link to={game.href} className="originals__card-btn originals__card-btn--play">
                     Play now

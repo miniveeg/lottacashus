@@ -29,6 +29,18 @@ export function SidebarChat() {
   const listRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // Early exit when Supabase isn't configured. This prevents the loadMessages
+  // and realtime-subscribe effects below from running fetches / channel
+  // subscriptions against an unconfigured client, which would log errors on
+  // every render in dev environments without env vars.
+  if (!configured) {
+    return (
+      <div className="sidebar-chat">
+        <p className="sidebar-chat__notice">Chat is unavailable — Supabase is not configured.</p>
+      </div>
+    );
+  }
+
   const displayName =
     profile?.username ?? user?.user_metadata?.username ?? user?.email?.split("@")[0] ?? "Player";
 
@@ -117,14 +129,6 @@ export function SidebarChat() {
         prev.some((m) => m.id === data.id) ? prev : [...prev, { ...data, level }]
       );
     }
-  }
-
-  if (!configured) {
-    return (
-      <div className="sidebar-chat">
-        <p className="sidebar-chat__notice">Chat is unavailable — Supabase is not configured.</p>
-      </div>
-    );
   }
 
   if (!user) {

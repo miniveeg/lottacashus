@@ -1,10 +1,10 @@
-import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { Wallet, Zap, TrendingUp, Dices } from "lucide-react";
 import { MotionLink } from "../../components/ui/MotionLink";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
 import { TiltCard } from "../../components/ui/TiltCard";
 import { useAuth } from "../../contexts/AuthContext";
+import { Seo } from "../../components/Seo/Seo";
 import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Home.css";
 
@@ -48,6 +48,7 @@ export function Home() {
 
   return (
     <div className="home lc-page">
+      <Seo title="LottaCash" path="/" />
       <section className="home__hero lc-glass lc-glass--crimson">
         <div className="home__hero-fog" aria-hidden="true" />
 
@@ -61,12 +62,11 @@ export function Home() {
             Welcome to LottaCash
           </motion.p>
           <motion.h1 className="home__headline" variants={fadeUpVariants}>
-            Your seat at the table <span>starts here</span>
+            One wallet. Six games. <span>Real crypto rails.</span>
           </motion.h1>
           <motion.p className="home__lead" variants={fadeUpVariants}>
-            A cinematic crypto casino built on one account, real on-chain rails, and rewards that
-            grow with every wager. Six house originals are live — fund your wallet and play in
-            seconds.
+            One account. Deposit SOL, LTC, or ETH. Play six provably fair house games. Your level
+            climbs with every wager — permanently, across every game.
           </motion.p>
           <motion.div className="home__cta" variants={fadeUpVariants}>
             {!loading && user ? (
@@ -101,10 +101,9 @@ export function Home() {
       <ScrollReveal className="home__intro">
         <h2 className="home__section-title">What is LottaCash?</h2>
         <p className="home__section-text">
-          LottaCash is a dark, crimson-accented entertainment hub focused on clarity and speed:
-          sign up with email verification, fund your wallet with cryptocurrency, track deposits
-          and withdrawals in Settings, and climb levels as you wager. Notifications keep you
-          informed when balances change or Discord is linked.
+          Sign up in under a minute. Fund with crypto. Play eight provably fair house games. Your
+          balance, level, and stats persist across everything. Track deposits and withdrawals in
+          Settings, and climb levels as you wager.
         </p>
       </ScrollReveal>
 
@@ -125,37 +124,7 @@ export function Home() {
         </div>
       </ScrollReveal>
 
-      <ScrollReveal className="home__roadmap" delay={2}>
-        <div className="home__roadmap-glow" aria-hidden="true" />
-        <div className="home__roadmap-copy">
-          <h2 className="home__section-title">What&rsquo;s next</h2>
-          <ul className="home__roadmap-list">
-            <li>
-              <span className="home__roadmap-dot home__roadmap-dot--live" aria-hidden="true" />
-              Live now — accounts, crypto deposits &amp; withdrawals, leveling, Discord link, Help
-            </li>
-            <li>
-              <span className="home__roadmap-dot home__roadmap-dot--live" aria-hidden="true" />
-              Live now — <Link to="/originals">Originals</Link>: Keno, Mines, Limbo, Roulette,
-              Blackjack, Crash, Case Battles
-            </li>
-            <li>
-              <span className="home__roadmap-dot home__roadmap-dot--live" aria-hidden="true" />
-              Live now — <Link to="/promotions">Promotions hub</Link> (rewards launching soon)
-            </li>
-            <li>
-              <span className="home__roadmap-dot" aria-hidden="true" />
-              Coming — expanded casino lobby and third-party providers
-            </li>
-            <li>
-              <span className="home__roadmap-dot" aria-hidden="true" />
-              Later — VIP tiers and Discord community rewards
-            </li>
-          </ul>
-        </div>
-      </ScrollReveal>
-
-      <ScrollReveal className="home__footer-cta" delay={3}>
+      <ScrollReveal className="home__footer-cta" delay={2}>
         <p className="home__footer-cta-text">
           Questions before you play? Read the FAQ or Terms anytime.
         </p>

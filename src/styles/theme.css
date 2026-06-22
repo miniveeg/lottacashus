@@ -1,10 +1,12 @@
 /* LottaCash — Obsidian Luxury Design Tokens */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+/* Google Fonts are loaded via <link> tags in index.html (preconnect + preload)
+   for parallel fetching. The previous CSS @import was render-blocking. */
 
 :root {
   /* ── Obsidian surfaces ── */
   --lc-bg: #040406;
   --lc-bg-base: #040406;
+  --lc-bg-rgb: 4, 4, 6; /* RGB breakdown for use in rgba(var(--lc-bg-rgb), 0.5) */
   --lc-bg-elevated: #0a0a10;
   --lc-bg-panel: #0e0e16;
   --lc-bg-hover: #14141f;
@@ -16,19 +18,36 @@
   --lc-sidebar-width: clamp(200px, 18vw, 252px);
   --lc-sidebar-collapsed: clamp(56px, 5vw, 72px);
 
-  /* ── Crimson accent (primary) ── */
+  /* ── Crimson accent (primary brand) ── */
   --lc-crimson: #dc143c;
   --lc-crimson-dim: #a81030;
   --lc-crimson-soft: #ff2d55;
   --lc-crimson-glow: rgba(220, 20, 60, 0.22);
   --lc-crimson-glow-strong: rgba(220, 20, 60, 0.45);
 
-  /* Legacy gold aliases → crimson for backward compat */
-  --lc-gold: var(--lc-crimson);
-  --lc-gold-dim: var(--lc-crimson-dim);
-  --lc-gold-soft: var(--lc-crimson-soft);
-  --lc-gold-glow: var(--lc-crimson-glow);
-  --lc-gold-glow-strong: var(--lc-crimson-glow-strong);
+  /* ── Amber accent (gold/coin/warning contexts) ──
+     Used for: GC (Gold Coins) visual contexts, profile badges,
+     affiliate earnings, 404 precious-metal gradient, warning panels. */
+  --lc-amber: #f5b942;
+  --lc-amber-dim: #c9900a;
+  --lc-amber-soft: #ffd166;
+  --lc-amber-glow: rgba(245, 185, 66, 0.22);
+  --lc-amber-glow-strong: rgba(245, 185, 66, 0.45);
+
+  /* ── Backward-compat `--lc-gold*` aliases → amber ──
+     The legacy `--lc-gold` tokens were originally aliased to crimson, which
+     made every "gold coin" / "achievement" / "warning" context render red.
+     They now alias to amber so coin amounts, badges, earned panels, and
+     warning UI render in the intended gold/amber. Primary CTA buttons do
+     NOT use these tokens — they are styled via `.lc-btn--primary` and the
+     `.lc-motion-btn--primary` class, which use the crimson brand color. */
+  --lc-gold: var(--lc-amber);
+  --lc-gold-dim: var(--lc-amber-dim);
+  --lc-gold-soft: var(--lc-amber-soft);
+  --lc-gold-glow: var(--lc-amber-glow);
+  --lc-gold-glow-strong: var(--lc-amber-glow-strong);
+  --lc-border-gold: var(--lc-border-amber);
+  --lc-shadow-gold: var(--lc-shadow-amber);
 
   /* ── Semantic colors ── */
   --lc-emerald: #00e87a;
@@ -53,12 +72,16 @@
   --lc-text-primary: #f2f2f8;
   --lc-text-secondary: #9494b0;
   --lc-text-muted: #7a7a98;
+  /* Near-black for text placed on top of bright (crimson or amber)
+     primary buttons. Both #080602 and #02160a were visually identical
+     to plain black in the old game-controls.css — consolidated to one. */
+  --lc-text-on-primary: #080602;
 
   /* ── Borders ── */
   --lc-border: rgba(255, 255, 255, 0.05);
   --lc-border-strong: rgba(255, 255, 255, 0.09);
   --lc-border-accent: rgba(220, 20, 60, 0.32);
-  --lc-border-gold: var(--lc-border-accent);
+  --lc-border-amber: rgba(245, 185, 66, 0.32);
 
   /* ── Glass ── */
   --lc-glass-blur: 20px;
@@ -70,7 +93,7 @@
   --lc-shadow-md: 0 8px 40px rgba(0, 0, 0, 0.7);
   --lc-shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.85);
   --lc-shadow-crimson: 0 0 40px var(--lc-crimson-glow), 0 0 80px rgba(220, 20, 60, 0.08);
-  --lc-shadow-gold: var(--lc-shadow-crimson);
+  --lc-shadow-amber: 0 0 40px var(--lc-amber-glow), 0 0 80px rgba(245, 185, 66, 0.08);
   --lc-shadow-emerald: 0 0 30px var(--lc-emerald-glow);
   --lc-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 
@@ -81,9 +104,14 @@
   --lc-radius-xl: 24px;
   --lc-radius-2xl: 32px;
 
-  /* ── Typography ── */
+  /* ── Typography ──
+     Inter is the body font for long-form copy (FAQ, legal, settings labels)
+     for legibility at 14–16px. Syne remains the display font for headings.
+     Rajdhani (condensed) is kept only for game stats, coin amounts, and
+     compact labels where its narrow width is an advantage. */
   --lc-font-display: 'Syne', system-ui, sans-serif;
-  --lc-font-body: 'Rajdhani', system-ui, sans-serif;
+  --lc-font-body: 'Inter', system-ui, sans-serif;
+  --lc-font-numeric: 'Rajdhani', 'Inter', system-ui, sans-serif;
   --lc-font-mono: 'JetBrains Mono', monospace;
 
   --lc-text-xs: clamp(0.72rem, 0.68rem + 0.2vw, 0.8rem);

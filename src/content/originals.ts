@@ -2,6 +2,9 @@ export type OriginalGame = {
   id: string;
   name: string;
   description: string;
+  /** Short label shown on the card. RTP moved out of the description so each
+   *  game's voice can lead with what makes it distinctive, not a checklist. */
+  rtp?: string;
   href: string;
   live: boolean;
   tag?: string;
@@ -11,8 +14,8 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
   {
     id: "keno",
     name: "Keno",
-    description:
-      "Pick 1–10 numbers on a 40-tile board. Four risk modes, provably fair — 94.5% RTP.",
+    description: "Pick your numbers, pick your risk. Four modes from safe to extreme — 40 tiles, your call.",
+    rtp: "94.5% RTP",
     href: "/keno",
     live: true,
     tag: "Live",
@@ -20,8 +23,8 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
   {
     id: "mines",
     name: "Mines",
-    description:
-      "5×5 grid, 1–24 mines. Reveal gems, dodge bombs, cash out anytime. 94.5% RTP.",
+    description: "One wrong tile ends it. Cash out before you go too far — or dig until there's nothing left.",
+    rtp: "94.5% RTP",
     href: "/mines",
     live: true,
     tag: "Live",
@@ -29,8 +32,8 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
   {
     id: "limbo",
     name: "Limbo",
-    description:
-      "Pick a target multiplier. Beat the roll to win. Provably fair, 94.5% RTP.",
+    description: "Name your multiplier. If the roll beats it, you win. The higher you go, the longer the odds.",
+    rtp: "94.5% RTP",
     href: "/limbo",
     live: true,
     tag: "Live",
@@ -38,8 +41,8 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
   {
     id: "roulette",
     name: "Roulette",
-    description:
-      "European wheel — bet red, black, or green (0). Provably fair — 94.5% RTP.",
+    description: "European wheel. Red, black, or green. Place your bet and watch it land.",
+    rtp: "94.5% RTP",
     href: "/roulette",
     live: true,
     tag: "New",
@@ -47,8 +50,8 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
   {
     id: "blackjack",
     name: "Blackjack",
-    description:
-      "Classic 21 vs the dealer. Hit, stand, double. 3:2 blackjack, H17 — 94.5% RTP.",
+    description: "You vs the dealer. Hit, stand, or double. Hit 21 and collect 3:2.",
+    rtp: "94.5% RTP",
     href: "/blackjack",
     live: true,
     tag: "Live",
@@ -56,8 +59,8 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
   {
     id: "case-battles",
     name: "Case Battles",
-    description:
-      "PvP case opens — pick gamemode, stack up to 50 cases, borrow up to 80%. Case RTP 84.5%.",
+    description: "PvP case opens. Pick your mode, stack up to 50 cases, borrow up to 80% of your balance.",
+    rtp: "Case RTP 84.5%",
     href: "/case-battles",
     live: true,
     tag: "Beta",
@@ -65,8 +68,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
   {
     id: "crash",
     name: "Crash",
-    description:
-      "Watch the multiplier rise. Cash out before it crashes. Provably fair.",
+    description: "The multiplier climbs. Cash out before it crashes. Wait too long and you lose everything.",
     href: "/crash",
     live: true,
     tag: "New",
@@ -74,8 +76,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
   {
     id: "slots",
     name: "Slots",
-    description:
-      "Classic 3-reel slot machine. Match symbols to win big — Crown 50x, Star 25x, and more.",
+    description: "Three reels. Match symbols to win. Crown pays 50×, Star pays 25×.",
     href: "/slots",
     live: true,
     tag: "New",

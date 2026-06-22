@@ -23,7 +23,7 @@ const PAGE_LINKS = [
 ];
 
 const LEGAL_LINKS = [
-  { label: "Terms of Service", href: "/help" },
+  { label: "Terms", href: "/help" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Sweepstakes Rules", href: "/sweepstakes" },
   { label: "Free Entry", href: "/free-entry" },
@@ -41,7 +41,7 @@ export function Footer() {
             <span className="site-footer__name">LottaCash</span>
           </Link>
           <p className="site-footer__tagline">
-            Premium crypto entertainment platform.
+            Eight games. One wallet. Your level, forever.
           </p>
         </div>
 

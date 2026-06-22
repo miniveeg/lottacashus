@@ -11,8 +11,8 @@
   gap: 1.25rem;
   padding: 1.5rem;
   background: var(--lc-bg-glass);
-  backdrop-filter: var(--lc-glass-blur);
-  -webkit-backdrop-filter: var(--lc-glass-blur);
+  backdrop-filter: blur(var(--lc-glass-blur));
+  -webkit-backdrop-filter: blur(var(--lc-glass-blur));
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-xl);
   box-shadow: var(--lc-shadow-sm);
@@ -46,7 +46,7 @@
   font-weight: 700;
   font-size: 1.75rem;
   color: #fff8f6;
-  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-dim));
+  background: linear-gradient(135deg, var(--lc-crimson-dim) 0%, var(--lc-crimson) 100%);
   box-shadow: 0 4px 20px rgba(139, 26, 36, 0.3);
 }
 
@@ -113,8 +113,8 @@
   gap: 0.25rem;
   padding: 1rem 1rem 0.85rem;
   background: var(--lc-bg-glass);
-  backdrop-filter: var(--lc-glass-blur);
-  -webkit-backdrop-filter: var(--lc-glass-blur);
+  backdrop-filter: blur(var(--lc-glass-blur));
+  -webkit-backdrop-filter: blur(var(--lc-glass-blur));
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-lg);
   box-shadow: var(--lc-shadow-sm);
@@ -193,18 +193,18 @@
 }
 
 .profile-badge--earned {
-  border-color: rgba(245, 185, 66, 0.35);
-  background: linear-gradient(135deg, rgba(245, 185, 66, 0.08), var(--lc-bg-glass));
+  border-color: var(--lc-border-amber);
+  background: linear-gradient(135deg, var(--lc-amber-glow), var(--lc-bg-glass));
 }
 
 .profile-badge--earned:hover {
-  border-color: var(--lc-gold-dim);
+  border-color: var(--lc-amber-dim);
   transform: translateY(-1px);
 }
 
 .profile-badge__icon {
   font-size: 0.9rem;
-  color: var(--lc-gold);
+  color: var(--lc-amber);
 }
 
 .profile-badge__name {
@@ -236,8 +236,8 @@
 .profile-referral {
   padding: 1.25rem;
   background: var(--lc-bg-glass);
-  backdrop-filter: var(--lc-glass-blur);
-  -webkit-backdrop-filter: var(--lc-glass-blur);
+  backdrop-filter: blur(var(--lc-glass-blur));
+  -webkit-backdrop-filter: blur(var(--lc-glass-blur));
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-xl);
   box-shadow: var(--lc-shadow-sm);
@@ -288,8 +288,8 @@
 
 .profile-referral__copy:hover {
   background: var(--lc-bg-hover);
-  border-color: var(--lc-gold-dim);
-  color: var(--lc-gold);
+  border-color: var(--lc-border-amber);
+  color: var(--lc-amber);
 }
 
 .profile-referral__copy:focus-visible {
@@ -326,8 +326,8 @@
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: var(--lc-radius-md);
-  background: linear-gradient(135deg, var(--lc-crimson-dim), var(--lc-crimson-dim));
-  color: #fff8f6;
+  background: linear-gradient(135deg, var(--lc-amber) 0%, var(--lc-amber-dim) 100%);
+  color: var(--lc-bg-base);
   box-shadow: 0 4px 16px rgba(139, 26, 36, 0.3);
   transition: filter var(--lc-transition), transform var(--lc-transition);
   cursor: pointer;

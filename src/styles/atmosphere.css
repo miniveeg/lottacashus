@@ -22,7 +22,10 @@
     radial-gradient(ellipse 80% 60% at 90% 70%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
     radial-gradient(ellipse 70% 50% at 10% 80%, rgba(56, 189, 248, 0.03) 0%, transparent 45%);
   animation: lc-fog-drift 24s ease-in-out infinite alternate;
-  will-change: transform, opacity;
+  /* No `will-change` — for slow 24s drift animations, the browser's
+     compositing heuristics handle layer promotion more efficiently than
+     a permanent `will-change` declaration, which would force the element
+     onto its own GPU layer for the entire page lifetime. */
 }
 
 .lc-atmosphere__noise {

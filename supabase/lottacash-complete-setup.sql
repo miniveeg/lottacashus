@@ -1023,7 +1023,7 @@ begin
     coalesce(u.raw_user_meta_data->>'username', split_part(u.email, '@', 1)),
     u.email,
     10000,  -- 10,000 GC welcome bonus
-    1       -- 1 SC welcome bonus
+    100     -- 100 SC welcome bonus (matches handle_new_user trigger)
   from auth.users u
   where u.id = uid
   on conflict (id) do nothing;

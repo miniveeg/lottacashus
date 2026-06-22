@@ -8,6 +8,12 @@
     var(--lc-bg-base);
 }
 
+/* On the home page, the 3D ObsidianScene WebGL canvas is the sole atmospheric
+   source — skip the CSS radial gradient so the two layers don't compound. */
+.app-shell__main--hero {
+  background: var(--lc-bg-base);
+}
+
 /* ── Page shell ──
    Pages fill 100% of the available main area by default.
    Modifiers cap the width for readability on very wide screens.
@@ -136,40 +142,20 @@
   transform: none !important;
 }
 
-/* Primary gold */
-.lc-btn--primary,
-.home__btn--gold,
-.wallet__btn:not(.wallet__btn--ghost),
-.auth-submit,
-.settings__save,
-.originals__card-btn--play,
-.admin__btn--primary,
-.keno__bet-btn,
-.mines__bet-btn,
-.limbo__bet-btn,
-.bj__deal-btn,
-.cb-page__btn-primary,
-.cbh__join-btn {
+/* Primary CTA — crimson brand color.
+   Page-specific primary buttons (auth-submit, keno__bet-btn, etc.) inherit
+   this look by also applying .lc-btn--primary OR by being targeted by their
+   page CSS with the same gradient. The mega-selector pattern (listing every
+   button class here) was removed in favor of class-based composition.
+   Page-specific button classes that need primary styling should @extend
+   this look in their own CSS file, or use the .lc-btn--primary class. */
+.lc-btn--primary {
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
   color: #fff;
   box-shadow: 0 2px 16px var(--lc-crimson-glow), var(--lc-shadow-inset);
 }
 
-.lc-btn--primary:hover:not(:disabled),
-.home__btn--gold:hover,
-.wallet__btn:not(.wallet__btn--ghost):hover:not(:disabled),
-.auth-submit:hover:not(:disabled),
-.settings__save:hover:not(:disabled),
-.originals__card-btn--play:hover:not(:disabled),
-.originals__card-cta:hover,
-.game-controls__play:hover:not(:disabled),
-.keno__bet-btn:hover:not(:disabled),
-.mines__bet-btn:hover:not(:disabled),
-.limbo__bet-btn:hover:not(:disabled),
-.bj__deal-btn:hover:not(:disabled),
-.crash__bet-btn:hover:not(:disabled),
-.crash__cashout-btn:hover:not(:disabled),
-.cb-page__btn-primary:hover {
+.lc-btn--primary:hover:not(:disabled) {
   transform: translateY(-2px);
   filter: brightness(1.08);
   box-shadow: 0 6px 28px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
@@ -177,25 +163,20 @@
 
 /* Secondary outline */
 .lc-btn--secondary,
-.home__btn--outline,
-.wallet__btn--ghost,
 .lc-btn--outline {
   border: 1px solid var(--lc-border-strong);
   color: var(--lc-text-primary);
   background: rgba(255,255,255,0.03);
 }
 
-.lc-btn--secondary:hover:not(:disabled),
-.home__btn--outline:hover,
-.wallet__btn--ghost:hover:not(:disabled) {
+.lc-btn--secondary:hover:not(:disabled) {
   background: var(--lc-bg-hover);
   border-color: var(--lc-border-accent);
   transform: translateY(-1px);
 }
 
 /* Ghost */
-.lc-btn--ghost,
-.home__btn--ghost {
+.lc-btn--ghost {
   color: var(--lc-text-secondary);
   background: transparent;
   border-color: transparent;
@@ -203,8 +184,7 @@
   padding-right: 0.75rem;
 }
 
-.lc-btn--ghost:hover:not(:disabled),
-.home__btn--ghost:hover { color: var(--lc-crimson-soft); }
+.lc-btn--ghost:hover:not(:disabled) { color: var(--lc-crimson-soft); }
 
 /* ── Tabs ── */
 .lc-tabs,
@@ -285,9 +265,9 @@
 }
 
 .lc-alert--warn, .auth-config-warning {
-  background: rgba(220, 20, 60, 0.08);
-  border: 1px solid rgba(220, 20, 60, 0.25);
-  color: var(--lc-crimson-soft);
+  background: var(--lc-amber-glow);
+  border: 1px solid var(--lc-border-amber);
+  color: var(--lc-amber-soft);
 }
 
 /* ── Stat cards ── */
@@ -400,7 +380,7 @@
   padding: 0.1em 0.35em;
   border-radius: var(--lc-radius-sm);
   background: var(--lc-bg-elevated);
-  color: var(--lc-gold);
+  color: var(--lc-amber);
 }
 
 /* ── Section cards ── */

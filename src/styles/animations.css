@@ -79,27 +79,17 @@
   animation: shimmer 1.8s ease-in-out infinite;
 }
 
-/* ── Fog Drift (slow atmospheric movement) ── */
-@keyframes fog-drift {
-  0%   { transform: translate(0, 0) scale(1); opacity: 0.5; }
-  33%  { transform: translate(30px, -15px) scale(1.05); opacity: 0.3; }
-  66%  { transform: translate(-20px, 10px) scale(0.98); opacity: 0.4; }
-  100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
-}
+/* ── Fog Drift (slow atmospheric movement) ──
+   The canonical fog-drift keyframe lives in atmosphere.css as `lc-fog-drift`.
+   The duplicate `fog-drift` and `fog-drift-reverse` keyframes that used to
+   live here have been removed; use `lc-fog-drift` for any future fog-style
+   animation. */
 .anim-fog-drift {
-  animation: fog-drift 25s ease-in-out infinite;
-  will-change: transform, opacity;
+  animation: lc-fog-drift 25s ease-in-out infinite;
 }
 
-@keyframes fog-drift-reverse {
-  0%   { transform: translate(0, 0) scale(1); opacity: 0.4; }
-  33%  { transform: translate(-25px, 20px) scale(1.03); opacity: 0.25; }
-  66%  { transform: translate(15px, -12px) scale(0.97); opacity: 0.35; }
-  100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
-}
 .anim-fog-drift-reverse {
-  animation: fog-drift-reverse 30s ease-in-out infinite;
-  will-change: transform, opacity;
+  animation: lc-fog-drift 30s ease-in-out infinite reverse;
 }
 
 /* ── Scale Bounce (for game results) ── */

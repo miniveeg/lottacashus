@@ -30,13 +30,17 @@
   inset: 0;
   background: linear-gradient(105deg, transparent 40%, rgba(255, 255, 255, 0.12) 50%, transparent 60%);
   transform: translateX(-120%);
-  transition: transform 0.6s ease;
+  transition: transform 0.9s ease;
   pointer-events: none;
 }
 
 .lc-motion-btn:hover .lc-motion-btn__shine {
   transform: translateX(120%);
 }
+
+/* Ghost buttons don't get the shine sweep — it's invisible against the
+   transparent background and creates a barely-perceptible jank on hover. */
+.lc-motion-btn--ghost .lc-motion-btn__shine { display: none; }
 
 .lc-motion-btn--primary {
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);

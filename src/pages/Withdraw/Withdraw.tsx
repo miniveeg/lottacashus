@@ -5,10 +5,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
 import { useToast } from "../../contexts/ToastContext";
-import { isSupabaseConfigured } from "../../lib/supabase";
+import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import {
   fetchMyWithdrawals,
-  requestWithdrawal,
   validateCryptoAddress,
   type CryptoWithdrawalRow,
 } from "../../lib/crypto";
@@ -96,21 +95,26 @@ export function Withdraw() {
       return;
     }
 
-    // Convert SC to USD before calling the RPC (which expects a USD amount).
-    // 100 SC = $1 USD, so usdAmount = scValue / 100.
-    const usdAmount = coinsToUsd(scValue, "sweeps_coins");
-
+    // Call request_sc_redemption — this is the correct RPC for withdrawing SC.
+    // It debits sweeps_coins (NOT balance/GC) and creates a row in the
+    // redemptions table. The old request_crypto_withdrawal RPC debited GC
+    // balance which was wrong — users are withdrawing SC, not GC.
     setSubmitting(true);
-    const { error: reqError } = await requestWithdrawal(chain, trimmedDestination, usdAmount);
+    const { error: reqError } = await supabase.rpc("request_sc_redemption", {
+      p_sc_amount: scValue,
+      p_chain: chain,
+      p_destination: trimmedDestination,
+    });
     setSubmitting(false);
 
     if (reqError) {
-      setError(reqError);
-      toast.error(reqError);
-      analytics.networkError("Withdraw.requestWithdrawal", reqError);
+      setError(reqError.message);
+      toast.error(reqError.message);
+      analytics.networkError("Withdraw.requestScRedemption", reqError.message);
       return;
     }
 
+    const usdAmount = coinsToUsd(scValue, "sweeps_coins");
     analytics.wallet.withdrawInitiated(chain, usdAmount);
     await refreshProfile();
     setSuccess("Withdrawal submitted. It will be processed from our treasury wallets.");

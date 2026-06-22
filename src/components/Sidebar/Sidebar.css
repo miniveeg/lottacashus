@@ -373,10 +373,42 @@
   .sidebar-chat__send { min-height: 2.8rem; min-width: 2.8rem; }
   .sidebar-chat__input { min-height: 2.8rem; font-size: 1rem; }
 
-  /* Mobile: hide section labels and dividers for a flat stacked list */
-  .sidebar__label { display: none; }
-  .sidebar__section + .sidebar__section { border-top: none; }
+  /* Mobile: keep section labels visible as hierarchy cues instead of
+     flattening everything into one indistinguishable list. The labels are
+     smaller and use the muted text color so they read as group headers
+     rather than primary navigation. */
+  .sidebar__label {
+    display: block;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    padding: 0.85rem 0.65rem 0.25rem;
+    opacity: 0.7;
+  }
+  .sidebar__section + .sidebar__section { border-top: 1px solid var(--lc-border); }
   .sidebar__section { padding: 0.2rem 0.55rem; }
+
+  /* On mobile, collapse the Legal section by default — these links are also
+     in the footer. Users can expand by tapping the label. */
+  .sidebar__section--legal .sidebar__nav {
+    display: none;
+  }
+  .sidebar__section--legal .sidebar__label {
+    cursor: pointer;
+    position: relative;
+  }
+  .sidebar__section--legal .sidebar__label::after {
+    content: "▸";
+    position: absolute;
+    right: 0.65rem;
+    color: var(--lc-text-muted);
+    transition: transform var(--lc-transition);
+  }
+  .sidebar__section--legal:has(.sidebar__label[aria-expanded="true"]) .sidebar__nav {
+    display: block;
+  }
+  .sidebar__section--legal:has(.sidebar__label[aria-expanded="true"]) .sidebar__label::after {
+    transform: rotate(90deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

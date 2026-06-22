@@ -201,8 +201,10 @@ export function Signup() {
 
         {!configured && (
           <p className="auth-config-warning" role="note">
-            Supabase is not configured. Add your project URL and anon key to the{" "}
-            <code>.env</code> file to enable authentication.
+            {import.meta.env.PROD
+              ? "Service temporarily unavailable. Please try again later."
+              : <>Supabase is not configured. Add your project URL and anon key to the{" "}
+                 <code>.env</code> file to enable authentication.</>}
           </p>
         )}
 
@@ -215,23 +217,6 @@ export function Signup() {
         {step === "details" ? (
           <form className="auth-form" onSubmit={handleSendCode} noValidate>
             {error && <p className="auth-error" role="alert" id="signup-error">{error}</p>}
-
-            <div className="auth-field">
-              <label htmlFor="signup-username">Username</label>
-              <input
-                id="signup-username"
-                type="text"
-                autoComplete="username"
-                placeholder="Your display name"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                maxLength={MAX_USERNAME_LENGTH}
-                aria-describedby="signup-username-hint"
-              />
-              <p className="auth-field-hint" id="signup-username-hint">
-                {username.length}/{MAX_USERNAME_LENGTH} characters
-              </p>
-            </div>
 
             <div className="auth-field">
               <label htmlFor="signup-email">Email</label>
@@ -249,6 +234,23 @@ export function Signup() {
             </div>
 
             <div className="auth-field">
+              <label htmlFor="signup-username">Username (optional)</label>
+              <input
+                id="signup-username"
+                type="text"
+                autoComplete="username"
+                placeholder="Your display name"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                maxLength={MAX_USERNAME_LENGTH}
+                aria-describedby="signup-username-hint"
+              />
+              <p className="auth-field-hint" id="signup-username-hint">
+                {username.length}/{MAX_USERNAME_LENGTH} characters
+              </p>
+            </div>
+
+            <div className="auth-field">
               <label htmlFor="signup-password">Password</label>
               <input
                 id="signup-password"
@@ -262,24 +264,6 @@ export function Signup() {
                 aria-invalid={Boolean(error) || undefined}
                 aria-describedby={error ? "signup-error" : undefined}
               />
-            </div>
-
-            <div className="auth-field">
-              <label htmlFor="signup-referral">Affiliate / referral code (optional)</label>
-              <input
-                id="signup-referral"
-                type="text"
-                autoComplete="off"
-                placeholder="e.g. ABC12DEF"
-                value={referralCode}
-                onChange={(e) => setReferralCode(normalizeAffiliateCode(e.target.value))}
-                maxLength={32}
-              />
-              <p className="auth-field-hint">
-                {referralCode
-                  ? "This code will be linked to your account when you finish signup."
-                  : "Have a friend's code? Enter it now — you can only set it once."}
-              </p>
             </div>
 
             <div className="auth-field">
@@ -329,6 +313,24 @@ export function Signup() {
                 </Link>
               </span>
             </label>
+
+            <details className="auth-field auth-field--optional">
+              <summary className="auth-field__summary">Affiliate / referral code (optional)</summary>
+              <input
+                id="signup-referral"
+                type="text"
+                autoComplete="off"
+                placeholder="e.g. ABC12DEF"
+                value={referralCode}
+                onChange={(e) => setReferralCode(normalizeAffiliateCode(e.target.value))}
+                maxLength={32}
+              />
+              <p className="auth-field-hint">
+                {referralCode
+                  ? "This code will be linked to your account when you finish signup."
+                  : "Have a friend's code? Enter it now — you can only set it once."}
+              </p>
+            </details>
 
             <button type="submit" className="auth-submit" disabled={submitting || !configured}>
               {submitting && <span className="auth-submit__spinner" aria-hidden="true" />}

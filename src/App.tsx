@@ -1,6 +1,7 @@
 
 import { lazy, Suspense, type ReactNode } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
 import { PlayModeProvider } from "./contexts/PlayModeContext";
@@ -48,18 +49,24 @@ const SweepstakesRules = lazy(() =>
 );
 const FreeEntry = lazy(() => import("./pages/FreeEntry/FreeEntry").then((m) => ({ default: m.FreeEntry })));
 const Redeem = lazy(() => import("./pages/Redeem/Redeem"));
+const ResponsibleGaming = lazy(() =>
+  import("./pages/ResponsibleGaming/ResponsibleGaming").then((m) => ({ default: m.ResponsibleGaming }))
+);
 
-function PageFallback({ label = "Loading…" }: { label?: string }) {
+function PageFallback() {
   return (
-    <div className="lc-page" style={{ padding: "2rem", color: "var(--lc-text-muted)" }}>
-      {label}
+    <div className="lc-page">
+      <div className="lc-loading" role="status" aria-live="polite">
+        <div className="lc-loading__pulse" aria-hidden />
+        <p>Loading…</p>
+      </div>
     </div>
   );
 }
 
 /** Wrap a lazy-loaded page in a Suspense boundary with a consistent fallback. */
-function LazyPage({ children, label }: { children: ReactNode; label?: string }) {
-  return <Suspense fallback={<PageFallback label={label} />}>{children}</Suspense>;
+function LazyPage({ children }: { children: ReactNode; label?: string }) {
+  return <Suspense fallback={<PageFallback />}>{children}</Suspense>;
 }
 
 function Shell({ children }: { children: ReactNode }) {
@@ -69,13 +76,14 @@ function Shell({ children }: { children: ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ProfileProvider>
-          <PlayModeProvider>
-            <NotificationsProvider>
-              <ToastProvider>
-                <ToastRegion />
-                <Routes>
+      <HelmetProvider>
+        <AuthProvider>
+          <ProfileProvider>
+            <PlayModeProvider>
+              <NotificationsProvider>
+                <ToastProvider>
+                  <ToastRegion />
+                  <Routes>
                   {/* Core auth & account routes — eager-loaded for instant first paint. */}
                   <Route path="/" element={<Shell><Home /></Shell>} />
                   <Route path="/login" element={<Shell><Login /></Shell>} />
@@ -167,7 +175,10 @@ export default function App() {
                     path="/free-entry"
                     element={<Shell><LazyPage><FreeEntry /></LazyPage></Shell>}
                   />
-                  <Route path="/responsible-gaming" element={<Navigate to="/settings" replace />} />
+                  <Route
+                    path="/responsible-gaming"
+                    element={<Shell><LazyPage><ResponsibleGaming /></LazyPage></Shell>}
+                  />
                   <Route
                     path="/redeem"
                     element={<Shell><LazyPage><Redeem /></LazyPage></Shell>}
@@ -182,6 +193,7 @@ export default function App() {
           </PlayModeProvider>
         </ProfileProvider>
       </AuthProvider>
+      </HelmetProvider>
     </BrowserRouter>
   );
 }

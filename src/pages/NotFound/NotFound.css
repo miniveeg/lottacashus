@@ -21,7 +21,8 @@
   font-weight: 800;
   font-size: 4rem;
   line-height: 1;
-  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-text-muted) 100%);
+  /* Precious-metal amber gradient — independent of the global --lc-gold alias. */
+  background: linear-gradient(135deg, #f5b942 0%, var(--lc-text-muted) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

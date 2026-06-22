@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# LottaCash — sitemap at /sitemap.xml
+Sitemap: https://lottacash.us/sitemap.xml

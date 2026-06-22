@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FAQ_ITEMS, TERMS_OF_SERVICE } from "../../content/help";
+import { Seo } from "../../components/Seo/Seo";
 import "./Help.css";
 
 type Tab = "faq" | "tos";
@@ -10,8 +11,13 @@ export function Help() {
 
   return (
     <div className="help lc-page lc-page--narrow">
+      <Seo
+        title="Help & FAQ"
+        description="Answers to common LottaCash questions and the Terms of Service that govern your use of the platform."
+        path="/help"
+      />
       <header className="lc-page__header help__header">
-        <h1 className="lc-page__title help__title">Help & Legal</h1>
+        <h1 className="lc-page__title help__title">Help &amp; FAQ</h1>
         <p className="lc-page__subtitle help__subtitle">
           Answers to common questions and the terms that govern your use of LottaCash.
         </p>
@@ -40,7 +46,7 @@ export function Help() {
           className={`help__tab${tab === "tos" ? " help__tab--active" : ""}`}
           onClick={() => setTab("tos")}
         >
-          Terms of Service
+          Terms
         </button>
       </div>
 

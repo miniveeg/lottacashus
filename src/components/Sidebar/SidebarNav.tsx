@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ORIGINALS_PATH, ORIGINALS_ROUTES } from "../../content/originals";
 import { useSidebar } from "../../contexts/SidebarContext";
@@ -58,6 +59,7 @@ function NavLink({ item }: { item: NavItem }) {
 export function SidebarNav() {
   const { profile } = useProfile();
   const { collapsed } = useSidebar();
+  const [legalOpen, setLegalOpen] = useState(false);
 
   const legalItems: NavItem[] = profile?.isAdmin
     ? [...legalNav, { icon: "admin", label: "Admin", href: "/admin" }]
@@ -83,8 +85,24 @@ export function SidebarNav() {
         </ul>
       </nav>
 
-      <nav className="sidebar__section" aria-label="Legal">
-        {!collapsed ? <p className="sidebar__label">Legal</p> : null}
+      <nav className="sidebar__section sidebar__section--legal" aria-label="Legal">
+        {!collapsed ? (
+          <p
+            className="sidebar__label"
+            role="button"
+            tabIndex={0}
+            aria-expanded={legalOpen}
+            onClick={() => setLegalOpen((open) => !open)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setLegalOpen((open) => !open);
+              }
+            }}
+          >
+            Legal
+          </p>
+        ) : null}
         <ul className="sidebar__nav">
           {legalItems.map((item) => (
             <NavLink key={item.label} item={item} />

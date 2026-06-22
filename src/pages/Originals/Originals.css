@@ -72,10 +72,19 @@
 
 .originals__card-desc {
   flex: 1;
-  margin: 0 0 1rem;
+  margin: 0 0 0.6rem;
   font-size: 0.85rem;
   line-height: 1.55;
   color: var(--lc-text-secondary);
+}
+
+.originals__card-rtp {
+  margin: 0 0 0.85rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lc-text-muted);
 }
 
 .originals__card-btn {

@@ -18,7 +18,7 @@
 }
 
 .promos__affiliate-intro strong {
-  color: var(--lc-gold);
+  color: var(--lc-amber);
   font-weight: 600;
 }
 
@@ -68,7 +68,7 @@
 
 .promos__affiliate-success {
   margin: 0 0 1rem;
-  color: var(--lc-gold);
+  color: var(--lc-amber);
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -82,15 +82,15 @@
   margin-bottom: 1.25rem;
   padding: 1.1rem 1.25rem;
   border-radius: var(--lc-radius-lg);
-  border: 1px solid var(--lc-gold-dim);
-  background: linear-gradient(145deg, rgba(245, 185, 66, 0.1), transparent);
+  border: 1px solid var(--lc-border-amber);
+  background: linear-gradient(145deg, var(--lc-amber-glow), transparent);
 }
 
 .promos__affiliate-claim-amount {
   margin: 0;
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--lc-gold);
+  color: var(--lc-amber);
   line-height: 1.2;
 }
 
@@ -151,7 +151,7 @@
 }
 
 .promos__affiliate-referrer-set strong {
-  color: var(--lc-gold);
+  color: var(--lc-amber);
   font-weight: 600;
 }
 
@@ -179,7 +179,7 @@
   font-size: 1.35rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--lc-gold);
+  color: var(--lc-amber);
   text-transform: uppercase;
 }
 
@@ -277,7 +277,7 @@
 
 .promos__affiliate-recent-amount {
   font-weight: 700;
-  color: var(--lc-gold);
+  color: var(--lc-amber);
 }
 
 .promos__affiliate-recent-date {
@@ -301,7 +301,7 @@
   display: grid;
   place-items: center;
   border-radius: var(--lc-radius-lg);
-  background: linear-gradient(145deg, rgba(245, 185, 66, 0.15), transparent);
+  background: linear-gradient(145deg, var(--lc-amber-glow), transparent);
   border: 1px solid var(--lc-border);
 }
 
@@ -333,7 +333,7 @@
 }
 
 .promos__btn--gold {
-  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
+  background: linear-gradient(135deg, var(--lc-amber) 0%, var(--lc-amber-dim) 100%);
   color: var(--lc-bg-base);
 }
 
@@ -344,65 +344,11 @@
 
 .promos__btn--ghost:hover {
   color: var(--lc-text-primary);
-  border-color: var(--lc-gold-dim);
-}
-
-.promos__section-title {
-  margin: 0 0 1rem;
-  font-family: var(--lc-font-display);
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.promos__cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.promos__card {
-  position: relative;
-  padding: 1.25rem 1.2rem;
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-lg);
-  transition: border-color var(--lc-transition);
-}
-
-.promos__card:hover {
-  border-color: var(--lc-border-strong);
-}
-
-.promos__card-title {
-  margin: 0 0 0.4rem;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.promos__card-desc {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--lc-text-secondary);
-  line-height: 1.5;
-  padding-right: 4rem;
-}
-
-.promos__card-badge {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--lc-gold);
-  padding: 0.2rem 0.5rem;
-  border-radius: 999px;
-  border: 1px solid var(--lc-gold-dim);
+  border-color: var(--lc-border-amber);
 }
 
 @media (max-width: 600px) {
-  .promos__hero {
+  .promos__affiliate-head {
     flex-direction: column;
   }
 }

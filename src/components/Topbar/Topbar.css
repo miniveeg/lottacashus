@@ -12,7 +12,7 @@
   border-bottom: 1px solid var(--lc-border);
   box-shadow: var(--lc-shadow-sm);
   position: relative;
-  z-index: 50;
+  z-index: var(--lc-z-topbar, 100);
 }
 
 .topbar::after {
@@ -69,7 +69,23 @@
   width: auto;
   flex-shrink: 0;
   background: transparent;
-  filter: drop-shadow(0 0 12px var(--lc-crimson-glow));
+  /* Ambient glow is provided by a pseudo-element on .topbar__brand instead of
+     a `filter: drop-shadow` on the image — that allows the logo asset to be
+     swapped without CSS color interference, and avoids the heavy GPU cost
+     of filtering a complex SVG. */
+}
+
+.topbar__brand {
+  position: relative;
+}
+
+.topbar__brand::after {
+  content: "";
+  position: absolute;
+  inset: -8px -16px;
+  background: radial-gradient(ellipse 60% 80% at 30% 50%, var(--lc-crimson-glow) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
 }
 
 .topbar__name {
@@ -77,10 +93,19 @@
   font-weight: 800;
   font-size: 1.25rem;
   letter-spacing: -0.02em;
-  background: linear-gradient(105deg, var(--lc-crimson-soft) 0%, var(--lc-text-primary) 50%, var(--lc-text-primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  /* Fallback color so the brand name is visible in browsers / print contexts
+     that don't support `background-clip: text` (otherwise the transparent
+     fill would render the text invisible). */
+  color: var(--lc-text-primary);
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .topbar__name {
+    background: linear-gradient(105deg, var(--lc-crimson-soft) 0%, var(--lc-text-primary) 50%, var(--lc-text-primary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 }
 
 /* Actions */
@@ -136,6 +161,91 @@
 
 .topbar__coin-toggle[aria-pressed="true"]:hover {
   filter: brightness(1.08);
+}
+
+/* Info button that opens the GC/SC explainer popover */
+.topbar__coin-info {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--lc-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: color var(--lc-transition), border-color var(--lc-transition), background var(--lc-transition);
+}
+
+.topbar__coin-info:hover,
+.topbar__coin-info[aria-expanded="true"] {
+  color: var(--lc-crimson-soft);
+  border-color: var(--lc-border-accent);
+  background: var(--lc-crimson-glow);
+}
+
+.topbar__coin-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: min(280px, 92vw);
+  padding: 0.9rem 1rem;
+  background: var(--lc-bg-panel);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-lg);
+  box-shadow: var(--lc-shadow-md);
+  z-index: var(--lc-z-notifications, 110);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--lc-text-secondary);
+}
+
+.topbar__coin-popover-close {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--lc-text-muted);
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: transparent;
+}
+
+.topbar__coin-popover-close:hover {
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-hover);
+}
+
+.topbar__coin-popover-title {
+  margin: 0.4rem 0 0.2rem;
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lc-text-primary);
+}
+
+.topbar__coin-popover-title:first-of-type {
+  margin-top: 0;
+}
+
+.topbar__coin-popover-text {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--lc-text-secondary);
+}
+
+.topbar__coin-popover-hint {
+  margin: 0.5rem 0 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--lc-border);
+  font-size: 0.72rem;
+  color: var(--lc-text-muted);
+  font-style: italic;
 }
 
 .topbar__balance {

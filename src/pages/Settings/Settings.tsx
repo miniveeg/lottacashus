@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Navigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams, useLocation } from "react-router-dom";
 import { Inbox } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
@@ -65,6 +65,20 @@ export function Settings() {
   const { user, loading: authLoading, session } = useAuth();
   const { profile, profileLoading, updateUsername, refreshProfile } = useProfile();
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+
+  // Scroll to the section named by the URL hash (e.g. /settings#responsible-gaming).
+  // React Router doesn't auto-scroll to anchors because the page is rendered
+  // inside a scrollable <main> rather than the document body.
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.replace(/^#/, "");
+    const el = document.getElementById(id);
+    if (el) {
+      // Defer until after paint so the element has a layout box.
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [location.hash]);
 
   const [username, setUsername] = useState("");
   const [initialUsername, setInitialUsername] = useState("");
@@ -269,7 +283,7 @@ export function Settings() {
     <div className="settings lc-page lc-page--wide">
       <header className="lc-page__header">
         <h1 className="lc-page__title settings__title">Settings</h1>
-        <p className="lc-page__subtitle settings__subtitle">Your LottaCash account overview</p>
+        <p className="lc-page__subtitle settings__subtitle">Manage your profile, view transaction history, and configure responsible gaming limits.</p>
       </header>
 
       {error && <p className="settings__error" role="alert">{error}</p>}
@@ -464,11 +478,13 @@ export function Settings() {
       </section>
 
       {/* 3. Responsible Gaming */}
-      <section className="settings__section">
+      <section className="settings__section" id="responsible-gaming">
         <h2 className="settings__section-title">Responsible Gaming</h2>
         <p className="settings__section-desc">
           Set limits on your play and take breaks when needed. All settings can be adjusted at any
-          time. If you need help, visit{" "}
+          time. For a full overview, visit the{" "}
+          <Link to="/responsible-gaming" className="settings__link">Responsible Gaming page</Link>.
+          If you need help, visit{" "}
           <a
             href="https://www.ncpgambling.org/"
             target="_blank"

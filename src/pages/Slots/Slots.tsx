@@ -294,6 +294,11 @@ export default function Slots() {
                 !rolling && showResult && lastResult?.won && state === "landed";
               const isLoss =
                 !rolling && showResult && lastResult && !lastResult.won && state === "landed";
+              // For the 3-symbol strip: center = result, top/bottom = adjacent
+              // symbols from the symbol ID space (purely decorative). When
+              // spinning, all 3 cycle randomly via the rAF tick above.
+              const aboveSymbol = symbol >= 0 ? (symbol + 6) % 7 : -1;
+              const belowSymbol = symbol >= 0 ? (symbol + 1) % 7 : -1;
               return (
                 <div
                   key={i}
@@ -305,8 +310,16 @@ export default function Slots() {
                 >
                   {symbol >= 0 ? (
                     <span className="slots__reel-inner">
-                      <span className="slots__symbol" aria-label={SYMBOL_NAMES[symbol] ?? `Symbol ${symbol}`}>
+                      {/* 3-symbol strip: top (dimmed) / center (win line) / bottom (dimmed).
+                          Audit issue P2 #5 — makes it look like a real slot machine. */}
+                      <span className="slots__symbol slots__symbol--adjacent" aria-hidden="true">
+                        <SlotSymbol id={aboveSymbol} size={48} />
+                      </span>
+                      <span className="slots__symbol slots__symbol--center" aria-label={SYMBOL_NAMES[symbol] ?? `Symbol ${symbol}`}>
                         <SlotSymbol id={symbol} size={64} />
+                      </span>
+                      <span className="slots__symbol slots__symbol--adjacent" aria-hidden="true">
+                        <SlotSymbol id={belowSymbol} size={48} />
                       </span>
                     </span>
                   ) : (

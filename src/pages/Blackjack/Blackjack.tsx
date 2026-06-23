@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
+import { Seo } from "../../components/Seo/Seo";
 import { cardRank, cardSuit, handValue, isRedCard } from "../../lib/games/blackjack";
 import { formatCoins } from "../../lib/format";
 import {
@@ -256,6 +257,11 @@ export function Blackjack() {
 
   return (
     <div className="bj lc-game-page">
+      <Seo
+        title="Blackjack"
+        description="Classic 21 vs the dealer. Hit, stand, double, or split. Blackjack pays 3:2. Provably fair, 94.5% RTP."
+        path="/blackjack"
+      />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Blackjack</h1>
         <p className="lc-page__subtitle">

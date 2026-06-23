@@ -75,7 +75,10 @@
 }
 
 .case-reel__tile-gem {
-  font-size: 1.6rem;
+  /* Enlarged from 1.6rem to 2.2rem for more visual weight — CaseItem has no
+    imageUrl field so the rarity glyph is the primary visual differentiator.
+    Audit issue P3 CB #25. */
+  font-size: 2.2rem;
   line-height: 1;
   filter: drop-shadow(0 0 8px currentColor);
 }

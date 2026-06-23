@@ -15,6 +15,14 @@ import { bytesToFloat, rollCaseItem } from "./provablyFair";
 export const BATTLE_RAKE = 0.05;
 export const BOT_CLIENT_SEED = "case-battle-bot";
 
+/** Round to 2 decimal places (cents). Used for all monetary math in this
+ *  module to avoid floating-point drift (e.g. 0.1 + 0.2 = 0.30000000000000004).
+ *  Audit issue #4.4 — extracted from 6+ inline `Math.round(x * 100) / 100`
+ *  call sites. Purely a maintainability refactor, no behavior change. */
+function roundCents(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
 export type RoundDrop = {
   round: number;
   caseId: string;
@@ -144,7 +152,7 @@ async function rollPlayerRounds(params: {
     total += item.value;
   }
 
-  return { drops, nonces, total: Math.round(total * 100) / 100 };
+  return { drops, nonces, total: roundCents(total) };
 }
 
 type OutcomeResult = {
@@ -174,14 +182,14 @@ function splitAmongAllSlots(players: BattlePlayerResult[], payoutPool: number): 
   const slots = [...players].sort((a, b) => a.slot - b.slot);
   if (!slots.length || payoutPool <= 0) return [];
 
-  const each = Math.round((payoutPool / slots.length) * 100) / 100;
+  const each = roundCents(payoutPool / slots.length);
   let distributed = 0;
   const payouts: WinnerPayout[] = [];
   for (let i = 0; i < slots.length; i++) {
     const p = slots[i]!;
     const share =
       i === slots.length - 1
-        ? Math.round((payoutPool - distributed) * 100) / 100
+        ? roundCents(payoutPool - distributed)
         : each;
     distributed += share;
     // Only humans receive payouts; bot shares are not credited.
@@ -199,7 +207,7 @@ function splitWinningTeamPayouts(
   const slots = [...teamPlayers].sort((a, b) => a.slot - b.slot);
   if (!slots.length || payoutPool <= 0) return [];
 
-  const each = Math.round((payoutPool / slots.length) * 100) / 100;
+  const each = roundCents(payoutPool / slots.length);
   let distributed = 0;
   const payouts: WinnerPayout[] = [];
 
@@ -207,7 +215,7 @@ function splitWinningTeamPayouts(
     const p = slots[i]!;
     const share =
       i === slots.length - 1
-        ? Math.round((payoutPool - distributed) * 100) / 100
+        ? roundCents(payoutPool - distributed)
         : each;
     distributed += share;
     if (!p.isBot && p.userId) {
@@ -218,7 +226,7 @@ function splitWinningTeamPayouts(
 }
 
 function totalUnboxedPool(players: BattlePlayerResult[]): number {
-  return Math.round(players.reduce((s, p) => s + p.totalValue, 0) * 100) / 100;
+  return roundCents(players.reduce((s, p) => s + p.totalValue, 0));
 }
 
 function pickExtremeIndex(
@@ -492,12 +500,16 @@ async function resolveJackpot(
   // Build per-player weights where each player gets their team's total weight.
   // This ensures the displayed percentages match the actual team selection
   // probability (all players on a team have identical odds).
-  const totalTeamWeight = teamWeights.reduce((s, w) => s + w, 0);
+  //
+  // Note: the unweighted sum of teamWeights is intentionally NOT computed
+  // here — it was previously calculated as `totalTeamWeight` and then
+  // explicitly voided (`void totalTeamWeight;`) because the UI normalizes
+  // jackpotWeights independently. Removed in audit #4.2 to avoid implying
+  // a value is used when it isn't.
   const jackpotWeights = players.map((p, i) => ({
     slot: p.slot,
     weight: teamWeights[playerTeamIndex[i]] ?? 0,
   }));
-  void totalTeamWeight; // used implicitly via jackpotWeights normalization in UI
 
   const teamIdx = await pickWeightedIndex(
     teamWeights,
@@ -592,7 +604,7 @@ export async function resolveBattle(params: {
   }
 
   players.sort((a, b) => a.slot - b.slot);
-  const potTotal = Math.round(params.potTotal * 100) / 100;
+  const potTotal = roundCents(params.potTotal);
   const gamemode = params.gamemode || "normal";
   const crazy = Boolean(params.crazyMode) && gamemode !== "group";
   const outcome = await resolveOutcome(

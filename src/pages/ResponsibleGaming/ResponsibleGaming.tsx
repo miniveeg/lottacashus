@@ -3,6 +3,7 @@ import { Shield, Clock, Ban, Phone, AlertTriangle, ExternalLink } from "lucide-r
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { Seo } from "../../components/Seo/Seo";
+import { GlassPanel } from "../../components/GlassPanel/GlassPanel";
 import "./ResponsibleGaming.css";
 
 export function ResponsibleGaming() {
@@ -24,7 +25,7 @@ export function ResponsibleGaming() {
         </p>
       </header>
 
-      <section className="lc-panel responsible-gaming__panel">
+      <GlassPanel className="responsible-gaming__panel">
         <div className="responsible-gaming__panel-head">
           <Shield size={28} aria-hidden />
           <div>
@@ -80,9 +81,9 @@ export function ResponsibleGaming() {
             Log in to manage limits
           </Link>
         )}
-      </section>
+      </GlassPanel>
 
-      <section className="lc-panel responsible-gaming__panel">
+      <GlassPanel className="responsible-gaming__panel">
         <h2 className="responsible-gaming__panel-title">If gambling is causing harm</h2>
         <p className="responsible-gaming__panel-text">
           Problem gambling is a recognized mental health condition. If you or someone you know is
@@ -154,9 +155,9 @@ export function ResponsibleGaming() {
             </div>
           </li>
         </ul>
-      </section>
+      </GlassPanel>
 
-      <section className="lc-panel responsible-gaming__panel responsible-gaming__panel--crisis">
+      <GlassPanel className="responsible-gaming__panel responsible-gaming__panel--crisis">
         <h2 className="responsible-gaming__panel-title">In immediate crisis</h2>
         <p className="responsible-gaming__panel-text">
           If you are thinking about harming yourself or someone else, stop and contact emergency
@@ -164,9 +165,9 @@ export function ResponsibleGaming() {
           Crisis Lifeline. In the UK, call <a href="tel:999">999</a> or{" "}
           <a href="tel:111">111</a>. Elsewhere, contact your local emergency number.
         </p>
-      </section>
+      </GlassPanel>
 
-      <section className="lc-panel responsible-gaming__panel">
+      <GlassPanel className="responsible-gaming__panel">
         <h2 className="responsible-gaming__panel-title">Our commitments</h2>
         <ul className="responsible-gaming__commitments">
           <li>Accounts are restricted to players 18 years or older (or the legal age in your jurisdiction, whichever is higher).</li>
@@ -175,7 +176,7 @@ export function ResponsibleGaming() {
           <li>Self-exclusion is irreversible for the duration you select — there is no &ldquo;early lift&rdquo; path, even via support.</li>
           <li>If we detect patterns consistent with harmful play, we may proactively reach out to suggest a break or limits.</li>
         </ul>
-      </section>
+      </GlassPanel>
     </div>
   );
 }

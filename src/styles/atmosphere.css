@@ -64,9 +64,39 @@
 
 /* Graceful fallback when backdrop-filter is unavailable (older Firefox,
    disabled-GPU contexts): use a more opaque surface so text stays
-   legible without the blur. */
+   legible without the blur. This covers `.lc-glass` (the utility class)
+   AND every hand-rolled glass surface across the site that uses
+   `var(--lc-bg-glass)` as its background — including all Case Battles
+   panels (.cbr__arena, .cbr__p-col, .cbr__join-panel, .cbh__card,
+   .cbc__*) and the per-page panels in Profile/Admin/Wallet/Settings. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .lc-glass { background: var(--lc-bg-panel); }
+  .lc-glass,
+  .lc-panel,
+  .glass-panel,
+  /* Case Battles — heaviest backdrop-filter user (audit #2.4) */
+  .cbr__arena,
+  .cbr__p-col,
+  .cbr__join-panel,
+  .cbr__pulls-strip,
+  .cbr__final-card,
+  .cbr__lobby-slot,
+  .cbh__card,
+  .cbh__panel,
+  .cbc__panel,
+  .cbc__summary-bar,
+  /* Per-page glass panels */
+  .profile-hero,
+  .profile-stat,
+  .profile-referral,
+  .leaderboard-table-wrap,
+  .settings__section,
+  .wallet__section,
+  .help__panel,
+  .admin__section,
+  .promos__affiliate,
+  .responsible-gaming__panel {
+    background: var(--lc-bg-panel);
+  }
 }
 
 .lc-glass--crimson {

@@ -1,3 +1,29 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   CASE BATTLES — SHARED PAGE CHROME
+   ═══════════════════════════════════════════════════════════════════════════
+
+   CLASS-PREFIX CONVENTION (audit #4.1):
+   This folder uses four BEM-style prefixes, one per page scope, plus a
+   shared `cb-page__` prefix for cross-page chrome. Stick to these:
+
+     cb-page__   — shared across Hub + Create + Room (topbar, hero, panel,
+                   stat, section-label, error, btn-primary). Lives in THIS
+                   file (CaseBattlesPages.css).
+     cbh__       — Hub-only classes. Lives in CaseBattlesHub.css.
+     cbc__       — Create-only classes. Lives in CaseBattlesCreate.css.
+     cbr__       — Room-only classes (arena, player columns, pulls, results,
+                   lobby, join panel). Lives in CaseBattlesRoom.css.
+
+   When adding a new class, use the prefix that matches the page you're in.
+   Don't invent a 4th page-specific prefix — if a new Case Battles page is
+   added, pick a new 3-letter prefix (e.g. `cbl__` for a hypothetical
+   "leaderboard" page) and document it here.
+
+   The two reel components (CaseOpenReel, JackpotReel) use their own
+   prefixes (`case-reel__` and `cb-jackpot-reel__` respectively) because
+   they're self-contained widgets, not page chrome.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 /* Shared layout for Case Battles hub + create */
 .cb-page--compact {
   max-width: min(1180px, 96vw);

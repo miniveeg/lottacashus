@@ -47,6 +47,8 @@ export type CaseBattlePlayerColumnProps = {
   phase: PlayerColumnPhase;
   gamemode: string;
   isYou: boolean;
+  isWinner: boolean;
+  isLeading: boolean;
   activeRound: number;
   revealedRounds: number;
   spinDurationMs: number;
@@ -65,6 +67,8 @@ export function CaseBattlePlayerColumn({
   phase,
   gamemode,
   isYou,
+  isWinner,
+  isLeading,
   activeRound,
   revealedRounds,
   spinDurationMs,
@@ -94,7 +98,9 @@ export function CaseBattlePlayerColumn({
       className={
         "cbr__p-col" +
         (filled ? " cbr__p-col--filled" : " cbr__p-col--empty") +
-        (isYou ? " cbr__p-col--you" : "")
+        (isYou ? " cbr__p-col--you" : "") +
+        (isWinner ? " cbr__p-col--winner" : "") +
+        (isLeading && !isWinner ? " cbr__p-col--leading" : "")
       }
       data-phase={phase}
     >
@@ -160,7 +166,7 @@ export function CaseBattlePlayerColumn({
                 ? (RARITY_COLORS[lastDrop.rarity as CaseRarity] ?? "#7a7a98")
                 : undefined;
               return (
-                <div className="cbr__p-col-reel-wait">
+                <div className="cbr__p-col-reel-wait cbr__p-col-reel-idle">
                   {lastDrop ? (
                     <div className="cbr__p-col-last-drop" style={{ borderColor: `${lastColor}55` }}>
                       <span className="cbr__p-col-last-drop-gem" style={{ color: lastColor }} aria-hidden>◆</span>

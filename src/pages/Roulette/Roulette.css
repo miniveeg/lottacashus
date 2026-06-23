@@ -71,6 +71,20 @@
   border: 1px solid var(--lc-border);
   background: var(--lc-bg-elevated);
   color: var(--lc-text-primary);
+  /* Staggered entrance — newest chip slides in from the left.
+     Audit issue P2 extra (Agent 2 Roulette improvement). */
+  animation: roulette-chip-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes roulette-chip-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .roulette__history-chip--red {
@@ -174,6 +188,11 @@
   border-color: var(--lc-border-strong);
 }
 
+/* Tactile press feedback. Audit issue P3 #13. */
+.roulette__bet-cell:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
 .roulette__bet-cell:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -274,23 +293,26 @@
   font-family: var(--lc-font-display);
   font-size: 1.05rem;
   font-weight: 700;
-  color: #0a0a0a;
-  background: linear-gradient(180deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
+  color: #fff;
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
   border: none;
-  border-radius: var(--lc-radius-md);
+  border-radius: var(--lc-radius-lg);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
+  box-shadow: 0 2px 16px var(--lc-crimson-glow), var(--lc-shadow-inset);
   transition:
     filter var(--lc-transition),
-    transform var(--lc-transition);
+    transform var(--lc-transition),
+    box-shadow var(--lc-transition);
 }
 
 .roulette__bet-btn:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
+  box-shadow: 0 6px 28px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
 }
 
 .roulette__bet-btn:active:not(:disabled) {
@@ -298,7 +320,7 @@
 }
 
 .roulette__bet-btn:focus-visible {
-  outline: 2px solid var(--lc-gold);
+  outline: 2px solid var(--lc-crimson-soft);
   outline-offset: 2px;
 }
 
@@ -471,6 +493,12 @@
   flex-direction: column;
   align-items: center;
   pointer-events: none;
+  /* Transform-origin at the wheel center so the ball-marker can orbit.
+     The marker is at top: -2%, left: 50% of the parent wheel. The wheel
+     center is at 50%, 50% — so relative to the marker's own box, the
+     center is horizontally at 50% (the marker's own center) and
+     vertically at calc(50% + 52%) ≈ the wheel's vertical center. */
+  transform-origin: 50% calc(50% + 52%);
 }
 
 .roulette-wheel__ball {
@@ -489,13 +517,24 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-top: 9px solid var(--lc-gold);
+  border-top: 9px solid var(--lc-amber);
   margin-top: -2px;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
+/* Ball orbits the rim during spin — the ball-marker wrapper rotates around
+   the wheel center. Audit issue P2 #4. */
+.roulette-wheel__disc-wrap--spinning ~ .roulette-wheel__ball-marker {
+  animation: roulette-ball-orbit 0.4s linear infinite;
+}
+
 .roulette-wheel__disc-wrap--spinning ~ .roulette-wheel__ball-marker .roulette-wheel__ball {
   animation: roulette-ball-bounce 0.4s ease-in-out infinite alternate;
+}
+
+@keyframes roulette-ball-orbit {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to { transform: translateX(-50%) rotate(360deg); }
 }
 
 @keyframes roulette-ball-bounce {

@@ -64,8 +64,8 @@
   background:
     radial-gradient(ellipse 60% 40% at 50% 0%, rgba(220, 20, 60, 0.10), transparent 65%),
     linear-gradient(180deg, rgba(14, 14, 22, 0.78), rgba(6, 6, 10, 0.92));
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
   padding: 1.5rem clamp(1rem, 3vw, 1.75rem) 1.75rem;
   box-shadow: var(--lc-shadow-md), var(--lc-glass-highlight);
   overflow: visible;
@@ -263,9 +263,9 @@
 }
 
 .cbr__phase-pill--waiting {
-  border-color: rgba(245, 158, 11, 0.45);
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  border-color: var(--lc-border-amber);
+  background: var(--lc-amber-glow);
+  color: var(--lc-amber);
 }
 
 .cbr__phase-pill--running {
@@ -855,8 +855,8 @@
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border-strong);
   background: rgba(14, 14, 22, 0.72);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
   box-shadow: var(--lc-glass-highlight);
   transition:
     border-color 0.3s ease,
@@ -898,6 +898,21 @@
     var(--lc-glass-highlight);
 }
 
+/* Live leader during play — softer amber glow to distinguish "currently ahead"
+   from the final crimson winner state. Audit issue CB P1 #5. */
+.cbr__p-col--leading {
+  border-color: var(--lc-amber);
+  box-shadow:
+    0 0 0 1px var(--lc-border-amber),
+    0 0 24px var(--lc-amber-glow),
+    var(--lc-glass-highlight);
+}
+
+.cbr__p-col--leading .cbr__p-col-foot-val {
+  color: var(--lc-amber);
+  text-shadow: 0 0 14px var(--lc-amber-glow);
+}
+
 /* Player header — horizontal: avatar circle + name + tag chips */
 .cbr__p-col-head {
   display: flex;
@@ -925,7 +940,7 @@
 }
 
 .cbr__p-col-avatar--bot {
-  background: linear-gradient(135deg, #4a4a5e, #2a2a3a);
+  background: linear-gradient(135deg, var(--lc-slate), var(--lc-slate-dim));
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -1318,8 +1333,8 @@
   border-style: solid;
   border-color: var(--lc-border-strong);
   background: rgba(14, 14, 22, 0.72);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
   box-shadow: var(--lc-glass-highlight);
 }
 
@@ -1355,7 +1370,7 @@
 }
 
 .cbr__slot-avatar--bot {
-  background: linear-gradient(135deg, #4a4a5e, #2a2a3a);
+  background: linear-gradient(135deg, var(--lc-slate), var(--lc-slate-dim));
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -1473,18 +1488,6 @@
 }
 
 /* Legacy pulls-list (CaseBattleResults, not the room) — vertical stack */
-.cbr__pulls-list--legacy {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  max-height: 14rem;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-
 .cbr__pulls-empty {
   font-size: 0.7rem;
   color: var(--lc-text-muted);
@@ -1551,7 +1554,7 @@
 
 /* Bot avatar variant (applied via inline className in JSX) */
 .cbr__pulls-strip-avatar--bot {
-  background: linear-gradient(135deg, #4a4a5e, #2a2a3a);
+  background: linear-gradient(135deg, var(--lc-slate), var(--lc-slate-dim));
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -1675,6 +1678,21 @@
   min-width: 0;
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   position: relative;
+  /* Staggered entrance — each pull item slides in with a delay based on its
+     index. Audit issue P2 CB #15. */
+  animation: cbr-pull-card-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--pull-index, 0) * 60ms);
+}
+
+@keyframes cbr-pull-card-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-12px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 .cbr__pull-item:hover {
@@ -1897,8 +1915,8 @@
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border-strong);
   background: rgba(14, 14, 22, 0.72);
-  backdrop-filter: blur(16px) saturate(140%);
-  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
   text-align: center;
   position: relative;
   transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
@@ -2003,7 +2021,7 @@
 }
 
 .cbr__final-card-avatar--bot {
-  background: linear-gradient(135deg, #4a4a5e, #2a2a3a);
+  background: linear-gradient(135deg, var(--lc-slate), var(--lc-slate-dim));
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
@@ -2101,20 +2119,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   LEGACY RESULTS VIEW (CaseBattleResults.tsx — not my file, preserve styles)
+   LEGACY RESULTS VIEW — removed (CaseBattleResults.tsx was deleted in audit #1.4)
    ═══════════════════════════════════════════════════════════════════════════ */
-.cbr__board-results-head {
-  text-align: center;
-  margin-bottom: 0.85rem;
-}
-
-.cbr__board-results-head .cbr__results-title {
-  margin: 0 0 0.25rem;
-}
-
-.cbr__board-results-head .cbr__results-sub {
-  margin: 0;
-}
 
 .cbr__reel-col {
   flex: 1 1 0;
@@ -2299,355 +2305,10 @@
   font-weight: 700;
 }
 
-.cbr__p-result {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.22rem;
-  margin-top: 0.4rem;
-  padding-top: 0.4rem;
-  border-top: 1px dashed var(--lc-border-strong);
-  text-align: center;
-}
-
-.cbr__p-result-badge {
-  font-family: var(--lc-font-body);
-  font-size: 0.62rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--lc-crimson-soft);
-}
-
-.cbr__p-result-jp {
-  font-family: var(--lc-font-body);
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--lc-crimson-soft);
-}
-
-.cbr__p-result-borrow {
-  font-family: var(--lc-font-body);
-  font-size: 0.62rem;
-  color: var(--lc-text-muted);
-}
-
-.cbr__p-result-payout {
-  font-family: var(--lc-font-display);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--lc-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.cbr__p-result-payout--win {
-  color: var(--lc-emerald);
-  text-shadow: 0 0 14px var(--lc-emerald-glow);
-}
-
-.cbr__p-result-note {
-  font-family: var(--lc-font-body);
-  font-size: 0.58rem;
-  color: var(--lc-text-muted);
-  line-height: 1.3;
-}
-
 /* Result columns (CaseBattleResults) */
-.cbr__results-board {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.cbr__results-board-head {
-  text-align: center;
-}
-
-.cbr__results-board-head .cbr__results-title {
-  margin: 0 0 0.25rem;
-}
-
-.cbr__results-board-head .cbr__results-sub {
-  margin: 0;
-}
-
-.cbr__results-board-cols {
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: stretch;
-  width: 100%;
-  gap: 0;
-}
-
-.cbr__result-col {
-  flex: 1 1 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  animation: cbr-result-col-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
 @keyframes cbr-result-col-enter {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-.cbr__result-col--you .cbr__result-col-head {
-  border-color: var(--lc-crimson);
-}
-
-.cbr__result-col--winner .cbr__result-col-head {
-  border-color: var(--lc-crimson-soft);
-  background: rgba(220, 20, 60, 0.08);
-}
-
-.cbr__result-col-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem 0.4rem;
-  padding: 0.4rem 0.3rem;
-  margin-bottom: 0.4rem;
-  border-radius: var(--lc-radius-sm);
-  border: 1px solid var(--lc-border-strong);
-  background: rgba(0, 0, 0, 0.35);
-  text-align: center;
-}
-
-.cbr__result-col-avatar {
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.cbr__result-col-name {
-  font-family: var(--lc-font-display);
-  font-size: 0.74rem;
-  font-weight: 700;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--lc-text-primary);
-}
-
-.cbr__result-col-badge {
-  width: 100%;
-  font-family: var(--lc-font-body);
-  font-size: 0.62rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--lc-crimson-soft);
-}
-
-.cbr__result-col-body {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  min-height: 8rem;
-  padding: 0.75rem 0.45rem;
-  border-radius: var(--lc-radius-md);
-  border: 1px solid var(--lc-border-strong);
-  background: rgba(14, 14, 22, 0.72);
-  text-align: center;
-}
-
-.cbr__result-col--winner .cbr__result-col-body {
-  border-color: var(--lc-crimson-soft);
-  background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(220, 20, 60, 0.1), transparent 70%),
-    rgba(14, 14, 22, 0.78);
-  box-shadow: 0 0 18px rgba(220, 20, 60, 0.12);
-  animation: cbr-result-col-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both,
-             cbr-winner-glow 2.4s ease-in-out 0.6s infinite;
-}
-
-.cbr__result-col-unboxed {
-  margin: 0;
-  font-family: var(--lc-font-body);
-  font-size: 0.7rem;
-  color: var(--lc-text-muted);
-}
-
-.cbr__result-col-unboxed strong {
-  display: block;
-  margin-top: 0.18rem;
-  font-family: var(--lc-font-mono);
-  font-size: 0.85rem;
-  color: var(--lc-text-primary);
-  font-weight: 700;
-}
-
-.cbr__result-col-jp {
-  margin: 0;
-  font-family: var(--lc-font-body);
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--lc-crimson-soft);
-}
-
-.cbr__result-col-borrow {
-  margin: 0;
-  font-family: var(--lc-font-body);
-  font-size: 0.62rem;
-  color: var(--lc-text-muted);
-}
-
-.cbr__result-col-payout {
-  margin: 0.2rem 0 0;
-  font-family: var(--lc-font-display);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--lc-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.cbr__result-col-payout--win {
-  color: var(--lc-emerald);
-  text-shadow: 0 0 16px var(--lc-emerald-glow);
-}
-
-.cbr__result-col-borrow-note {
-  margin: 0;
-  font-family: var(--lc-font-body);
-  font-size: 0.6rem;
-  color: var(--lc-text-muted);
-  line-height: 1.3;
-}
-
-.cbr__results {
-  margin-top: 1.3rem;
-  padding: 1.1rem 1.2rem 1.25rem;
-  border-radius: var(--lc-radius-md);
-  border: 1px solid var(--lc-border-strong);
-  background: rgba(14, 14, 22, 0.72);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.cbr__results-title {
-  margin: 0 0 0.4rem;
-  font-family: var(--lc-font-display);
-  font-size: 1.05rem;
-  font-weight: 700;
-  text-align: center;
-  color: var(--lc-text-primary);
-}
-
-.cbr__results-sub {
-  margin: 0 0 0.9rem;
-  font-family: var(--lc-font-body);
-  font-size: 0.8rem;
-  text-align: center;
-  color: var(--lc-text-muted);
-}
-
-.cbr__results-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-}
-
-.cbr__results-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.55rem 0.85rem;
-  padding: 0.65rem 0.75rem;
-  border-radius: var(--lc-radius-sm);
-  border: 1px solid var(--lc-border-strong);
-  background: rgba(0, 0, 0, 0.35);
-}
-
-.cbr__results-row--winner {
-  border-color: var(--lc-crimson-soft);
-  background: rgba(220, 20, 60, 0.08);
-  box-shadow: 0 0 18px rgba(220, 20, 60, 0.12);
-}
-
-.cbr__results-row--you {
-  box-shadow: 0 0 0 1px var(--lc-crimson-glow-strong);
-}
-
-.cbr__results-player {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-}
-
-.cbr__results-avatar {
-  font-size: 1.3rem;
-  line-height: 1;
-}
-
-.cbr__results-meta {
-  min-width: 0;
-}
-
-.cbr__results-name {
-  display: block;
-  font-family: var(--lc-font-display);
-  font-weight: 700;
-  font-size: 0.85rem;
-  color: var(--lc-text-primary);
-}
-
-.cbr__results-unboxed {
-  display: block;
-  font-family: var(--lc-font-mono);
-  font-size: 0.7rem;
-  color: var(--lc-text-muted);
-}
-
-.cbr__results-outcome {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.18rem;
-  text-align: right;
-}
-
-.cbr__results-jp-pct {
-  font-family: var(--lc-font-body);
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--lc-crimson-soft);
-}
-
-.cbr__results-borrow {
-  font-family: var(--lc-font-body);
-  font-size: 0.66rem;
-  color: var(--lc-text-muted);
-}
-
-.cbr__results-payout {
-  font-family: var(--lc-font-display);
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--lc-text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.cbr__results-payout--win {
-  color: var(--lc-emerald);
-  text-shadow: 0 0 14px var(--lc-emerald-glow);
-}
-
-.cbr__results-borrow-note {
-  font-family: var(--lc-font-body);
-  font-size: 0.62rem;
-  color: var(--lc-text-muted);
-  max-width: 12rem;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -2816,11 +2477,6 @@
     min-width: 4.75rem;
   }
 
-  .cbr__results-outcome {
-    align-items: flex-start;
-    text-align: left;
-  }
-
   .cbr__players-row,
   .cbr__reels-row {
     flex-wrap: nowrap;
@@ -2873,7 +2529,7 @@
   }
 }
 
-@media (max-width: 420px) {
+@media (max-width: 480px) {
   .cbr__arena {
     padding: 1rem 0.7rem 1.25rem;
   }
@@ -2913,8 +2569,6 @@
   .cbr__final-card--winner,
   .cbr__final-card-crown,
   .cbr__pull-card,
-  .cbr__result-col,
-  .cbr__result-col--winner,
   .cbr__result-pill,
   .cbr__p-col,
   .cbr__p-col-body,

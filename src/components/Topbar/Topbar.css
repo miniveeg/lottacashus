@@ -385,6 +385,10 @@ a.topbar__balance:hover {
   .topbar__btn--logout { display: none; }
   .topbar__balance-value { font-size: 0.82rem; }
   .topbar__actions { gap: 0.15rem; }
+  /* Hide the GC/SC label text on very small screens — the coin toggle button
+     already shows "GC" or "SC" as a compact indicator. Audit issue P3 #15. */
+  .topbar__balance-label { display: none; }
+  .topbar__balance-usd { display: none; }
 }
 
 @media (max-width: 360px) {

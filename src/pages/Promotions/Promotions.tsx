@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
 import { Seo } from "../../components/Seo/Seo";
+import { GlassPanel } from "../../components/GlassPanel/GlassPanel";
 import {
   claimAffiliateEarnings,
   fetchAffiliateStats,
@@ -133,7 +134,7 @@ export function Promotions() {
         </p>
       </header>
 
-      <section className="promos__affiliate lc-panel" aria-labelledby="affiliate-heading">
+      <GlassPanel className="promos__affiliate lc-panel" aria-labelledby="affiliate-heading" padding="lg">
         <div className="promos__affiliate-head">
           <div className="promos__hero-icon promos__affiliate-icon" aria-hidden="true">
             <Handshake size={32} />
@@ -358,7 +359,7 @@ export function Promotions() {
             )}
           </>
         ) : null}
-      </section>
+      </GlassPanel>
 
     </div>
   );

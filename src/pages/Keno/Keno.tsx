@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
+import { Seo } from "../../components/Seo/Seo";
 import { LcSelect } from "../../components/LcSelect/LcSelect";
 import {
   getPaytableRow,
@@ -215,6 +216,11 @@ export function Keno() {
 
   return (
     <div className="keno lc-game-page">
+      <Seo
+        title="Keno"
+        description="Pick 1–10 numbers on a 40-tile board. Four risk modes from safe to extreme. Provably fair, 94.5% RTP."
+        path="/keno"
+      />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Keno</h1>
         <p className="lc-page__subtitle">
@@ -251,6 +257,9 @@ export function Keno() {
               const isSelected = selectedSet.has(n);
               const isDrawn = drawnSet?.has(n);
               const isHit = isSelected && isDrawn;
+              // Draw order index for stagger animation — the position of this
+              // number in the drawn array determines its reveal delay.
+              const drawIndex = drawn ? drawn.indexOf(n) : -1;
               const cellAriaLabel = [
                 `Number ${n}`,
                 isSelected ? "selected" : "not selected",
@@ -271,6 +280,7 @@ export function Keno() {
                   ]
                     .filter(Boolean)
                     .join(" ")}
+                  style={isDrawn && drawIndex >= 0 ? { ["--draw-index" as string]: drawIndex } as CSSProperties : undefined}
                   onClick={() => toggleNumber(n)}
                   disabled={drawing}
                   aria-pressed={isSelected}

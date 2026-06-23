@@ -34,6 +34,17 @@ const ROUND_DELAY_MS = 5000;
 const ROUND_DELAY_FAST_MS = 2000;
 
 function reelItemHeight(playerCount: number): number {
+  // Per-player-count reel item height, tuned by eye against ITEM_H = 92
+  // (the base tile height in CaseOpenReel.tsx). Each step shrinks the tile
+  // by ~6-8px so that 6 reels fit comfortably side-by-side in the arena
+  // without horizontal overflow, while 1v1 battles get the largest tiles
+  // for maximum visual impact.
+  //
+  // Ratios (itemHeight / ITEM_H):
+  //   1v1 / 1v1v1   (≤3 players)  →  80 / 92 ≈ 0.87
+  //   1v1v1v1 / 2v2 (4 players)   →  72 / 92 ≈ 0.78
+  //   1v1v1v1v1     (5 players)   →  64 / 92 ≈ 0.70
+  //   1v1v1v1v1v1   (6 players)   →  58 / 92 ≈ 0.63
   if (playerCount >= 6) return 58;
   if (playerCount >= 5) return 64;
   if (playerCount >= 4) return 72;
@@ -524,6 +535,28 @@ export function CaseBattleArena({
           ? battle.winningSlots.includes(player.slot)
           : battle.winnerSlot === player.slot);
 
+  // Live leader tracking: during the playing phase, find the player with the
+  // highest displayTotal and mark them as "leading." This gives visual
+  // feedback (amber glow via cbr__p-col--leading) while reels are spinning,
+  // so players can see who's ahead in real time. Audit issue CB P1 #5.
+  const leadingSlot = useMemo(() => {
+    if (columnPhase !== "playing" || battle.players.length === 0) return null;
+    let bestSlot: number | null = null;
+    let bestTotal = -1;
+    for (const p of battle.players) {
+      const revealedDrops = p.drops.slice(0, revealedRounds);
+      const total = revealedDrops.reduce((s, d) => s + d.value, 0);
+      if (total > bestTotal) {
+        bestTotal = total;
+        bestSlot = p.slot;
+      }
+    }
+    // Only mark a leader if there's a meaningful total (> 0) and more than
+    // one player — otherwise the "leading" state is meaningless.
+    if (bestTotal <= 0 || battle.players.length < 2) return null;
+    return bestSlot;
+  }, [columnPhase, battle.players, revealedRounds]);
+
   const renderSlotColumn = (slot: number) => {
     const player = battle.players.find((p) => p.slot === slot);
     return (
@@ -537,6 +570,8 @@ export function CaseBattleArena({
         phase={columnPhase}
         gamemode={battleGamemode}
         isYou={player?.userId === userId}
+        isWinner={player != null && playerIsWinner(player)}
+        isLeading={leadingSlot === slot}
         activeRound={activeRound}
         revealedRounds={showJackpotReel || showStaticResults ? battle.rounds : revealedRounds}
         spinDurationMs={spinDurationMs}
@@ -760,7 +795,7 @@ export function CaseBattleArena({
       )}
 
       {showStaticResults && onComplete && (
-        <button type="button" className="cb-page__btn-primary cbr__done-btn" onClick={onComplete}>
+        <button type="button" className="lc-btn lc-btn--primary cbr__done-btn" onClick={onComplete}>
           Back to battles
         </button>
       )}

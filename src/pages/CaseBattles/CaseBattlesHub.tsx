@@ -9,6 +9,7 @@ import { getCaseById } from "../../lib/games/case-battles";
 import { formatCoins } from "../../lib/format";
 import { filterListedBattles, listOpenCaseBattles, type OpenBattleRow } from "../../lib/caseBattles";
 import { LcSelect, type LcSelectOption } from "../../components/LcSelect/LcSelect";
+import { Seo } from "../../components/Seo/Seo";
 import { CaseBattlesTopbar } from "./CaseBattlesTopbar";
 import {
   battleIsJoinable,
@@ -32,6 +33,26 @@ const SORT_OPTIONS: LcSelectOption<SortKey>[] = [
   { value: "price-desc", label: "Entry: high to low" },
 ];
 
+/** Gamemode filter chips — "all" plus the four gamemodes. */
+type GamemodeFilter = "all" | "normal" | "group" | "terminal" | "jackpot";
+const GAMEMODE_FILTERS: { id: GamemodeFilter; label: string }[] = [
+  { id: "all", label: "All modes" },
+  { id: "normal", label: "Normal" },
+  { id: "group", label: "Group" },
+  { id: "terminal", label: "Terminal" },
+  { id: "jackpot", label: "Jackpot" },
+];
+
+/** Player-count filter chips — "all" plus the common sizes. */
+type PlayerFilter = "all" | "2" | "3" | "4" | "6";
+const PLAYER_FILTERS: { id: PlayerFilter; label: string }[] = [
+  { id: "all", label: "Any size" },
+  { id: "2", label: "1v1 / 2p" },
+  { id: "3", label: "1v1v1 / 3p" },
+  { id: "4", label: "1v1v1v1 / 2v2" },
+  { id: "6", label: "6-player" },
+];
+
 function sortBattles(rows: OpenBattleRow[], sort: SortKey): OpenBattleRow[] {
   const list = [...rows];
   switch (sort) {
@@ -48,6 +69,20 @@ function sortBattles(rows: OpenBattleRow[], sort: SortKey): OpenBattleRow[] {
   }
 }
 
+/** Apply gamemode + player-count filters to the lobby list. */
+function applyFilters(
+  rows: OpenBattleRow[],
+  gamemode: GamemodeFilter,
+  players: PlayerFilter
+): OpenBattleRow[] {
+  if (gamemode === "all" && players === "all") return rows;
+  return rows.filter((r) => {
+    if (gamemode !== "all" && r.gamemode !== gamemode) return false;
+    if (players !== "all" && Number(r.max_players) !== Number(players)) return false;
+    return true;
+  });
+}
+
 export function CaseBattlesHub() {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -59,6 +94,8 @@ export function CaseBattlesHub() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>("newest");
+  const [gamemodeFilter, setGamemodeFilter] = useState<GamemodeFilter>("all");
+  const [playerFilter, setPlayerFilter] = useState<PlayerFilter>("all");
 
   const loadLobby = useCallback(async () => {
     const res = await listOpenCaseBattles(50);
@@ -89,7 +126,14 @@ export function CaseBattlesHub() {
     return () => window.clearInterval(id);
   }, []);
 
-  const sortedBattles = useMemo(() => sortBattles(openBattles, sort), [openBattles, sort]);
+  const sortedBattles = useMemo(
+    () => sortBattles(applyFilters(openBattles, gamemodeFilter, playerFilter), sort),
+    [openBattles, sort, gamemodeFilter, playerFilter]
+  );
+
+  /** True when any filter is active — used to show a "clear filters" hint in
+   *  the empty state so users don't think the lobby is genuinely empty. */
+  const hasActiveFilters = gamemodeFilter !== "all" || playerFilter !== "all";
 
   const totalPot = useMemo(
     () => openBattles.reduce((sum, b) => sum + Number(b.pot_total), 0),
@@ -107,12 +151,17 @@ export function CaseBattlesHub() {
 
   return (
     <div className="cb-page cbh">
+      <Seo
+        title="Case Battles"
+        description="PvP case opens. Stack up to 50 cases, pick a gamemode (Normal/Group/Terminal/Jackpot), and battle for the pot."
+        path="/case-battles"
+      />
       <CaseBattlesTopbar
         backTo={ORIGINALS_PATH}
         backLabel="Originals"
         title="Battles"
         actions={
-          <Link to="/case-battles/create" className="cb-page__btn-primary cbh__create-btn">
+          <Link to="/case-battles/create" className="lc-btn lc-btn--primary cbh__create-btn">
             <span className="cbh__create-icon" aria-hidden>
               +
             </span>
@@ -159,6 +208,37 @@ export function CaseBattlesHub() {
           />
         </div>
 
+        {/* Filter chips — gamemode + player count. Client-side filter on the
+            existing openBattles array; no extra round-trip to the server. */}
+        <div className="cbh__filters" role="group" aria-label="Filter battles">
+          <div className="cbh__filter-row" role="group" aria-label="Filter by gamemode">
+            {GAMEMODE_FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                className={`cbh__chip${gamemodeFilter === f.id ? " cbh__chip--active" : ""}`}
+                aria-pressed={gamemodeFilter === f.id}
+                onClick={() => setGamemodeFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <div className="cbh__filter-row" role="group" aria-label="Filter by player count">
+            {PLAYER_FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                className={`cbh__chip${playerFilter === f.id ? " cbh__chip--active" : ""}`}
+                aria-pressed={playerFilter === f.id}
+                onClick={() => setPlayerFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {error && (
           <p className="cb-page__error cbh__error" role="alert">
             {error}
@@ -185,11 +265,27 @@ export function CaseBattlesHub() {
                 <line x1="19" y1="21" x2="21" y2="19" />
               </svg>
             </div>
-            <p className="cbh__empty-title">No open battles</p>
-            <p className="cbh__empty-text">
-              Be the first to start the action — stack cases, pick a mode, and open your lobby.
+            <p className="cbh__empty-title">
+              {hasActiveFilters ? "No battles match your filters" : "No open battles"}
             </p>
-            <Link to="/case-battles/create" className="cb-page__btn-primary cbh__empty-cta">
+            <p className="cbh__empty-text">
+              {hasActiveFilters
+                ? "Try widening your filter — switch to All modes or Any size, or create a battle with your preferred setup."
+                : "Be the first to start the action — stack cases, pick a mode, and open your lobby."}
+            </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="cbh__clear-filters"
+                onClick={() => {
+                  setGamemodeFilter("all");
+                  setPlayerFilter("all");
+                }}
+              >
+                Clear filters
+              </button>
+            )}
+            <Link to="/case-battles/create" className="lc-btn lc-btn--primary cbh__empty-cta">
               <span className="cbh__create-icon" aria-hidden>
                 +
               </span>
@@ -218,7 +314,7 @@ export function CaseBattlesHub() {
               return (
                 <article
                   key={row.battle_id}
-                  className={`cbh__card${isCreator ? " cbh__card--yours" : ""}`}
+                  className={`cbh__card${isCreator ? " cbh__card--yours" : ""}${row.status === "running" || row.status === "pending_eos" ? " cbh__card--running" : ""}`}
                   onClick={() => openBattle(row.battle_id)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
@@ -349,7 +445,7 @@ export function CaseBattlesHub() {
                     {isCreator ? (
                       <button
                         type="button"
-                        className="cbh__join-btn"
+                        className="lc-btn lc-btn--primary cbh__join-btn"
                         onClick={(e) => {
                           e.stopPropagation();
                           openBattle(row.battle_id);
@@ -360,7 +456,7 @@ export function CaseBattlesHub() {
                     ) : !user ? (
                       <Link
                         to={loginUrl(pathname)}
-                        className="cbh__join-btn"
+                        className="lc-btn lc-btn--primary cbh__join-btn"
                         onClick={(e) => e.stopPropagation()}
                       >
                         Log in to join
@@ -368,7 +464,7 @@ export function CaseBattlesHub() {
                     ) : (
                       <button
                         type="button"
-                        className="cbh__join-btn"
+                        className="lc-btn lc-btn--primary cbh__join-btn"
                         disabled={!canJoin}
                         title={
                           !joinable

@@ -193,20 +193,20 @@
   gap: 0.7rem;
 }
 
-@media (max-width: 1100px) {
+@media (max-width: 900px) {
   .cbc__catalog-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .cbc__catalog-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.55rem;
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
   .cbc__catalog-grid {
     grid-template-columns: 1fr;
   }
@@ -1214,7 +1214,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 55;
+    z-index: var(--lc-z-game-action-bar, 55);
     flex-direction: row;
     align-items: center;
     justify-content: space-between;

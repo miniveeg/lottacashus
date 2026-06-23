@@ -3961,16 +3961,16 @@ begin
 
   with roster(name) as (
     values
-      ('Rusty'),
-      ('Blitz'),
-      ('Nova'),
-      ('Cipher'),
-      ('Vega'),
-      ('Onyx'),
-      ('Rex'),
-      ('Flint'),
-      ('Jinx'),
-      ('Sable')
+      ('Rusty [Bot]'),
+      ('Blitz [Bot]'),
+      ('Nova [Bot]'),
+      ('Cipher [Bot]'),
+      ('Vega [Bot]'),
+      ('Onyx [Bot]'),
+      ('Rex [Bot]'),
+      ('Flint [Bot]'),
+      ('Jinx [Bot]'),
+      ('Sable [Bot]')
   ),
   taken as (
     select p.display_name
@@ -3988,16 +3988,16 @@ begin
     select r.name into v_name
     from (
       values
-        ('Rusty'),
-        ('Blitz'),
-        ('Nova'),
-        ('Cipher'),
-        ('Vega'),
-        ('Onyx'),
-        ('Rex'),
-        ('Flint'),
-        ('Jinx'),
-        ('Sable')
+        ('Rusty [Bot]'),
+        ('Blitz [Bot]'),
+        ('Nova [Bot]'),
+        ('Cipher [Bot]'),
+        ('Vega [Bot]'),
+        ('Onyx [Bot]'),
+        ('Rex [Bot]'),
+        ('Flint [Bot]'),
+        ('Jinx [Bot]'),
+        ('Sable [Bot]')
     ) as r(name)
     order by random()
     limit 1;

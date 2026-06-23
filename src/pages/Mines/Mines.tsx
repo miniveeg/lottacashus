@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
+import { Seo } from "../../components/Seo/Seo";
 import {
   getMaxGems,
   getMinesMultiplier,
@@ -279,6 +280,11 @@ export function Mines() {
 
   return (
     <div className="mines lc-game-page">
+      <Seo
+        title="Mines"
+        description="5×5 grid, 1–24 mines. Reveal gems to raise your multiplier — cash out anytime or risk it all. Provably fair, 94.5% RTP."
+        path="/mines"
+      />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Mines</h1>
         <p className="lc-page__subtitle">

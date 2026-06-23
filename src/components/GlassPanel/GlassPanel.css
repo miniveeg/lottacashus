@@ -1,63 +1,46 @@
-/* LottaCash — Cracked Obsidian Glass Panel */
+/* ── GlassPanel — canonical glass surface ──
+   Used by every page that needs a translucent panel. Co-located here so
+   the recipe and its `@supports not (backdrop-filter)` fallback are never
+   accidentally separated. */
 
 .glass-panel {
-  background: rgba(6, 4, 8, 0.55);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--lc-glass-border);
-  border-radius: var(--lc-radius-xl);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    var(--lc-shadow-inset);
   position: relative;
-  overflow: hidden;
+  background: rgba(6, 4, 8, 0.55);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border: 1px solid var(--lc-glass-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--lc-radius-xl);
+  box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight, inset 0 1px 0 rgba(255, 255, 255, 0.06));
 }
 
-/* When backdrop-filter is unavailable (older Firefox, locked-down GPUs),
-   fall back to a more opaque surface so foreground text stays legible
-   instead of showing a thin 55% veil over the page. */
+/* Opaque fallback when backdrop-filter is unsupported (older Firefox,
+   disabled-GPU contexts, some print-to-PDF engines). Without this, the
+   panel would render as a near-invisible veil over low-contrast text. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass-panel {
-    background: var(--lc-bg-panel);
+    background: var(--lc-bg-panel, #0e0e16);
   }
 }
 
-.glass-panel::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 50%;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
-  pointer-events: none;
-  border-radius: inherit;
-}
+.glass-panel--sm { padding: 0.85rem 1rem; }
+.glass-panel--md { padding: 1.25rem 1.4rem; }
+.glass-panel--lg { padding: 1.85rem 2rem; }
 
-.glass-panel::after {
-  content: '';
-  position: absolute;
-  top: -1px;
-  left: 15%;
-  right: 15%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-  pointer-events: none;
+.glass-panel--crimson {
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-shadow-sm), 0 0 24px rgba(220, 20, 60, 0.08), var(--lc-glass-highlight, inset 0 1px 0 rgba(255, 255, 255, 0.06));
 }
 
 .glass-panel--glow {
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 40px var(--lc-crimson-glow),
-    var(--lc-shadow-inset);
-  border-color: var(--lc-border-accent);
+    var(--lc-shadow-md),
+    0 0 32px var(--lc-crimson-glow, rgba(220, 20, 60, 0.22)),
+    var(--lc-glass-highlight, inset 0 1px 0 rgba(255, 255, 255, 0.06));
 }
 
-.glass-panel--sm { padding: 0.75rem 1rem; }
-.glass-panel--md { padding: 1.25rem 1.5rem; }
-.glass-panel--lg { padding: 1.75rem 2rem; }
-
-@media (max-width: 480px) {
-  .glass-panel--md { padding: 1rem 1.15rem; }
-  .glass-panel--lg { padding: 1.25rem 1.35rem; }
+.glass-panel--crimson.glass-panel--glow {
+  box-shadow:
+    var(--lc-shadow-md),
+    0 0 40px var(--lc-crimson-glow-strong, rgba(220, 20, 60, 0.45)),
+    var(--lc-glass-highlight, inset 0 1px 0 rgba(255, 255, 255, 0.06));
 }

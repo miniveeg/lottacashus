@@ -60,8 +60,11 @@
 }
 
 .limbo__display--rolling {
-  border-color: var(--lc-gold-dim);
-  box-shadow: 0 0 24px var(--lc-gold-glow);
+  /* Color shift during rolling — transitions from the default obsidian
+     background toward a deep amber glow as the rolling state progresses.
+     Audit issue P3 extra (Agent 3 Limbo improvement). */
+  border-color: var(--lc-amber-dim);
+  box-shadow: 0 0 24px var(--lc-amber-glow);
   animation: limbo-wait-pulse 1.2s ease-in-out infinite;
 }
 

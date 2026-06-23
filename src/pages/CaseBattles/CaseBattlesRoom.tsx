@@ -6,6 +6,8 @@ import { viewCaseBattle, type CaseBattleView } from "../../lib/caseBattles";
 import { CaseBattleArena } from "./CaseBattleArena";
 import { CaseBattlesTopbar } from "./CaseBattlesTopbar";
 import { gamemodeLabel } from "./caseBattlesUi";
+import { Seo } from "../../components/Seo/Seo";
+import { formatCoins } from "../../lib/format";
 import "./CaseBattlesPages.css";
 import "./CaseBattlesRoom.css";
 
@@ -88,8 +90,23 @@ export function CaseBattlesRoom() {
     : undefined;
   const battleReady = battle != null && battle.battleId === battleId;
 
+  // Dynamic SEO title: "$X pot · 1v1 Jackpot — Case Battles" when battle is
+  // loaded, generic "Battle room — Case Battles" while loading. Distinct per
+  // battle URL so shared links show the actual pot + mode in the preview.
+  const seoTitle = battle
+    ? `${formatCoins(battle.potTotal, "balance")} pot · ${battle.playerMode.toUpperCase()} ${gamemodeLabel(battle.gamemode)}`
+    : "Battle room";
+  const seoDescription = battle
+    ? `${gamemodeLabel(battle.gamemode)} case battle · ${battle.playerMode.toUpperCase()} · ${formatCoins(battle.potTotal, "balance")} pot. Provably fair PvP case opens.`
+    : "Live Case Battle room. Watch the reels spin in real time.";
+
   return (
     <div className="cb-page cb-page--compact cbr">
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        path={`/case-battles/${battleId}`}
+      />
       <CaseBattlesTopbar
         backTo="/case-battles"
         backLabel="Battles"
@@ -104,7 +121,7 @@ export function CaseBattlesRoom() {
           </p>
           <button
             type="button"
-            className="cb-page__btn-primary"
+            className="lc-btn lc-btn--primary"
             onClick={() => {
               setLoading(true);
               setError(null);

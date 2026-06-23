@@ -30,6 +30,7 @@ import { createCaseBattle } from "../../lib/caseBattles";
 import { CaseBattleRoundsStrip } from "./CaseBattleRoundsStrip";
 import { CaseBattlesTopbar } from "./CaseBattlesTopbar";
 import { gamemodeIcon, gamemodeLabel } from "./caseBattlesUi";
+import { Seo } from "../../components/Seo/Seo";
 import "./CaseBattlesCreate.css";
 
 type GroupedCase = { caseId: string; count: number };
@@ -247,6 +248,11 @@ export function CaseBattlesCreate() {
 
   return (
     <div className="cb-page cb-page--compact cbc">
+      <Seo
+        title="Create Case Battle"
+        description="Stack up to 50 cases, pick a gamemode (Normal/Group/Terminal/Jackpot) and player count, and open your lobby."
+        path="/case-battles/create"
+      />
       <CaseBattlesTopbar
         backTo="/case-battles"
         backLabel="Battles"
@@ -738,7 +744,7 @@ export function CaseBattlesCreate() {
             </div>
             <button
               type="button"
-              className="cbc__summary-create"
+              className="lc-btn lc-btn--primary cbc__summary-create"
               disabled={!canCreate}
               onClick={() => void handleCreate()}
             >

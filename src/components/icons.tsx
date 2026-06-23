@@ -15,6 +15,14 @@ import {
   Diamond,
   Wallet,
   FileText,
+  Grid3X3,
+  Bomb,
+  TrendingUp,
+  CircleDot,
+  Spade,
+  Swords,
+  Zap,
+  Cherry,
   type LucideIcon,
 } from "lucide-react";
 import type { ComponentProps } from "react";
@@ -35,6 +43,17 @@ const ICONS = {
   check: Check,
   slots: Diamond,
   redeem: Wallet,
+  // Game-specific icons — shared between Originals.tsx cards and any future
+  // sidebar game links so the icon vocabulary is consistent across the site.
+  // These match the GAME_ICONS map in Originals.tsx (audit issue P1 #3).
+  keno: Grid3X3,
+  mines: Bomb,
+  limbo: TrendingUp,
+  roulette: CircleDot,
+  blackjack: Spade,
+  "case-battles": Swords,
+  crash: Zap,
+  cherry: Cherry,
   // Aliases used by other pages (Profile, SidebarNav, etc.)
   gift: Gift,
   trophy: Trophy,

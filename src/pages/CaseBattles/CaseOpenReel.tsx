@@ -1,15 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CaseItem, LootCase } from "../../lib/games/case-battles";
 import { RARITY_COLORS, type CaseRarity } from "../../lib/games/case-battles";
+import { REEL_EASING } from "./reelConstants";
 import "./CaseOpenReel.css";
 
 const ITEM_H = 92;
-
-/** Consistent easing curve for all reels — a strong deceleration that feels
- *  weighty and satisfying, similar to CS:GO / Rust case opening reels.
- *  All reels use the same curve so the multi-player columns feel unified
- *  rather than each having a slightly different stop pattern. */
-const REEL_EASING = "cubic-bezier(0.08, 0.82, 0.17, 1)";
 
 export type ReelSpinProfile = {
   landIndex: number;
@@ -38,15 +33,46 @@ export function getReelSpinProfile(
   };
 }
 
-/** Pick a uniformly-random item from the case for reel filler tiles.
- *  Uses uniform distribution (not weighted) so the reel shows a VISUALLY
- *  diverse mix of rarities scrolling by — if we used the weighted
- *  distribution, common items (which have ~40% weight) would dominate
- *  and the reel would look static/samey. The actual drop is determined
- *  by the `targetItem` (server-side provably-fair), not these filler items. */
-function pickRandomItem(lootCase: LootCase): CaseItem {
+/** Pick a filler item for the reel using a sqrt-flattened weighted
+ *  distribution.
+ *
+ *  Previously this used uniform-random distribution, which visually implied
+ *  far better odds for rare items than the case actually has. The actual drop
+ *  is still correctly weighted server-side (this is purely visual filler),
+ *  but a reel that's 90% common items looked "dead" — so we apply a mild
+ *  flattening curve (sqrt of the weight) that makes rares show up MORE than
+ *  their true odds but not at uniform frequency.
+ *
+ *  The math: instead of `weight` as the probability, we use `sqrt(weight)`.
+ *  This compresses the dynamic range — a 40% item becomes ~63% as likely as
+ *  before in the filler, while a 1% item becomes ~10% as likely. The reel
+ *  stays visually varied without implying the case is far swingier than it is.
+ *
+ *  Audit issue #2.8. */
+function pickFillerItem(lootCase: LootCase): CaseItem {
   const items = lootCase.items;
-  return items[Math.floor(Math.random() * items.length)] ?? items[0]!;
+  if (items.length === 0) {
+    // Defensive — should never happen (cases always have items), but
+    // avoids a crash if the catalog is malformed.
+    throw new Error("pickFillerItem: case has no items");
+  }
+  if (items.length === 1) return items[0]!;
+
+  // Build a sqrt-flattened weight for each item. CaseItem.weight is always
+  // present (required field), but we clamp to >= 0 for safety.
+  const flattened = items.map((item) => Math.sqrt(Math.max(item.weight, 0)));
+  const total = flattened.reduce((s, w) => s + w, 0);
+  if (total <= 0) {
+    // All weights were zero/negative — fall back to uniform.
+    return items[Math.floor(Math.random() * items.length)]!;
+  }
+  let r = Math.random() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= flattened[i]!;
+    if (r <= 0) return items[i]!;
+  }
+  // Floating-point drift fallback — return the last item.
+  return items[items.length - 1]!;
 }
 
 /** Distinct icon per rarity so the reel scrolling is visually obvious.
@@ -130,7 +156,7 @@ export function CaseOpenReel({
   const strip = useMemo(() => {
     const items: CaseItem[] = [];
     for (let i = 0; i < profile.stripLen; i++) {
-      items.push(i === profile.landIndex ? targetItem : pickRandomItem(lootCase));
+      items.push(i === profile.landIndex ? targetItem : pickFillerItem(lootCase));
     }
     return items;
   }, [lootCase, targetItem, spinKey, profile.landIndex, profile.stripLen]);

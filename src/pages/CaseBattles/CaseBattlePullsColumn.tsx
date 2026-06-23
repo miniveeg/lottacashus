@@ -3,10 +3,16 @@ import { formatCoins } from "../../lib/format";
 import type { CaseBattleDrop, CaseBattlePlayer } from "../../lib/caseBattles";
 import { Bot, User } from "lucide-react";
 
-export function PulledItemCard({ drop, round }: { drop: CaseBattleDrop; round?: number }) {
+export function PulledItemCard({ drop, round, index = 0 }: { drop: CaseBattleDrop; round?: number; index?: number }) {
   const color = RARITY_COLORS[drop.rarity as CaseRarity] ?? "#7a7a98";
   return (
-    <div className="cbr__pull-item" style={{ borderColor: `${color}44` }}>
+    <div
+      className="cbr__pull-item"
+      style={{
+        borderColor: `${color}44`,
+        ["--pull-index" as string]: index,
+      }}
+    >
       {round != null && <span className="cbr__pull-item-round">R{round + 1}</span>}
       <span className="cbr__pull-item-name">{drop.name}</span>
       <span className="cbr__pull-item-val" style={{ color }}>
@@ -82,7 +88,7 @@ export function CaseBattlePullsColumn({
           <p className="cbr__pulls-strip-empty">No pulls yet</p>
         ) : (
           revealed.map((drop, i) => (
-            <PulledItemCard key={`${slot}-${i}`} drop={drop} round={drop.round} />
+            <PulledItemCard key={`${slot}-${i}`} drop={drop} round={drop.round} index={i} />
           ))
         )}
       </div>

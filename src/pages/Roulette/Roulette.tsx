@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
+import { Seo } from "../../components/Seo/Seo";
 import {
   type RouletteBetType,
   type RouletteColor,
@@ -172,6 +173,11 @@ export function Roulette() {
 
   return (
     <div className="roulette lc-game-page">
+      <Seo
+        title="Roulette"
+        description="European wheel — bet red, black, or green (zero). Provably fair, 94.5% RTP."
+        path="/roulette"
+      />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Roulette</h1>
         <p className="lc-page__subtitle">

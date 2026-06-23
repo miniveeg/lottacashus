@@ -34,6 +34,12 @@
   --lc-amber-glow: rgba(245, 185, 66, 0.22);
   --lc-amber-glow-strong: rgba(245, 185, 66, 0.45);
 
+  /* ── Slate accent (bot/neutral surfaces) ──
+     Used for: Case Battle bot avatars and any neutral "not a real player"
+     surface that needs to read as deliberately muted rather than crimson. */
+  --lc-slate: #4a4a5e;
+  --lc-slate-dim: #2a2a3a;
+
   /* ── Backward-compat `--lc-gold*` aliases → amber ──
      The legacy `--lc-gold` tokens were originally aliased to crimson, which
      made every "gold coin" / "achievement" / "warning" context render red.
@@ -132,10 +138,23 @@
   --lc-focus-ring: 0 0 0 3px var(--lc-crimson-glow);
   --lc-focus-outline: 2px solid var(--lc-crimson-soft);
 
-  /* ── Breakpoints ── */
-  --lc-bp-sm: 640px;
-  --lc-bp-md: 768px;
-  --lc-bp-lg: 900px;
+  /* ── Breakpoints ──
+     NOTE: CSS custom properties CANNOT be used inside `@media` feature
+     queries in plain CSS — `@media (max-width: var(--lc-bp-lg))` is invalid.
+     The tokens that used to live here (`--lc-bp-sm/md/lg`) were decorative
+     documentation that suggested they were load-bearing. They have been
+     removed to prevent that misconception.
+
+     CONVENTION: all responsive `@media` queries across the site use these
+     three numbers directly. Match them by convention, not by token:
+
+       640px  — small phones (e.g. hide secondary table columns)
+       768px  — tablets (e.g. switch from 2-col to 1-col layouts)
+       900px  — desktop sidebar breakpoint (primary mobile/desktop switch)
+
+     If you need to add a new breakpoint, prefer one of these three values.
+     If you genuinely need a fourth, add a comment here documenting what
+     it's for and why none of the existing three fit. */
 
   --lc-drawer-width: min(280px, 85vw);
   --lc-safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -149,6 +168,7 @@
      sensible fallback) by overlay-style components. */
   --lc-z-base: 1;            /* .app-shell__main */
   --lc-z-sidebar: 50;        /* desktop sidebar */
+  --lc-z-game-action-bar: 55; /* Case Battles Create mobile fixed-bottom summary bar — sits above sidebar, below topbar */
   --lc-z-topbar: 100;        /* .app-shell__topbar */
   --lc-z-notifications: 110; /* TopbarLevelProgress dropdown */
   --lc-z-backdrop: 150;      /* mobile drawer backdrop */

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
+import { Seo } from "../../components/Seo/Seo";
 import { formatCoins } from "../../lib/format";
 import {
   fetchCrashPfState,
@@ -416,6 +417,11 @@ export function Crash() {
 
   return (
     <div className="crash lc-game-page">
+      <Seo
+        title="Crash"
+        description="The multiplier climbs. Cash out before it crashes. Wait too long and you lose everything. Provably fair."
+        path="/crash"
+      />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Crash</h1>
         <p className="lc-page__subtitle">
@@ -426,7 +432,7 @@ export function Crash() {
 
       <div className="crash__layout">
         <section className="crash__stage-panel">
-          <div className={`crash__canvas-wrap${phase === "running" ? " crash__canvas-wrap--running" : ""}${phase === "crashed" ? " crash__canvas-wrap--crashed" : ""}${phase === "cashed_out" ? " crash__canvas-wrap--win" : ""}`}>
+          <div className={`crash__canvas-wrap${phase === "running" ? " crash__canvas-wrap--running" : ""}${phase === "crashed" ? " crash__canvas-wrap--crashed" : ""}${phase === "cashed_out" ? " crash__canvas-wrap--win" : ""}${phase === "idle" ? " crash__canvas-wrap--idle" : ""}`}>
             <canvas
               ref={canvasRef}
               className="crash__canvas"
@@ -436,7 +442,10 @@ export function Crash() {
               aria-label="Crash multiplier chart"
             />
             <div className="crash__multiplier-overlay">
-              <span className={`crash__mult-value${phase === "crashed" ? " crash__mult-value--crashed" : ""}${phase === "cashed_out" ? " crash__mult-value--win" : ""}`}>
+              <span
+                className={`crash__mult-value${phase === "crashed" ? " crash__mult-value--crashed" : ""}${phase === "cashed_out" ? " crash__mult-value--win" : ""}`}
+                data-tier={phase === "running" ? (multiplier >= 10 ? "crimson" : multiplier >= 5 ? "amber" : undefined) : undefined}
+              >
                 {multiplier.toFixed(2)}x
               </span>
               {phase === "idle" && (

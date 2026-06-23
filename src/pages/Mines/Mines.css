@@ -92,7 +92,12 @@
   aspect-ratio: 1;
   border-radius: var(--lc-radius-sm);
   border: 1px solid var(--lc-border-strong);
-  background: var(--lc-bg-elevated);
+  /* Depth treatment — gradient makes tiles feel like pressable physical
+     objects rather than flat cells. Audit issue P2 #8. */
+  background: linear-gradient(145deg, var(--lc-bg-hover) 0%, var(--lc-bg-elevated) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 2px 6px rgba(0, 0, 0, 0.25);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -102,16 +107,26 @@
   transition:
     transform 0.12s ease,
     background-color var(--lc-transition),
-    border-color var(--lc-transition);
+    border-color var(--lc-transition),
+    box-shadow var(--lc-transition);
 }
 
 .mines__tile:hover:not(:disabled) {
-  border-color: var(--lc-gold-dim);
+  border-color: var(--lc-amber-dim);
   transform: scale(1.03);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 0 12px var(--lc-amber-glow);
+}
+
+.mines__tile:active:not(:disabled) {
+  transform: scale(0.96);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .mines__tile:focus-visible {
-  outline: 2px solid var(--lc-gold);
+  outline: 2px solid var(--lc-crimson-soft);
   outline-offset: 2px;
 }
 
@@ -277,7 +292,7 @@
   font-weight: 700;
   font-size: 1rem;
   border: none;
-  border-radius: var(--lc-radius-md);
+  border-radius: var(--lc-radius-lg);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -290,18 +305,20 @@
 
 .mines__bet-btn:focus-visible,
 .mines__cashout-btn:focus-visible {
-  outline: 2px solid var(--lc-gold);
+  outline: 2px solid var(--lc-crimson-soft);
   outline-offset: 2px;
 }
 
 .mines__bet-btn {
-  background: var(--lc-gold);
-  color: #0a0a0b;
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
+  color: #fff;
+  box-shadow: 0 2px 16px var(--lc-crimson-glow), var(--lc-shadow-inset);
 }
 
 .mines__bet-btn:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
+  box-shadow: 0 6px 28px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
 }
 
 .mines__cashout-btn {

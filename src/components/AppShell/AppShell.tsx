@@ -5,7 +5,6 @@ import { isGuestBrowsableGamePath } from "../../content/originals";
 import { useSessionReminder } from "../../lib/useSessionReminder";
 import { AffiliateRefCapture } from "../AffiliateRefCapture/AffiliateRefCapture";
 import { AtmosphericLayer } from "../atmosphere/AtmosphericLayer";
-import { SmoothScroll } from "../atmosphere/SmoothScroll";
 import { GameGuestBanner } from "../GameGuestBanner/GameGuestBanner";
 import { Topbar } from "../Topbar/Topbar";
 import { Sidebar } from "../Sidebar/Sidebar";
@@ -49,6 +48,17 @@ function AppShellInner({ children }: AppShellProps) {
   const showGuestBanner = isGuestBrowsableGamePath(pathname);
   const showHero3d = pathname === "/";
   useSessionReminder();
+
+  // Reset scroll position to the top of <main> on every route change.
+  // Previously this was handled by the `lenis` smooth-scroll library via
+  // <SmoothScroll scrollKey={pathname}>; lenis was removed in audit #3.2
+  // because it added perceived input latency on the Case Battle arena page
+  // (which re-renders every round). Native scroll + this reset hook covers
+  // the same UX guarantee (new page starts at the top) without the library.
+  useEffect(() => {
+    const el = mainRef.current;
+    if (el) el.scrollTop = 0;
+  }, [pathname]);
 
   // Track whether the viewport matches the mobile media query so we can
   // (a) hide the closed drawer from the a11y tree via `inert` and
@@ -198,19 +208,17 @@ function AppShellInner({ children }: AppShellProps) {
       >
         <Sidebar />
       </div>
-      <SmoothScroll targetRef={mainRef} scrollKey={pathname}>
-        <main
-          ref={mainRef}
-          id="lc-main-content"
-          className={`app-shell__main${showHero3d ? " app-shell__main--hero" : ""}`}
-        >
-          <PageTransition>
-            {showGuestBanner ? <GameGuestBanner /> : null}
-            {children}
-            <Footer />
-          </PageTransition>
-        </main>
-      </SmoothScroll>
+      <main
+        ref={mainRef}
+        id="lc-main-content"
+        className={`app-shell__main${showHero3d ? " app-shell__main--hero" : ""}`}
+      >
+        <PageTransition>
+          {showGuestBanner ? <GameGuestBanner /> : null}
+          {children}
+          <Footer />
+        </PageTransition>
+      </main>
     </div>
   );
 }

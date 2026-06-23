@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatCoins } from "../../lib/format";
 import type { CaseBattlePlayer } from "../../lib/caseBattles";
 import { Bot, User } from "lucide-react";
+import { REEL_EASING, slotColor } from "./reelConstants";
 import "./JackpotReel.css";
 
 const REEL_COPIES = 20;
 const SPIN_MS_DEFAULT = 5200;
 const EXTRA_CYCLES = 4;
-const SPIN_EASING = "cubic-bezier(0.15, 0.85, 0.2, 1)";
 
 type JackpotWeight = { slot: number; weight: number };
 
@@ -21,10 +21,6 @@ type JackpotReelProps = {
 };
 
 type StripEntry = { player: CaseBattlePlayer; pct: number };
-
-/** Per-slot accent colors, drawn from the Obsidian Luxury theme palette.
- *  Each player gets a distinct semantic color so columns are easy to track. */
-const SLOT_COLORS = ["#dc143c", "#8b5cf6", "#00e87a", "#38bdf8", "#ff3b5c", "#ff2d55"];
 
 function PlayerTile({
   player,
@@ -81,8 +77,18 @@ export function JackpotReel({
   const spinGenRef = useRef(0);
   const [highlightIndex, setHighlightIndex] = useState<number | null>(null);
   const [layoutReady, setLayoutReady] = useState(false);
+  // Build-up phase: 1.5s entrance where the title + pointer drop in before
+  // the reel starts spinning. Audit issue P2 CB #16.
+  const [buildUp, setBuildUp] = useState(true);
 
   onCompleteRef.current = onComplete;
+
+  // After mount, wait 1.5s for the entrance animation, then clear buildUp
+  // so the spin logic can proceed.
+  useEffect(() => {
+    const t = window.setTimeout(() => setBuildUp(false), 1500);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const sorted = useMemo(() => [...players].sort((a, b) => a.slot - b.slot), [players]);
   const cycle = useMemo(() => buildCycleStrip(sorted, weights), [sorted, weights]);
@@ -104,11 +110,6 @@ export function JackpotReel({
   }, [cycleLen, targetIndexInCycle]);
 
   const winnerPlayer = sorted.find((p) => p.slot === targetSlot) ?? sorted[0];
-
-  const slotColor = useCallback(
-    (slot: number) => SLOT_COLORS[slot % SLOT_COLORS.length] ?? "#dc143c",
-    []
-  );
 
   useEffect(() => {
     spinGenRef.current += 1;
@@ -146,7 +147,7 @@ export function JackpotReel({
   }, [strip.length, landIndex, cycleLen]);
 
   useEffect(() => {
-    if (!layoutReady || cycleLen === 0) return;
+    if (!layoutReady || cycleLen === 0 || buildUp) return;
 
     const viewport = viewportRef.current;
     const track = trackRef.current;
@@ -193,7 +194,7 @@ export function JackpotReel({
         if (cancelled || spinGenRef.current !== spinGen) return;
 
         track.addEventListener("transitionend", onEnd);
-        track.style.transition = `transform ${spinDurationMs}ms ${SPIN_EASING}`;
+        track.style.transition = `transform ${spinDurationMs}ms ${REEL_EASING}`;
         track.style.transform = `translateX(${endX}px)`;
 
         fallback = window.setTimeout(() => {
@@ -210,10 +211,10 @@ export function JackpotReel({
       track.removeEventListener("transitionend", onEnd);
       if (fallback) window.clearTimeout(fallback);
     };
-  }, [layoutReady, landIndex, cycleLen, spinDurationMs, strip.length, targetSlot]);
+  }, [layoutReady, landIndex, cycleLen, spinDurationMs, strip.length, targetSlot, buildUp]);
 
   return (
-    <div className="cb-jackpot-reel" aria-live="polite">
+    <div className={`cb-jackpot-reel${buildUp ? " cb-jackpot-reel--buildup" : ""}`} aria-live="polite">
       <div className="cb-jackpot-reel__head">
         <p className="cb-jackpot-reel__title">Jackpot roll</p>
         <p className="cb-jackpot-reel__sub">The pointer marks the jackpot winner</p>

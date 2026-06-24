@@ -97,6 +97,14 @@ export function Crash() {
     [wager, multiplier]
   );
 
+  // Max-payout cap (audit R6): server enforces 100,000. The crash point is
+  // unknown at bet time, but if the wager alone exceeds the cap (wager >
+  // 100,000 / 1.01 ≈ 99,010), even a minimum (1.01×) cashout would exceed
+  // it. We also warn the player about the cap so they understand the
+  // server-side limit.
+  const CRASH_MAX_PAYOUT = 100_000;
+  const exceedsMaxPayout = wager > CRASH_MAX_PAYOUT / 1.01;
+
   /** Resolve theme color for the chart line so it stays consistent with the site palette. */
   function resolveChartColor(): { line: string; fill: string; crashed: string } {
     if (typeof window === "undefined") {
@@ -556,10 +564,21 @@ export function Crash() {
               type="button"
               className="crash__bet-btn"
               onClick={handleBet}
-              disabled={!user}
+              disabled={!user || exceedsMaxPayout}
             >
-              {phase === "crashed" || phase === "cashed_out" ? "Bet again" : "Bet"}
+              {exceedsMaxPayout
+                ? "Payout exceeds cap"
+                : phase === "crashed" || phase === "cashed_out"
+                  ? "Bet again"
+                  : "Bet"}
             </button>
+          )}
+
+          {exceedsMaxPayout && phase === "idle" && (
+            <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
+              Max payout is {CRASH_MAX_PAYOUT.toLocaleString()}. Lower your wager — even a minimum
+              cashout at this wager would exceed the cap.
+            </p>
           )}
 
           {error && (
@@ -606,6 +625,11 @@ export function Crash() {
                 </button>
                 <p className="crash__fairness-note">
                   HMAC-SHA256 &rarr; 4-byte float &rarr; 2&sup2;&#8304;/(n+1)&times;0.99 &mdash; provably fair.
+                </p>
+                <p className="crash__fairness-note crash__fairness-note--disclosure">
+                  RTP disclosure: the crash point distribution targets ~99% RTP
+                  at fair payouts; no additional bias roll is applied to Crash.
+                  The 99% RTP comes directly from the crash-point formula.
                 </p>
               </div>
             )}

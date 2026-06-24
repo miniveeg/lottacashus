@@ -28,6 +28,21 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: validationError }, 400, req);
     }
 
+    // SECURITY (audit R5): max-payout cap. Keno's top multiplier (high risk,
+    // 10 picks, 10 hits) can be very large — cap the potential payout to
+    // bound treasury risk. Worst-case multiplier across all risk/pick modes
+    // is ~11000×; we cap at 100,000 in the player's coin currency.
+    const KENO_MAX_PAYOUT = 100_000;
+    const kenoWorstCaseMultiplier = 11000;
+    const kenoPotentialPayout = Math.round(wager * kenoWorstCaseMultiplier * 100) / 100;
+    if (kenoPotentialPayout > KENO_MAX_PAYOUT) {
+      return jsonResponse(
+        { error: `Potential payout exceeds the maximum allowed (${KENO_MAX_PAYOUT.toLocaleString()}). Lower your wager.` },
+        400,
+        req,
+      );
+    }
+
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,

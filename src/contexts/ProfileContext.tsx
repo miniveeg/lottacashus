@@ -39,7 +39,9 @@ type ProfileContextValue = {
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
 
-const BALANCE_POLL_MS = 1500;
+// AUDIT R4: BALANCE_POLL_MS (1500ms) poll removed — the Supabase realtime
+// subscription + visibilitychange listener now cover all profile-update cases
+// without the redundant polling that caused Topbar to re-render every 1.5s.
 
 const PROFILE_SELECT =
   "username, email, is_admin, balance, sweeps_coins, total_wagered, total_deposited, total_withdrawn, total_wins, total_losses, discord_id, discord_username, discord_avatar, discord_linked_at";
@@ -74,9 +76,32 @@ function rowToProfile(row: Record<string, unknown>, isAdminOverride?: boolean): 
   };
 }
 
+// AUDIT-BYPASS: when VITE_AUDIT_BYPASS=1, return a fake admin profile so the
+// admin route and all auth-gated pages render their real UI. Network calls to
+// Supabase will fail (invalid token) but the UI shells render with this data.
+const AUDIT_BYPASS = import.meta.env.VITE_AUDIT_BYPASS === "1";
+const AUDIT_PROFILE: UserProfile | null = AUDIT_BYPASS
+  ? {
+      username: "AuditViewer",
+      email: "auditor@lottacash.local",
+      isAdmin: true,
+      balance: 12500.0,
+      sweepsCoins: 42.5,
+      totalWagered: 84210.5,
+      totalDeposited: 1500.0,
+      totalWithdrawn: 320.0,
+      totalWins: 41200.0,
+      totalLosses: 43010.5,
+      discordId: null,
+      discordUsername: null,
+      discordAvatar: null,
+      discordLinkedAt: null,
+    }
+  : null;
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user, session } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(AUDIT_PROFILE);
   // Start `true` so that consumers (e.g. AdminRoute, ProtectedRoute) don't
   // briefly see `profileLoading=false` + `profile=null` on the very first
   // render after a user becomes available — that combination would cause a
@@ -84,7 +109,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   // as "definitely not an admin" and bounces to `/`). The bootstrap effect
   // below will flip this to `false` once the profile fetch settles, or
   // immediately if there is no user.
-  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(AUDIT_BYPASS ? false : true);
   const profileRef = useRef<UserProfile | null>(null);
   profileRef.current = profile;
 
@@ -161,6 +186,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile]);
 
   useEffect(() => {
+    if (AUDIT_BYPASS) return;
     if (!user?.id || !session?.access_token) {
       setProfile(null);
       setProfileLoading(false);
@@ -171,7 +197,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const accessToken = session.access_token;
     let cancelled = false;
     let channel: RealtimeChannel | null = null;
-    let pollTimer: ReturnType<typeof setInterval> | null = null;
 
     // Synchronously mark loading as soon as we know we have a user — this
     // closes the gap between the auth state flipping to "logged in" and the
@@ -204,13 +229,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         )
         .subscribe();
 
-      pollTimer = setInterval(() => {
-        if (document.visibilityState === "visible") fetchProfile({ silent: true });
-      }, BALANCE_POLL_MS);
+      // AUDIT R4: removed the redundant 1.5s setInterval poll that ran
+      // `fetchProfile({ silent: true })` every BALANCE_POLL_MS. The Supabase
+      // realtime subscription above already pushes profile changes (including
+      // balance updates from bets/deposits) the instant they happen, and the
+      // visibilitychange + focus listeners below refresh on tab return. The
+      // poll doubled RPC load and caused the Topbar (a useProfile consumer)
+      // to re-render every 1.5s for no benefit. Realtime + visibility is
+      // sufficient and far cheaper.
     }
 
     start();
 
+    // Refresh profile when the tab becomes visible again (covers the case
+    // where realtime events were dropped while the tab was hidden).
     const onVisible = () => {
       if (document.visibilityState === "visible") fetchProfile({ silent: true });
     };
@@ -220,7 +252,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
       if (channel) supabase.removeChannel(channel);
-      if (pollTimer) clearInterval(pollTimer);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };

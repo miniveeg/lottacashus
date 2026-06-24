@@ -30,6 +30,20 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: validationError }, 400, req);
     }
 
+    // SECURITY (audit R4): enforce a max-payout cap server-side. Green pays
+    // 36× — without a cap, a large wager could produce an unbounded payout.
+    // Same pattern as the Limbo cap (audit R3). Never trust the client.
+    const ROULETTE_MAX_PAYOUT = 100_000;
+    const rouletteMultiplier = betType === "green" ? 36 : 2;
+    const potentialPayout = Math.round(wager * rouletteMultiplier * 100) / 100;
+    if (potentialPayout > ROULETTE_MAX_PAYOUT) {
+      return jsonResponse(
+        { error: `Payout exceeds the maximum allowed (${ROULETTE_MAX_PAYOUT.toLocaleString()}). Lower your wager.` },
+        400,
+        req,
+      );
+    }
+
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,

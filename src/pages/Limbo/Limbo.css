@@ -272,8 +272,8 @@
   font-size: 1rem;
   border: none;
   border-radius: var(--lc-radius-md);
-  background: var(--lc-gold);
-  color: #0a0a0b;
+  background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
+  color: #fff;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -290,7 +290,7 @@
 }
 
 .limbo__bet-btn:focus-visible {
-  outline: 2px solid var(--lc-gold);
+  outline: 2px solid var(--lc-crimson-soft);
   outline-offset: 2px;
 }
 
@@ -304,8 +304,8 @@
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  border: 2px solid rgba(10, 10, 11, 0.25);
-  border-top-color: #0a0a0b;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
   animation: limbo-spinner 0.7s linear infinite;
 }
 

@@ -69,6 +69,11 @@ export function Roulette() {
 
   const winChance = useMemo(() => rouletteWinChance(betType), [betType]);
   const potentialWin = useMemo(() => roulettePotentialWin(wager, betType), [wager, betType]);
+  /** Max-payout cap (matches the server-side cap in place-roulette-bet). Green
+   *  pays 36×, red/black pay 2×. When the potential win exceeds 100,000 the
+   *  bet button is disabled and a warning is shown — same UX as Limbo. */
+  const ROULETTE_MAX_PAYOUT = 100_000;
+  const exceedsMaxPayout = potentialWin > ROULETTE_MAX_PAYOUT;
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchRoulettePfState();
@@ -269,6 +274,11 @@ export function Roulette() {
               <p className="game-controls__option-hint">
                 Win chance {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
               </p>
+              {exceedsMaxPayout && (
+                <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
+                  Max payout is {formatCoins(ROULETTE_MAX_PAYOUT, coinType)}. Lower your wager.
+                </p>
+              )}
             </div>
           </div>
 
@@ -355,7 +365,7 @@ export function Roulette() {
             type="button"
             className="roulette__bet-btn"
             onClick={handleBet}
-            disabled={spinning || !user}
+            disabled={spinning || !user || exceedsMaxPayout}
             aria-busy={spinning}
           >
             {spinning ? (
@@ -363,6 +373,8 @@ export function Roulette() {
                 <span className="roulette__spinner" aria-hidden="true" />
                 <span>Spinning…</span>
               </>
+            ) : exceedsMaxPayout ? (
+              "Payout exceeds cap"
             ) : (
               "Bet"
             )}
@@ -411,6 +423,12 @@ export function Roulette() {
                 </button>
                 <p className="roulette__fairness-note">
                   HMAC-SHA256 → pocket = floor(float × 37). European layout.
+                </p>
+                <p className="roulette__fairness-note roulette__fairness-note--disclosure">
+                  RTP disclosure: the wheel is fair (1/37 per pocket); the
+                  displayed 94.5% RTP is enforced by a deterministic bias roll
+                  (same seeds) that downgrades ~4.5% of would-be wins. Verifiable
+                  after seed rotation.
                 </p>
               </div>
             )}

@@ -7,6 +7,7 @@ import { Seo } from "../../components/Seo/Seo";
 import {
   LIMBO_MAX_TARGET,
   LIMBO_MIN_TARGET,
+  LIMBO_MAX_PAYOUT,
   limboWinChance,
 } from "../../lib/games/limbo";
 import { formatCoins } from "../../lib/format";
@@ -71,6 +72,10 @@ export function Limbo() {
     () => Math.round(wager * target * 100) / 100,
     [wager, target]
   );
+  /** True when wager × target would exceed the max-payout cap. The bet
+   *  button is disabled and a notice is shown so the player understands
+   *  why. The server enforces the same cap — this is just UX. */
+  const exceedsMaxPayout = potentialWin > LIMBO_MAX_PAYOUT;
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchLimboPfState();
@@ -146,7 +151,11 @@ export function Limbo() {
       if (cancelledRef.current) return;
       rollingRef.current = false;
       setRolling(false);
-      setShowResult(true);
+      // Do NOT call setShowResult(true) here — that would display a fake
+      // "1.00×" result (the default displayMult) as if a round had resolved.
+      // On error we only surface the error message and reset the board so the
+      // player can retry. Previously this set showResult=true, making a loss
+      // look like a played round when no round happened.
       setError(betErr ?? "Bet failed.");
       // Server may have debited before failing — refresh to stay accurate.
       void refreshProfile();
@@ -302,6 +311,11 @@ export function Limbo() {
               <p className="game-controls__option-hint">
                 Win chance ≈ {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
               </p>
+              {exceedsMaxPayout && (
+                <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
+                  Max payout is {formatCoins(LIMBO_MAX_PAYOUT, coinType)}. Lower your wager or target.
+                </p>
+              )}
             </div>
           </div>
 
@@ -369,7 +383,7 @@ export function Limbo() {
             type="button"
             className="limbo__bet-btn"
             onClick={handleBet}
-            disabled={rolling || !user}
+            disabled={rolling || !user || exceedsMaxPayout}
             aria-busy={rolling}
           >
             {rolling ? (
@@ -377,6 +391,8 @@ export function Limbo() {
                 <span className="limbo__spinner" aria-hidden="true" />
                 <span>Rolling…</span>
               </>
+            ) : exceedsMaxPayout ? (
+              "Payout exceeds cap"
             ) : (
               "Bet"
             )}
@@ -420,6 +436,11 @@ export function Limbo() {
                 </button>
                 <p className="limbo__fairness-note">
                   HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — 94.5% RTP via win odds.
+                </p>
+                <p className="limbo__fairness-note limbo__fairness-note--disclosure">
+                  RTP disclosure: the raw roll targets ~99% RTP; a deterministic
+                  bias roll (same seeds) downgrades ~4.5% of would-be wins to
+                  enforce the displayed 94.5% RTP. Verifiable after seed rotation.
                 </p>
               </div>
             )}

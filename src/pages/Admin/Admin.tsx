@@ -14,6 +14,7 @@ import {
 } from "../../lib/admin";
 import { useAuth } from "../../contexts/AuthContext";
 import { formatUsd } from "../../lib/format";
+import { Seo } from "../../components/Seo/Seo";
 import {
   RefreshCw,
   Copy,
@@ -266,6 +267,7 @@ export function Admin() {
 
   return (
     <div className="admin admin--dashboard">
+      <Seo title="Admin" path="/admin" noindex />
       <header className="admin__header">
         <div className="admin__header-row">
           <div>

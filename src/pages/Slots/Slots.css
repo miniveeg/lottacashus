@@ -288,3 +288,72 @@
     transition: none;
   }
 }
+
+/* ── Paytable display (audit R4) ── */
+.slots__paytable {
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--lc-bg-base);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-md);
+}
+
+.slots__paytable-title {
+  margin: 0 0 0.6rem;
+  font-family: var(--lc-font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--lc-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.slots__paytable-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.3rem 1rem;
+  align-items: center;
+}
+
+.slots__paytable-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--lc-text-primary);
+}
+
+.slots__paytable-row--cherry {
+  color: var(--lc-text-secondary);
+  font-size: 0.78rem;
+  padding-left: 0.2rem;
+}
+
+.slots__paytable-mult {
+  font-family: var(--lc-font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+  text-align: right;
+}
+
+.slots__paytable-mult--top {
+  color: var(--lc-crimson-soft);
+}
+
+.slots__paytable-rtp {
+  margin: 0.6rem 0 0;
+  font-family: var(--lc-font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--lc-emerald);
+  letter-spacing: 0.02em;
+}
+
+/* Fairness notes (shared disclosure style from game-controls.css) */
+.slots__fairness-note {
+  margin-top: 0.5rem;
+  color: var(--lc-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}

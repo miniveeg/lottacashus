@@ -1,17 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
-import { Link, Navigate, useSearchParams, useLocation } from "react-router-dom";
-import { Inbox } from "lucide-react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Link, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
-import {
-  isDiscordConfigured,
-  linkDiscordAccount,
-  startDiscordOAuth,
-  unlinkDiscordAccount,
-  validateDiscordState,
-} from "../../lib/discord";
-import { createUserNotification } from "../../lib/notifications";
 import {
   formatCoins,
   formatCoinsWithUsd,
@@ -20,14 +11,11 @@ import {
   getCashFlowTally,
   SC_USD_RATE,
 } from "../../lib/format";
-import { isSupabaseConfigured, supabase } from "../../lib/supabase";
-import {
-  fetchTransactionsPage,
-  TRANSACTIONS_PAGE_SIZE,
-} from "../../lib/transactions";
-import type { Transaction } from "../../types/transaction";
-import { TRANSACTION_LABELS } from "../../types/transaction";
+import { isSupabaseConfigured } from "../../lib/supabase";
 import { SettingsLevelSection } from "../../components/Level/SettingsLevelSection";
+import { SettingsProvablyFairSection } from "../../components/Level/SettingsProvablyFairSection";
+import { SettingsTransactionsSection } from "../../components/Level/SettingsTransactionsSection";
+import { SettingsDiscordSection } from "../../components/Level/SettingsDiscordSection";
 import { MAX_USERNAME_LENGTH, validateUsername } from "../../lib/username";
 import {
   fetchSelfExclusion,
@@ -37,34 +25,12 @@ import {
   type SelfExclusion,
   type DepositLimits,
 } from "../../lib/responsibleGaming";
+import { Seo } from "../../components/Seo/Seo";
 import "./Settings.css";
 
-function formatTxDate(iso: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(iso));
-}
-
-function txAmountClass(type: Transaction["type"], amount: number) {
-  if (type === "deposit" || type === "win" || type === "affiliate") return "settings__tx-amount--pos";
-  if (type === "withdrawal" || type === "loss" || type === "wager") return "settings__tx-amount--neg";
-  return amount >= 0 ? "settings__tx-amount--pos" : "settings__tx-amount--neg";
-}
-
-/**
- * Infer the coin currency for a transaction. Withdrawals (cash redemptions)
- * and affiliate bonuses are Sweeps Coins (SC); everything else is Gold Coins (GC).
- */
-function txCoinType(type: Transaction["type"]): "balance" | "sweeps_coins" {
-  if (type === "withdrawal" || type === "affiliate") return "sweeps_coins";
-  return "balance";
-}
-
 export function Settings() {
-  const { user, loading: authLoading, session } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { profile, profileLoading, updateUsername, refreshProfile } = useProfile();
-  const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
 
   // Scroll to the section named by the URL hash (e.g. /settings#responsible-gaming).
@@ -85,12 +51,6 @@ export function Settings() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [discordBusy, setDiscordBusy] = useState(false);
-
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [txLoading, setTxLoading] = useState(true);
-  const [txPage, setTxPage] = useState(0);
-  const [txTotal, setTxTotal] = useState(0);
 
   const [selfExclusion, setSelfExclusion] = useState<SelfExclusion | null>(null);
   const [seDuration, setSeDuration] = useState<30 | 90 | 180>(30);
@@ -102,19 +62,6 @@ export function Settings() {
   const [initialDlDaily, setInitialDlDaily] = useState("");
   const [initialDlWeekly, setInitialDlWeekly] = useState("");
   const [dlBusy, setDlBusy] = useState(false);
-
-  const txPageCount = Math.max(1, Math.ceil(txTotal / TRANSACTIONS_PAGE_SIZE));
-
-  const loadTransactions = useCallback(async () => {
-    if (!user) return;
-    setTxLoading(true);
-    const { transactions: rows, total, error: txError } = await fetchTransactionsPage(txPage);
-    if (!txError) {
-      setTransactions(rows);
-      setTxTotal(total);
-    }
-    setTxLoading(false);
-  }, [user, txPage]);
 
   useEffect(() => {
     const name =
@@ -159,59 +106,6 @@ export function Settings() {
     return () => window.removeEventListener("beforeunload", handler);
   }, []);
 
-  useEffect(() => {
-    if (!user?.id) return;
-    loadTransactions();
-
-    const channel = supabase
-      .channel(`transactions-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "transactions",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => loadTransactions()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, loadTransactions]);
-
-  useEffect(() => {
-    const code = searchParams.get("code");
-    const state = searchParams.get("state");
-    if (!code || !session) return;
-
-    if (!validateDiscordState(state)) {
-      setError("Discord link expired or invalid. Try again.");
-      setSearchParams({}, { replace: true });
-      return;
-    }
-
-    setDiscordBusy(true);
-    setSearchParams({}, { replace: true });
-
-    linkDiscordAccount(code).then(async ({ data, error: linkError }) => {
-      setDiscordBusy(false);
-      if (linkError) {
-        await createUserNotification(
-          "discord_link_failed",
-          "Discord link failed",
-          linkError
-        );
-        setError(linkError);
-        return;
-      }
-      await refreshProfile();
-      setSuccess(`Discord linked as ${data?.discordUsername ?? "account"}.`);
-    });
-  }, [searchParams, session, setSearchParams, refreshProfile]);
-
   if (!authLoading && !user) {
     // Hardcode the redirect path (don't use `pathname` from useLocation).
     // When Settings returns <Navigate>, React Router updates the location, but
@@ -246,27 +140,6 @@ export function Settings() {
     }
   }
 
-  function handleLinkDiscord() {
-    setError(null);
-    try {
-      startDiscordOAuth();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Discord is not configured.");
-    }
-  }
-
-  async function handleUnlinkDiscord() {
-    setError(null);
-    setDiscordBusy(true);
-    const { error: unlinkError } = await unlinkDiscordAccount();
-    setDiscordBusy(false);
-    if (unlinkError) setError(unlinkError);
-    else {
-      await refreshProfile();
-      setSuccess("Discord unlinked.");
-    }
-  }
-
   const cashFlow = getCashFlowTally(
     profile?.totalDeposited ?? 0,
     profile?.totalWithdrawn ?? 0
@@ -281,6 +154,7 @@ export function Settings() {
 
   return (
     <div className="settings lc-page lc-page--wide">
+      <Seo title="Settings" path="/settings" noindex />
       <header className="lc-page__header">
         <h1 className="lc-page__title settings__title">Settings</h1>
         <p className="lc-page__subtitle settings__subtitle">Manage your profile, view transaction history, and configure responsible gaming limits.</p>
@@ -420,62 +294,11 @@ export function Settings() {
         </form>
       </section>
 
-      {/* 2. Discord */}
-      <section className="settings__section">
-        <h2 className="settings__section-title">Discord</h2>
-        <p className="settings__section-desc">
-          Link Discord for future rewards, levelling, and server perks when the LottaCash Discord launches.
-        </p>
-
-        {profile?.discordId ? (
-          <div className="settings__discord">
-            <div className="settings__discord-linked">
-              {profile.discordAvatar && (
-                <img
-                  src={profile.discordAvatar}
-                  alt=""
-                  className="settings__discord-avatar"
-                  width={48}
-                  height={48}
-                />
-              )}
-              <div>
-                <p className="settings__discord-name">{profile.discordUsername}</p>
-                <p className="settings__discord-status">Connected</p>
-              </div>
-            </div>
-            <div className="settings__btn-row">
-              <button
-                type="button"
-                className="settings__btn settings__btn--ghost"
-                onClick={handleUnlinkDiscord}
-                disabled={discordBusy}
-              >
-                Unlink Discord
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="settings__discord">
-              <p className="settings__hint settings__hint--flex">
-              No Discord account linked yet.
-            </p>
-            <button
-              type="button"
-              className="settings__btn settings__btn--discord"
-              onClick={handleLinkDiscord}
-              disabled={discordBusy || !isDiscordConfigured}
-            >
-              {discordBusy ? "Linking…" : "Link Discord"}
-            </button>
-          </div>
-        )}
-        {!isDiscordConfigured && (
-          <p className="settings__hint settings__hint--top">
-            Add <code>VITE_DISCORD_CLIENT_ID</code> to your <code>.env</code> and deploy the <code>link-discord</code> Edge Function with Discord secrets.
-          </p>
-        )}
-      </section>
+      {/* 2. Discord (extracted to its own component) */}
+      <SettingsDiscordSection
+        onError={(msg) => setError(msg)}
+        onSuccess={(msg) => setSuccess(msg)}
+      />
 
       {/* 3. Responsible Gaming */}
       <section className="settings__section" id="responsible-gaming">
@@ -739,97 +562,11 @@ export function Settings() {
         )}
       </section>
 
-      {/* 4. Transactions */}
-      <section className="settings__section">
-        <h2 className="settings__section-title">Transactions</h2>
-        <p className="settings__section-desc">
-          Deposits, withdrawals, wagers, and wins. Each bet shows the wager before the result.
-        </p>
+      {/* 4. Provably Fair — server seed rotation (extracted to its own component) */}
+      <SettingsProvablyFairSection />
 
-        {txLoading ? (
-          <div className="lc-loading">
-            <div className="lc-loading__pulse" />
-            <span>Loading transactions…</span>
-          </div>
-        ) : transactions.length === 0 ? (
-          <div className="settings__tx-empty">
-            <Inbox size={28} aria-hidden="true" />
-            <p>No transactions yet.</p>
-            <p className="settings__tx-empty-hint">
-              Your activity history will show up here automatically.
-            </p>
-          </div>
-        ) : (
-          <div className="settings__tx-table-wrap">
-            <table className="settings__tx-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Type</th>
-                  <th>Amount</th>
-                  <th>Balance after</th>
-                  <th>Note</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((tx) => (
-                  <tr key={tx.id}>
-                    <td>{formatTxDate(tx.created_at)}</td>
-                    <td>
-                      <span className={`settings__tx-type settings__tx-type--${tx.type}`}>
-                        {TRANSACTION_LABELS[tx.type]}
-                      </span>{" "}
-                      <span
-                        className={`settings__tx-coin-badge ${
-                          txCoinType(tx.type) === "sweeps_coins"
-                            ? "settings__tx-coin-badge--sc"
-                            : "settings__tx-coin-badge--gc"
-                        }`}
-                        title={
-                          txCoinType(tx.type) === "sweeps_coins"
-                            ? "Sweeps Coins transaction (redeemable for cash)"
-                            : "Gold Coins transaction (play money)"
-                        }
-                      >
-                        {txCoinType(tx.type) === "sweeps_coins" ? "SC" : "GC"}
-                      </span>
-                    </td>
-                    <td className={txAmountClass(tx.type, tx.amount)}>
-                      {formatUsd(Math.abs(tx.amount))}
-                    </td>
-                    <td>{tx.balance_after != null ? formatUsd(tx.balance_after) : "—"}</td>
-                    <td>{tx.description ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {!txLoading && txTotal > TRANSACTIONS_PAGE_SIZE && (
-          <div className="settings__tx-pagination">
-            <button
-              type="button"
-              className="settings__tx-page-btn"
-              disabled={txPage <= 0}
-              onClick={() => setTxPage((p) => Math.max(0, p - 1))}
-            >
-              Previous
-            </button>
-            <span className="settings__tx-page-info">
-              Page {txPage + 1} of {txPageCount}
-            </span>
-            <button
-              type="button"
-              className="settings__tx-page-btn"
-              disabled={txPage + 1 >= txPageCount}
-              onClick={() => setTxPage((p) => p + 1)}
-            >
-              Next
-            </button>
-          </div>
-        )}
-      </section>
+      {/* 5. Transactions (extracted to its own component) */}
+      <SettingsTransactionsSection userId={user?.id} />
     </div>
   );
 }

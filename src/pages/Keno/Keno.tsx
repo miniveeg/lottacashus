@@ -68,6 +68,13 @@ export function Keno() {
     [pickCount, risk]
   );
 
+  // Max-payout cap (audit R6): the max Keno multiplier across all risk/pick
+  // modes is 1000× (high risk). Wager × 1000 > 100,000 when wager > 100.
+  // The server enforces the cap; this is the UX.
+  const KENO_MAX_PAYOUT = 100_000;
+  const kenoMaxWin = wager * 1000;
+  const exceedsMaxPayout = kenoMaxWin > KENO_MAX_PAYOUT;
+
   const loadPf = useCallback(async () => {
     const { data, error: pfErr } = await fetchKenoPfState();
     if (pfErr) return;
@@ -418,7 +425,7 @@ export function Keno() {
             type="button"
             className={`keno__bet-btn${drawing ? " keno__bet-btn--busy" : ""}`}
             onClick={handleBet}
-            disabled={drawing || pickCount < 1 || !user}
+            disabled={drawing || pickCount < 1 || !user || exceedsMaxPayout}
             aria-busy={drawing}
           >
             {drawing ? (
@@ -426,10 +433,19 @@ export function Keno() {
                 <span className="keno__spinner" aria-hidden="true" />
                 <span>{revealComplete ? "Done…" : "Drawing…"}</span>
               </>
+            ) : exceedsMaxPayout ? (
+              "Payout exceeds cap"
             ) : (
               "Bet"
             )}
           </button>
+
+          {exceedsMaxPayout && (
+            <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
+              Max payout is {KENO_MAX_PAYOUT.toLocaleString()}. Lower your wager — a max-hit round
+              would exceed the cap.
+            </p>
+          )}
 
           <p className="keno__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
@@ -474,6 +490,12 @@ export function Keno() {
                 </button>
                 <p className="keno__fairness-note">
                   Draws use HMAC-SHA256 with Fisher-Yates selection (Stake Keno).
+                </p>
+                <p className="keno__fairness-note keno__fairness-note--disclosure">
+                  RTP disclosure: base draw odds target ~99% RTP; a deterministic
+                  bias roll (HMAC-SHA256, same seeds) downgrades ~4.5% of would-be
+                  wins to losses to enforce the displayed 94.5% RTP. The bias is
+                  verifiable post-rotation using the revealed server seed.
                 </p>
               </div>
             )}

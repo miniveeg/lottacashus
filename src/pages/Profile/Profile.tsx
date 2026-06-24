@@ -13,6 +13,7 @@ import {
   type ReferralInfo,
 } from "../../lib/profile";
 import { isSupabaseConfigured } from "../../lib/supabase";
+import { getLevelProgress, MAX_LEVEL, MAX_WAGER_FOR_MAX_LEVEL } from "../../lib/leveling";
 import { UiIcon } from "../../components/icons";
 import { Seo } from "../../components/Seo/Seo";
 import "./Profile.css";
@@ -33,11 +34,21 @@ const BADGES: Badge[] = [
   { id: "veteran", name: "Veteran", icon: Calendar, description: "Account age 30+ days", check: (p) => { if (!p.memberSince) return false; return (Date.now() - new Date(p.memberSince).getTime()) / 86400000 >= 30; } },
 ];
 
+// Level progress is derived from the shared `lib/leveling.ts` engine (curve,
+// cap 100, $500k for max) so the Profile page agrees with Settings, the
+// Topbar level badge, and the Leaderboard. Previously this page used a
+// local linear `totalWagered / 100` calc that produced absurd levels like
+// 843 — contradicting the rest of the site.
 function calcLevel(totalWagered: number): { level: number; xp: number; xpMax: number } {
-  const xpPerLevel = 100;
-  const level = Math.floor(totalWagered / xpPerLevel) + 1;
-  const xp = totalWagered % xpPerLevel;
-  return { level, xp, xpMax: xpPerLevel };
+  const progress = getLevelProgress(totalWagered);
+  if (progress.isMaxLevel) {
+    return { level: MAX_LEVEL, xp: MAX_WAGER_FOR_MAX_LEVEL, xpMax: MAX_WAGER_FOR_MAX_LEVEL };
+  }
+  return {
+    level: progress.level,
+    xp: progress.wagerInCurrentLevel,
+    xpMax: progress.wagerNeededForNextLevel,
+  };
 }
 
 export function ProfilePage() {

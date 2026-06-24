@@ -7,6 +7,9 @@ interface SeoProps {
   path?: string;
   /** Optional OG image override (path-relative or absolute URL). */
   image?: string;
+  /** When true, emits <meta name="robots" content="noindex,nofollow"> so
+   *  auth-gated / admin / legal-transactional pages are not indexed. */
+  noindex?: boolean;
 }
 
 const DEFAULT_DESCRIPTION =
@@ -20,8 +23,19 @@ const SITE_URL = "https://lottacash.us";
  *
  * Title is automatically suffixed with " — LottaCash" unless the page is
  * the home page (which uses the brand-first pattern "LottaCash — Crypto Casino").
+ *
+ * Pass `noindex` for pages that should not appear in search results:
+ * auth pages (login/signup/forgot), account pages (settings/deposit/withdraw/
+ * redeem), and the admin panel. These are either transactional (no value to
+ * searchers) or expose user state.
  */
-export function Seo({ title, description = DEFAULT_DESCRIPTION, path = "/", image = DEFAULT_OG_IMAGE }: SeoProps) {
+export function Seo({
+  title,
+  description = DEFAULT_DESCRIPTION,
+  path = "/",
+  image = DEFAULT_OG_IMAGE,
+  noindex = false,
+}: SeoProps) {
   const isHome = path === "/";
   const fullTitle = isHome ? "LottaCash — Crypto Casino" : `${title} — LottaCash`;
   const url = `${SITE_URL}${path}`;
@@ -32,6 +46,7 @@ export function Seo({ title, description = DEFAULT_DESCRIPTION, path = "/", imag
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={url} />
+      {noindex && <meta name="robots" content="noindex,nofollow" />}
 
       <meta property="og:type" content="website" />
       <meta property="og:site_name" content="LottaCash" />

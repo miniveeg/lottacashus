@@ -69,7 +69,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 ];
 
 export const TERMS_OF_SERVICE = `
-Last updated: May 2026
+Last updated: November 18, 2024
 
 1. Acceptance of terms
 By accessing or using LottaCash ("the Service"), you agree to these Terms of Service ("Terms"). If you do not agree, do not use the Service.

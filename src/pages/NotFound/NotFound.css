@@ -61,7 +61,7 @@
 }
 
 .not-found__btn--gold {
-  background: linear-gradient(135deg, var(--lc-gold) 0%, var(--lc-gold-dim) 100%);
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
   color: var(--lc-bg-base);
 }
 

@@ -20,10 +20,16 @@ import {
 } from "../../lib/format";
 import { analytics } from "../../lib/analytics";
 import { CRYPTO_CHAINS, type CryptoChain } from "../../types/crypto";
+import { Seo } from "../../components/Seo/Seo";
 import "../Wallet/Wallet.css";
 
-/** Minimum withdrawal in SC. 10 SC = $0.10 USD. */
-const MIN_WITHDRAW_SC = 10;
+/** Minimum cashout in SC.
+ *
+ *  Unified minimum across the cashout flow. Previously Withdraw used 10 SC
+ *  and the duplicate Redeem page used 100 SC — the audit (Wallet agent #11)
+ *  flagged this contradiction. 100 SC ($1) is the sweepstakes-standard minimum
+ *  redemption and matches the Sweepstakes Rules, so we use it here. */
+const MIN_WITHDRAW_SC = 100;
 
 export function Withdraw() {
   const { user, loading: authLoading, configured } = useAuth();
@@ -131,11 +137,12 @@ export function Withdraw() {
 
   return (
     <div className="wallet lc-page lc-page--narrow">
+      <Seo title="Withdraw" path="/withdraw" noindex />
       <header className="lc-page__header">
         <h1 className="lc-page__title wallet__title">Withdraw</h1>
         <p className="lc-page__subtitle wallet__subtitle">
-          Withdraw your Sweeps Coins (SC) as cryptocurrency. 100 SC = $1 USD. Minimum withdrawal: 10 SC
-          ($0.10).
+          Cash out your Sweeps Coins (SC) for real crypto (SOL, LTC, or ETH). 100 SC = $1 USD.
+          Minimum redemption: 100 SC ($1). Processed within 3–5 business days.
         </p>
       </header>
 
@@ -244,8 +251,9 @@ export function Withdraw() {
         </form>
 
         <p className="wallet__hint wallet__hint--note">
-          Withdrawals are queued and sent manually or automatically from treasury wallets. Processing
-          times vary by network.
+          Redemptions are reviewed and processed from treasury wallets within 3–5 business days.
+          Sweeps Coins (SC) are redeemable for real crypto; Gold Coins (GC) are play money and cannot
+          be withdrawn.
         </p>
       </section>
 

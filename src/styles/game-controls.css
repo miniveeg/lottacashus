@@ -50,6 +50,16 @@
   margin: 0;
 }
 
+/* Warning variant — e.g. Limbo max-payout-cap notice. */
+.game-controls__option-hint--warn {
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.55rem;
+  color: var(--lc-amber);
+  background: rgba(245, 185, 66, 0.08);
+  border-left: 2px solid var(--lc-amber);
+  border-radius: 0 4px 4px 0;
+}
+
 .game-controls__option .lc-select-root { width: 100%; }
 
 .game-controls__mines-row {
@@ -248,4 +258,21 @@
   font-weight: 600;
   color: var(--lc-ruby);
   margin-top: 0.4rem;
+}
+
+/* ── RTP disclosure notes (audit P0 legal/ethics) ──
+   Each game's provably-fair panel includes a disclosure note explaining the
+   deterministic RTP bias roll. These get a distinct amber-tinted style so
+   they read as an honesty disclosure rather than a generic footnote.
+   The class is BEM-suffixed per game (e.g. keno__fairness-note--disclosure)
+   but the shared visual lives here so all games stay consistent. */
+[class*="fairness-note--disclosure"] {
+  margin-top: 0.6rem !important;
+  padding: 0.55rem 0.7rem;
+  border-left: 2px solid var(--lc-amber);
+  background: rgba(245, 185, 66, 0.06);
+  border-radius: 0 6px 6px 0;
+  color: var(--lc-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
 }

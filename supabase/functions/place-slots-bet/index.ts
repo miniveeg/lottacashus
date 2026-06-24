@@ -3,10 +3,18 @@ import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 
 const SYMBOLS = ["Cherry", "Bell", "Seven", "Bar", "Watermelon", "Star", "Crown"];
 
+// Rebalanced paytable (audit R4): the previous table gave 75.8% RTP — the
+// worst deal on the site by 19 points and undisclosed. New top payouts
+// (Crown 100×, Star 35×, Seven 20×) bring the theoretical RTP to ~94.75%,
+// in line with the other house games.
+//   3-of-a-kind EV: (100+35+20+10+8+5+3)/343 = 181/343
+//   2 cherries:     2 × C(3,2)×(1/7)²×(6/7) = 36/343
+//   1 cherry:       1 × C(3,1)×(1/7)×(6/7)² = 108/343
+//   Total RTP:      325/343 ≈ 94.75%
 const PAYTABLE: Record<number, number> = {
-  6: 50,   // Crown
-  5: 25,   // Star
-  2: 15,   // Seven
+  6: 100,  // Crown
+  5: 35,   // Star
+  2: 20,   // Seven
   3: 10,   // Bar
   4: 8,    // Watermelon
   1: 5,    // Bell
@@ -74,6 +82,19 @@ Deno.serve(async (req) => {
 
     if (!Number.isFinite(wager) || wager < 1) {
       return jsonResponse({ error: "Minimum bet is 1 SC or GC." }, 400, req);
+    }
+
+    // SECURITY (audit R5): max-payout cap. Slots max multiplier is 100×
+    // (Crown 3-of-a-kind). Cap potential payout to bound treasury risk.
+    const SLOTS_MAX_PAYOUT = 100_000;
+    const slotsWorstCaseMultiplier = 100;
+    const slotsPotentialPayout = Math.round(wager * slotsWorstCaseMultiplier * 100) / 100;
+    if (slotsPotentialPayout > SLOTS_MAX_PAYOUT) {
+      return jsonResponse(
+        { error: `Potential payout exceeds the maximum allowed (${SLOTS_MAX_PAYOUT.toLocaleString()}). Lower your wager.` },
+        400,
+        req,
+      );
     }
 
     const supabaseUser = createClient(

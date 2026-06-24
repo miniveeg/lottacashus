@@ -56,6 +56,22 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Minimum bet is 1 SC or GC." }, 400, req);
     }
 
+    // SECURITY (audit R5): max-payout cap. Crash's max crash point is
+    // 1,000,000× — without a cap, a large wager at a high crash point could
+    // produce an unbounded payout. The cash_out_crash RPC (round 1) already
+    // validates cashed_at ≤ crash_point, but we cap the potential payout
+    // here at bet-placement time too. Same 100k cap as other games.
+    const CRASH_MAX_PAYOUT = 100_000;
+    const crashWorstCaseMultiplier = 1_000_000;
+    const crashPotentialPayout = Math.round(wager * crashWorstCaseMultiplier * 100) / 100;
+    if (crashPotentialPayout > CRASH_MAX_PAYOUT) {
+      return jsonResponse(
+        { error: `Potential payout exceeds the maximum allowed (${CRASH_MAX_PAYOUT.toLocaleString()}). Lower your wager.` },
+        400,
+        req,
+      );
+    }
+
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
@@ -139,7 +155,12 @@ Deno.serve(async (req) => {
 
     return jsonResponse({
       betId: row?.bet_id,
-      crashPoint,
+      // SECURITY: do NOT return crashPoint here. The client learns the crash
+      // point only when the round resolves (settle-loss / a dedicated reveal
+      // endpoint). Returning it in the bet-creation response lets a client
+      // know the bust point before deciding when to cash out — defeating the
+      // game. The Crash UI derives its animation curve from the server's
+      // cash_out_crash / crash_settle_loss responses instead.
       won: false,
       payout: 0,
       cashedAt: null,

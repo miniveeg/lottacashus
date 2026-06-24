@@ -340,8 +340,8 @@
   font-size: 1rem;
   border: none;
   border-radius: var(--lc-radius-md);
-  background: var(--lc-gold);
-  color: #0a0a0b;
+  background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
+  color: #fff;
   cursor: pointer;
 }
 

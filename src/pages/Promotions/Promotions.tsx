@@ -134,6 +134,50 @@ export function Promotions() {
         </p>
       </header>
 
+      {/* Active promotions grid — real offers, not just the affiliate program. */}
+      <div className="promos__grid">
+        <article className="promos__card promos__card--welcome">
+          <div className="promos__card-badge promos__card-badge--new">New players</div>
+          <h3 className="promos__card-title">Welcome bonus</h3>
+          <p className="promos__card-amount">10,000 GC + 100 SC</p>
+          <p className="promos__card-desc">
+            Free on signup. Play any game immediately — no deposit required. SC is redeemable for
+            real crypto.
+          </p>
+          {!user && (
+            <Link to={signupUrl(pathname)} className="promos__card-btn">
+              Claim now
+            </Link>
+          )}
+        </article>
+
+        <article className="promos__card promos__card--daily">
+          <div className="promos__card-badge promos__card-badge--daily">Daily</div>
+          <h3 className="promos__card-title">Free SC mail-in entry</h3>
+          <p className="promos__card-amount">100 SC / month</p>
+          <p className="promos__card-desc">
+            No purchase necessary. Mail a handwritten request to receive free Sweeps Coins. One per
+            household per month.
+          </p>
+          <Link to="/free-entry" className="promos__card-btn promos__card-btn--ghost">
+            How to enter
+          </Link>
+        </article>
+
+        <article className="promos__card promos__card--level">
+          <div className="promos__card-badge promos__card-badge--perm">Permanent</div>
+          <h3 className="promos__card-title">Wager-based levels</h3>
+          <p className="promos__card-amount">Level 0 → 100</p>
+          <p className="promos__card-desc">
+            Your level climbs with every SC wager — permanently, across all games. Reach Level 100
+            at $500k total wagered.
+          </p>
+          <Link to="/leaderboard" className="promos__card-btn promos__card-btn--ghost">
+            View leaderboard
+          </Link>
+        </article>
+      </div>
+
       <GlassPanel className="promos__affiliate lc-panel" aria-labelledby="affiliate-heading" padding="lg">
         <div className="promos__affiliate-head">
           <div className="promos__hero-icon promos__affiliate-icon" aria-hidden="true">
@@ -188,9 +232,21 @@ export function Promotions() {
         ) : affiliateLoading ? (
           <p className="promos__affiliate-muted">Loading your affiliate stats…</p>
         ) : affiliateError ? (
-          <p className="promos__affiliate-error" role="alert">
-            {affiliateError}
-          </p>
+          /* AUDIT R8: previously this error branch replaced the entire affiliate
+           * UI with a single <p>. Now we show the error inline and still render
+           * the referral-code form + CTA so the page is useful even when the
+           * affiliate-stats RPC fails (e.g. RLS denies in demo mode). */
+          <>
+            <p className="promos__affiliate-error" role="alert">
+              {affiliateError}
+            </p>
+            <div className="promos__affiliate-referral">
+              <h3 className="promos__affiliate-referral-title">Have a referral code?</h3>
+              <p className="promos__affiliate-referral-text">
+                You can still share your link or apply a referral code once stats load.
+              </p>
+            </div>
+          </>
         ) : affiliate ? (
           <>
             {affiliate.has_referrer ? (

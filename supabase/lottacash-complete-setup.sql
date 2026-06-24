@@ -931,11 +931,23 @@ grant select        on public.transactions            to authenticated;
 grant select        on public.user_notifications      to authenticated;
 grant update        on public.user_notifications      to authenticated;
 grant select, insert on public.chat_messages          to authenticated;
-grant select        on public.game_pf_seeds           to authenticated;
+-- SECURITY (audit P0): column-level grants for tables that hold secrets.
+-- Previously these were table-level `grant select`, which let any
+-- authenticated user read the LIVE server_seed (game_pf_seeds), the mine
+-- positions (mines_games.mine_tiles), or the entire shuffled shoe
+-- (blackjack_hands.shoe) — breaking provably-fair commitment and letting a
+-- player compute outcomes in advance. The service_role (edge functions)
+-- still gets `grant all` above so the server can read the secrets to
+-- resolve bets. Authenticated clients can read only the non-secret columns
+-- they need for history/fairness-verification UIs.
+grant select (user_id, server_seed_hash, client_seed, next_nonce, created_at, updated_at)
+                  on public.game_pf_seeds           to authenticated;
 grant select        on public.keno_bets               to authenticated;
-grant select        on public.mines_games             to authenticated;
+grant select (id, user_id, wager, mine_count, revealed_tiles, gems_revealed, multiplier, payout, status, nonce, created_at, completed_at)
+                  on public.mines_games             to authenticated;
 grant select        on public.limbo_bets              to authenticated;
-grant select        on public.blackjack_hands         to authenticated;
+grant select (id, user_id, wager, total_wager, doubled, shoe_index, player_cards, dealer_cards, dealer_revealed, status, outcome, payout, nonce, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, created_at, completed_at)
+                  on public.blackjack_hands         to authenticated;
 grant select        on public.case_battles            to authenticated;
 grant select        on public.case_battle_players     to authenticated;
 grant select        on public.roulette_bets           to authenticated;
@@ -2701,6 +2713,62 @@ revoke all on function public.ensure_game_pf_seeds(uuid) from public;
 grant execute on function public.ensure_game_pf_seeds(uuid) to service_role;
 
 
+-- rotate_server_seed: atomically archives the current server_seed (so the
+-- player can verify past rounds after rotation), generates a new one, and
+-- resets the nonce. This closes the "live server_seed is forever readable"
+-- hole when combined with the column-level grant above: the archived
+-- (revealed) seed is safe to read because it is no longer used for new
+-- rounds. Returns the COMMITMENT (hash) of the NEW seed plus the REVEALED
+-- old seed so the client can verify past rounds.
+create or replace function public.rotate_server_seed()
+returns table (
+  new_server_seed_hash text,
+  revealed_server_seed  text,
+  revealed_server_seed_hash text,
+  client_seed           text,
+  next_nonce            bigint
+)
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  uid uuid := auth.uid();
+  old_row public.game_pf_seeds;
+  new_seed text;
+  new_hash text;
+begin
+  if uid is null then raise exception 'Not authenticated'; end if;
+
+  select * into old_row from public.game_pf_seeds where user_id = uid for update;
+  if not found then
+    -- Bootstrap if the user somehow has no seed row yet.
+    perform public.ensure_game_pf_seeds(uid);
+    select * into old_row from public.game_pf_seeds where user_id = uid for update;
+  end if;
+
+  new_seed := encode(gen_random_bytes(32), 'hex');
+  new_hash := encode(digest(new_seed, 'sha256'), 'hex');
+
+  update public.game_pf_seeds
+    set server_seed = new_seed,
+        server_seed_hash = new_hash,
+        next_nonce = 0,
+        updated_at = now()
+    where user_id = uid;
+
+  return query select
+    new_hash,
+    old_row.server_seed        as revealed_server_seed,
+    old_row.server_seed_hash   as revealed_server_seed_hash,
+    old_row.client_seed        as client_seed,
+    0::bigint                  as next_nonce;
+end;
+$$;
+revoke all on function public.rotate_server_seed() from public;
+grant execute on function public.rotate_server_seed() to authenticated;
+
+
 create or replace function public.get_keno_pf_state()
 returns table (
   server_seed_hash text,
@@ -4430,6 +4498,13 @@ begin
   select * into b from public.crash_bets where id = p_bet_id and user_id = p_user_id for update;
   if not found then raise exception 'Bet not found'; end if;
   if b.won then raise exception 'Already cashed out'; end if;
+
+  -- SECURITY: validate the claimed cashout multiplier against the round's
+  -- crash_point. Without this check a caller could POST cashedAtMultiplier:
+  -- 1000000 and credit themselves wager × 1,000,000. The crash_point column
+  -- holds the server-determined bust multiplier for this round.
+  if p_cashed_at < 1 then raise exception 'Invalid cashout multiplier'; end if;
+  if p_cashed_at > b.crash_point then raise exception 'Cashed out after crash point'; end if;
 
   pay := round(b.wager * p_cashed_at, 2);
 

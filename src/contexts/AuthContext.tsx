@@ -47,12 +47,39 @@ function mapAuthError(message: string): string {
   return message;
 }
 
+// AUDIT-BYPASS: when VITE_AUDIT_BYPASS=1, synthesize a fake logged-in session
+// so auth-gated pages (Settings, Deposit, Withdraw, Profile, Admin) can be
+// viewed without real Supabase credentials. Only active in the audit build.
+const AUDIT_BYPASS = import.meta.env.VITE_AUDIT_BYPASS === "1";
+const AUDIT_USER: User | null = AUDIT_BYPASS
+  ? ({
+      id: "audit-user-00000000",
+      aud: "authenticated",
+      role: "authenticated",
+      email: "auditor@lottacash.local",
+      app_metadata: { provider: "email" },
+      user_metadata: { username: "AuditViewer" },
+      created_at: new Date().toISOString(),
+    } as unknown as User)
+  : null;
+const AUDIT_SESSION: Session | null = AUDIT_BYPASS
+  ? ({
+      access_token: "audit-fake-access-token",
+      refresh_token: "audit-fake-refresh-token",
+      expires_in: 3600,
+      expires_at: Math.floor(Date.now() / 1000) + 3600,
+      token_type: "bearer",
+      user: AUDIT_USER,
+    } as unknown as Session)
+  : null;
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(AUDIT_USER);
+  const [session, setSession] = useState<Session | null>(AUDIT_SESSION);
+  const [loading, setLoading] = useState(AUDIT_BYPASS ? false : true);
 
   useEffect(() => {
+    if (AUDIT_BYPASS) return;
     if (!isSupabaseConfigured) {
       setLoading(false);
       return;

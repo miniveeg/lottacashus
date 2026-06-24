@@ -11,7 +11,7 @@
 .lc-atmosphere__canvas {
   position: absolute;
   inset: 0;
-  opacity: 0.55;
+  opacity: 0.85;
 }
 
 .lc-atmosphere__fog {

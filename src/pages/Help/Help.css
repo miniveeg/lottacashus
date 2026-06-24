@@ -186,3 +186,96 @@
     padding: 0.75rem 0.85rem;
   }
 }
+
+/* ── FAQ search (audit R10) ── */
+.help__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.help__search-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--lc-text-muted);
+  pointer-events: none;
+}
+
+.help__search-input {
+  flex: 1;
+  width: 100%;
+  padding: 0.65rem 2.5rem 0.65rem 2.4rem;
+  font-size: 0.9rem;
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-base);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-md);
+  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.help__search-input:focus {
+  outline: none;
+  border-color: var(--lc-crimson-soft);
+  box-shadow: 0 0 0 3px rgba(232, 37, 76, 0.12);
+}
+
+.help__search-input::placeholder {
+  color: var(--lc-text-muted);
+}
+
+.help__search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.help__search-clear {
+  position: absolute;
+  right: 0.5rem;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  color: var(--lc-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--lc-transition), color var(--lc-transition);
+}
+
+.help__search-clear:hover {
+  background: var(--lc-bg-hover);
+  color: var(--lc-text-primary);
+}
+
+/* Empty search state */
+.help__faq-empty {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  color: var(--lc-text-muted);
+}
+
+.help__faq-empty p {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+}
+
+.help__faq-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  background: var(--lc-bg-hover);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-sm);
+  cursor: pointer;
+  transition: background var(--lc-transition), color var(--lc-transition);
+}
+
+.help__faq-empty-btn:hover {
+  background: var(--lc-bg-active);
+  color: var(--lc-text-primary);
+}

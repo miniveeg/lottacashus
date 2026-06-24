@@ -94,6 +94,12 @@ export function Blackjack() {
   const settled = hand?.status === "settled";
   const showTable = Boolean(hand);
 
+  // Max-payout cap (audit R7): blackjack pays 3:2, and a doubled hand can
+  // win 2× the doubled wager at 3:2 = 5× the original wager. Wager × 5 >
+  // 100,000 when wager > 20,000. The server enforces the cap; this is the UX.
+  const BLACKJACK_MAX_PAYOUT = 100_000;
+  const exceedsMaxPayout = !playing && wager * 5 > BLACKJACK_MAX_PAYOUT;
+
   const loadPf = useCallback(async () => {
     const { data } = await fetchBlackjackPfState();
     if (data) {
@@ -393,9 +399,9 @@ export function Blackjack() {
               type="button"
               className="bj__deal-btn"
               onClick={handleStart}
-              disabled={busy || !user}
+              disabled={busy || !user || exceedsMaxPayout}
             >
-              {busy ? "Dealing…" : showTable && settled ? "New hand" : "Deal"}
+              {busy ? "Dealing…" : exceedsMaxPayout ? "Payout exceeds cap" : showTable && settled ? "New hand" : "Deal"}
             </button>
           ) : insuranceOffer ? (
             <div className="bj__insurance">
@@ -464,6 +470,13 @@ export function Blackjack() {
             </div>
           )}
 
+          {exceedsMaxPayout && !playing && (
+            <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
+              Max payout is {BLACKJACK_MAX_PAYOUT.toLocaleString()}. Lower your wager — a doubled
+              blackjack would exceed the cap.
+            </p>
+          )}
+
           <p className="bj__hint">
             Need funds? <Link to="/deposit">Deposit</Link>
           </p>
@@ -511,6 +524,12 @@ export function Blackjack() {
                 </button>
                 <p className="bj__fairness-note">
                   Fisher-Yates shuffle from HMAC-SHA256 (Stake card order).
+                </p>
+                <p className="bj__fairness-note bj__fairness-note--disclosure">
+                  RTP disclosure: the shuffle is fair; the displayed 94.5% RTP is
+                  enforced by a deterministic bias roll (same seeds) that
+                  downgrades ~4.5% of would-be wins to losses. Verifiable after
+                  seed rotation.
                 </p>
               </div>
             )}

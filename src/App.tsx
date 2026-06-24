@@ -30,13 +30,13 @@ const Blackjack = lazy(() => import("./pages/Blackjack/Blackjack").then((m) => (
 const Crash = lazy(() => import("./pages/Crash/Crash").then((m) => ({ default: m.Crash })));
 const Slots = lazy(() => import("./pages/Slots/Slots"));
 const CaseBattlesCreate = lazy(() =>
-  import("./pages/CaseBattles/CaseBattlesCreate").then((m) => ({ default: m.CaseBattlesCreate }))
+  import("./pages/CaseBattles/CaseBattlesCreateV2").then((m) => ({ default: m.CaseBattlesCreateV2 }))
 );
 const CaseBattlesHub = lazy(() =>
-  import("./pages/CaseBattles/CaseBattlesHub").then((m) => ({ default: m.CaseBattlesHub }))
+  import("./pages/CaseBattles/CaseBattlesHubV2").then((m) => ({ default: m.CaseBattlesHubV2 }))
 );
 const CaseBattlesRoom = lazy(() =>
-  import("./pages/CaseBattles/CaseBattlesRoom").then((m) => ({ default: m.CaseBattlesRoom }))
+  import("./pages/CaseBattles/CaseBattlesRoomV2").then((m) => ({ default: m.CaseBattlesRoomV2 }))
 );
 const Admin = lazy(() => import("./pages/Admin/Admin").then((m) => ({ default: m.Admin })));
 const Promotions = lazy(() => import("./pages/Promotions/Promotions").then((m) => ({ default: m.Promotions })));

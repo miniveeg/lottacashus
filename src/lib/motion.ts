@@ -11,26 +11,6 @@ export const smoothTransition: Transition = {
   ease: [0.22, 1, 0.36, 1],
 };
 
-export const pageTransitionVariants: Variants = {
-  initial: {
-    opacity: 0,
-    filter: "blur(10px)",
-    y: 16,
-  },
-  animate: {
-    opacity: 1,
-    filter: "blur(0px)",
-    y: 0,
-    transition: { duration: 0.42, ease: [0.22, 1, 0.36, 1] },
-  },
-  exit: {
-    opacity: 0,
-    filter: "blur(6px)",
-    y: -10,
-    transition: { duration: 0.28, ease: [0.4, 0, 0.2, 1] },
-  },
-};
-
 export const minorPageTransitionVariants: Variants = {
   initial: { opacity: 0, y: 6 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.22 } },

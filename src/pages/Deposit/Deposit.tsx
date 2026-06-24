@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
+import QRCode from "qrcode";
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -21,6 +22,7 @@ import {
   type CryptoChain,
   type CryptoDepositRow,
 } from "../../types/crypto";
+import { Seo } from "../../components/Seo/Seo";
 import "../Wallet/Wallet.css";
 
 export function Deposit() {
@@ -29,6 +31,7 @@ export function Deposit() {
   const toast = useToast();
   const [chain, setChain] = useState<CryptoChain>("sol");
   const [address, setAddress] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [loadingAddr, setLoadingAddr] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -39,6 +42,7 @@ export function Deposit() {
   const loadAddress = useCallback(async (c: CryptoChain) => {
     setLoadingAddr(true);
     setError(null);
+    setQrDataUrl(null);
     analytics.wallet.depositInitiated(c);
     const { data, error: err } = await fetchDepositAddress(c);
     setLoadingAddr(false);
@@ -48,7 +52,25 @@ export function Deposit() {
       analytics.networkError("Deposit.loadAddress", err);
       return;
     }
-    setAddress(data?.address ?? null);
+    const addr = data?.address ?? null;
+    setAddress(addr);
+    // Generate a QR code for the deposit address so mobile wallet users can
+    // scan instead of typing. The QR encodes the bare address (most wallets
+    // accept this for SOL/LTC/ETH).
+    if (addr) {
+      try {
+        const url = await QRCode.toDataURL(addr, {
+          width: 180,
+          margin: 1,
+          color: { dark: "#040406", light: "#ffffff" },
+          errorCorrectionLevel: "M",
+        });
+        setQrDataUrl(url);
+      } catch {
+        // QR generation is a nice-to-have — if it fails, the address text +
+        // copy button still work.
+      }
+    }
   }, []);
 
   const loadDeposits = useCallback(async () => {
@@ -141,6 +163,7 @@ export function Deposit() {
 
   return (
     <div className="wallet lc-page lc-page--narrow">
+      <Seo title="Deposit" path="/deposit" noindex />
       <header className="lc-page__header">
         <h1 className="lc-page__title wallet__title">Deposit</h1>
         <p className="lc-page__subtitle wallet__subtitle">
@@ -214,25 +237,35 @@ export function Deposit() {
             </p>
           ) : address ? (
             <>
-              <p className="wallet__hint" id="deposit-address-label">
-                Your unique {chain.toUpperCase()} deposit address
-              </p>
-              <p
-                className="wallet__address"
-                aria-labelledby="deposit-address-label"
-                title={address}
-              >
-                {address}
-              </p>
-              <div className="wallet__copy-row">
-                <button
-                  type="button"
-                  className="wallet__btn"
-                  onClick={handleCopy}
-                  aria-label={copied ? "Deposit address copied to clipboard" : `Copy ${chain.toUpperCase()} deposit address to clipboard`}
-                >
-                  {copied ? "Copied!" : "Copy address"}
-                </button>
+              <div className="wallet__address-qr-row">
+                <div className="wallet__address-text">
+                  <p className="wallet__hint" id="deposit-address-label">
+                    Your unique {chain.toUpperCase()} deposit address
+                  </p>
+                  <p
+                    className="wallet__address"
+                    aria-labelledby="deposit-address-label"
+                    title={address}
+                  >
+                    {address}
+                  </p>
+                  <div className="wallet__copy-row">
+                    <button
+                      type="button"
+                      className="wallet__btn"
+                      onClick={handleCopy}
+                      aria-label={copied ? "Deposit address copied to clipboard" : `Copy ${chain.toUpperCase()} deposit address to clipboard`}
+                    >
+                      {copied ? "Copied!" : "Copy address"}
+                    </button>
+                  </div>
+                </div>
+                {qrDataUrl && (
+                  <div className="wallet__qr" aria-label="QR code for deposit address">
+                    <img src={qrDataUrl} alt={`QR code for ${chain.toUpperCase()} deposit address`} width={140} height={140} />
+                    <p className="wallet__qr-hint">Scan to deposit</p>
+                  </div>
+                )}
               </div>
             </>
           ) : (

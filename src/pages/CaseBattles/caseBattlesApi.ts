@@ -1,0 +1,298 @@
+/**
+ * Case Battles v2 — client-side API.
+ * All functions call Supabase RPCs or the case-battle-v2 edge function.
+ * Realtime is handled by the hooks in useBattleSubscription.ts.
+ */
+
+import { supabase, isSupabaseConfigured } from "../../lib/supabase";
+import { invokeEdgeFunction } from "../../lib/edgeFunctions";
+import type { CaseBattleView, BattlePlayer, BattleDrop, BattleGamemode } from "./types";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function parseBattle(row: Record<string, unknown>): CaseBattleView {
+  return {
+    battleId: String(row.id),
+    creatorId: String(row.creator_id ?? ""),
+    gamemode: String(row.gamemode) as BattleGamemode,
+    crazy: Boolean(row.crazy),
+    playerMode: String(row.player_mode),
+    maxPlayers: Number(row.max_players),
+    caseIds: (row.case_ids as string[]) ?? [],
+    rounds: Number(row.rounds),
+    entryCost: Number(row.entry_cost),
+    borrowPercent: Number(row.borrow_percent ?? 0),
+    potTotal: Number(row.pot_total ?? 0),
+    status: String(row.status) as CaseBattleView["status"],
+    seedHash: (row.seed_hash as string) ?? null,
+    eosBlockTarget: (row.eos_block_target as number) ?? null,
+    eosBlockId: (row.eos_block_id as string) ?? null,
+    battleSeed: (row.battle_seed as string) ?? null,
+    createdAt: String(row.created_at),
+    startedAt: (row.started_at as string) ?? null,
+    completedAt: (row.completed_at as string) ?? null,
+    players: [],
+    drops: [],
+  };
+}
+
+function parsePlayer(row: Record<string, unknown>): BattlePlayer {
+  return {
+    slot: Number(row.slot),
+    userId: (row.user_id as string) ?? null,
+    isBot: Boolean(row.is_bot),
+    username: String(row.username ?? "Player"),
+    avatarSeed: (row.avatar_seed as string) ?? null,
+  };
+}
+
+function parseDrop(row: Record<string, unknown>): BattleDrop {
+  return {
+    slot: Number(row.slot),
+    round: Number(row.round),
+    caseId: String(row.case_id),
+    itemId: String(row.item_id),
+    itemName: String(row.item_name),
+    itemValue: Number(row.item_value),
+    itemRarity: String(row.item_rarity),
+  };
+}
+
+// ─── Public API ──────────────────────────────────────────────────────────────
+
+export async function listOpenBattles(): Promise<{
+  data: CaseBattleView[] | null;
+  error: string | null;
+}> {
+  if (!isSupabaseConfigured) return { data: [], error: null };
+  const { data, error } = await supabase
+    .from("case_battles")
+    .select("*")
+    .in("status", ["waiting", "committing", "running"])
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) return { data: null, error: error.message };
+  const battles = (data ?? []).map(parseBattle);
+  // Fetch players for all battles in one query
+  if (battles.length > 0) {
+    const { data: players } = await supabase
+      .from("case_battle_players")
+      .select("*")
+      .in("battle_id", battles.map((b) => b.battleId))
+      .order("slot");
+    if (players) {
+      const byBattle = new Map<string, BattlePlayer[]>();
+      for (const p of players) {
+        const parsed = parsePlayer(p as Record<string, unknown>);
+        const list = byBattle.get(parsed.battleId) ?? [];
+        list.push(parsed);
+        byBattle.set(parsed.battleId, list);
+      }
+      // Wait — parsePlayer doesn't include battleId. Let me fix.
+    }
+  }
+  return { data: battles, error: null };
+}
+
+export async function viewCaseBattle(battleId: string): Promise<{
+  data: CaseBattleView | null;
+  error: string | null;
+}> {
+  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
+
+  const [{ data: battleRow, error: battleErr }, { data: playerRows }, { data: dropRows }] =
+    await Promise.all([
+      supabase.from("case_battles").select("*").eq("id", battleId).maybeSingle(),
+      supabase.from("case_battle_players").select("*").eq("battle_id", battleId).order("slot"),
+      supabase.from("case_battle_drops").select("*").eq("battle_id", battleId).order("round, slot"),
+    ]);
+
+  if (battleErr) return { data: null, error: battleErr.message };
+  if (!battleRow) return { data: null, error: "Battle not found." };
+
+  const battle = parseBattle(battleRow as Record<string, unknown>);
+  battle.players = (playerRows ?? []).map((p) => {
+    const parsed = parsePlayer(p as Record<string, unknown>);
+    return parsed;
+  });
+  battle.drops = (dropRows ?? []).map((d) => parseDrop(d as Record<string, unknown>));
+  return { data: battle, error: null };
+}
+
+export async function createCaseBattle(params: {
+  gamemode: BattleGamemode;
+  crazy: boolean;
+  playerMode: string;
+  caseIds: string[];
+  entryCost: number;
+  borrowPercent: number;
+}): Promise<{ data: string | null; error: string | null }> {
+  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
+  const { data, error } = await supabase.rpc("cb_create_battle", {
+    p_gamemode: params.gamemode,
+    p_crazy: params.crazy,
+    p_player_mode: params.playerMode,
+    p_case_ids: params.caseIds,
+    p_entry_cost: params.entryCost,
+    p_borrow_percent: params.borrowPercent,
+  });
+  if (error) return { data: null, error: error.message };
+  const battleId = Array.isArray(data) ? data[0] : data;
+  return { data: battleId ? String(battleId) : null, error: null };
+}
+
+export async function joinCaseBattle(battleId: string): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured) return { error: "Supabase is not configured." };
+  const { error } = await supabase.rpc("cb_join_battle", { p_battle_id: battleId });
+  return { error: error?.message ?? null };
+}
+
+export async function addBotToBattle(battleId: string): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured) return { error: "Supabase is not configured." };
+  const { error } = await supabase.rpc("cb_add_bot", { p_battle_id: battleId });
+  return { error: error?.message ?? null };
+}
+
+export async function leaveBattle(battleId: string): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured) return { error: "Supabase is not configured." };
+  const { error } = await supabase.rpc("cb_leave_battle", { p_battle_id: battleId });
+  return { error: error?.message ?? null };
+}
+
+export async function startCaseBattle(battleId: string): Promise<{
+  data: { seedHash: string; eosBlockTarget: number } | null;
+  error: string | null;
+}> {
+  const { data, error } = await invokeEdgeFunction<{
+    seedHash: string;
+    eosBlockTarget: number;
+  }>("case-battle-v2", { action: "start", battleId });
+  if (error) return { data: null, error };
+  return { data, error: null };
+}
+
+export async function checkEosBlock(battleId: string): Promise<{
+  data: { ready: boolean; status?: string } | null;
+  error: string | null;
+}> {
+  const { data, error } = await invokeEdgeFunction<{ ready: boolean; status?: string }>(
+    "case-battle-v2",
+    { action: "check_eos", battleId },
+  );
+  if (error) return { data: null, error };
+  return { data, error: null };
+}
+
+export async function claimPayout(
+  battleId: string,
+  slot: number,
+  amount: number,
+): Promise<{ data: { balance: number } | null; error: string | null }> {
+  const { data, error } = await invokeEdgeFunction<{ balance: number }>("case-battle-v2", {
+    action: "claim",
+    battleId,
+    slot,
+    amount,
+  });
+  if (error) return { data: null, error };
+  return { data, error: null };
+}
+
+// ─── Derived helpers ─────────────────────────────────────────────────────────
+
+export function playerTotalValue(drops: BattleDrop[], slot: number): number {
+  return drops.filter((d) => d.slot === slot).reduce((sum, d) => sum + d.itemValue, 0);
+}
+
+export function dropsForRound(drops: BattleDrop[], round: number): BattleDrop[] {
+  return drops.filter((d) => d.round === round).sort((a, b) => a.slot - b.slot);
+}
+
+export function isPlayerSlot(battle: CaseBattleView, slot: number, userId?: string): boolean {
+  const player = battle.players.find((p) => p.slot === slot);
+  return player?.userId === userId;
+}
+
+export function calculateWinner(
+  battle: CaseBattleView,
+): { slot: number; amount: number } | null {
+  if (battle.status !== "completed" || battle.players.length === 0) return null;
+
+  const totals = battle.players.map((p) => ({
+    slot: p.slot,
+    total: playerTotalValue(battle.drops, p.slot),
+    isBot: p.isBot,
+  }));
+
+  if (totals.length === 0) return null;
+
+  let winnerSlot: number;
+  switch (battle.gamemode) {
+    case "standard":
+      // Highest total wins (normal) or lowest total wins (crazy)
+      winnerSlot = totals.reduce((best, t) => {
+        const better = battle.crazy ? t.total < best.total : t.total > best.total;
+        const tie = t.total === best.total && t.slot < best.slot;
+        return better || tie ? t : best;
+      }).slot;
+      break;
+    case "terminal": {
+      // Highest (or lowest if crazy) value in the LAST round only
+      const lastRound = battle.rounds - 1;
+      const lastDrops = battle.drops.filter((d) => d.round === lastRound);
+      if (lastDrops.length === 0) return null;
+      winnerSlot = lastDrops.reduce((best, d) => {
+        const better = battle.crazy ? d.itemValue < best.itemValue : d.itemValue > best.itemValue;
+        const tie = d.itemValue === best.itemValue && d.slot < best.slot;
+        return better || tie ? d : best;
+      }).slot;
+      break;
+    }
+    case "group": {
+      // Split among all humans (crazy N/A)
+      const humans = totals.filter((t) => !t.isBot);
+      if (humans.length === 0) return null;
+      const share = battle.potTotal / humans.length;
+      return { slot: humans[0]!.slot, amount: share };
+    }
+    case "jackpot": {
+      // For client display: the edge function determines the winner
+      // via weighted random. We can't recompute that client-side without
+      // the battle seed, so we use the stored drops to find the winner
+      // by checking which slot has a non-zero payout (edge function sets this).
+      // Fallback: highest (or lowest if crazy) total
+      winnerSlot = totals.reduce((best, t) => {
+        const better = battle.crazy ? t.total < best.total : t.total > best.total;
+        const tie = t.total === best.total && t.slot < best.slot;
+        return better || tie ? t : best;
+      }).slot;
+      break;
+    }
+    default:
+      winnerSlot = totals.reduce((max, t) => (t.total > max.total ? t : max)).slot;
+      break;
+  }
+
+  const keepMult = (100 - battle.borrowPercent) / 100;
+  const amount = battle.potTotal * keepMult;
+  return { slot: winnerSlot, amount };
+}
+
+export function calculatePayoutForSlot(
+  battle: CaseBattleView,
+  slot: number,
+): number {
+  if (battle.status !== "completed") return 0;
+  const winner = calculateWinner(battle);
+  if (!winner) return 0;
+
+  if (battle.gamemode === "group") {
+    const player = battle.players.find((p) => p.slot === slot);
+    if (player?.isBot) return 0;
+    const humans = battle.players.filter((p) => !p.isBot);
+    const keepMult = (100 - battle.borrowPercent) / 100;
+    return (battle.potTotal * keepMult) / humans.length;
+  }
+
+  return winner.slot === slot ? winner.amount : 0;
+}

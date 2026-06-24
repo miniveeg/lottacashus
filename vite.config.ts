@@ -7,6 +7,12 @@ export default defineConfig({
     // Three.js is inherently large even with selective imports; it is lazy-
     // loaded only on the home page, so a 1.1 MB chunk is acceptable.
     chunkSizeWarningLimit: 1200,
+    // three.js is only needed on the home page (ObsidianScene). Without this
+    // filter, Vite's modulePreload leaks the 1.07MB three chunk onto EVERY
+    // page via AtmosphericLayer's static import of the lazy ObsidianScene.
+    modulePreload: {
+      resolveDependencies: (_url, deps) => deps.filter((d) => !d.includes("three")),
+    },
     rollupOptions: {
       output: {
         // Split large vendor dependencies into their own chunks so the main

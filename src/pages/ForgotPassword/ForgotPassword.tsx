@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
 import { useAuth } from "../../contexts/AuthContext";
 import { requestPasswordResetCode, resetPasswordWithCode } from "../../lib/passwordReset";
+import { Seo } from "../../components/Seo/Seo";
 import "../../components/BrandLogo/BrandLogo.css";
 import "../Auth/Auth.css";
 
@@ -119,6 +120,7 @@ export function ForgotPassword() {
 
   return (
     <div className="auth-page lc-page--auth">
+      <Seo title="Reset password" path="/forgot-password" noindex />
       <div className="auth-card">
         <BrandLogo className="auth-card__logo" size={72} />
         <h1 className="auth-card__title">Reset password</h1>

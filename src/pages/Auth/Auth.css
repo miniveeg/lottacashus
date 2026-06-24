@@ -161,7 +161,7 @@
   border-radius: var(--lc-radius-md);
   font-weight: 700;
   font-size: 0.95rem;
-  background: linear-gradient(135deg, var(--lc-gold), var(--lc-gold-dim));
+  background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
   color: var(--lc-bg-base);
   display: inline-flex;
   align-items: center;

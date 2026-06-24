@@ -1,9 +1,15 @@
 import { PRIVACY_POLICY } from "../../content/legal";
+import { Seo } from "../../components/Seo/Seo";
 import "../Help/Help.css";
 
 export function Privacy() {
   return (
     <div className="help lc-page lc-page--narrow">
+      <Seo
+        title="Privacy Policy"
+        path="/privacy"
+        description="How LottaCash collects, uses, and protects your personal information, including GDPR and CCPA rights."
+      />
       <header className="lc-page__header help__header">
         <h1 className="lc-page__title help__title">Privacy Policy</h1>
         <p className="lc-page__subtitle help__subtitle">

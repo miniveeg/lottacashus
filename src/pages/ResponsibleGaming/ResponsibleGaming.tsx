@@ -146,7 +146,7 @@ export function ResponsibleGaming() {
             <div>
               <h3 className="responsible-gaming__resource-title">GamCare (UK)</h3>
               <p className="responsible-gaming__resource-text">
-                Call <a href="tel:08088026520">0808 8020 133</a> or visit{" "}
+                Call <a href="tel:08088020133">0808 8020 133</a> or visit{" "}
                 <a href="https://www.gamcare.org.uk" target="_blank" rel="noopener noreferrer">
                   gamcare.org.uk
                 </a>

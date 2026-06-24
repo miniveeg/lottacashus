@@ -326,7 +326,7 @@
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: var(--lc-radius-md);
-  background: linear-gradient(135deg, var(--lc-amber) 0%, var(--lc-amber-dim) 100%);
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
   color: var(--lc-bg-base);
   box-shadow: 0 4px 16px rgba(139, 26, 36, 0.3);
   transition: filter var(--lc-transition), transform var(--lc-transition);

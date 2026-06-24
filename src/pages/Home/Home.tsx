@@ -18,22 +18,22 @@ import "./Home.css";
 const pillars = [
   {
     title: "One wallet",
-    desc: "A single USD balance for everything on LottaCash — no juggling separate purses.",
+    desc: "A single USD balance for every game — no juggling purses or converting between games.",
     icon: Wallet,
   },
   {
     title: "Crypto in & out",
-    desc: "Deposit and withdraw with SOL, LTC, and ETH. Your own addresses, on-chain transparency.",
+    desc: "Deposit and withdraw in SOL, LTC, or ETH, to and from your own addresses.",
     icon: Zap,
   },
   {
     title: "Level up",
-    desc: "Wager-based ranks from 0 to 100. Progress is permanent and visible on your profile.",
+    desc: "Wager-based ranks 0 to 100. Progress is permanent and visible on your profile.",
     icon: TrendingUp,
   },
   {
     title: "House originals",
-    desc: "Keno, Mines, Limbo, Blackjack, and Case Battles — provably fair, one wallet, SC-wager-based levels.",
+    desc: "Keno, Mines, Limbo, Roulette, Blackjack, Crash, Slots, and Case Battles — all provably fair, all on the same balance.",
     icon: Dices,
   },
 ];
@@ -59,14 +59,15 @@ export function Home() {
           variants={staggerContainer}
         >
           <motion.p className="home__eyebrow" variants={fadeUpVariants}>
-            Welcome to LottaCash
+            SOL · LTC · ETH accepted
           </motion.p>
           <motion.h1 className="home__headline" variants={fadeUpVariants}>
-            One wallet. Six games. <span>Real crypto rails.</span>
+            Eight provably fair house games, <span>paid out to your own wallet.</span>
           </motion.h1>
           <motion.p className="home__lead" variants={fadeUpVariants}>
-            One account. Deposit SOL, LTC, or ETH. Play six provably fair house games. Your level
-            climbs with every wager — permanently, across every game.
+            Bring SOL, LTC, or ETH, play any of the eight provably fair house games, and withdraw
+            back to your own address on the same chain. Every wager pushes your level up — and that
+            progress is permanent across all eight.
           </motion.p>
           <motion.div className="home__cta" variants={fadeUpVariants}>
             {!loading && user ? (
@@ -99,16 +100,17 @@ export function Home() {
       </section>
 
       <ScrollReveal className="home__intro">
-        <h2 className="home__section-title">What is LottaCash?</h2>
+        <h2 className="home__section-title">From deposit to cash-out</h2>
         <p className="home__section-text">
-          Sign up in under a minute. Fund with crypto. Play eight provably fair house games. Your
-          balance, level, and stats persist across everything. Track deposits and withdrawals in
-          Settings, and climb levels as you wager.
+          Sign up, grab a deposit address for SOL, LTC, or ETH, and send funds — they show up as a
+          single USD balance you can spend on any game. Cash out the same way, back to your own
+          wallet. Bets, level, deposits, and withdrawals all live in Settings, so there's no second
+          dashboard to keep up with.
         </p>
       </ScrollReveal>
 
       <ScrollReveal className="home__pillars" delay={1}>
-        <h2 className="home__section-title">How it works</h2>
+        <h2 className="home__section-title">Four things to know</h2>
         <div className="home__pillar-grid">
           {pillars.map((item, i) => (
             <ScrollReveal key={item.title} delay={i * 0.5}>
@@ -126,7 +128,8 @@ export function Home() {
 
       <ScrollReveal className="home__footer-cta" delay={2}>
         <p className="home__footer-cta-text">
-          Questions before you play? Read the FAQ or Terms anytime.
+          New here? The FAQ and Terms walk through how deposits, levels, and withdrawals actually
+          work.
         </p>
         <MotionLink to="/help" variant="secondary">
           Open Help page

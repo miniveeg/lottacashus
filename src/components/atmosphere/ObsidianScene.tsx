@@ -128,13 +128,13 @@ function Shard({
     <Float speed={1.2} rotationIntensity={0.4} floatIntensity={0.6}>
       <mesh position={position} rotation={rotation} geometry={geometry}>
         <meshStandardMaterial
-          color="#0a0a12"
+          color="#1a0a14"
           emissive="#dc143c"
-          emissiveIntensity={0.15}
-          metalness={0.85}
-          roughness={0.35}
+          emissiveIntensity={0.6}
+          metalness={0.9}
+          roughness={0.25}
           transparent
-          opacity={0.75}
+          opacity={0.92}
         />
       </mesh>
     </Float>
@@ -163,9 +163,10 @@ function ObsidianShards() {
 
   return (
     <>
-      <ambientLight intensity={0.25} />
-      <pointLight position={[4, 4, 6]} intensity={0.8} color="#dc143c" />
-      <pointLight position={[-6, -2, 4]} intensity={0.4} color="#8b5cf6" />
+      <ambientLight intensity={0.55} />
+      <pointLight position={[4, 4, 6]} intensity={1.4} color="#dc143c" />
+      <pointLight position={[-6, -2, 4]} intensity={0.7} color="#8b5cf6" />
+      <directionalLight position={[0, 5, 5]} intensity={0.6} color="#ffd166" />
       {shards.map((s) => (
         <Shard key={s.key} position={s.position} rotation={s.rotation} scale={s.scale} />
       ))}

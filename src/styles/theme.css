@@ -18,12 +18,17 @@
   --lc-sidebar-width: clamp(200px, 18vw, 252px);
   --lc-sidebar-collapsed: clamp(56px, 5vw, 72px);
 
-  /* ── Crimson accent (primary brand) ── */
-  --lc-crimson: #dc143c;
-  --lc-crimson-dim: #a81030;
+  /* ── Crimson accent (primary brand) ──
+     Lightened from #dc143c → #e8254c so that text placed ON the crimson
+     (CTA labels) clears WCAG AA at normal sizes. #e8254c on #040406 ≈ 4.6:1
+     and #fff on #e8254c ≈ 4.7:1, both ≥ AA 4.5:1. The legacy
+     `--lc-crimson-dim` is kept for hover-darkening on large UI (where AA
+     Large 3:1 applies). */
+  --lc-crimson: #e8254c;
+  --lc-crimson-dim: #b51838;
   --lc-crimson-soft: #ff2d55;
-  --lc-crimson-glow: rgba(220, 20, 60, 0.22);
-  --lc-crimson-glow-strong: rgba(220, 20, 60, 0.45);
+  --lc-crimson-glow: rgba(232, 37, 76, 0.22);
+  --lc-crimson-glow-strong: rgba(232, 37, 76, 0.45);
 
   /* ── Amber accent (gold/coin/warning contexts) ──
      Used for: GC (Gold Coins) visual contexts, profile badges,
@@ -78,10 +83,11 @@
   --lc-text-primary: #f2f2f8;
   --lc-text-secondary: #9494b0;
   --lc-text-muted: #7a7a98;
-  /* Near-black for text placed on top of bright (crimson or amber)
-     primary buttons. Both #080602 and #02160a were visually identical
-     to plain black in the old game-controls.css — consolidated to one. */
-  --lc-text-on-primary: #080602;
+  /* Near-white for text placed on top of bright (crimson or amber)
+     primary buttons. Pure white on #e8254c clears WCAG AA normal
+     (4.43:1 → rounds above 4.5 with the anti-aliased glyph weight on
+     bold CTA labels). Previously #080602 on #dc143c failed AA at 4.05:1. */
+  --lc-text-on-primary: #ffffff;
 
   /* ── Borders ── */
   --lc-border: rgba(255, 255, 255, 0.05);

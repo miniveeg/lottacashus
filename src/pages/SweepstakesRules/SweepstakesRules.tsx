@@ -1,9 +1,15 @@
 import { SWEEPSTAKES_RULES } from "../../content/legal";
+import { Seo } from "../../components/Seo/Seo";
 import "../Help/Help.css";
 
 export function SweepstakesRules() {
   return (
     <div className="help lc-page lc-page--narrow">
+      <Seo
+        title="Sweepstakes Rules"
+        path="/sweepstakes"
+        description="Official LottaCash sweepstakes rules: eligibility, free entry by mail, prizes, odds, and redemption terms."
+      />
       <header className="lc-page__header help__header">
         <h1 className="lc-page__title help__title">Sweepstakes Rules</h1>
         <p className="lc-page__subtitle help__subtitle">

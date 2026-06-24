@@ -9,9 +9,14 @@
 }
 
 /* On the home page, the 3D ObsidianScene WebGL canvas is the sole atmospheric
-   source — skip the CSS radial gradient so the two layers don't compound. */
+   source. The main area's background MUST be transparent so the fixed
+   `.lc-atmosphere` canvas (z-index 0) shows through the main content layer
+   (z-index 1). Previously this was `var(--lc-bg-base)` (opaque #040406),
+   which completely hid the canvas — the #1 reason the 3D hero was invisible.
+   The body element provides the opaque fallback, so transparency here only
+   reveals the canvas; there is no "hole" to the page behind. */
 .app-shell__main--hero {
-  background: var(--lc-bg-base);
+  background: transparent;
 }
 
 /* ── Page shell ──

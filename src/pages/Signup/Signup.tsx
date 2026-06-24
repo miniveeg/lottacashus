@@ -12,6 +12,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { analytics } from "../../lib/analytics";
 import { MAX_USERNAME_LENGTH, normalizeUsername, validateUsername } from "../../lib/username";
+import { Seo } from "../../components/Seo/Seo";
 import "../../components/BrandLogo/BrandLogo.css";
 import "../Auth/Auth.css";
 
@@ -190,6 +191,7 @@ export function Signup() {
 
   return (
     <div className="auth-page lc-page--auth">
+      <Seo title="Create account" path="/signup" noindex />
       <div className="auth-card">
         <BrandLogo className="auth-card__logo" size={72} />
         <h1 className="auth-card__title">Join LottaCash</h1>

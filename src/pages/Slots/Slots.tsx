@@ -90,6 +90,12 @@ export default function Slots() {
     return coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
   }, [user, coinType, profile]);
 
+  // Max-payout cap (audit R6): Crown pays 100×, so wager × 100 > 100,000
+  // when wager > 1,000. The server enforces the cap; this is the UX.
+  const SLOTS_MAX_PAYOUT = 100_000;
+  const slotsMaxWin = wager * 100;
+  const exceedsMaxPayout = slotsMaxWin > SLOTS_MAX_PAYOUT;
+
   useEffect(() => {
     fetchSlotsPfState().then(({ data }) => {
       if (data) {
@@ -271,12 +277,12 @@ export default function Slots() {
     <div className="slots lc-game-page">
       <Seo
         title="Slots"
-        description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 50×, Star pays 25×."
+        description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 100×, Star pays 35×. 94.5% RTP."
         path="/slots"
       />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Slots</h1>
-        <p className="lc-page__subtitle">Three reels. Match symbols to win. Crown pays 50×, Star pays 25×.</p>
+        <p className="lc-page__subtitle">Three reels. Match symbols to win. Crown pays 100×, Star pays 35×. 94.5% RTP.</p>
       </header>
 
       <div className="slots__layout">
@@ -416,12 +422,18 @@ export default function Slots() {
           <button
             type="button"
             className="game-controls__play"
-            disabled={rolling || !user}
+            disabled={rolling || !user || exceedsMaxPayout}
             onClick={handleSpin}
-            aria-disabled={rolling || !user}
+            aria-disabled={rolling || !user || exceedsMaxPayout}
           >
-            {rolling ? "Spinning\u2026" : !user ? "Log in to play" : "Spin"}
+            {rolling ? "Spinning\u2026" : !user ? "Log in to play" : exceedsMaxPayout ? "Payout exceeds cap" : "Spin"}
           </button>
+
+          {exceedsMaxPayout && (
+            <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
+              Max payout is {SLOTS_MAX_PAYOUT.toLocaleString()}. Lower your wager — Crown (100×) would exceed the cap.
+            </p>
+          )}
 
           <div className="game-controls__stats">
             <div className="game-controls__stat-row">
@@ -451,6 +463,21 @@ export default function Slots() {
           >
             <summary>Provably Fair</summary>
             <div className="slots__fairness-body">
+              <div className="slots__paytable" aria-label="Paytable">
+                <h4 className="slots__paytable-title">Paytable (3 of a kind)</h4>
+                <div className="slots__paytable-grid">
+                  <span className="slots__paytable-row"><SlotSymbol id={6} size={22} /> Crown</span><span className="slots__paytable-mult slots__paytable-mult--top">100×</span>
+                  <span className="slots__paytable-row"><SlotSymbol id={5} size={22} /> Star</span><span className="slots__paytable-mult">35×</span>
+                  <span className="slots__paytable-row"><SlotSymbol id={2} size={22} /> Seven</span><span className="slots__paytable-mult">20×</span>
+                  <span className="slots__paytable-row"><SlotSymbol id={3} size={22} /> Bar</span><span className="slots__paytable-mult">10×</span>
+                  <span className="slots__paytable-row"><SlotSymbol id={4} size={22} /> Watermelon</span><span className="slots__paytable-mult">8×</span>
+                  <span className="slots__paytable-row"><SlotSymbol id={1} size={22} /> Bell</span><span className="slots__paytable-mult">5×</span>
+                  <span className="slots__paytable-row"><SlotSymbol id={0} size={22} /> Cherry</span><span className="slots__paytable-mult">3×</span>
+                  <span className="slots__paytable-row slots__paytable-row--cherry">2× Cherry</span><span className="slots__paytable-mult">2×</span>
+                  <span className="slots__paytable-row slots__paytable-row--cherry">1× Cherry</span><span className="slots__paytable-mult">1×</span>
+                </div>
+                <p className="slots__paytable-rtp">Theoretical RTP: 94.75%</p>
+              </div>
               <label className="slots__fairness-label">
                 Server seed hash
                 <input
@@ -487,6 +514,14 @@ export default function Slots() {
                   </button>
                 </div>
               </label>
+              <p className="slots__fairness-note">
+                Reels are picked via HMAC-SHA256 &mdash; 4-byte float per reel, floor(&times;7).
+              </p>
+              <p className="slots__fairness-note slots__fairness-note--disclosure">
+                RTP disclosure: the reel selection is fair (uniform 1/7 per symbol). The displayed
+                94.75% RTP comes directly from the paytable above &mdash; no additional bias roll is
+                applied to Slots. Verifiable after seed rotation.
+              </p>
             </div>
           </details>
         </aside>

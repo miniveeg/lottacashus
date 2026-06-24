@@ -68,6 +68,19 @@ export function Mines() {
     [wager, multiplier]
   );
 
+  // Max-payout cap (audit R7): the worst-case Mines multiplier (revealing ALL
+  // safe gems) varies by mine count — peaks at ~5.15M× for 12-13 mines.
+  // We compute the max multiplier for the current mine count and cap the
+  // potential payout at 100,000 (matching the server cap). The server cap
+  // uses a conservative 24,475× flat worst case; this client check is more
+  // precise per-mine-count but still bounds to the same 100k cap.
+  const MINES_MAX_PAYOUT = 100_000;
+  const minesMaxWin = useMemo(
+    () => wager * getMinesMultiplier(mineCount, maxGems),
+    [wager, mineCount, maxGems],
+  );
+  const exceedsMaxPayout = !playing && minesMaxWin > MINES_MAX_PAYOUT;
+
   const loadPf = useCallback(async () => {
     const { data } = await fetchMinesPfState();
     if (data) {
@@ -458,7 +471,7 @@ export function Mines() {
               type="button"
               className="mines__bet-btn"
               onClick={handleStart}
-              disabled={busy || !user}
+              disabled={busy || !user || exceedsMaxPayout}
               aria-busy={busy}
             >
               {busy ? (
@@ -466,6 +479,8 @@ export function Mines() {
                   <span className="mines__spinner" aria-hidden="true" />
                   <span>Starting…</span>
                 </>
+              ) : exceedsMaxPayout ? (
+                "Payout exceeds cap"
               ) : (
                 "Bet"
               )}
@@ -487,6 +502,13 @@ export function Mines() {
                 `Cash out ${formatCoins(potentialPayout, coinType)}`
               )}
             </button>
+          )}
+
+          {exceedsMaxPayout && (
+            <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
+              Max payout is {MINES_MAX_PAYOUT.toLocaleString()}. Lower your wager or mine count — a
+              full-clear cashout would exceed the cap.
+            </p>
           )}
 
           <p className="mines__hint">
@@ -532,6 +554,12 @@ export function Mines() {
                 </button>
                 <p className="mines__fairness-note">
                   Mine positions use 24 HMAC floats + Fisher-Yates (Stake Mines).
+                </p>
+                <p className="mines__fairness-note mines__fairness-note--disclosure">
+                  RTP disclosure: tile reveals are fair; the displayed 94.5% RTP
+                  is enforced by a deterministic bias roll (HMAC-SHA256, same
+                  seeds) that downgrades ~4.5% of would-be winning games. The
+                  bias is verifiable after you rotate your server seed.
                 </p>
               </div>
             )}

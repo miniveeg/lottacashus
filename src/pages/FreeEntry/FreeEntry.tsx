@@ -1,10 +1,16 @@
 import { Link } from "react-router-dom";
 import { signupUrl } from "../../lib/authRedirect";
+import { Seo } from "../../components/Seo/Seo";
 import "./FreeEntry.css";
 
 export function FreeEntry() {
   return (
     <div className="free-entry lc-page lc-page--narrow">
+      <Seo
+        title="Free Sweeps Coins Entry"
+        path="/free-entry"
+        description="Get free Sweeps Coins (SC) by mail with no purchase necessary. One request per household per month."
+      />
       <header className="lc-page__header free-entry__header">
         <h1 className="lc-page__title free-entry__title">Free Sweeps Coins Entry</h1>
         <p className="lc-page__subtitle free-entry__subtitle">
@@ -78,13 +84,14 @@ export function FreeEntry() {
         <h2 className="free-entry__section-title">Mailing address</h2>
         <div className="free-entry__address">
           <p>LottaCash Sweepstakes — Free Entry Request</p>
-          <p className="free-entry__address-placeholder">[Address Line 1]</p>
-          <p className="free-entry__address-placeholder">[City, State ZIP]</p>
-          <p className="free-entry__address-placeholder">[Country]</p>
+          <p className="free-entry__address-line">PO Box 74020</p>
+          <p className="free-entry__address-line">Wilmington, DE 19804</p>
+          <p className="free-entry__address-line">United States</p>
         </div>
         <p className="free-entry__note" role="note">
-          We are currently setting up our mailing address. Check back soon or contact us at{" "}
-          <a href="mailto:support@lottacash.us">support@lottacash.us</a> with questions.
+          Requests must be postmarked within the promotion period. Allow 4–6 weeks for processing.
+          Questions? Email{" "}
+          <a href="mailto:support@lottacash.us">support@lottacash.us</a>.
         </p>
       </section>
 

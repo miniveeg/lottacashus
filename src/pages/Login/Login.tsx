@@ -5,6 +5,7 @@ import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { analytics } from "../../lib/analytics";
+import { Seo } from "../../components/Seo/Seo";
 import "../../components/BrandLogo/BrandLogo.css";
 import "../Auth/Auth.css";
 
@@ -66,6 +67,7 @@ export function Login() {
 
   return (
     <div className="auth-page lc-page--auth">
+      <Seo title="Log in" path="/login" noindex />
       <div className="auth-card">
         <BrandLogo className="auth-card__logo" size={72} />
         <h1 className="auth-card__title">Welcome back</h1>

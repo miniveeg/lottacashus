@@ -1,6 +1,8 @@
 /**
- * Case Battles v2 — Create battle
- * Pick gamemode, player mode, cases, borrow %.
+ * Case Battles v2 — Create battle (Diceblox-style)
+ * - "Add Cases" button opens a modal picker
+ * - GC/SC coin toggle
+ * - Mode dropdown + Crazy toggle + Borrow toggle + game type buttons
  */
 
 import { useState, useMemo } from "react";
@@ -9,11 +11,14 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { Seo } from "../../components/Seo/Seo";
 import { createCaseBattle } from "./caseBattlesApi";
-import { GAMEMODES, playerModeOptions, gamemodeLabelWithCrazy, type BattleGamemode } from "./types";
+import { GAMEMODES, playerModeOptions, type BattleGamemode } from "./types";
 import { CASE_CATALOG, getCaseById } from "../../lib/games/case-battles";
-import { formatCoins } from "../../lib/format";
+import { formatCoins, formatCoinsWithUsd } from "../../lib/format";
 import { entryAfterBorrow } from "../../lib/games/case-battles/config";
+import { Plus, X, Search, ChevronDown } from "lucide-react";
 import "./CaseBattlesV2.css";
+
+type SortKey = "popular" | "price-high" | "price-low" | "newest";
 
 export function CaseBattlesCreateV2() {
   const navigate = useNavigate();
@@ -24,11 +29,16 @@ export function CaseBattlesCreateV2() {
   const [playerMode, setPlayerMode] = useState("1v1");
   const [caseIds, setCaseIds] = useState<string[]>([]);
   const [borrowPercent, setBorrowPercent] = useState(0);
+  const [coinType, setCoinType] = useState<"balance" | "sweeps_coins">("balance");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const [showCaseModal, setShowCaseModal] = useState(false);
 
-  const balance = profile?.balance ?? 0;
+  // Modal state
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortKey>("popular");
+
+  const balance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
   const entryCost = useMemo(
     () => caseIds.reduce((sum, id) => sum + (getCaseById(id)?.price ?? 0), 0),
     [caseIds],
@@ -39,18 +49,32 @@ export function CaseBattlesCreateV2() {
   const pModes = playerModeOptions(gamemode);
   const canBeCrazy = GAMEMODES.find((g) => g.id === gamemode)?.canBeCrazy ?? false;
 
-  const filteredCases = useMemo(() => {
+  const sortedCases = useMemo(() => {
+    let list = [...CASE_CATALOG];
     const q = search.trim().toLowerCase();
-    if (!q) return CASE_CATALOG;
-    return CASE_CATALOG.filter((c) => c.name.toLowerCase().includes(q));
-  }, [search]);
+    if (q) list = list.filter((c) => c.name.toLowerCase().includes(q));
+    switch (sort) {
+      case "price-high": list.sort((a, b) => b.price - a.price); break;
+      case "price-low": list.sort((a, b) => a.price - b.price); break;
+      case "newest": list.reverse(); break;
+      default: break; // popular = catalog order
+    }
+    return list;
+  }, [search, sort]);
 
-  function toggleCase(id: string) {
+  function addCase(id: string) {
     setCaseIds((prev) => {
-      if (prev.includes(id)) return prev.filter((c) => c !== id);
       if (prev.length >= 50) return prev;
       return [...prev, id];
     });
+  }
+
+  function removeCase(index: number) {
+    setCaseIds((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function clearCases() {
+    setCaseIds([]);
   }
 
   async function handleCreate() {
@@ -62,6 +86,7 @@ export function CaseBattlesCreateV2() {
       playerMode,
       caseIds,
       entryCost,
+      coinType,
       borrowPercent,
     });
     setBusy(false);
@@ -72,152 +97,251 @@ export function CaseBattlesCreateV2() {
     }
   }
 
+  const coinLabel = coinType === "sweeps_coins" ? "SC" : "GC";
+
   return (
     <div className="cb-create lc-page">
       <Seo title="Create Case Battle" path="/case-battles/create" noindex />
-      <header className="cb-create__header">
-        <h1 className="cb-create__title">Create a battle</h1>
-      </header>
 
-      {/* Gamemode picker */}
-      <section className="cb-create__section">
-        <h2 className="cb-create__section-title">Game mode</h2>
-        <div className="cb-create__modes">
-          {GAMEMODES.map((mode) => (
-            <button
-              key={mode.id}
-              type="button"
-              className={"cb-mode-card" + (gamemode === mode.id ? " cb-mode-card--active" : "")}
-              onClick={() => {
-                setGamemode(mode.id);
-                if (!mode.canBeCrazy) setCrazy(false);
-                const opts = playerModeOptions(mode.id);
-                if (!opts.find((o) => o.id === playerMode)) {
-                  setPlayerMode(opts[0]!.id);
-                }
-              }}
-            >
-              <span className="cb-mode-card__icon">{mode.icon}</span>
-              <span className="cb-mode-card__name">{mode.name}</span>
-              <span className="cb-mode-card__desc">{mode.description}</span>
-            </button>
-          ))}
+      {/* Top bar: exit + title */}
+      <div className="cb-create__topbar">
+        <button type="button" className="cb-create__exit" onClick={() => navigate("/case-battles")}>
+          ← Exit
+        </button>
+        <h1 className="cb-create__title">Create Battle</h1>
+      </div>
+
+      {/* Settings bar */}
+      <div className="cb-create__settings">
+        {/* Player mode dropdown */}
+        <div className="cb-create__setting">
+          <label>Mode</label>
+          <div className="cb-create__dropdown">
+            <select value={playerMode} onChange={(e) => setPlayerMode(e.target.value)}>
+              {pModes.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
+            <ChevronDown size={14} aria-hidden />
+          </div>
         </div>
-        {/* Crazy toggle — only for Standard, Terminal, Jackpot (not Group) */}
+
+        {/* Game type buttons */}
+        <div className="cb-create__setting">
+          <label>Type</label>
+          <div className="cb-create__types">
+            {GAMEMODES.map((mode) => (
+              <button
+                key={mode.id}
+                type="button"
+                className={"cb-type-btn" + (gamemode === mode.id ? " cb-type-btn--active" : "")}
+                onClick={() => {
+                  setGamemode(mode.id);
+                  if (!mode.canBeCrazy) setCrazy(false);
+                  const opts = playerModeOptions(mode.id);
+                  if (!opts.find((o) => o.id === playerMode)) setPlayerMode(opts[0]!.id);
+                }}
+                title={mode.description}
+              >
+                {mode.icon} {mode.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Coin toggle */}
+        <div className="cb-create__setting">
+          <label>Coin</label>
+          <div className="cb-create__coin-toggle">
+            <button
+              type="button"
+              className={coinType === "balance" ? "cb-coin-btn cb-coin-btn--active" : "cb-coin-btn"}
+              onClick={() => setCoinType("balance")}
+            >
+              GC
+            </button>
+            <button
+              type="button"
+              className={coinType === "sweeps_coins" ? "cb-coin-btn cb-coin-btn--active" : "cb-coin-btn"}
+              onClick={() => setCoinType("sweeps_coins")}
+            >
+              SC
+            </button>
+          </div>
+        </div>
+
+        {/* Crazy toggle */}
         {canBeCrazy && (
+          <div className="cb-create__setting">
+            <label>Crazy</label>
+            <button
+              type="button"
+              className={"cb-toggle" + (crazy ? " cb-toggle--on" : "")}
+              onClick={() => setCrazy(!crazy)}
+              aria-pressed={crazy}
+            >
+              <span className="cb-toggle__knob" />
+            </button>
+          </div>
+        )}
+
+        {/* Borrow toggle */}
+        <div className="cb-create__setting">
+          <label>Borrow</label>
           <button
             type="button"
-            className={"cb-crazy-toggle" + (crazy ? " cb-crazy-toggle--active" : "")}
-            onClick={() => setCrazy(!crazy)}
-            aria-pressed={crazy}
+            className={"cb-toggle" + (borrowPercent > 0 ? " cb-toggle--on" : "")}
+            onClick={() => setBorrowPercent(borrowPercent > 0 ? 0 : 50)}
+            aria-pressed={borrowPercent > 0}
           >
-            <span className="cb-crazy-toggle__icon">🤪</span>
-            <div className="cb-crazy-toggle__text">
-              <span className="cb-crazy-toggle__label">Crazy Mode</span>
-              <span className="cb-crazy-toggle__desc">
-                {gamemode === "standard" && "Lowest total value wins"}
-                {gamemode === "terminal" && "Lowest last round value wins"}
-                {gamemode === "jackpot" && "Lowest pulled has highest win chance"}
-              </span>
-            </div>
+            <span className="cb-toggle__knob" />
           </button>
+          {borrowPercent > 0 && (
+            <span className="cb-create__borrow-pct">{borrowPercent}%</span>
+          )}
+        </div>
+      </div>
+
+      {/* Case area */}
+      <div className="cb-create__case-area">
+        {caseIds.length === 0 ? (
+          <button type="button" className="cb-create__add-cases-btn" onClick={() => setShowCaseModal(true)}>
+            <Plus size={24} />
+            <span>Add Cases</span>
+          </button>
+        ) : (
+          <>
+            <div className="cb-create__case-list-header">
+              <span>{caseIds.length} cases · {formatCoins(entryCost, coinType)}</span>
+              <div className="cb-create__case-list-actions">
+                <button type="button" className="cb-create__small-btn" onClick={() => setShowCaseModal(true)}>
+                  + Add more
+                </button>
+                <button type="button" className="cb-create__small-btn cb-create__small-btn--danger" onClick={clearCases}>
+                  Clear
+                </button>
+              </div>
+            </div>
+            <div className="cb-create__case-list">
+              {caseIds.map((id, i) => {
+                const c = getCaseById(id);
+                return (
+                  <div key={i} className="cb-create__case-item">
+                    <span className="cb-create__case-item-name">{c?.name ?? id}</span>
+                    <span className="cb-create__case-item-price">${c?.price.toFixed(2) ?? "?"}</span>
+                    <button type="button" className="cb-create__case-remove" onClick={() => removeCase(i)}>
+                      <X size={14} />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
-      </section>
+      </div>
 
-      {/* Player mode picker */}
-      <section className="cb-create__section">
-        <h2 className="cb-create__section-title">Players</h2>
-        <div className="cb-create__pmodes">
-          {pModes.map((mode) => (
-            <button
-              key={mode.id}
-              type="button"
-              className={"cb-pmode" + (playerMode === mode.id ? " cb-pmode--active" : "")}
-              onClick={() => setPlayerMode(mode.id)}
-            >
-              {mode.label}
-            </button>
-          ))}
+      {/* Bottom: summary + create button */}
+      <div className="cb-create__bottom">
+        <div className="cb-create__summary-bar">
+          <div className="cb-create__summary-item">
+            <span className="cb-create__summary-label">Entry</span>
+            <span className="cb-create__summary-value">{formatCoins(actualEntry, coinType)}</span>
+          </div>
+          <div className="cb-create__summary-item">
+            <span className="cb-create__summary-label">Balance</span>
+            <span className="cb-create__summary-value">{formatCoins(balance, coinType)}</span>
+          </div>
+          <div className="cb-create__summary-item">
+            <span className="cb-create__summary-label">Cases</span>
+            <span className="cb-create__summary-value">{caseIds.length}/50</span>
+          </div>
         </div>
-      </section>
-
-      {/* Case picker */}
-      <section className="cb-create__section">
-        <h2 className="cb-create__section-title">
-          Cases ({caseIds.length}/50)
-        </h2>
-        <input
-          type="search"
-          className="cb-create__search"
-          placeholder="Search cases…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <div className="cb-create__case-grid">
-          {filteredCases.slice(0, 100).map((lootCase) => {
-            const count = caseIds.filter((id) => id === lootCase.id).length;
-            return (
-              <button
-                key={lootCase.id}
-                type="button"
-                className={"cb-case-card" + (count > 0 ? " cb-case-card--selected" : "")}
-                onClick={() => toggleCase(lootCase.id)}
-              >
-                {count > 0 && <span className="cb-case-card__count">{count}</span>}
-                <span className="cb-case-card__name">{lootCase.name}</span>
-                <span className="cb-case-card__price">${lootCase.price.toFixed(2)}</span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Borrow slider */}
-      <section className="cb-create__section">
-        <h2 className="cb-create__section-title">Borrow</h2>
-        <div className="cb-create__borrow">
-          <input
-            type="range"
-            min="0"
-            max="80"
-            step="10"
-            value={borrowPercent}
-            onChange={(e) => setBorrowPercent(Number(e.target.value))}
-          />
-          <span className="cb-create__borrow-value">{borrowPercent}%</span>
-          <p className="cb-create__borrow-hint">
-            Borrow up to 80% of the entry cost. You keep only {100 - borrowPercent}% of winnings on the borrowed portion.
-          </p>
-        </div>
-      </section>
-
-      {/* Summary + create */}
-      <section className="cb-create__summary">
-        <div className="cb-create__summary-row">
-          <span>Entry cost</span>
-          <span>{formatCoins(entryCost, "balance")}</span>
-        </div>
-        <div className="cb-create__summary-row">
-          <span>After borrow</span>
-          <span>{formatCoins(actualEntry, "balance")}</span>
-        </div>
-        <div className="cb-create__summary-row">
-          <span>Your balance</span>
-          <span>{formatCoins(balance, "balance")}</span>
-        </div>
-        {actualEntry > balance && (
-          <p className="cb-create__insufficient">Insufficient balance</p>
-        )}
         {error && <p className="cb-create__error" role="alert">{error}</p>}
+        {actualEntry > balance && <p className="cb-create__error">Insufficient {coinLabel} balance</p>}
         <button
           type="button"
           className="cb-btn cb-btn--primary cb-create__submit"
           onClick={handleCreate}
           disabled={!canCreate}
         >
-          {busy ? "Creating…" : `Create battle (${formatCoins(actualEntry, "balance")})`}
+          {busy ? "Creating…" : `Create Battle (${formatCoins(actualEntry, coinType)})`}
         </button>
-      </section>
+      </div>
+
+      {/* Case picker modal */}
+      {showCaseModal && (
+        <div className="cb-modal-overlay" onClick={() => setShowCaseModal(false)}>
+          <div className="cb-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="cb-modal__header">
+              <h2>Add Cases</h2>
+              <button type="button" className="cb-modal__close" onClick={() => setShowCaseModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="cb-modal__controls">
+              <div className="cb-modal__search">
+                <Search size={16} aria-hidden />
+                <input
+                  type="search"
+                  placeholder="Search cases…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="cb-modal__sort">
+                <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+                  <option value="popular">Most Popular</option>
+                  <option value="price-high">Highest Price</option>
+                  <option value="price-low">Lowest Price</option>
+                  <option value="newest">Newest</option>
+                </select>
+                <ChevronDown size={14} aria-hidden />
+              </div>
+            </div>
+            <div className="cb-modal__grid">
+              {sortedCases.slice(0, 200).map((lootCase) => {
+                const count = caseIds.filter((id) => id === lootCase.id).length;
+                return (
+                  <button
+                    key={lootCase.id}
+                    type="button"
+                    className={"cb-modal__case-card" + (count > 0 ? " cb-modal__case-card--selected" : "")}
+                    onClick={() => addCase(lootCase.id)}
+                    disabled={caseIds.length >= 50}
+                  >
+                    {count > 0 && <span className="cb-modal__case-count">{count}</span>}
+                    <div className="cb-modal__case-thumb" style={{ background: lootCase.accent ?? "var(--lc-bg-active)" }}>
+                      {lootCase.name.charAt(0)}
+                    </div>
+                    <span className="cb-modal__case-name">{lootCase.name}</span>
+                    <span className="cb-modal__case-price">{formatCoins(lootCase.price, coinType)}</span>
+                    <span className="cb-modal__case-add">+ Add</span>
+                  </button>
+                );
+              })}
+            </div>
+            <div className="cb-modal__footer">
+              <div className="cb-modal__footer-info">
+                <span>{caseIds.length} cases</span>
+                <span className="cb-modal__footer-total">{formatCoins(entryCost, coinType)}</span>
+              </div>
+              <div className="cb-modal__footer-actions">
+                <button type="button" className="cb-btn cb-btn--ghost" onClick={() => setShowCaseModal(false)}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="cb-btn cb-btn--primary"
+                  onClick={() => setShowCaseModal(false)}
+                  disabled={caseIds.length === 0}
+                >
+                  Add Cases ({caseIds.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

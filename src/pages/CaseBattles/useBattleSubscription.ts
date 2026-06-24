@@ -128,6 +128,7 @@ export function useLobbySubscription() {
         caseIds: (row.case_ids as string[]) ?? [],
         rounds: Number(row.rounds),
         entryCost: Number(row.entry_cost),
+        coinType: (row.coin_type as "balance" | "sweeps_coins") ?? "balance",
         borrowPercent: Number(row.borrow_percent ?? 0),
         potTotal: Number(row.pot_total ?? 0),
         status: row.status as CaseBattleView["status"],

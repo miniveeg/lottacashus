@@ -21,6 +21,7 @@ function parseBattle(row: Record<string, unknown>): CaseBattleView {
     caseIds: (row.case_ids as string[]) ?? [],
     rounds: Number(row.rounds),
     entryCost: Number(row.entry_cost),
+    coinType: (row.coin_type as "balance" | "sweeps_coins") ?? "balance",
     borrowPercent: Number(row.borrow_percent ?? 0),
     potTotal: Number(row.pot_total ?? 0),
     status: String(row.status) as CaseBattleView["status"],
@@ -125,6 +126,7 @@ export async function createCaseBattle(params: {
   playerMode: string;
   caseIds: string[];
   entryCost: number;
+  coinType: "balance" | "sweeps_coins";
   borrowPercent: number;
 }): Promise<{ data: string | null; error: string | null }> {
   if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
@@ -134,6 +136,7 @@ export async function createCaseBattle(params: {
     p_player_mode: params.playerMode,
     p_case_ids: params.caseIds,
     p_entry_cost: params.entryCost,
+    p_coin_type: params.coinType,
     p_borrow_percent: params.borrowPercent,
   });
   if (error) return { data: null, error: error.message };

@@ -27,6 +27,7 @@ create table public.case_battles (
   case_ids        text[] not null,               -- ordered list of case IDs (one per round)
   rounds          int not null check (rounds between 1 and 50),
   entry_cost      numeric(12,2) not null,
+  coin_type       text not null default 'balance' check (coin_type in ('balance','sweeps_coins')),
   borrow_percent  int not null default 0 check (borrow_percent between 0 and 80),
 
   -- Live state
@@ -115,6 +116,7 @@ create or replace function public.cb_create_battle(
   p_player_mode text,
   p_case_ids text[],
   p_entry_cost numeric,
+  p_coin_type text,
   p_borrow_percent int
 )
 returns uuid
@@ -140,14 +142,14 @@ begin
   select username into v_username from public.profiles where id = v_uid;
   if v_username is null then v_username := 'Player'; end if;
 
-  insert into public.case_battles (creator_id, gamemode, crazy, player_mode, max_players, case_ids, rounds, entry_cost, borrow_percent, pot_total)
+  insert into public.case_battles (creator_id, gamemode, crazy, player_mode, max_players, case_ids, rounds, entry_cost, coin_type, borrow_percent, pot_total)
   values (v_uid, p_gamemode, p_crazy, p_player_mode,
     case p_player_mode
       when '1v1' then 2 when '1v1v1' then 3 when '1v1v1v1' then 4
       when '2v2' then 4 when '2v2v2' then 6 when '3v3' then 6
       when '2p' then 2 when '3p' then 3 when '4p' then 4
       else 2 end,
-    p_case_ids, v_rounds, p_entry_cost, p_borrow_percent, p_entry_cost)
+    p_case_ids, v_rounds, p_entry_cost, coalesce(p_coin_type, 'balance'), p_borrow_percent, p_entry_cost)
   returning id into v_id;
 
   insert into public.case_battle_players (battle_id, user_id, slot, username)
@@ -156,8 +158,8 @@ begin
   return v_id;
 end;
 $$;
-revoke all on function public.cb_create_battle(text,boolean,text,text[],numeric,int) from public;
-grant execute on function public.cb_create_battle(text,boolean,text,text[],numeric,int) to authenticated;
+revoke all on function public.cb_create_battle(text,boolean,text,text[],numeric,text,int) from public;
+grant execute on function public.cb_create_battle(text,boolean,text,text[],numeric,text,int) to authenticated;
 
 -- cb_join_battle: joins an open battle as the next available slot
 create or replace function public.cb_join_battle(p_battle_id uuid)

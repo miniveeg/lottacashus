@@ -77,7 +77,7 @@ export function CaseBattlesRoomV2() {
   const myPlayer = battle.players.find((p) => p.userId === user?.id);
   const isWaiting = battle.status === "waiting";
   const isCompleted = battle.status === "completed";
-  const canStart = isWaiting && isCreator && battle.players.length >= 2;
+  const canStart = isWaiting && isCreator && battle.players.length >= battle.maxPlayers;
   const canJoin = isWaiting && !myPlayer;
   const canAddBot = isWaiting && isCreator && battle.players.length < battle.maxPlayers;
   const myPayout = myPlayer ? calculatePayoutForSlot(battle, myPlayer.slot) : 0;
@@ -159,8 +159,8 @@ export function CaseBattlesRoomV2() {
               Start battle
             </button>
           )}
-          {isCreator && !canStart && battle.players.length < 2 && (
-            <p className="cb-room__hint">Need at least 2 players to start. Add a bot!</p>
+          {isCreator && !canStart && battle.players.length < battle.maxPlayers && (
+            <p className="cb-room__hint">Need all {battle.maxPlayers} slots filled to start. Add bots!</p>
           )}
         </div>
       )}

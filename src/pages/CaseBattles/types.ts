@@ -41,6 +41,7 @@ export type CaseBattleView = {
   caseIds: string[];
   rounds: number;
   entryCost: number;
+  coinType: "balance" | "sweeps_coins";
   borrowPercent: number;
   potTotal: number;
   status: BattleStatus;

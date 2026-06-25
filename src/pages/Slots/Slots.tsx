@@ -14,10 +14,10 @@ import { Seo } from "../../components/Seo/Seo";
 import "../../styles/game-controls.css";
 import "./Slots.css";
 
-const REVEAL_DELAY_MS = 1200;
+const REVEAL_DELAY_MS = 2000;
 // Per-reel landing stagger — each reel stops shortly after the previous one
 // for a satisfying left-to-right settle effect.
-const REEL_STOP_STAGGER_MS = 180;
+const REEL_STOP_STAGGER_MS = 280;
 // Symbol cycle rate during the spin animation. Lower = faster visual flicker.
 const SYMBOL_CYCLE_MS = 55;
 
@@ -113,7 +113,7 @@ export default function Slots() {
         setWager(1);
         setWagerInput("1");
       } else {
-        const clamped = Math.min(Math.max(parsed, 1), 100000);
+        const clamped = Math.min(Math.max(parsed, 1), coinType === "sweeps_coins" ? 100_000 : 10_000_000);
         setWager(clamped);
         setWagerInput(String(clamped));
       }

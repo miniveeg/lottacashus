@@ -137,7 +137,8 @@ export function Keno() {
   };
 
   const applyWager = (value: number) => {
-    const v = Math.max(1, Math.min(100_000, value));
+    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -382,7 +383,7 @@ export function Keno() {
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
                   const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(100_000, activeBalance));
+                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
                 }}
                 disabled={drawing}
                 aria-label="Max bet"

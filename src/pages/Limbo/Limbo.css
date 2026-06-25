@@ -35,9 +35,9 @@
   }
 }
 
-.limbo__scene {
+.limbo__rocket-stage {
   width: 100%;
-  max-width: 420px;
+  max-width: 380px;
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
@@ -45,77 +45,78 @@
   overflow: hidden;
 }
 
-.limbo__scene-svg {
+.limbo__rocket-svg {
   width: 100%;
   height: auto;
   display: block;
 }
 
-/* The person is upright by default */
-.limbo__person {
-  transform-origin: 200px 160px;
-  transition: transform 0.5s ease;
+/* Rocket idle */
+.limbo__rocket {
+  transform-origin: 160px 120px;
+  transition: transform 0.4s ease;
 }
 
-/* While rolling — person leans back and ducks under the bar */
-.limbo__person--rolling {
-  animation: limbo-duck 1.4s ease-in-out infinite;
+/* Rocket flies up and left while rolling */
+.limbo__rocket--flying {
+  animation: limbo-rocket-fly 1.4s ease-in-out infinite;
 }
 
-@keyframes limbo-duck {
-  0%   { transform: translateX(-60px) rotate(0deg); }
-  30%  { transform: translateX(-20px) rotate(0deg); }
-  55%  { transform: translateX(20px)  rotate(35deg); }
-  80%  { transform: translateX(60px)  rotate(35deg); }
-  100% { transform: translateX(-60px) rotate(0deg); }
+@keyframes limbo-rocket-fly {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg); }
+  25%  { transform: translateY(-18px) translateX(-10px) rotate(-8deg); }
+  50%  { transform: translateY(-28px) translateX(0px) rotate(0deg); }
+  75%  { transform: translateY(-18px) translateX(10px) rotate(8deg); }
+  100% { transform: translateY(0) translateX(0) rotate(0deg); }
 }
 
-/* Win: person glides under the bar and raises arms in celebration */
-.limbo__person--win {
-  animation: limbo-win-slide 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+/* Win: rocket shoots off to the top right */
+.limbo__rocket--win {
+  animation: limbo-rocket-win 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
 }
 
-@keyframes limbo-win-slide {
-  0%   { transform: translateX(-60px) rotate(0deg); }
-  40%  { transform: translateX(0px)   rotate(38deg); }
-  70%  { transform: translateX(60px)  rotate(38deg); }
-  85%  { transform: translateX(60px)  rotate(0deg) translateY(-8px); }
-  100% { transform: translateX(60px)  rotate(0deg) translateY(0px); }
+@keyframes limbo-rocket-win {
+  0%   { transform: translateY(0) translateX(0) rotate(0deg); }
+  40%  { transform: translateY(-20px) translateX(10px) rotate(-15deg); }
+  100% { transform: translateY(-70px) translateX(80px) rotate(-30deg); opacity: 0; }
 }
 
-/* Loss: person walks into the bar and it falls */
-.limbo__person--loss {
-  animation: limbo-loss-walk 0.7s ease-out forwards;
+/* Loss: rocket drops */
+.limbo__rocket--loss {
+  animation: limbo-rocket-loss 0.7s ease-in forwards;
 }
 
-@keyframes limbo-loss-walk {
-  0%   { transform: translateX(-40px) rotate(0deg); }
-  40%  { transform: translateX(0px)   rotate(0deg); }
-  55%  { transform: translateX(0px)   rotate(-12deg); }
-  75%  { transform: translateX(-8px)  rotate(10deg); }
-  100% { transform: translateX(-8px)  rotate(0deg); }
+@keyframes limbo-rocket-loss {
+  0%   { transform: translateY(0) rotate(0deg); }
+  30%  { transform: translateY(5px) rotate(10deg); }
+  100% { transform: translateY(40px) rotate(45deg); opacity: 0.2; }
 }
 
-/* Bar drops on loss */
-.limbo__scene--loss .limbo__bar {
-  animation: limbo-bar-fall 0.5s 0.4s ease-in forwards;
+/* Flame flicker */
+.limbo__flame {
+  animation: limbo-flame 0.18s ease-in-out infinite alternate;
+}
+.limbo__flame-inner {
+  animation: limbo-flame-inner 0.22s ease-in-out infinite alternate;
 }
 
-@keyframes limbo-bar-fall {
-  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-  60%  { transform: translateY(40px) rotate(5deg); opacity: 0.8; }
-  100% { transform: translateY(70px) rotate(8deg); opacity: 0; }
+@keyframes limbo-flame {
+  from { transform: scaleY(1); opacity: 0.8; }
+  to   { transform: scaleY(1.3) scaleX(0.85); opacity: 1; }
+}
+@keyframes limbo-flame-inner {
+  from { transform: scaleY(1); }
+  to   { transform: scaleY(1.4) scaleX(0.9); }
 }
 
-/* Bar glows green on win */
-.limbo__scene--win .limbo__bar {
-  animation: limbo-bar-glow 0.6s ease-out;
+/* Target bar pulse when rolling */
+.limbo__rocket-stage--rolling .limbo__target-bar {
+  animation: limbo-bar-pulse 1s ease-in-out infinite;
 }
 
-@keyframes limbo-bar-glow {
-  0%   { filter: drop-shadow(0 0 0 rgba(0,232,122,0)); }
-  50%  { filter: drop-shadow(0 0 12px rgba(0,232,122,0.8)); }
-  100% { filter: drop-shadow(0 0 4px rgba(0,232,122,0.3)); }
+@keyframes limbo-bar-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%       { opacity: 1; }
 }
 
 .limbo__stage-panel {

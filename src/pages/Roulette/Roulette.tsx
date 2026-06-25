@@ -100,7 +100,8 @@ export function Roulette() {
   }, []);
 
   const applyWager = (value: number) => {
-    const v = Math.max(1, Math.min(100_000, value));
+    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -152,6 +153,13 @@ export function Roulette() {
     setHistory((h) =>
       [{ pocket: data.resultPocket, color: data.resultColor }, ...h].slice(0, HISTORY_MAX)
     );
+
+    // Wait for the wheel settle animation (4.2s CSS transition) before showing
+    // the result banner and crediting the balance, so the player sees the
+    // outcome exactly when the wheel lands.
+    await wait(4400);
+    if (cancelledRef.current) return;
+
     setLastResult({
       pocket: data.resultPocket,
       color: data.resultColor,
@@ -322,7 +330,7 @@ export function Roulette() {
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
                   const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(100_000, activeBalance));
+                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
                 }}
                 disabled={spinning}
                 aria-label="Max bet"

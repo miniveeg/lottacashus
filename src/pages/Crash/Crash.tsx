@@ -15,9 +15,11 @@ import { truncateCrashMultiplier } from "../../lib/games/crash";
 import "../../styles/game-controls.css";
 import "./Crash.css";
 
-// Animation rate — multiplier grows ~3%/frame at 60fps. Slower start gives
-// players a realistic window to cash out at low multipliers like 1.01x–1.10x.
-const ANIMATION_GROWTH = 1.003;
+// Animation uses a smooth curve that starts VERY slow near 1.00x and
+// gradually accelerates — exactly like a real crash game.
+// e^(k * t^1.6): at t=5s → ~1.11x, t=10s → ~1.37x, t=20s → ~2.6x, t=35s → ~10x
+const CRASH_SPEED_K = 0.008;
+const CRASH_SPEED_EXP = 1.6;
 const CANVAS_BASE_WIDTH = 600;
 const CANVAS_BASE_HEIGHT = 320;
 
@@ -88,7 +90,8 @@ export function Crash() {
   }, [user, loadPf]);
 
   const applyWager = (value: number) => {
-    const v = Math.max(1, Math.min(100_000, value));
+    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -103,7 +106,7 @@ export function Crash() {
   // 100,000 / 1.01 ≈ 99,010), even a minimum (1.01×) cashout would exceed
   // it. We also warn the player about the cap so they understand the
   // server-side limit.
-  const CRASH_MAX_PAYOUT = 100_000;
+  const CRASH_MAX_PAYOUT = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
   const exceedsMaxPayout = wager > CRASH_MAX_PAYOUT / 1.01;
 
   /** Resolve theme color for the chart line so it stays consistent with the site palette. */
@@ -266,11 +269,23 @@ export function Crash() {
       if (phaseRef.current !== "running") return;
 
       const elapsed = (performance.now() - startTime) / 1000;
-      // Exponential growth — feels like a real crash multiplier.
-      const current = Math.pow(ANIMATION_GROWTH, elapsed * 60);
+      // Slow-start curve: e^(k * t^1.6) — near-flat for the first few seconds
+      // so players have a real window to cash out at 1.01x–1.10x, then ramps.
+      const current = Math.exp(CRASH_SPEED_K * Math.pow(elapsed, CRASH_SPEED_EXP));
       const truncated = truncateCrashMultiplier(current);
 
       if (truncated >= crashPt) {
+        // If a cashout is currently in-flight, don't visually crash yet —
+        // let the cashout response determine the outcome. The server is the
+        // source of truth; if the cashout failed, the error handler will
+        // show the crashed state.
+        if (cashingOutRef.current) {
+          // Keep the chart at the crash point but don't change phase
+          pts.push({ x: elapsed, y: crashPt });
+          drawGraph(ctx, w, h, pts, crashPt, false);
+          animRef.current = requestAnimationFrame(tick);
+          return;
+        }
         pts.push({ x: elapsed, y: crashPt });
         drawGraph(ctx, w, h, pts, crashPt, true);
         multiplierRef.current = crashPt;
@@ -403,13 +418,14 @@ export function Crash() {
 
     cashingOutRef.current = true;
     setCashingOut(true);
-    stopAnimation();
-    phaseRef.current = "idle";
 
     // Capture the multiplier from the ref (synchronously updated in tick) so
-    // the cashout value matches the latest drawn frame, not the stale state
-    // (which lags one render behind the canvas paint).
+    // the cashout value matches the latest drawn frame, not the stale state.
     const multAtClick = multiplierRef.current;
+
+    // NOTE: Do NOT stop animation or change phase yet — keep the chart running
+    // so the screen doesn't go black while we wait for the server. We'll stop
+    // after we get a response.
     const { data, error: cashErr } = await cashOutCrash({
       betId,
       cashedAtMultiplier: multAtClick,
@@ -418,15 +434,11 @@ export function Crash() {
 
     if (cashErr || !data) {
       if (cancelledRef.current) return;
+      // Stop animation now that we know the result
+      stopAnimation();
+      phaseRef.current = "idle";
       cashingOutRef.current = false;
       setCashingOut(false);
-      // The most common failure is that the bet already crashed server-side
-      // before the cashout was processed. Transition to the crashed state
-      // rather than restarting the animation from 1× (which was jarring and
-      // misleading — the chart would visibly climb again from the start). If
-      // the cashout actually succeeded despite the network error,
-      // refreshProfile() will reflect the updated balance.
-      phaseRef.current = "idle";
       displayPhaseRef.current = "crashed";
       setPhase("crashed");
       multiplierRef.current = crashPointRef.current;
@@ -442,6 +454,8 @@ export function Crash() {
       return;
     }
 
+    // Stop the animation now that we have the server result
+    stopAnimation();
     cashingOutRef.current = false;
     setCashingOut(false);
     phaseRef.current = "idle";
@@ -581,7 +595,7 @@ export function Crash() {
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
                   const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(100_000, activeBalance));
+                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
                 }}
                 disabled={phase === "running"}
                 aria-label="Max bet"

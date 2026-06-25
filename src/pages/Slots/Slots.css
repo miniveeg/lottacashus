@@ -73,31 +73,29 @@
   }
 }
 
-/* Spinning state — motion blur + subtle vibration for kinetic feel. */
+/* Spinning state — real vertical scroll strip animation */
 .slots__reel--rolling {
   border-color: var(--lc-gold);
   box-shadow: 0 0 20px var(--lc-gold-glow);
 }
 
 .slots__reel--rolling .slots__reel-inner {
-  animation: slots-reel-shake 0.18s linear infinite;
-  filter: blur(1.5px);
+  animation: slots-reel-scroll 0.15s linear infinite;
 }
 
-@keyframes slots-reel-shake {
-  0% { transform: translateY(-6%); }
-  50% { transform: translateY(6%); }
-  100% { transform: translateY(-6%); }
+@keyframes slots-reel-scroll {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-33.333%); }
 }
 
 /* Landed reel — quick settle bounce. */
 .slots__reel--landed .slots__reel-inner {
-  animation: slots-reel-land 0.32s cubic-bezier(0.25, 1.5, 0.5, 1) both;
+  animation: slots-reel-land 0.38s cubic-bezier(0.22, 1.4, 0.5, 1) both;
 }
 
 @keyframes slots-reel-land {
   0% { transform: translateY(-12%); }
-  60% { transform: translateY(4%); }
+  60% { transform: translateY(5%); }
   100% { transform: translateY(0); }
 }
 

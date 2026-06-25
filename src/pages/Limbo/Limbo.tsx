@@ -106,7 +106,8 @@ export function Limbo() {
   }, []);
 
   const applyWager = (value: number) => {
-    const v = Math.max(1, Math.min(100_000, value));
+    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -217,38 +218,31 @@ export function Limbo() {
 
       <div className="limbo__layout">
         <section className="limbo__stage-panel">
-          {/* Limbo character animation scene */}
-          <div className={`limbo__scene${rolling ? " limbo__scene--rolling" : ""}${lastResult?.won ? " limbo__scene--win" : lastResult && !lastResult.won ? " limbo__scene--loss" : ""}`} aria-hidden="true">
-            <svg className="limbo__scene-svg" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
-              {/* Ground */}
-              <line x1="20" y1="185" x2="380" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="2" />
-              {/* Left pole */}
-              <rect x="38" y="80" width="8" height="105" rx="4" fill="rgba(255,255,255,0.25)" />
-              {/* Right pole */}
-              <rect x="354" y="80" width="8" height="105" rx="4" fill="rgba(255,255,255,0.25)" />
-              {/* The bar — height adjusts based on target multiplier (higher target = lower bar) */}
-              <rect
-                className="limbo__bar"
-                x="38" y="115" width="324" height="6" rx="3"
-                fill={lastResult?.won ? "#00e87a" : lastResult && !lastResult.won ? "#ff3b5c" : "rgba(245,185,66,0.9)"}
-              />
-              {/* Stick figure person */}
-              <g className={`limbo__person${rolling ? " limbo__person--rolling" : ""}${lastResult?.won ? " limbo__person--win" : lastResult && !lastResult.won ? " limbo__person--loss" : ""}`}>
-                {/* Head */}
-                <circle cx="200" cy="88" r="11" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" />
-                {/* Body — leans back when going under */}
-                <line x1="200" y1="99" x2="200" y2="140" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
-                {/* Arms up */}
-                <line x1="200" y1="115" x2="178" y2="128" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
-                <line x1="200" y1="115" x2="222" y2="128" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
-                {/* Left leg */}
-                <line x1="200" y1="140" x2="182" y2="163" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
-                {/* Right leg */}
-                <line x1="200" y1="140" x2="218" y2="163" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
-                {/* Left foot */}
-                <line x1="182" y1="163" x2="172" y2="170" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" />
-                {/* Right foot */}
-                <line x1="218" y1="163" x2="228" y2="170" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" />
+          {/* Limbo — clean animated rocket/multiplier visual */}
+          <div className={`limbo__rocket-stage${rolling ? " limbo__rocket-stage--rolling" : ""}${lastResult?.won ? " limbo__rocket-stage--win" : lastResult && !lastResult.won ? " limbo__rocket-stage--loss" : ""}`} aria-hidden="true">
+            <svg className="limbo__rocket-svg" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg">
+              {/* Animated grid lines */}
+              <line x1="0" y1="140" x2="320" y2="140" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+              <line x1="0" y1="100" x2="320" y2="100" stroke="rgba(255,255,255,0.05)" strokeWidth="1"/>
+              <line x1="0" y1="60" x2="320" y2="60" stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
+              {/* Target bar */}
+              <g className="limbo__target-bar">
+                <line x1="20" y1="90" x2="300" y2="90" stroke={lastResult?.won ? "#22c55e" : lastResult && !lastResult.won ? "#ef4444" : "rgba(245,185,66,0.7)"} strokeWidth="2" strokeDasharray="8 4"/>
+                <text x="304" y="94" fill={lastResult?.won ? "#22c55e" : lastResult && !lastResult.won ? "#ef4444" : "rgba(245,185,66,0.85)"} fontSize="10" fontWeight="700" fontFamily="monospace">{target.toFixed(2)}×</text>
+              </g>
+              {/* Rocket */}
+              <g className={`limbo__rocket${rolling ? " limbo__rocket--flying" : ""}${lastResult?.won ? " limbo__rocket--win" : lastResult && !lastResult.won ? " limbo__rocket--loss" : ""}`}>
+                {/* Flame */}
+                <ellipse cx="160" cy="138" rx="7" ry="12" fill="rgba(251,146,60,0.85)" className="limbo__flame"/>
+                <ellipse cx="160" cy="136" rx="4" ry="7" fill="rgba(253,224,71,0.9)" className="limbo__flame-inner"/>
+                {/* Body */}
+                <ellipse cx="160" cy="112" rx="12" ry="20" fill="rgba(255,255,255,0.9)"/>
+                <ellipse cx="160" cy="95" rx="8" ry="10" fill="rgba(200,210,255,0.95)"/>
+                {/* Window */}
+                <circle cx="160" cy="108" r="5" fill="rgba(100,160,255,0.8)" stroke="rgba(255,255,255,0.5)" strokeWidth="1"/>
+                {/* Fins */}
+                <polygon points="148,128 140,142 148,135" fill="rgba(220,220,240,0.8)"/>
+                <polygon points="172,128 180,142 172,135" fill="rgba(220,220,240,0.8)"/>
               </g>
             </svg>
           </div>
@@ -395,7 +389,7 @@ export function Limbo() {
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
                   const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(100_000, activeBalance));
+                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
                 }}
                 disabled={rolling}
                 aria-label="Max bet"

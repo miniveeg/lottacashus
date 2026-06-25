@@ -145,7 +145,8 @@ export function Blackjack() {
   }, []);
 
   const applyWager = (value: number) => {
-    const v = Math.max(1, Math.min(100_000, value));
+    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -288,7 +289,7 @@ export function Blackjack() {
                   </p>
                   <div className="bj__cards">
                     {hand?.dealerCards.map((c, i) => (
-                      <CardView key={`d-${i}`} card={c} index={i} />
+                      <CardView key={`d-${i}-${c}`} card={c} index={i} />
                     ))}
                     {hiddenDealerSlots > 0 && <CardView hidden index={(hand?.dealerCards.length ?? 0)} />}
                   </div>
@@ -315,7 +316,7 @@ export function Blackjack() {
                         </p>
                         <div className="bj__cards">
                           {line.cards.map((c, i) => (
-                            <CardView key={`p-${index}-${i}`} card={c} index={i} />
+                            <CardView key={`p-${index}-${i}-${c}`} card={c} index={i} />
                           ))}
                         </div>
                       </div>
@@ -374,7 +375,7 @@ export function Blackjack() {
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
                   const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(100_000, activeBalance));
+                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
                 }}
                 disabled={playing || busy}
                 aria-label="Max bet"

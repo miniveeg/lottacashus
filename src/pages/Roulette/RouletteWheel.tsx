@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { RouletteColor } from "../../lib/games/roulette";
 import {
   EUROPEAN_WHEEL_ORDER,
   WHEEL_SEGMENT_DEG,
   pocketColorForWheel,
-  rotationForPocket,
 } from "./wheelOrder";
 
 const CX = 100;
@@ -50,49 +49,51 @@ const FILL: Record<RouletteColor, string> = {
 };
 
 export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
+  // Use proper refs for mutable values (not useState tuples used as refs)
+  const accumulatedRotationRef = useRef(0);
+  const prevResultPocketRef = useRef<number | null>(null);
+
   const [rotation, setRotation] = useState(0);
   const [settling, setSettling] = useState(false);
-  // Track accumulated rotations so the wheel always spins forward and
-  // lands on the correct pocket after a full multi-revolution spin.
-  const accumulatedRotation = useState(0);
-  const prevResultPocket = useState<number | null>(null);
-
-  const targetRotation = useMemo(() => {
-    if (resultPocket === null) return null;
-    // Each result spins at least 5 full rotations forward from wherever
-    // the wheel currently sits, then lands exactly on the target pocket.
-    const index = EUROPEAN_WHEEL_ORDER.indexOf(resultPocket as (typeof EUROPEAN_WHEEL_ORDER)[number]);
-    const idx = index >= 0 ? index : 0;
-    const segmentCenter = idx * WHEEL_SEGMENT_DEG + WHEEL_SEGMENT_DEG / 2;
-    const landAngle = (360 - segmentCenter) % 360;
-    // Round up so we always add at least 5 full turns forward
-    const currentBase = accumulatedRotation[0] % 360;
-    const delta = ((landAngle - currentBase) + 360) % 360;
-    return accumulatedRotation[0] + 5 * 360 + (delta === 0 ? 360 : delta);
-  }, [resultPocket]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [spinFrom, setSpinFrom] = useState(0);
 
   useEffect(() => {
     if (spinning) {
+      // Start spinning from current rotation
+      setSpinFrom(accumulatedRotationRef.current % 360);
       setSettling(false);
       return;
     }
-    if (targetRotation !== null && resultPocket !== prevResultPocket[0]) {
-      prevResultPocket[0] = resultPocket;
-      accumulatedRotation[0] = targetRotation;
+
+    // When spin stops, land on result pocket
+    if (resultPocket !== null && resultPocket !== prevResultPocketRef.current) {
+      prevResultPocketRef.current = resultPocket;
+
+      const index = EUROPEAN_WHEEL_ORDER.indexOf(
+        resultPocket as (typeof EUROPEAN_WHEEL_ORDER)[number]
+      );
+      const idx = index >= 0 ? index : 0;
+      const segmentCenter = idx * WHEEL_SEGMENT_DEG + WHEEL_SEGMENT_DEG / 2;
+      // The "land" angle is where the top of the wheel (pointer) needs to point
+      const landAngle = (360 - segmentCenter) % 360;
+      const currentBase = accumulatedRotationRef.current % 360;
+      const delta = ((landAngle - currentBase) + 360) % 360;
+      const targetRotation = accumulatedRotationRef.current + 5 * 360 + (delta === 0 ? 360 : delta);
+
+      accumulatedRotationRef.current = targetRotation;
       setSettling(true);
       setRotation(targetRotation);
     }
-  }, [spinning, targetRotation, resultPocket]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [spinning, resultPocket]);
 
   const hubColor = resultColor ?? "neutral";
   const hubNumber = spinning ? null : resultPocket;
-  const spinFrom = rotation % 360;
 
   return (
     <div className="roulette-wheel">
       <div className="roulette-wheel__rim" aria-hidden="true" />
       <div
-        className={`roulette-wheel__disc-wrap${spinning ? " roulette-wheel__disc-wrap--spinning" : ""}${settling ? " roulette-wheel__disc-wrap--settling" : ""}`}
+        className={`roulette-wheel__disc-wrap${spinning ? " roulette-wheel__disc-wrap--spinning" : ""}${settling && !spinning ? " roulette-wheel__disc-wrap--settling" : ""}`}
       >
         <div
           className="roulette-wheel__disc"

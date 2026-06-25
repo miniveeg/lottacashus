@@ -98,25 +98,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-sm);
+  background: radial-gradient(ellipse at 35% 35%, var(--lc-bg-hover) 0%, var(--lc-bg-elevated) 100%);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: 50%;
   color: var(--lc-text-secondary);
   font-family: var(--lc-font-display);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 2px 6px rgba(0,0,0,0.3);
   transition:
     border-color var(--lc-transition),
     background var(--lc-transition),
     color var(--lc-transition),
-    transform 0.12s ease;
+    transform 0.12s ease,
+    box-shadow var(--lc-transition);
 }
 
 .keno__cell:hover:not(:disabled) {
-  border-color: var(--lc-border-strong);
+  border-color: var(--lc-amber-dim);
   color: var(--lc-text-primary);
-  transform: translateY(-1px);
+  transform: translateY(-2px) scale(1.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 4px 12px rgba(0,0,0,0.4),
+    0 0 12px var(--lc-amber-glow);
 }
 
 .keno__cell:focus-visible {
@@ -125,30 +133,33 @@
 }
 
 .keno__cell--selected {
-  border-color: var(--lc-gold-dim);
-  background: rgba(245, 185, 66, 0.12);
-  color: var(--lc-gold);
+  border-color: var(--lc-amber);
+  background: radial-gradient(ellipse at 35% 35%, rgba(245,185,66,0.25) 0%, rgba(245,185,66,0.08) 100%);
+  color: var(--lc-amber);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 0 14px var(--lc-amber-glow),
+    0 2px 8px rgba(0,0,0,0.3);
 }
 
 .keno__cell--drawn:not(.keno__cell--hit) {
-  /* Drawn but not selected — ghosted circle with a subtle crimson ring
-     instead of just fading to 0.45 opacity. Audit issue P3 extra. */
+  /* Drawn but not selected — ghosted circle with a subtle crimson ring */
   opacity: 0.55;
   border-color: var(--lc-border-accent);
   background: rgba(220, 20, 60, 0.04);
   animation: keno-cell-drawn 0.25s ease-out;
-  /* Stagger delay based on draw order — set via --draw-index inline style.
-     Audit issue P3 #10. */
   animation-delay: calc(var(--draw-index, 0) * 0.1s);
 }
 
 .keno__cell--hit {
   border-color: var(--lc-emerald);
-  background: rgba(34, 197, 94, 0.15);
+  background: radial-gradient(ellipse at 35% 35%, rgba(34,197,94,0.3) 0%, rgba(34,197,94,0.1) 100%);
   color: var(--lc-emerald);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.1),
+    0 0 18px var(--lc-emerald-glow),
+    0 2px 8px rgba(0,0,0,0.3);
   animation: keno-cell-hit 0.4s cubic-bezier(0.34, 1.45, 0.64, 1);
-  /* Stagger delay so hits reveal sequentially like a live draw.
-     Audit issue P3 #10. */
   animation-delay: calc(var(--draw-index, 0) * 0.1s);
 }
 

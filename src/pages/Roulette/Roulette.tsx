@@ -20,7 +20,7 @@ import { RouletteWheel } from "./RouletteWheel";
 import "../../styles/game-controls.css";
 import "./Roulette.css";
 
-const SPIN_DELAY_MS = 1600;
+const SPIN_DELAY_MS = 4500;
 const HISTORY_MAX = 8;
 
 const BET_OPTIONS: {

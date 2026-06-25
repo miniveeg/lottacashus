@@ -217,6 +217,42 @@ export function Limbo() {
 
       <div className="limbo__layout">
         <section className="limbo__stage-panel">
+          {/* Limbo character animation scene */}
+          <div className={`limbo__scene${rolling ? " limbo__scene--rolling" : ""}${lastResult?.won ? " limbo__scene--win" : lastResult && !lastResult.won ? " limbo__scene--loss" : ""}`} aria-hidden="true">
+            <svg className="limbo__scene-svg" viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              {/* Ground */}
+              <line x1="20" y1="185" x2="380" y2="185" stroke="rgba(255,255,255,0.12)" strokeWidth="2" />
+              {/* Left pole */}
+              <rect x="38" y="80" width="8" height="105" rx="4" fill="rgba(255,255,255,0.25)" />
+              {/* Right pole */}
+              <rect x="354" y="80" width="8" height="105" rx="4" fill="rgba(255,255,255,0.25)" />
+              {/* The bar — height adjusts based on target multiplier (higher target = lower bar) */}
+              <rect
+                className="limbo__bar"
+                x="38" y="115" width="324" height="6" rx="3"
+                fill={lastResult?.won ? "#00e87a" : lastResult && !lastResult.won ? "#ff3b5c" : "rgba(245,185,66,0.9)"}
+              />
+              {/* Stick figure person */}
+              <g className={`limbo__person${rolling ? " limbo__person--rolling" : ""}${lastResult?.won ? " limbo__person--win" : lastResult && !lastResult.won ? " limbo__person--loss" : ""}`}>
+                {/* Head */}
+                <circle cx="200" cy="88" r="11" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" />
+                {/* Body — leans back when going under */}
+                <line x1="200" y1="99" x2="200" y2="140" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
+                {/* Arms up */}
+                <line x1="200" y1="115" x2="178" y2="128" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
+                <line x1="200" y1="115" x2="222" y2="128" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
+                {/* Left leg */}
+                <line x1="200" y1="140" x2="182" y2="163" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
+                {/* Right leg */}
+                <line x1="200" y1="140" x2="218" y2="163" stroke="rgba(255,255,255,0.85)" strokeWidth="2.5" strokeLinecap="round" />
+                {/* Left foot */}
+                <line x1="182" y1="163" x2="172" y2="170" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" />
+                {/* Right foot */}
+                <line x1="218" y1="163" x2="228" y2="170" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" />
+              </g>
+            </svg>
+          </div>
+
           <div
             className={`limbo__display${rolling ? " limbo__display--rolling" : ""}${lastResult?.won ? " limbo__display--win" : lastResult && !lastResult.won ? " limbo__display--loss" : ""}`}
             aria-live="polite"

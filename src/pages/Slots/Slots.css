@@ -1,10 +1,10 @@
 .slots {
-  --slot-reel-size: 80px;
+  --slot-reel-size: 110px;
 }
 
 @media (min-width: 600px) {
   .slots {
-    --slot-reel-size: 100px;
+    --slot-reel-size: 150px;
   }
 }
 
@@ -56,9 +56,9 @@
   display: grid;
   place-items: center;
   background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border-strong);
+  border: 2px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-lg);
-  font-size: 2.2rem;
+  font-size: 3rem;
   font-family: var(--lc-font-mono);
   font-weight: 800;
   color: var(--lc-text-primary);
@@ -69,7 +69,7 @@
 
 @media (min-width: 600px) {
   .slots__reel {
-    font-size: 2.8rem;
+    font-size: 4rem;
   }
 }
 

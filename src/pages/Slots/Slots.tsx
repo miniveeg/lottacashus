@@ -414,6 +414,20 @@ export default function Slots() {
             </p>
           )}
 
+          {/* Always-visible paytable so players know what to aim for */}
+          <div className="slots__paytable" aria-label="Paytable">
+            <h4 className="slots__paytable-title">Paytable (3 of a kind)</h4>
+            <div className="slots__paytable-grid">
+              <span className="slots__paytable-row"><SlotSymbol id={6} size={22} /> Crown</span><span className="slots__paytable-mult slots__paytable-mult--top">100×</span>
+              <span className="slots__paytable-row"><SlotSymbol id={5} size={22} /> Star</span><span className="slots__paytable-mult">35×</span>
+              <span className="slots__paytable-row"><SlotSymbol id={2} size={22} /> Seven</span><span className="slots__paytable-mult">20×</span>
+              <span className="slots__paytable-row"><SlotSymbol id={3} size={22} /> Bar</span><span className="slots__paytable-mult">10×</span>
+              <span className="slots__paytable-row"><SlotSymbol id={4} size={22} /> Watermelon</span><span className="slots__paytable-mult">8×</span>
+              <span className="slots__paytable-row"><SlotSymbol id={1} size={22} /> Bell</span><span className="slots__paytable-mult">5×</span>
+              <span className="slots__paytable-row"><SlotSymbol id={0} size={22} /> Cherry</span><span className="slots__paytable-mult">3×</span>
+            </div>
+          </div>
+
           <button
             type="button"
             className="game-controls__play"

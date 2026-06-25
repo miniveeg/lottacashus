@@ -462,7 +462,7 @@
 }
 
 .roulette-wheel__disc-wrap--settling .roulette-wheel__disc {
-  transition: transform 1.2s cubic-bezier(0.15, 0.85, 0.25, 1);
+  transition: transform 4.2s cubic-bezier(0.12, 0.8, 0.18, 1);
 }
 
 @keyframes roulette-disc-spin {

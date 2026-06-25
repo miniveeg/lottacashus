@@ -15,8 +15,9 @@ import { truncateCrashMultiplier } from "../../lib/games/crash";
 import "../../styles/game-controls.css";
 import "./Crash.css";
 
-// Animation rate — multiplier grows ~9%/frame at 60fps (exponential, crash-like).
-const ANIMATION_GROWTH = 1.009;
+// Animation rate — multiplier grows ~3%/frame at 60fps. Slower start gives
+// players a realistic window to cash out at low multipliers like 1.01x–1.10x.
+const ANIMATION_GROWTH = 1.003;
 const CANVAS_BASE_WIDTH = 600;
 const CANVAS_BASE_HEIGHT = 320;
 
@@ -143,9 +144,16 @@ export function Crash() {
 
     const colors = resolveChartColor();
 
+    // Background subtle radial glow at origin
+    const bgGrad = ctx.createRadialGradient(pad, pad + graphH, 0, pad, pad + graphH, graphW * 0.6);
+    bgGrad.addColorStop(0, crashed ? "rgba(239,68,68,0.06)" : "rgba(34,197,94,0.05)");
+    bgGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, w, h);
+
     // Horizontal grid lines + labels
     ctx.beginPath();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
     ctx.lineWidth = 1;
     for (let i = 1; i < maxY; i++) {
       const y = mapY(i);
@@ -154,9 +162,29 @@ export function Crash() {
     }
     ctx.stroke();
 
+    // Vertical time grid lines (subtle)
+    ctx.beginPath();
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.025)";
+    ctx.lineWidth = 1;
+    const vDivisions = 4;
+    for (let vi = 1; vi < vDivisions; vi++) {
+      const vx = pad + (vi / vDivisions) * graphW;
+      ctx.moveTo(vx, pad);
+      ctx.lineTo(vx, pad + graphH);
+    }
+    ctx.stroke();
+
     if (pts.length === 0) return;
 
-    // Area fill under the line
+    // Area fill under the line — vertical gradient
+    const fillGrad = ctx.createLinearGradient(0, pad, 0, pad + graphH);
+    if (crashed) {
+      fillGrad.addColorStop(0, "rgba(239, 68, 68, 0.22)");
+      fillGrad.addColorStop(1, "rgba(239, 68, 68, 0.02)");
+    } else {
+      fillGrad.addColorStop(0, "rgba(34, 197, 94, 0.18)");
+      fillGrad.addColorStop(1, "rgba(34, 197, 94, 0.01)");
+    }
     ctx.beginPath();
     for (let i = 0; i < pts.length; i++) {
       const px = mapX(pts[i].x);
@@ -167,7 +195,7 @@ export function Crash() {
     ctx.lineTo(mapX(pts[pts.length - 1].x), pad + graphH);
     ctx.lineTo(mapX(pts[0].x), pad + graphH);
     ctx.closePath();
-    ctx.fillStyle = crashed ? "rgba(239, 68, 68, 0.10)" : colors.fill;
+    ctx.fillStyle = fillGrad;
     ctx.fill();
 
     // Chart line
@@ -184,13 +212,31 @@ export function Crash() {
     }
     ctx.stroke();
 
+    // Glowing dot at the tip of the line (only while running)
+    if (!crashed && pts.length > 1) {
+      const last = pts[pts.length - 1];
+      const tipX = mapX(last.x);
+      const tipY = mapY(last.y);
+      const glowGrad = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 12);
+      glowGrad.addColorStop(0, "rgba(34, 197, 94, 0.55)");
+      glowGrad.addColorStop(1, "rgba(34, 197, 94, 0)");
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 12, 0, Math.PI * 2);
+      ctx.fillStyle = glowGrad;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 4, 0, Math.PI * 2);
+      ctx.fillStyle = colors.line;
+      ctx.fill();
+    }
+
     // Y-axis labels
-    ctx.fillStyle = "rgba(255, 255, 255, 0.32)";
-    ctx.font = "11px system-ui, sans-serif";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+    ctx.font = "bold 11px system-ui, sans-serif";
     ctx.textBaseline = "middle";
     for (let i = 1; i < maxY; i++) {
       const y = mapY(i);
-      ctx.fillText(`${i}x`, 4, y);
+      ctx.fillText(`${i}×`, 4, y);
     }
   }
 

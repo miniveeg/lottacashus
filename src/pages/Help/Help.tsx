@@ -11,6 +11,24 @@ export function Help() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [query, setQuery] = useState("");
 
+  // FAQPage structured data — emitted as JSON-LD so search engines can render
+  // the questions as rich results. Built once from the canonical FAQ content.
+  const faqJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: FAQ_ITEMS.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.answer,
+        },
+      })),
+    }),
+    [],
+  );
+
   // Filter FAQ items by the search query (matches question OR answer).
   const filteredFaq = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -29,6 +47,7 @@ export function Help() {
         title="Help & FAQ"
         description="Answers to common LottaCash questions and the Terms of Service that govern your use of the platform."
         path="/help"
+        jsonLd={faqJsonLd}
       />
       <header className="lc-page__header help__header">
         <h1 className="lc-page__title help__title">Help &amp; FAQ</h1>

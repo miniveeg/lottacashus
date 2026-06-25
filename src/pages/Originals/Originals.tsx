@@ -118,7 +118,7 @@ export function Originals() {
           <span className="originals__stat-label">House games</span>
         </div>
         <div className="originals__stat">
-          <span className="originals__stat-num">94.5%</span>
+          <span className="originals__stat-num">96.5%</span>
           <span className="originals__stat-label">RTP (most games)</span>
         </div>
         <div className="originals__stat">

@@ -30,7 +30,7 @@ import "./Settings.css";
 
 export function Settings() {
   const { user, loading: authLoading } = useAuth();
-  const { profile, profileLoading, updateUsername, refreshProfile } = useProfile();
+  const { profile, profileLoading, updateUsername } = useProfile();
   const location = useLocation();
 
   // Scroll to the section named by the URL hash (e.g. /settings#responsible-gaming).

@@ -129,10 +129,6 @@ export function Mines() {
 
   const handleStart = async () => {
     if (busyRef.current) return;
-    if (!user) {
-      setError("Log in to play.");
-      return;
-    }
     const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (wager > activeBalance) {
       setError("Insufficient balance.");
@@ -295,14 +291,14 @@ export function Mines() {
     <div className="mines lc-game-page">
       <Seo
         title="Mines"
-        description="5×5 grid, 1–24 mines. Reveal gems to raise your multiplier — cash out anytime or risk it all. Provably fair, 94.5% RTP."
+        description="5×5 grid, 1–24 mines. Reveal gems to raise your multiplier — cash out anytime or risk it all. Provably fair, 96.5% RTP."
         path="/mines"
       />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Mines</h1>
         <p className="lc-page__subtitle">
           5×5 grid, 1–24 mines. Reveal gems to raise your multiplier — cash out anytime or risk it all.
-          Provably fair — 94.5% RTP.
+          Provably fair — 96.5% RTP.
         </p>
       </header>
 
@@ -471,7 +467,7 @@ export function Mines() {
               type="button"
               className="mines__bet-btn"
               onClick={handleStart}
-              disabled={busy || !user || exceedsMaxPayout}
+              disabled={busy || exceedsMaxPayout}
               aria-busy={busy}
             >
               {busy ? (
@@ -556,10 +552,11 @@ export function Mines() {
                   Mine positions use 24 HMAC floats + Fisher-Yates (Stake Mines).
                 </p>
                 <p className="mines__fairness-note mines__fairness-note--disclosure">
-                  RTP disclosure: tile reveals are fair; the displayed 94.5% RTP
-                  is enforced by a deterministic bias roll (HMAC-SHA256, same
-                  seeds) that downgrades ~4.5% of would-be winning games. The
-                  bias is verifiable after you rotate your server seed.
+                  RTP disclosure: tile reveals are fair; the 96.5% RTP is baked
+                  directly into the multiplier formula
+                  (0.965 × C(25,g) / C(25-m,g)) — no separate bias roll. The
+                  multiplier at each reveal count is verifiable after you
+                  rotate your server seed.
                 </p>
               </div>
             )}

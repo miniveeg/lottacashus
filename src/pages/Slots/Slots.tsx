@@ -171,7 +171,7 @@ export default function Slots() {
   }
 
   async function handleSpin() {
-    // Double-spin race guard: the Spin button's `disabled={rolling || !user}`
+    // Double-spin race guard: the Spin button's `disabled={rolling}`
     // prop prevents most double-clicks, but there's a sub-ms window between
     // the first click's setRolling(true) state commit and the second click's
     // handler execution. The ref closes that window synchronously.
@@ -180,11 +180,6 @@ export default function Slots() {
     setError(null);
     setShowResult(false);
     setLastResult(null);
-
-    if (!user) {
-      setError("Log in to play.");
-      return;
-    }
 
     if (activeBalance < wager) {
       setError("Insufficient balance.");
@@ -277,12 +272,12 @@ export default function Slots() {
     <div className="slots lc-game-page">
       <Seo
         title="Slots"
-        description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 100×, Star pays 35×. 94.5% RTP."
+        description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 100×, Star pays 35×. 96.5% RTP."
         path="/slots"
       />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Slots</h1>
-        <p className="lc-page__subtitle">Three reels. Match symbols to win. Crown pays 100×, Star pays 35×. 94.5% RTP.</p>
+        <p className="lc-page__subtitle">Three reels. Match symbols to win. Crown pays 100×, Star pays 35×. 96.5% RTP.</p>
       </header>
 
       <div className="slots__layout">
@@ -422,11 +417,11 @@ export default function Slots() {
           <button
             type="button"
             className="game-controls__play"
-            disabled={rolling || !user || exceedsMaxPayout}
+            disabled={rolling || exceedsMaxPayout}
             onClick={handleSpin}
-            aria-disabled={rolling || !user || exceedsMaxPayout}
+            aria-disabled={rolling || exceedsMaxPayout}
           >
-            {rolling ? "Spinning\u2026" : !user ? "Log in to play" : exceedsMaxPayout ? "Payout exceeds cap" : "Spin"}
+            {rolling ? "Spinning\u2026" : exceedsMaxPayout ? "Payout exceeds cap" : "Spin"}
           </button>
 
           {exceedsMaxPayout && (
@@ -476,7 +471,7 @@ export default function Slots() {
                   <span className="slots__paytable-row slots__paytable-row--cherry">2× Cherry</span><span className="slots__paytable-mult">2×</span>
                   <span className="slots__paytable-row slots__paytable-row--cherry">1× Cherry</span><span className="slots__paytable-mult">1×</span>
                 </div>
-                <p className="slots__paytable-rtp">Theoretical RTP: 94.75%</p>
+                <p className="slots__paytable-rtp">Theoretical RTP: 96.5%</p>
               </div>
               <label className="slots__fairness-label">
                 Server seed hash
@@ -519,7 +514,7 @@ export default function Slots() {
               </p>
               <p className="slots__fairness-note slots__fairness-note--disclosure">
                 RTP disclosure: the reel selection is fair (uniform 1/7 per symbol). The displayed
-                94.75% RTP comes directly from the paytable above &mdash; no additional bias roll is
+                96.5% RTP comes directly from the paytable above &mdash; no additional bias roll is
                 applied to Slots. Verifiable after seed rotation.
               </p>
             </div>

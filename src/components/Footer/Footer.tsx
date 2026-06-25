@@ -88,6 +88,9 @@ export function Footer() {
       </div>
 
       <div className="site-footer__bottom">
+        <p className="site-footer__entity">
+          Operated by LottaCash Entertainment LLC. Sweepstakes rules apply. Void where prohibited.
+        </p>
         <p className="site-footer__responsible">
           <span>Must be 18+ to play. Play responsibly.</span>
           <a

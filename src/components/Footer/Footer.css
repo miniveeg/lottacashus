@@ -80,6 +80,13 @@
   color: var(--lc-text-muted);
   text-decoration: none;
   font-size: var(--lc-text-sm);
+  /* WCAG 2.5.5: 44px touch target on mobile. The link itself is inline text,
+     so we pad it to meet the minimum. */
+  display: inline-block;
+  padding: 0.35rem 0;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   transition: color var(--lc-transition);
 }
 

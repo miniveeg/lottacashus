@@ -162,10 +162,6 @@ export function Blackjack() {
     // prop relies on a re-render cycle that leaves a sub-ms race window
     // between the first click's setBusy(true) commit and a second click.
     if (busyRef.current) return;
-    if (!user) {
-      setError("Log in to play.");
-      return;
-    }
     const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
@@ -265,13 +261,13 @@ export function Blackjack() {
     <div className="bj lc-game-page">
       <Seo
         title="Blackjack"
-        description="Classic 21 vs the dealer. Hit, stand, double, or split. Blackjack pays 3:2. Provably fair, 94.5% RTP."
+        description="Classic 21 vs the dealer. Hit, stand, double, or split. Blackjack pays 3:2. Provably fair, 96.5% RTP."
         path="/blackjack"
       />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Blackjack</h1>
         <p className="lc-page__subtitle">
-          Dealer hits soft 17. Blackjack pays 3:2. Split pairs and insurance — 94.5% RTP.
+          Dealer hits soft 17. Blackjack pays 3:2. Split pairs and insurance — 96.5% RTP.
         </p>
       </header>
 
@@ -399,7 +395,7 @@ export function Blackjack() {
               type="button"
               className="bj__deal-btn"
               onClick={handleStart}
-              disabled={busy || !user || exceedsMaxPayout}
+              disabled={busy || exceedsMaxPayout}
             >
               {busy ? "Dealing…" : exceedsMaxPayout ? "Payout exceeds cap" : showTable && settled ? "New hand" : "Deal"}
             </button>
@@ -526,9 +522,9 @@ export function Blackjack() {
                   Fisher-Yates shuffle from HMAC-SHA256 (Stake card order).
                 </p>
                 <p className="bj__fairness-note bj__fairness-note--disclosure">
-                  RTP disclosure: the shuffle is fair; the displayed 94.5% RTP is
+                  RTP disclosure: the shuffle is fair; the displayed 96.5% RTP is
                   enforced by a deterministic bias roll (same seeds) that
-                  downgrades ~4.5% of would-be wins to losses. Verifiable after
+                  downgrades ~2.5% of would-be wins to losses. Verifiable after
                   seed rotation.
                 </p>
               </div>

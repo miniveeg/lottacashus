@@ -18,22 +18,22 @@ import "./Home.css";
 const pillars = [
   {
     title: "One wallet",
-    desc: "A single USD balance for every game — no juggling purses or converting between games.",
+    desc: "GC and SC balance across every game. Toggle between them anytime.",
     icon: Wallet,
   },
   {
     title: "Crypto in & out",
-    desc: "Deposit and withdraw in SOL, LTC, or ETH, to and from your own addresses.",
+    desc: "Deposit SOL, LTC, or ETH. Redeem SC back to your own wallet.",
     icon: Zap,
   },
   {
     title: "Level up",
-    desc: "Wager-based ranks 0 to 100. Progress is permanent and visible on your profile.",
+    desc: "Wager-based ranks 0 to 100. Progress is permanent.",
     icon: TrendingUp,
   },
   {
     title: "House originals",
-    desc: "Keno, Mines, Limbo, Roulette, Blackjack, Crash, Slots, and Case Battles — all provably fair, all on the same balance.",
+    desc: "Eight provably fair games on one balance.",
     icon: Dices,
   },
 ];
@@ -62,12 +62,11 @@ export function Home() {
             SOL · LTC · ETH accepted
           </motion.p>
           <motion.h1 className="home__headline" variants={fadeUpVariants}>
-            Eight provably fair house games, <span>paid out to your own wallet.</span>
+            Eight provably fair house games. <span>Play in GC or SC.</span>
           </motion.h1>
           <motion.p className="home__lead" variants={fadeUpVariants}>
-            Bring SOL, LTC, or ETH, play any of the eight provably fair house games, and withdraw
-            back to your own address on the same chain. Every wager pushes your level up — and that
-            progress is permanent across all eight.
+            Deposit SOL, LTC, or ETH and play any of the eight provably fair house games. Redeem SC
+            back to your own wallet. Every wager raises your level — permanently.
           </motion.p>
           <motion.div className="home__cta" variants={fadeUpVariants}>
             {!loading && user ? (
@@ -102,10 +101,8 @@ export function Home() {
       <ScrollReveal className="home__intro">
         <h2 className="home__section-title">From deposit to cash-out</h2>
         <p className="home__section-text">
-          Sign up, grab a deposit address for SOL, LTC, or ETH, and send funds — they show up as a
-          single USD balance you can spend on any game. Cash out the same way, back to your own
-          wallet. Bets, level, deposits, and withdrawals all live in Settings, so there's no second
-          dashboard to keep up with.
+          Deposit crypto, get GC plus bonus SC, and play any game. Redeem SC for crypto back to your
+          wallet. Bets, level, deposits, and withdrawals all live in Settings.
         </p>
       </ScrollReveal>
 

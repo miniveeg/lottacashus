@@ -7,13 +7,12 @@
 
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { Seo } from "../../components/Seo/Seo";
 import { createCaseBattle } from "./caseBattlesApi";
 import { GAMEMODES, playerModeOptions, type BattleGamemode } from "./types";
 import { CASE_CATALOG, getCaseById } from "../../lib/games/case-battles";
-import { formatCoins, formatCoinsWithUsd } from "../../lib/format";
+import { formatCoins } from "../../lib/format";
 import { entryAfterBorrow } from "../../lib/games/case-battles/config";
 import { Plus, X, Search, ChevronDown } from "lucide-react";
 import "./CaseBattlesV2.css";
@@ -22,7 +21,6 @@ type SortKey = "popular" | "price-high" | "price-low" | "newest";
 
 export function CaseBattlesCreateV2() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { profile } = useProfile();
   const [gamemode, setGamemode] = useState<BattleGamemode>("standard");
   const [crazy, setCrazy] = useState(false);

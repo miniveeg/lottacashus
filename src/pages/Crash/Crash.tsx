@@ -311,8 +311,7 @@ export function Crash() {
     // but a sub-ms race window exists between the click and the re-render.
     if (busyRef.current) return;
     if (!user) {
-      setError("Log in to play.");
-      return;
+      // Local-play guests can still play.
     }
     const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
@@ -434,7 +433,7 @@ export function Crash() {
         <h1 className="lc-page__title">Crash</h1>
         <p className="lc-page__subtitle">
           Watch the multiplier rise. Cash out before it crashes to lock in your winnings.
-          Provably fair — {((1 - 0.01) * 100).toFixed(1)}% RTP.
+          Provably fair — 96.5% RTP.
         </p>
       </header>
 
@@ -564,7 +563,7 @@ export function Crash() {
               type="button"
               className="crash__bet-btn"
               onClick={handleBet}
-              disabled={!user || exceedsMaxPayout}
+              disabled={exceedsMaxPayout}
             >
               {exceedsMaxPayout
                 ? "Payout exceeds cap"
@@ -624,12 +623,12 @@ export function Crash() {
                   Save client seed
                 </button>
                 <p className="crash__fairness-note">
-                  HMAC-SHA256 &rarr; 4-byte float &rarr; 2&sup2;&#8304;/(n+1)&times;0.99 &mdash; provably fair.
+                  HMAC-SHA256 &rarr; 4-byte float &rarr; 2&sup2;&#8304;/(n+1)&times;0.965 &mdash; provably fair.
                 </p>
                 <p className="crash__fairness-note crash__fairness-note--disclosure">
-                  RTP disclosure: the crash point distribution targets ~99% RTP
+                  RTP disclosure: the crash point distribution targets ~96.5% RTP
                   at fair payouts; no additional bias roll is applied to Crash.
-                  The 99% RTP comes directly from the crash-point formula.
+                  The 96.5% RTP comes directly from the crash-point formula.
                 </p>
               </div>
             )}

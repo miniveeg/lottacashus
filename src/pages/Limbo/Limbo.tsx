@@ -124,10 +124,6 @@ export function Limbo() {
     // prop relies on a re-render cycle that leaves a sub-ms race window
     // between the first click's setRolling(true) commit and a second click.
     if (rollingRef.current) return;
-    if (!user) {
-      setError("Log in to play.");
-      return;
-    }
     const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
@@ -208,14 +204,14 @@ export function Limbo() {
     <div className="limbo lc-game-page">
       <Seo
         title="Limbo"
-        description="Name your target multiplier. If the roll beats it, you win. The higher you go, the longer the odds. Provably fair, 94.5% RTP."
+        description="Name your target multiplier. If the roll beats it, you win. The higher you go, the longer the odds. Provably fair, 96.5% RTP."
         path="/limbo"
       />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Limbo</h1>
         <p className="lc-page__subtitle">
           Set a target multiplier. If the round result is equal or higher, you win bet × target.
-          Provably fair — 94.5% RTP.
+          Provably fair — 96.5% RTP.
         </p>
       </header>
 
@@ -383,7 +379,7 @@ export function Limbo() {
             type="button"
             className="limbo__bet-btn"
             onClick={handleBet}
-            disabled={rolling || !user || exceedsMaxPayout}
+            disabled={rolling || exceedsMaxPayout}
             aria-busy={rolling}
           >
             {rolling ? (
@@ -435,12 +431,12 @@ export function Limbo() {
                   Save client seed
                 </button>
                 <p className="limbo__fairness-note">
-                  HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — 94.5% RTP via win odds.
+                  HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — 96.5% RTP via win odds.
                 </p>
                 <p className="limbo__fairness-note limbo__fairness-note--disclosure">
-                  RTP disclosure: the raw roll targets ~99% RTP; a deterministic
-                  bias roll (same seeds) downgrades ~4.5% of would-be wins to
-                  enforce the displayed 94.5% RTP. Verifiable after seed rotation.
+                  RTP disclosure: the raw roll targets ~99% RTP; a deterministic; a deterministic
+                  bias roll (same seeds) downgrades ~2.5% of would-be wins to
+                  enforce the displayed 96.5% RTP. Verifiable after seed rotation.
                 </p>
               </div>
             )}

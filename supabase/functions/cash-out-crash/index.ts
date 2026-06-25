@@ -51,10 +51,9 @@ Deno.serve(async (req) => {
     const { data: result, error: cashError } = await supabaseAdmin.rpc(
       "cash_out_crash",
       {
-        p_bet_id: betId,
         p_user_id: user.id,
-        p_cashed_at_multiplier: cashedAtMultiplier,
-        p_coin_type: coinType,
+        p_bet_id: betId,
+        p_cashed_at: cashedAtMultiplier,
       }
     );
 

@@ -3,7 +3,10 @@
 export const MINES_GRID_SIZE = 25;
 export const MINES_MIN_COUNT = 1;
 export const MINES_MAX_COUNT = 24;
-const MINES_HOUSE_EDGE = 0.99;
+/** RTP factor baked into the multiplier (96.5% target). Matches the
+ *  `mines_reveal_tile` SQL function and src/lib/games/mines/multipliers.ts.
+ *  No separate win-odds bias roll is applied. */
+const MINES_HOUSE_EDGE = 0.965;
 const MINES_FLOAT_COUNT = 24;
 
 function comb(n: number, r: number): number {

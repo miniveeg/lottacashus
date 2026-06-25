@@ -31,7 +31,8 @@ async function crashPointFromSeeds(serverSeed: string, clientSeed: string, nonce
   const hash = await hmacSha256(serverSeed, msg);
   const float = bytesToFloat(hash, 0);
   const scaled = float * 16777216;
-  const raw = (16777216 / (scaled + 1)) * 0.99;
+  // 96.5% RTP: P(point >= x) = 0.965/x  =>  EV of "cash at t" = 0.965.
+  const raw = (16777216 / (scaled + 1)) * 0.965;
   return truncateCrashMultiplier(Math.max(1, raw));
 }
 
@@ -56,13 +57,12 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Minimum bet is 1 SC or GC." }, 400, req);
     }
 
-    // SECURITY (audit R5): max-payout cap. Crash's max crash point is
-    // 1,000,000× — without a cap, a large wager at a high crash point could
-    // produce an unbounded payout. The cash_out_crash RPC (round 1) already
-    // validates cashed_at ≤ crash_point, but we cap the potential payout
-    // here at bet-placement time too. Same 100k cap as other games.
+    // Max-payout cap: the crash formula can produce up to ~1,000,000× but we
+    // cap the potential payout at 100,000. With a worst-case multiplier of
+    // 1,000× (the 99.99th percentile), the max allowed wager is 100. This
+    // keeps the game playable (min wager 1, max ~100) while capping exposure.
     const CRASH_MAX_PAYOUT = 100_000;
-    const crashWorstCaseMultiplier = 1_000_000;
+    const crashWorstCaseMultiplier = 1_000;
     const crashPotentialPayout = Math.round(wager * crashWorstCaseMultiplier * 100) / 100;
     if (crashPotentialPayout > CRASH_MAX_PAYOUT) {
       return jsonResponse(

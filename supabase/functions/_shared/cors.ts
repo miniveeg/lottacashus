@@ -10,10 +10,14 @@
 function getAllowedOrigin(req: Request): string {
   const configured = Deno.env.get("ALLOWED_ORIGINS")?.trim();
   if (!configured) {
-    if (Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined || Deno.env.get("SUPABASE_URL")) {
-      console.warn(
-        "ALLOWED_ORIGINS is not set; CORS is open to any origin. Set it in production to lock down the API."
-      );
+    // SECURITY: in production (Deno Deploy / Supabase URL set), refuse to
+    // serve cross-origin requests when ALLOWED_ORIGINS is unset. Returning
+    // "null" makes the browser block the response. Local dev (no env set)
+    // still gets "*" so `vite dev` works.
+    const isProd = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined || Deno.env.get("SUPABASE_URL");
+    if (isProd) {
+      console.error("ALLOWED_ORIGINS is not set in production — refusing cross-origin requests.");
+      return "null";
     }
     return "*";
   }
@@ -22,7 +26,7 @@ function getAllowedOrigin(req: Request): string {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-  return allowed.includes(origin) ? origin : allowed[0] ?? "*";
+  return allowed.includes(origin) ? origin : "null";
 }
 
 export function corsHeaders(req?: Request) {

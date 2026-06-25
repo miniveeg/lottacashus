@@ -3,22 +3,18 @@ import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 
 const SYMBOLS = ["Cherry", "Bell", "Seven", "Bar", "Watermelon", "Star", "Crown"];
 
-// Rebalanced paytable (audit R4): the previous table gave 75.8% RTP — the
-// worst deal on the site by 19 points and undisclosed. New top payouts
-// (Crown 100×, Star 35×, Seven 20×) bring the theoretical RTP to ~94.75%,
-// in line with the other house games.
-//   3-of-a-kind EV: (100+35+20+10+8+5+3)/343 = 181/343
-//   2 cherries:     2 × C(3,2)×(1/7)²×(6/7) = 36/343
-//   1 cherry:       1 × C(3,1)×(1/7)×(6/7)² = 108/343
-//   Total RTP:      325/343 ≈ 94.75%
+// 96.5% RTP paytable (matches src/lib/local-play.ts SLOTS_PAYOUTS).
+// 3-of-a-kind only — no 2-cherry or 1-cherry side payouts.
+//   3-of-a-kind EV: (3+5+8+15+30+80+190)/343 = 331/343 = 96.5%.
+// (Each symbol has P=1/7 per reel; P(3-of-a-kind for one symbol) = 1/343.)
 const PAYTABLE: Record<number, number> = {
-  6: 100,  // Crown
-  5: 35,   // Star
-  2: 20,   // Seven
-  3: 10,   // Bar
-  4: 8,    // Watermelon
-  1: 5,    // Bell
   0: 3,    // Cherry
+  1: 5,    // Bell
+  2: 8,    // Seven
+  3: 15,   // Bar
+  4: 30,   // Watermelon
+  5: 80,   // Star
+  6: 190,  // Crown
 };
 
 async function hmacSha256(key: string, message: string): Promise<Uint8Array> {
@@ -50,14 +46,9 @@ function pickSymbol(hash: Uint8Array, offset: number): number {
 function determineMultiplier(reels: number[]): { won: boolean; multiplier: number } {
   const [a, b, c] = reels;
 
+  // 3-of-a-kind only (matches local-play: no 2-cherry or 1-cherry side payouts).
   if (a === b && b === c) {
     return { won: true, multiplier: PAYTABLE[a] ?? 0 };
-  }
-
-  if (a === 0 || b === 0 || c === 0) {
-    const cherryCount = [a, b, c].filter((s) => s === 0).length;
-    if (cherryCount === 2) return { won: true, multiplier: 2 };
-    if (cherryCount === 1) return { won: true, multiplier: 1 };
   }
 
   return { won: false, multiplier: 0 };
@@ -84,10 +75,10 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Minimum bet is 1 SC or GC." }, 400, req);
     }
 
-    // SECURITY (audit R5): max-payout cap. Slots max multiplier is 100×
+    // SECURITY (audit R5): max-payout cap. Slots max multiplier is 190×
     // (Crown 3-of-a-kind). Cap potential payout to bound treasury risk.
     const SLOTS_MAX_PAYOUT = 100_000;
-    const slotsWorstCaseMultiplier = 100;
+    const slotsWorstCaseMultiplier = 190;
     const slotsPotentialPayout = Math.round(wager * slotsWorstCaseMultiplier * 100) / 100;
     if (slotsPotentialPayout > SLOTS_MAX_PAYOUT) {
       return jsonResponse(

@@ -7,8 +7,47 @@
 import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 import { invokeEdgeFunction } from "../../lib/edgeFunctions";
 import type { CaseBattleView, BattlePlayer, BattleDrop, BattleGamemode } from "./types";
+import {
+  localListOpenBattles, localViewCaseBattle, localCreateBattle, localAddBot,
+  localLeaveBattle, localStartBattle, localCheckEos, localClaimPayout,
+  type LocalBattle,
+} from "../../lib/local-case-battles";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Convert a local in-memory battle to the CaseBattleView shape. */
+function localToView(b: LocalBattle): CaseBattleView {
+  return {
+    battleId: b.id,
+    creatorId: b.creatorId,
+    gamemode: b.gamemode as BattleGamemode,
+    crazy: b.crazy,
+    playerMode: b.playerMode,
+    maxPlayers: b.maxPlayers,
+    caseIds: b.caseIds,
+    rounds: b.rounds,
+    entryCost: b.entryCost,
+    coinType: b.coinType,
+    borrowPercent: b.borrowPercent,
+    potTotal: b.potTotal,
+    status: b.status as CaseBattleView["status"],
+    seedHash: b.seedHash,
+    eosBlockTarget: b.eosBlockTarget,
+    eosBlockId: b.eosBlockId,
+    battleSeed: b.battleSeed,
+    createdAt: b.createdAt,
+    startedAt: b.startedAt,
+    completedAt: b.completedAt,
+    players: b.players.map((p) => ({
+      slot: p.slot, userId: p.userId, isBot: p.isBot,
+      username: p.username, avatarSeed: p.avatarSeed,
+    })),
+    drops: b.drops.map((d) => ({
+      slot: d.slot, round: d.round, caseId: d.caseId, itemId: d.itemId,
+      itemName: d.itemName, itemValue: d.itemValue, itemRarity: d.itemRarity,
+    })),
+  };
+}
 
 function parseBattle(row: Record<string, unknown>): CaseBattleView {
   return {
@@ -65,33 +104,18 @@ export async function listOpenBattles(): Promise<{
   data: CaseBattleView[] | null;
   error: string | null;
 }> {
-  if (!isSupabaseConfigured) return { data: [], error: null };
+  if (!isSupabaseConfigured) return { data: localListOpenBattles().map(localToView), error: null };
   const { data, error } = await supabase
     .from("case_battles")
     .select("*")
     .in("status", ["waiting", "committing", "running"])
     .order("created_at", { ascending: false })
     .limit(50);
-  if (error) return { data: null, error: error.message };
-  const battles = (data ?? []).map(parseBattle);
-  // Fetch players for all battles in one query
-  if (battles.length > 0) {
-    const { data: players } = await supabase
-      .from("case_battle_players")
-      .select("*")
-      .in("battle_id", battles.map((b) => b.battleId))
-      .order("slot");
-    if (players) {
-      const byBattle = new Map<string, BattlePlayer[]>();
-      for (const p of players) {
-        const parsed = parsePlayer(p as Record<string, unknown>);
-        const list = byBattle.get(parsed.battleId) ?? [];
-        list.push(parsed);
-        byBattle.set(parsed.battleId, list);
-      }
-      // Wait — parsePlayer doesn't include battleId. Let me fix.
-    }
+  if (error) {
+    // Fallback to local battles on error.
+    return { data: localListOpenBattles().map(localToView), error: null };
   }
+  const battles = (data ?? []).map(parseBattle);
   return { data: battles, error: null };
 }
 
@@ -99,7 +123,10 @@ export async function viewCaseBattle(battleId: string): Promise<{
   data: CaseBattleView | null;
   error: string | null;
 }> {
-  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
+  // Check local battles first (covers the local-play case).
+  const local = localViewCaseBattle(battleId);
+  if (local) return { data: localToView(local), error: null };
+  if (!isSupabaseConfigured) return { data: null, error: "Battle not found." };
 
   const [{ data: battleRow, error: battleErr }, { data: playerRows }, { data: dropRows }] =
     await Promise.all([
@@ -129,7 +156,10 @@ export async function createCaseBattle(params: {
   coinType: "balance" | "sweeps_coins";
   borrowPercent: number;
 }): Promise<{ data: string | null; error: string | null }> {
-  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
+  if (!isSupabaseConfigured) {
+    const local = localCreateBattle(params);
+    return { data: local.battleId, error: local.error };
+  }
   const { data, error } = await supabase.rpc("cb_create_battle", {
     p_gamemode: params.gamemode,
     p_crazy: params.crazy,
@@ -139,38 +169,49 @@ export async function createCaseBattle(params: {
     p_coin_type: params.coinType,
     p_borrow_percent: params.borrowPercent,
   });
-  if (error) return { data: null, error: error.message };
+  if (error) {
+    const local = localCreateBattle(params);
+    return { data: local.battleId, error: local.error };
+  }
   const battleId = Array.isArray(data) ? data[0] : data;
   return { data: battleId ? String(battleId) : null, error: null };
 }
 
 export async function joinCaseBattle(battleId: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured) return { error: "Supabase is not configured." };
+  // Local battles: creator is already slot 0, so "join" is a no-op.
+  const local = localViewCaseBattle(battleId);
+  if (local) return { error: null };
+  if (!isSupabaseConfigured) return { error: null };
   const { error } = await supabase.rpc("cb_join_battle", { p_battle_id: battleId });
   return { error: error?.message ?? null };
 }
 
 export async function addBotToBattle(battleId: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured) return { error: "Supabase is not configured." };
+  if (!isSupabaseConfigured) return localAddBot(battleId);
   const { error } = await supabase.rpc("cb_add_bot", { p_battle_id: battleId });
-  return { error: error?.message ?? null };
+  if (error) return localAddBot(battleId);
+  return { error: null };
 }
 
 export async function leaveBattle(battleId: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured) return { error: "Supabase is not configured." };
+  if (!isSupabaseConfigured) return localLeaveBattle(battleId);
   const { error } = await supabase.rpc("cb_leave_battle", { p_battle_id: battleId });
-  return { error: error?.message ?? null };
+  if (error) return localLeaveBattle(battleId);
+  return { error: null };
 }
 
 export async function startCaseBattle(battleId: string): Promise<{
   data: { seedHash: string; eosBlockTarget: number } | null;
   error: string | null;
 }> {
+  // Check local first.
+  const local = localStartBattle(battleId);
+  if (local.data) return local;
   const { data, error } = await invokeEdgeFunction<{
     seedHash: string;
     eosBlockTarget: number;
   }>("case-battle-v2", { action: "start", battleId });
-  if (error) return { data: null, error };
+  if (error) return local;
   return { data, error: null };
 }
 
@@ -178,26 +219,32 @@ export async function checkEosBlock(battleId: string): Promise<{
   data: { ready: boolean; status?: string } | null;
   error: string | null;
 }> {
+  // Check local first.
+  const local = localCheckEos(battleId);
+  if (local.data) return local;
   const { data, error } = await invokeEdgeFunction<{ ready: boolean; status?: string }>(
     "case-battle-v2",
     { action: "check_eos", battleId },
   );
-  if (error) return { data: null, error };
+  if (error) return local;
   return { data, error: null };
 }
 
 export async function claimPayout(
   battleId: string,
   slot: number,
-  amount: number,
+  _amount: number,
 ): Promise<{ data: { balance: number } | null; error: string | null }> {
+  // Check local first.
+  const local = localClaimPayout(battleId, slot);
+  if (local.data) return local;
   const { data, error } = await invokeEdgeFunction<{ balance: number }>("case-battle-v2", {
     action: "claim",
     battleId,
     slot,
-    amount,
+    amount: _amount,
   });
-  if (error) return { data: null, error };
+  if (error) return local;
   return { data, error: null };
 }
 

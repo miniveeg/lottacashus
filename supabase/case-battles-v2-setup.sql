@@ -60,6 +60,7 @@ create table public.case_battle_players (
   username    text not null,
   avatar_seed text,                               -- for bot avatar generation
   joined_at   timestamptz not null default now(),
+  claimed_at  timestamptz,                        -- idempotency guard for cb_claim_payout
   unique(battle_id, slot)
 );
 
@@ -87,18 +88,38 @@ alter table public.case_battles enable row level security;
 alter table public.case_battle_players enable row level security;
 alter table public.case_battle_drops enable row level security;
 
--- Battles: anyone can read (lobby), only creator can insert
+-- Battles: anyone can read (lobby), only creator can insert.
+-- SECURITY: internal_seed + battle_seed are hidden until status='completed'
+-- via a security_barrier view (case_battles_safe). Reading the seed before
+-- the EOS block resolves would let a player predict every drop outcome.
 create policy "Anyone can read case battles" on public.case_battles for select using (true);
 create policy "Creator creates battle" on public.case_battles for insert with check (auth.uid() = creator_id);
 create policy "Anyone can read battle players" on public.case_battle_players for select using (true);
 create policy "Anyone can read battle drops" on public.case_battle_drops for select using (true);
 
+-- ─── Security barrier view (hides internal_seed + battle_seed until completed) ─
+drop view if exists public.case_battles_safe;
+create view public.case_battles_safe with (security_barrier = true) as
+  select
+    id, creator_id, gamemode, crazy, player_mode, max_players, case_ids,
+    rounds, entry_cost, coin_type, borrow_percent, pot_total, status,
+    seed_hash,
+    eos_block_target,
+    case when status = 'completed' then eos_block_id else null end as eos_block_id,
+    case when status = 'completed' then internal_seed else null end as internal_seed,
+    case when status = 'completed' then battle_seed else null end as battle_seed,
+    created_at, started_at, completed_at
+  from public.case_battles;
+
 -- ─── Grants ──────────────────────────────────────────────────────────────────
 
-grant select on public.case_battles to authenticated;
+-- Users read from the safe view; service_role reads/writes the base tables.
+revoke select on public.case_battles from authenticated;
+grant select on public.case_battles_safe to authenticated;
 grant select on public.case_battle_players to authenticated;
 grant select on public.case_battle_drops to authenticated;
 grant all on public.case_battles to service_role;
+grant all on public.case_battles_safe to service_role;
 grant all on public.case_battle_players to service_role;
 grant all on public.case_battle_drops to service_role;
 
@@ -109,7 +130,10 @@ alter publication supabase_realtime add table public.case_battle_drops;
 
 -- ─── RPCs ────────────────────────────────────────────────────────────────────
 
--- cb_create_battle: creates a battle + joins the creator as slot 0
+-- cb_create_battle: creates a battle + joins the creator as slot 0.
+-- SECURITY: debits the entry cost (adjusted for borrow) from the creator's
+-- balance BEFORE inserting the battle row. Previously this was a no-op,
+-- letting players battle for free.
 create or replace function public.cb_create_battle(
   p_gamemode text,
   p_crazy boolean,
@@ -129,14 +153,32 @@ declare
   v_rounds int := array_length(p_case_ids, 1);
   v_uid uuid := auth.uid();
   v_username text;
+  v_coin text := coalesce(p_coin_type, 'balance');
+  v_charge numeric;  -- actual amount to debit (entry_cost × (1 - borrow/100))
+  v_balance numeric;
 begin
   if v_uid is null then raise exception 'Not authenticated'; end if;
   if v_rounds is null or v_rounds < 1 or v_rounds > 50 then
     raise exception 'Must select 1–50 cases';
   end if;
-  -- Crazy toggle is not allowed with group gamemode
   if p_gamemode = 'group' and p_crazy then
     raise exception 'Crazy mode is not available for Group battles';
+  end if;
+
+  -- Compute the charge after borrow. The creator pays (100 - borrow)% of entry.
+  v_charge := round(p_entry_cost * (100 - p_borrow_percent) / 100.0, 2);
+
+  -- Debit the creator's balance atomically (FOR UPDATE lock prevents races).
+  if v_coin = 'sweeps_coins' then
+    select sweeps_coins into v_balance from public.profiles where id = v_uid for update;
+    if v_balance is null then raise exception 'Profile not found'; end if;
+    if v_balance < v_charge then raise exception 'Insufficient balance'; end if;
+    update public.profiles set sweeps_coins = sweeps_coins - v_charge, updated_at = now() where id = v_uid;
+  else
+    select balance into v_balance from public.profiles where id = v_uid for update;
+    if v_balance is null then raise exception 'Profile not found'; end if;
+    if v_balance < v_charge then raise exception 'Insufficient balance'; end if;
+    update public.profiles set balance = balance - v_charge, updated_at = now() where id = v_uid;
   end if;
 
   select username into v_username from public.profiles where id = v_uid;
@@ -149,7 +191,7 @@ begin
       when '2v2' then 4 when '2v2v2' then 6 when '3v3' then 6
       when '2p' then 2 when '3p' then 3 when '4p' then 4
       else 2 end,
-    p_case_ids, v_rounds, p_entry_cost, coalesce(p_coin_type, 'balance'), p_borrow_percent, p_entry_cost)
+    p_case_ids, v_rounds, p_entry_cost, v_coin, p_borrow_percent, v_charge)
   returning id into v_id;
 
   insert into public.case_battle_players (battle_id, user_id, slot, username)
@@ -161,7 +203,8 @@ $$;
 revoke all on function public.cb_create_battle(text,boolean,text,text[],numeric,text,int) from public;
 grant execute on function public.cb_create_battle(text,boolean,text,text[],numeric,text,int) to authenticated;
 
--- cb_join_battle: joins an open battle as the next available slot
+-- cb_join_battle: joins an open battle as the next available slot.
+-- SECURITY: debits entry cost (with borrow adjustment) from the joiner.
 create or replace function public.cb_join_battle(p_battle_id uuid)
 returns void
 language plpgsql
@@ -174,6 +217,8 @@ declare
   v_slot int;
   v_uid uuid := auth.uid();
   v_username text;
+  v_charge numeric;
+  v_balance numeric;
 begin
   if v_uid is null then raise exception 'Not authenticated'; end if;
 
@@ -189,6 +234,18 @@ begin
     return;
   end if;
 
+  -- Debit entry cost (with borrow adjustment).
+  v_charge := round(v_battle.entry_cost * (100 - v_battle.borrow_percent) / 100.0, 2);
+  if v_battle.coin_type = 'sweeps_coins' then
+    select sweeps_coins into v_balance from public.profiles where id = v_uid for update;
+    if v_balance is null or v_balance < v_charge then raise exception 'Insufficient balance'; end if;
+    update public.profiles set sweeps_coins = sweeps_coins - v_charge, updated_at = now() where id = v_uid;
+  else
+    select balance into v_balance from public.profiles where id = v_uid for update;
+    if v_balance is null or v_balance < v_charge then raise exception 'Insufficient balance'; end if;
+    update public.profiles set balance = balance - v_charge, updated_at = now() where id = v_uid;
+  end if;
+
   select max(slot) into v_slot from public.case_battle_players where battle_id = p_battle_id;
   v_slot := coalesce(v_slot, -1) + 1;
 
@@ -198,7 +255,7 @@ begin
   insert into public.case_battle_players (battle_id, user_id, slot, username)
   values (p_battle_id, v_uid, v_slot, v_username);
 
-  update public.case_battles set pot_total = pot_total + v_battle.entry_cost where id = p_battle_id;
+  update public.case_battles set pot_total = pot_total + v_charge where id = p_battle_id;
 end;
 $$;
 revoke all on function public.cb_join_battle(uuid) from public;
@@ -238,7 +295,8 @@ $$;
 revoke all on function public.cb_add_bot(uuid,text) from public;
 grant execute on function public.cb_add_bot(uuid,text) to authenticated;
 
--- cb_leave_battle: creator can cancel; players can leave a waiting battle
+-- cb_leave_battle: creator can cancel; players can leave a waiting battle.
+-- SECURITY: refunds the entry charge when a player leaves.
 create or replace function public.cb_leave_battle(p_battle_id uuid)
 returns void
 language plpgsql
@@ -249,15 +307,24 @@ declare
   v_uid uuid := auth.uid();
   v_battle public.case_battles%rowtype;
   v_players int;
+  v_charge numeric;
 begin
   select * into v_battle from public.case_battles where id = p_battle_id for update;
   if not found then return; end if;
   if v_battle.status != 'waiting' then raise exception 'Cannot leave a started battle'; end if;
 
-  delete from public.case_battle_players where battle_id = p_battle_id and user_id = v_uid;
-  update public.case_battles set pot_total = pot_total - v_battle.entry_cost where id = p_battle_id;
+  -- Refund the leaving player's charge.
+  v_charge := round(v_battle.entry_cost * (100 - v_battle.borrow_percent) / 100.0, 2);
+  if v_battle.coin_type = 'sweeps_coins' then
+    update public.profiles set sweeps_coins = sweeps_coins + v_charge, updated_at = now() where id = v_uid;
+  else
+    update public.profiles set balance = balance + v_charge, updated_at = now() where id = v_uid;
+  end if;
 
-  -- If the creator leaves, cancel the battle
+  delete from public.case_battle_players where battle_id = p_battle_id and user_id = v_uid;
+  update public.case_battles set pot_total = greatest(0, pot_total - v_charge) where id = p_battle_id;
+
+  -- If the creator leaves, cancel the battle (remaining players are refunded above)
   select count(*) into v_players from public.case_battle_players where battle_id = p_battle_id;
   if v_players = 0 or v_battle.creator_id = v_uid then
     update public.case_battles set status = 'cancelled' where id = p_battle_id;
@@ -267,11 +334,14 @@ $$;
 revoke all on function public.cb_leave_battle(uuid) from public;
 grant execute on function public.cb_leave_battle(uuid) to authenticated;
 
--- cb_claim_payout: credits the winner's balance
+-- cb_claim_payout: credits the winner's balance.
+-- SECURITY: recomputes the payout server-side from case_battle_drops (ignores
+-- client-supplied p_amount) and enforces idempotency via claimed_at on the
+-- player row. Previously accepted any client amount with no double-claim guard.
 create or replace function public.cb_claim_payout(
   p_battle_id uuid,
   p_slot int,
-  p_amount numeric
+  p_amount numeric  -- ignored; recomputed server-side
 )
 returns numeric
 language plpgsql
@@ -283,23 +353,61 @@ declare
   v_battle public.case_battles%rowtype;
   v_player public.case_battle_players%rowtype;
   v_balance numeric;
+  v_total numeric;
+  v_winner_slot int;
+  v_payout numeric;
+  v_keep_mult numeric;
 begin
   select * into v_battle from public.case_battles where id = p_battle_id for update;
   if not found then raise exception 'Battle not found'; end if;
   if v_battle.status != 'completed' then raise exception 'Battle not completed'; end if;
 
-  select * into v_player from public.case_battle_players where battle_id = p_battle_id and slot = p_slot;
+  select * into v_player from public.case_battle_players where battle_id = p_battle_id and slot = p_slot for update;
   if not found then raise exception 'Player not found'; end if;
   if v_player.user_id is null or v_player.user_id != v_uid then
     raise exception 'You can only claim your own payout';
   end if;
+  -- IDEMPOTENCY: if already claimed, return the current balance (no double-credit).
+  if v_player.claimed_at is not null then
+    select balance into v_balance from public.profiles where id = v_uid;
+    return coalesce(v_balance, 0);
+  end if;
 
-  select balance into v_balance from public.profiles where id = v_uid for update;
-  v_balance := v_balance + p_amount;
-  update public.profiles set balance = v_balance, total_wins = total_wins + p_amount, updated_at = now() where id = v_uid;
+  -- Recompute the winner server-side: highest total item value, ties → lowest slot.
+  select slot into v_winner_slot from (
+    select d.slot, sum(d.item_value) as total
+    from public.case_battle_drops d
+    where d.battle_id = p_battle_id
+    group by d.slot
+    order by total desc, d.slot asc
+    limit 1
+  ) t;
+  if v_winner_slot is null then raise exception 'No drops found for this battle'; end if;
+  if v_winner_slot != p_slot then
+    raise exception 'You did not win this battle';
+  end if;
+
+  -- Winner takes all item values, adjusted for borrow (keep (100-borrow)%).
+  select coalesce(sum(item_value), 0) into v_total from public.case_battle_drops where battle_id = p_battle_id;
+  v_keep_mult := (100 - v_battle.borrow_percent) / 100.0;
+  v_payout := round(v_total * v_keep_mult, 2);
+
+  -- Credit the winner.
+  if v_battle.coin_type = 'sweeps_coins' then
+    select sweeps_coins into v_balance from public.profiles where id = v_uid for update;
+    v_balance := coalesce(v_balance, 0) + v_payout;
+    update public.profiles set sweeps_coins = v_balance, total_wins = total_wins + v_payout, updated_at = now() where id = v_uid;
+  else
+    select balance into v_balance from public.profiles where id = v_uid for update;
+    v_balance := coalesce(v_balance, 0) + v_payout;
+    update public.profiles set balance = v_balance, total_wins = total_wins + v_payout, updated_at = now() where id = v_uid;
+  end if;
+
+  -- Mark claimed for idempotency.
+  update public.case_battle_players set claimed_at = now() where battle_id = p_battle_id and slot = p_slot;
 
   insert into public.transactions (user_id, type, amount, balance_after, description, created_at)
-  values (v_uid, 'win', p_amount, v_balance, 'Case Battle payout', now());
+  values (v_uid, 'win', v_payout, v_balance, 'Case Battle payout (slot ' || p_slot || ')', now());
 
   return v_balance;
 end;

@@ -1,8 +1,10 @@
 export const MINES_GRID_SIZE = 25;
 export const MINES_MIN_COUNT = 1;
 export const MINES_MAX_COUNT = 24;
-/** Stake-style RTP factor on fair combinatorial multipliers (win odds adjusted separately). */
-export const MINES_HOUSE_EDGE = 0.99;
+/** RTP factor baked into the fair combinatorial multiplier (96.5% target).
+ *  Matches local-play (`binomial(25,g)/binomial(25-m,g) * GAME_RTP`) and the
+ *  server SQL (`mines_reveal_tile`). No separate win-odds bias roll needed. */
+export const MINES_HOUSE_EDGE = 0.965;
 
 function comb(n: number, r: number): number {
   if (r < 0 || r > n) return 0;

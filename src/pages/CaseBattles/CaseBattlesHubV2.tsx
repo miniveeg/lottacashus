@@ -4,8 +4,6 @@
  */
 
 import { Link } from "react-router-dom";
-import { useAuth } from "../../contexts/AuthContext";
-import { loginUrl } from "../../lib/authRedirect";
 import { Seo } from "../../components/Seo/Seo";
 import { useLobbySubscription } from "./useBattleSubscription";
 import { gamemodeLabelWithCrazy } from "./types";
@@ -15,7 +13,6 @@ import { GAMEMODES } from "./types";
 import "./CaseBattlesV2.css";
 
 export function CaseBattlesHubV2() {
-  const { user } = useAuth();
   const { battles, loading } = useLobbySubscription();
 
   return (
@@ -67,7 +64,6 @@ export function CaseBattlesHubV2() {
         ) : (
           battles.map((battle) => {
             const playerCount = (battle as any)._playerCount ?? battle.players.length;
-            const firstCase = battle.caseIds[0] ? getCaseById(battle.caseIds[0]) : null;
             return (
               <Link key={battle.battleId} to={`/case-battles/${battle.battleId}`} className="cb-hub__row">
                 <div className="cb-hub__row-info">

@@ -6,6 +6,7 @@
  * square" pattern. Used on /originals, the sidebar, and anywhere game icons
  * appear.
  */
+import type { ReactElement } from "react";
 
 interface IconProps {
   size?: number;
@@ -130,7 +131,7 @@ export function CaseBattlesIcon({ size = 24, className }: IconProps) {
 }
 
 /** Map game IDs to their custom icon components. */
-export const GAME_ICONS: Record<string, (props: IconProps) => JSX.Element> = {
+export const GAME_ICONS: Record<string, (props: IconProps) => ReactElement> = {
   keno: KenoIcon,
   mines: MinesIcon,
   limbo: LimboIcon,

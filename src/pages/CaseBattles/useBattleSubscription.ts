@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { supabase, isSupabaseConfigured } from "../../lib/supabase";
-import { viewCaseBattle } from "./caseBattlesApi";
+import { viewCaseBattle, listOpenBattles } from "./caseBattlesApi";
 import type { CaseBattleView } from "./types";
 
 /**
@@ -75,6 +75,21 @@ export function useBattleSubscription(battleId: string | undefined): {
     };
   }, [battleId, fetchBattle]);
 
+  // Local-play polling: when the battle exists in the local in-memory store
+  // (no realtime subscription will fire), poll every 400ms so the UI picks up
+  // state changes (add bot, start, resolve, claim).
+  useEffect(() => {
+    if (!battleId) return;
+    let active = true;
+    const iv = setInterval(async () => {
+      if (!active) return;
+      const { localViewCaseBattle } = await import("../../lib/local-case-battles");
+      const local = localViewCaseBattle(battleId);
+      if (local) await fetchBattle();
+    }, 400);
+    return () => { active = false; clearInterval(iv); };
+  }, [battleId, fetchBattle]);
+
   return { battle, loading, error, refetch: fetchBattle };
 }
 
@@ -88,65 +103,14 @@ export function useLobbySubscription() {
   const cancelledRef = useRef(false);
 
   const fetchLobby = useCallback(async () => {
-    if (!isSupabaseConfigured) {
-      setLoading(false);
-      return;
-    }
-    const { data, error } = await supabase
-      .from("case_battles")
-      .select("*")
-      .in("status", ["waiting", "committing", "running"])
-      .order("created_at", { ascending: false })
-      .limit(50);
-
+    const { data, error } = await listOpenBattles();
     if (cancelledRef.current) return;
-    if (error) {
+    if (error || !data) {
       setBattles([]);
-    } else if (data) {
-      // Fetch player counts
-      const ids = data.map((r) => r.id);
-      let playersByBattle = new Map<string, number>();
-      if (ids.length > 0) {
-        const { data: players } = await supabase
-          .from("case_battle_players")
-          .select("battle_id")
-          .in("battle_id", ids);
-        if (players) {
-          for (const p of players) {
-            const bid = p.battle_id as string;
-            playersByBattle.set(bid, (playersByBattle.get(bid) ?? 0) + 1);
-          }
-        }
-      }
-      const views: CaseBattleView[] = data.map((row) => ({
-        battleId: String(row.id),
-        creatorId: String(row.creator_id ?? ""),
-        gamemode: row.gamemode as CaseBattleView["gamemode"],
-        crazy: Boolean(row.crazy),
-        playerMode: String(row.player_mode),
-        maxPlayers: Number(row.max_players),
-        caseIds: (row.case_ids as string[]) ?? [],
-        rounds: Number(row.rounds),
-        entryCost: Number(row.entry_cost),
-        coinType: (row.coin_type as "balance" | "sweeps_coins") ?? "balance",
-        borrowPercent: Number(row.borrow_percent ?? 0),
-        potTotal: Number(row.pot_total ?? 0),
-        status: row.status as CaseBattleView["status"],
-        seedHash: row.seed_hash ?? null,
-        eosBlockTarget: row.eos_block_target ?? null,
-        eosBlockId: row.eos_block_id ?? null,
-        battleSeed: row.battle_seed ?? null,
-        createdAt: String(row.created_at),
-        startedAt: row.started_at ?? null,
-        completedAt: row.completed_at ?? null,
-        players: [],
-        drops: [],
-      }));
-      // Attach player count as a synthetic field (we don't need full player
-      // objects in the lobby — just the count for display)
-      (views as any[]).forEach((v) => {
-        v._playerCount = playersByBattle.get(v.battleId) ?? 0;
-      });
+    } else {
+      // Attach player count as a synthetic field for display.
+      const views = data as any[];
+      views.forEach((v) => { v._playerCount = v.players?.length ?? 0; });
       setBattles(views);
     }
     setLoading(false);
@@ -156,7 +120,11 @@ export function useLobbySubscription() {
     cancelledRef.current = false;
     fetchLobby();
 
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured) {
+      // Local-play polling: refresh lobby every 1s to pick up new local battles.
+      const iv = setInterval(() => fetchLobby(), 1000);
+      return () => { cancelledRef.current = true; clearInterval(iv); };
+    }
 
     const channel = supabase
       .channel("lobby")

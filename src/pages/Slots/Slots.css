@@ -213,6 +213,12 @@
   min-height: 0;
 }
 
+@media (max-width: 900px) {
+  .slots__layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .slots__stage {
   min-width: 0;
 }

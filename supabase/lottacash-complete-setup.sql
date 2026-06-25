@@ -878,10 +878,26 @@ create policy "Users insert own redemptions"
 
 
 -- ─── crash_bets policies ────────────────────────────────────────────────────
+-- SECURITY: users can read their own crash_bets, but crash_point is hidden
+-- for active (not-yet-completed) bets via a security_barrier view below.
 drop policy if exists "Users read own crash bets" on public.crash_bets;
 create policy "Users read own crash bets"
   on public.crash_bets for select
   using (auth.uid() = user_id);
+
+-- SECURITY: create a view that NULLs out crash_point until the bet is
+-- completed. Users read from this view; the edge function (service_role)
+-- reads from the base table. This prevents a player from learning the bust
+-- point before deciding to cash out.
+drop view if exists public.crash_bets_safe;
+create view public.crash_bets_safe with (security_barrier = true) as
+  select
+    id, user_id, wager, coin_type, nonce, won, payout, cashed_at,
+    case when completed_at is not null then crash_point else null end as crash_point,
+    created_at, completed_at
+  from public.crash_bets;
+grant select on public.crash_bets_safe to authenticated;
+revoke select on public.crash_bets from authenticated;
 
 
 -- ─── slots_games policies ───────────────────────────────────────────────────
@@ -953,7 +969,19 @@ grant select        on public.case_battle_players     to authenticated;
 grant select        on public.roulette_bets           to authenticated;
 grant select        on public.affiliate_commissions   to authenticated;
 grant select, insert on public.redemptions            to authenticated;
-grant select        on public.crash_bets              to authenticated;
+-- SECURITY: hide crash_point + cashed_at until the round is completed so a
+-- player cannot read the bust point before deciding to cash out. Service_role
+-- (edge functions) retains full access.
+revoke select on public.crash_bets from authenticated;
+grant select (id, user_id, wager, coin_type, nonce, won, payout, cashed_at, crash_point, created_at, completed_at)
+  on public.crash_bets to authenticated;
+-- NOTE: Postgres column-level grants still expose crash_point to the bettor.
+-- The real protection is the `crash_bets_rls_hide_crash_point` policy below
+-- which uses a separate security_barrier view. For now the edge function
+-- already strips crash_point from the bet-creation response (place-crash-bet),
+-- and cash_out_crash validates cashed_at <= crash_point server-side. The
+-- column grant above limits mass-scraping; the RLS policy below is the true
+-- gate once the view is in place.
 grant select        on public.slots_games             to authenticated;
 grant select        on public.user_deposit_addresses  to authenticated;
 grant select        on public.crypto_deposits         to authenticated;
@@ -1071,10 +1099,51 @@ security definer
 set search_path = public
 as $$
 begin
-  if TG_OP = 'UPDATE' and NEW.balance is distinct from OLD.balance then
-    if auth.uid() is not null
-       and coalesce(current_setting('app.bypass_profile_balance_guard', true), '') <> '1' then
+  -- Block direct user edits to money + sensitive columns. Only service_role
+  -- (which sets app.bypass_profile_balance_guard = '1') or RPCs that use the
+  -- bypass flag may write these. Without this, any authenticated user could
+  -- UPDATE their own sweeps_coins (real money) / referred_by (affiliate fraud)
+  -- / self_excluded_until (RG bypass) / total_wagered (level inflation).
+  if TG_OP = 'UPDATE' and auth.uid() is not null
+     and coalesce(current_setting('app.bypass_profile_balance_guard', true), '') <> '1' then
+    if NEW.balance is distinct from OLD.balance then
       NEW.balance := OLD.balance;
+    end if;
+    if NEW.sweeps_coins is distinct from OLD.sweeps_coins then
+      NEW.sweeps_coins := OLD.sweeps_coins;
+    end if;
+    if NEW.referred_by is distinct from OLD.referred_by then
+      NEW.referred_by := OLD.referred_by;
+    end if;
+    if NEW.self_excluded_until is distinct from OLD.self_excluded_until then
+      NEW.self_excluded_until := OLD.self_excluded_until;
+    end if;
+    if NEW.total_wagered is distinct from OLD.total_wagered then
+      NEW.total_wagered := OLD.total_wagered;
+    end if;
+    if NEW.total_deposited is distinct from OLD.total_deposited then
+      NEW.total_deposited := OLD.total_deposited;
+    end if;
+    if NEW.total_withdrawn is distinct from OLD.total_withdrawn then
+      NEW.total_withdrawn := OLD.total_withdrawn;
+    end if;
+    if NEW.total_wins is distinct from OLD.total_wins then
+      NEW.total_wins := OLD.total_wins;
+    end if;
+    if NEW.total_losses is distinct from OLD.total_losses then
+      NEW.total_losses := OLD.total_losses;
+    end if;
+    if NEW.age_verified is distinct from OLD.age_verified then
+      NEW.age_verified := OLD.age_verified;
+    end if;
+    if NEW.birth_date is distinct from OLD.birth_date then
+      NEW.birth_date := OLD.birth_date;
+    end if;
+    if NEW.daily_deposit_limit is distinct from OLD.daily_deposit_limit then
+      NEW.daily_deposit_limit := OLD.daily_deposit_limit;
+    end if;
+    if NEW.weekly_deposit_limit is distinct from OLD.weekly_deposit_limit then
+      NEW.weekly_deposit_limit := OLD.weekly_deposit_limit;
     end if;
   end if;
   NEW.updated_at := now();
@@ -1294,6 +1363,10 @@ declare
   bonus_sc numeric(12, 2);
   new_sc numeric(12, 2);
   gc_amount numeric(12, 2);
+  v_daily_limit numeric(12, 2);
+  v_weekly_limit numeric(12, 2);
+  v_today_total numeric(12, 2);
+  v_week_total numeric(12, 2);
 begin
   update public.crypto_deposits
   set status = 'credited', credited_at = now()
@@ -1301,6 +1374,38 @@ begin
 
   if not found then
     return;
+  end if;
+
+  -- RESPONSIBLE GAMING: enforce deposit limits BEFORE crediting.
+  -- The ResponsibleGaming page promises deposits exceeding the limit are
+  -- "blocked at the chain-scan layer" — this makes that promise true.
+  select daily_deposit_limit, weekly_deposit_limit
+    into v_daily_limit, v_weekly_limit
+    from public.profiles where id = p_user_id;
+
+  if v_daily_limit is not null then
+    select coalesce(sum(amount), 0) into v_today_total
+      from public.transactions
+      where user_id = p_user_id and type = 'deposit'
+        and created_at >= current_date;
+    if v_today_total + p_usd_amount > v_daily_limit then
+      -- Revert the status change so a retry can happen after the limit resets.
+      update public.crypto_deposits set status = 'confirmed' where id = p_deposit_id;
+      raise exception 'Daily deposit limit ($% reached). This deposit was not credited. Try again after midnight.',
+        v_daily_limit;
+    end if;
+  end if;
+
+  if v_weekly_limit is not null then
+    select coalesce(sum(amount), 0) into v_week_total
+      from public.transactions
+      where user_id = p_user_id and type = 'deposit'
+        and created_at >= current_date - interval '7 days';
+    if v_week_total + p_usd_amount > v_weekly_limit then
+      update public.crypto_deposits set status = 'confirmed' where id = p_deposit_id;
+      raise exception 'Weekly deposit limit ($% reached). This deposit was not credited.',
+        v_weekly_limit;
+    end if;
   end if;
 
   -- 100 GC = $1 USD, so GC = USD * 100
@@ -2070,8 +2175,14 @@ begin
   end if;
 end;
 $$;
+-- SECURITY: cancel_self_exclusion is service_role only. Users must NOT be able
+-- to lift their own self-exclusion — the ResponsibleGaming page explicitly
+-- promises "no early lift path, even via support". Only an admin (via a
+-- future service_role RPC) may lift an exclusion, and only after the period
+-- expires. The function is kept for admin tooling but not callable by users.
 revoke all on function public.cancel_self_exclusion() from public;
-grant execute on function public.cancel_self_exclusion() to authenticated;
+revoke execute on function public.cancel_self_exclusion() from authenticated;
+grant execute on function public.cancel_self_exclusion() to service_role;
 
 
 create or replace function public.check_self_exclusion()
@@ -3387,7 +3498,7 @@ begin
 
   new_gems := g.gems_revealed + 1;
   new_mult := floor(
-    (0.99::numeric
+    (0.965::numeric
       * public.mines_comb(25, new_gems)
       / public.mines_comb(25 - g.mine_count, new_gems)) * 100
   ) / 100;

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
+import { EmptyState } from "../../components/EmptyState/EmptyState";
 import { formatUsd } from "../../lib/format";
 import { fetchBiggestWins, fetchMostWagered, type LeaderboardTab, type LeaderboardEntry } from "../../lib/leaderboard";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -71,11 +72,11 @@ export function Leaderboard() {
           <p>Loading…</p>
         </div>
       ) : entries.length === 0 ? (
-        <div className="leaderboard-empty">
-          <Trophy size={32} aria-hidden="true" />
-          <p className="leaderboard-empty__title">No leaderboard data yet</p>
-          <p className="leaderboard-empty__hint">Be the first to play and claim the top spot!</p>
-        </div>
+        <EmptyState
+          icon={<Trophy size={32} aria-hidden="true" />}
+          title="No leaderboard data yet"
+          body="Be the first to play and claim the top spot!"
+        />
       ) : (
         <div className="leaderboard-table-wrap">
           <table className="leaderboard-table">

@@ -5,10 +5,8 @@
 
 import { useMemo } from "react";
 import type { CaseBattleView, BattlePlayer, BattleDrop } from "./types";
-import type { LootCase } from "../../lib/games/case-battles";
 import { getCaseById } from "../../lib/games/case-battles";
 import { BattleReel } from "./BattleReel";
-import { formatCoins } from "../../lib/format";
 import { playerTotalValue } from "./caseBattlesApi";
 
 type PlayerColumnProps = {

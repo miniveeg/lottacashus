@@ -13,8 +13,8 @@
  */
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import type { CaseBattleView, BattleDrop } from "./types";
-import { dropsForRound, calculatePayoutForSlot, playerTotalValue } from "./caseBattlesApi";
+import type { CaseBattleView } from "./types";
+import { dropsForRound, calculatePayoutForSlot } from "./caseBattlesApi";
 import { PlayerColumn } from "./PlayerColumn";
 import { formatCoins } from "../../lib/format";
 import "./CaseBattlesV2.css";
@@ -121,7 +121,6 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
   // ─── Running / Completed state — the arena ──────────────────────────────
   const roundDrops = dropsForRound(battle.drops, currentRound);
   const isCompleted = battle.status === "completed";
-  const showAllRounds = isCompleted;
 
   // When completed, show all rounds at once (or cycle through them)
   const displayRound = isCompleted ? Math.min(currentRound, battle.rounds - 1) : currentRound;

@@ -28,9 +28,25 @@ Deno.serve(async (req) => {
     const referralCode = referralRaw
       ? referralRaw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 32)
       : "";
+    const birthDateRaw = typeof body?.birthDate === "string" ? body.birthDate.trim() : "";
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return jsonResponse({ error: "Enter a valid email address." }, 400, req);
+    }
+
+    // SERVER-SIDE AGE VERIFICATION: parse birth_date, require 18+.
+    // The client-side check in Signup.tsx is UX only — this is the real gate.
+    if (!birthDateRaw || !/^\d{4}-\d{2}-\d{2}$/.test(birthDateRaw)) {
+      return jsonResponse({ error: "Birth date is required (YYYY-MM-DD)." }, 400, req);
+    }
+    const birthDate = new Date(birthDateRaw + "T00:00:00Z");
+    if (isNaN(birthDate.getTime())) {
+      return jsonResponse({ error: "Invalid birth date." }, 400, req);
+    }
+    const ageMs = Date.now() - birthDate.getTime();
+    const ageYears = ageMs / (365.25 * 24 * 60 * 60 * 1000);
+    if (ageYears < 18) {
+      return jsonResponse({ error: "You must be at least 18 years old to use this site." }, 403, req);
     }
 
     if (!/^\d{6}$/.test(code)) {
@@ -100,6 +116,8 @@ Deno.serve(async (req) => {
           id: authData.user.id,
           email,
           username: displayName,
+          birth_date: birthDateRaw,
+          age_verified: true,
         },
         { onConflict: "id" }
       );

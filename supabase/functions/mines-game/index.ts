@@ -7,8 +7,6 @@ import {
   validateMinesStart,
   validateMinesTile,
 } from "../_shared/mines.ts";
-import { retainStakeStyleWin } from "../_shared/rtp.ts";
-import { rtpBiasFloat } from "../_shared/rtpBias.ts";
 
 type MinesAction = "start" | "reveal" | "cashout" | "active";
 
@@ -177,47 +175,16 @@ Deno.serve(async (req) => {
       if (tileError) return jsonResponse({ error: tileError }, 400, req);
       if (!gameId) return jsonResponse({ error: "Game id required." }, 400, req);
 
-      const { data: gameRow } = await supabaseAdmin
-        .from("mines_games")
-        .select("mine_tiles, revealed_tiles, nonce")
-        .eq("id", gameId)
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .maybeSingle();
-
-      if (!gameRow) return jsonResponse({ error: "Active game not found." }, 400, req);
-
-      const mineTiles = (gameRow.mine_tiles as number[]) ?? [];
-      const fairMine = mineTiles.includes(tile);
-      let forceMine = false;
-
-      if (!fairMine) {
-        const { data: pf } = await supabaseAdmin
-          .from("game_pf_seeds")
-          .select("server_seed, client_seed")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        const serverSeed = pf?.server_seed;
-        const clientSeed = String(pf?.client_seed ?? "default");
-        const revealed = (gameRow.revealed_tiles as number[]) ?? [];
-        if (typeof serverSeed === "string" && serverSeed) {
-          const bias = await rtpBiasFloat(
-            serverSeed,
-            clientSeed,
-            Number(gameRow.nonce ?? 0),
-            `mines-${gameId}-${revealed.length}-${tile}`
-          );
-          forceMine = !retainStakeStyleWin(bias);
-        }
-      }
-
+      // RTP is baked into the multiplier formula (MINES_HOUSE_EDGE = 0.965
+      // in _shared/mines.ts and the mines_reveal_tile SQL function) — reveal
+      // is fair, no per-tile or resolution-time bias roll is needed.
       const { data: revealed, error: revealError } = await supabaseAdmin.rpc(
         "mines_reveal_tile",
         {
           p_user_id: user.id,
           p_game_id: gameId,
           p_tile: tile,
-          p_force_mine: forceMine,
+          p_force_mine: false,
         }
       );
 
@@ -259,6 +226,10 @@ Deno.serve(async (req) => {
       const gameId = String(body?.gameId ?? body?.game_id ?? "");
       if (!gameId) return jsonResponse({ error: "Game id required." }, 400, req);
 
+      // RTP is baked into the multiplier formula (MINES_HOUSE_EDGE = 0.965
+      // in _shared/mines.ts and the mines_reveal_tile SQL function). Cashout
+      // is a straight payout of wager × stored multiplier — no separate
+      // resolution-time bias roll. Matches local-play (`binomial(25,g)/binomial(25-m,g) * GAME_RTP`).
       const { data: cashed, error: cashError } = await supabaseAdmin.rpc(
         "mines_cashout",
         {

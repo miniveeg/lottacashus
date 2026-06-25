@@ -112,10 +112,6 @@ export function Roulette() {
     // prop relies on a re-render cycle that leaves a sub-ms race window
     // between the first click's setSpinning(true) commit and a second click.
     if (spinningRef.current) return;
-    if (!user) {
-      setError("Log in to play.");
-      return;
-    }
     const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
@@ -180,13 +176,13 @@ export function Roulette() {
     <div className="roulette lc-game-page">
       <Seo
         title="Roulette"
-        description="European wheel — bet red, black, or green (zero). Provably fair, 94.5% RTP."
+        description="European wheel — bet red, black, or green (zero). Provably fair, 96.5% RTP."
         path="/roulette"
       />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Roulette</h1>
         <p className="lc-page__subtitle">
-          European wheel — bet red, black, or zero. Provably fair — 94.5% RTP.
+          European wheel — bet red, black, or zero. Provably fair — 96.5% RTP.
         </p>
       </header>
 
@@ -365,7 +361,7 @@ export function Roulette() {
             type="button"
             className="roulette__bet-btn"
             onClick={handleBet}
-            disabled={spinning || !user || exceedsMaxPayout}
+            disabled={spinning || exceedsMaxPayout}
             aria-busy={spinning}
           >
             {spinning ? (
@@ -426,8 +422,8 @@ export function Roulette() {
                 </p>
                 <p className="roulette__fairness-note roulette__fairness-note--disclosure">
                   RTP disclosure: the wheel is fair (1/37 per pocket); the
-                  displayed 94.5% RTP is enforced by a deterministic bias roll
-                  (same seeds) that downgrades ~4.5% of would-be wins. Verifiable
+                  displayed 96.5% RTP is enforced by a deterministic bias roll
+                  (same seeds) that downgrades ~2.5% of would-be wins. Verifiable
                   after seed rotation.
                 </p>
               </div>

@@ -1,4 +1,15 @@
 import { useState } from "react";
+import { resolveLimboRound, limboResultFromSeeds } from "../../lib/games/limbo/provablyFair";
+import {
+  resolveRouletteRound,
+  roulettePocketFromSeeds,
+  pocketColor as roulettePocketColor,
+} from "../../lib/games/roulette/provablyFair";
+import { playKenoRound, drawKenoNumbers, kenoFloatsFromSeeds } from "../../lib/games/keno/provablyFair";
+import { getKenoMultiplier, type KenoRisk } from "../../lib/games/keno/paytables";
+import { getMinesMultiplier } from "../../lib/games/mines/multipliers";
+import { rtpBiasFloat } from "../../lib/games/rtpBias";
+import { retainStakeStyleWin, retainRouletteWin } from "../../lib/games/rtp";
 
 /**
  * "Verify a round" tool — lets the player paste a revealed server seed,
@@ -6,8 +17,15 @@ import { useState } from "react";
  * the house didn't cheat. Complements the rotate-seed feature: after
  * rotating, the player gets the revealed seed and can verify any past round.
  *
- * Currently supports Limbo (the simplest: one HMAC → one multiplier).
- * Future rounds can add Keno, Mines, Roulette, Blackjack, Crash verifiers.
+ * Supports all 6 games: Limbo, Crash, Roulette, Mines, Keno, Blackjack.
+ * For Limbo / Roulette / Keno the verifier replicates the full RTP bias
+ * step (retainStakeStyleWin / retainRouletteWin) so the post-bias result
+ * matches what the server actually returned. Crash and Mines have no
+ * separate bias roll — the 96.5% RTP is baked directly into the formula
+ * (Crash: crash-point distribution; Mines: multiplier formula
+ * `0.965 × C(25,g)/C(25-m,g)`). Blackjack applies its bias per-hand using a
+ * tag derived from the hand id — the verifier shows the fair shuffled shoe
+ * and notes the per-hand bias caveat.
  */
 
 async function hmacSha256Hex(key: string, message: string): Promise<string> {
@@ -33,33 +51,14 @@ function bytesToFloat(hex: string, offset = 0): number {
   return value;
 }
 
-/** Limbo result: float → 2²⁴ / (n+1) × 0.99, floored to 2 decimals. */
-function limboResult(float: number): number {
-  const MAX = 2 ** 24;
-  const raw = Math.floor((MAX / (float * MAX + 1)) * 0.99 * 100) / 100;
-  return Math.max(1, raw);
-}
-
-/** Crash result: float → max(1, (2²⁴ / (float×2²⁴ + 1)) × (1 - 0.01)). */
+/** Crash result: float → max(1, (2²⁴ / (float×2²⁴ + 1)) × 0.965).
+ *  96.5% RTP baked directly into the crash-point distribution (no separate
+ *  bias roll). Matches the server (supabase/functions/place-crash-bet). */
 function crashResult(float: number): number {
   const MAX = 2 ** 24;
   const scaled = float * MAX;
-  const raw = (MAX / (scaled + 1)) * (1 - 0.01);
+  const raw = (MAX / (scaled + 1)) * 0.965;
   return Math.max(1, Math.floor(raw * 100) / 100);
-}
-
-/** Roulette result: float → floor(float × 37), returns pocket 0–36. */
-function rouletteResult(float: number): number {
-  return Math.floor(float * 37);
-}
-
-const ROULETTE_RED_POCKETS = new Set([
-  1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36,
-]);
-
-function pocketColor(pocket: number): string {
-  if (pocket === 0) return "green";
-  return ROULETTE_RED_POCKETS.has(pocket) ? "red" : "black";
 }
 
 type GameType = "limbo" | "crash" | "roulette" | "mines" | "keno" | "blackjack";
@@ -101,43 +100,6 @@ async function blackjackResult(serverSeed: string, clientSeed: string, nonce: nu
     const suit = SUITS[card % 4] ?? "?";
     return `${suit}${rank}`;
   });
-}
-
-/** Keno: 2 HMAC cursors → 10 floats → Fisher-Yates draw of 10 from 40. */
-async function kenoResult(serverSeed: string, clientSeed: string, nonce: number): Promise<number[]> {
-  const DRAW_COUNT = 10;
-  const POOL_SIZE = 40;
-  // 2 cursors, 32 bytes each = 64 bytes; use first 40 (10 floats × 4 bytes)
-  const merged: number[] = [];
-  for (let cursor = 0; cursor < 2; cursor++) {
-    const hash = await hmacSha256Hex(serverSeed, `${clientSeed}:${nonce}:${cursor}`);
-    for (let i = 0; i < hash.length; i += 2) {
-      merged.push(parseInt(hash.substr(i, 2), 16));
-    }
-  }
-  const floats: number[] = [];
-  for (let i = 0; i < DRAW_COUNT; i++) {
-    let value = 0;
-    for (let j = 0; j < 4; j++) {
-      value += merged[i * 4 + j]! / Math.pow(256, j + 1);
-    }
-    floats.push(value);
-  }
-  // Fisher-Yates draw without replacement
-  const pool = Array.from({ length: POOL_SIZE }, (_, i) => i);
-  const drawn: number[] = [];
-  for (let t = 0; t < DRAW_COUNT && t < floats.length; t++) {
-    const remaining = POOL_SIZE - t;
-    const index = Math.floor(floats[t]! * remaining);
-    const pickIndex = t + index;
-    const value = pool[pickIndex]!;
-    drawn.push(value + 1);
-    for (let o = pickIndex; o > t; o--) {
-      pool[o] = pool[o - 1]!;
-    }
-    pool[t] = value;
-  }
-  return drawn.sort((a, b) => a - b);
 }
 
 /** Mines: 24 floats from HMAC cursors, Fisher-Yates mine placement. */
@@ -184,6 +146,10 @@ export function VerifyRoundTool() {
   const [nonce, setNonce] = useState("");
   const [mineCount, setMineCount] = useState("3");
   const [cardCount, setCardCount] = useState("6");
+  const [limboTarget, setLimboTarget] = useState("2.00");
+  const [rouletteBet, setRouletteBet] = useState<"red" | "black" | "green">("red");
+  const [kenoPicks, setKenoPicks] = useState("1,5,10,15,20");
+  const [kenoRisk, setKenoRisk] = useState<KenoRisk>("classic");
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -205,11 +171,19 @@ export function VerifyRoundTool() {
     }
     try {
       if (game === "limbo") {
-        const hash = await hmacSha256Hex(serverSeed.trim(), `${clientSeed.trim()}:${n}:limbo`);
-        const float = bytesToFloat(hash, 0);
-        const multiplier = limboResult(float);
+        const target = Number(limboTarget);
+        if (!Number.isFinite(target) || target < 1.01) {
+          setError("Target multiplier must be ≥ 1.01.");
+          return;
+        }
+        // Fair result (pre-bias) and the post-bias resolved outcome.
+        const fairMult = await limboResultFromSeeds(serverSeed.trim(), clientSeed.trim(), n);
+        const { resultMultiplier, won } = await resolveLimboRound(serverSeed.trim(), clientSeed.trim(), n, target);
+        const bias = await rtpBiasFloat(serverSeed.trim(), clientSeed.trim(), n, "limbo");
+        const retained = retainStakeStyleWin(bias);
+        const wouldWinFair = fairMult >= target;
         setResult(
-          `Limbo round — nonce ${n}: result = ${multiplier.toFixed(2)}× (raw float ${float.toFixed(6)}, hash ${hash.slice(0, 16)}…)`,
+          `Limbo round — nonce ${n}, target ${target.toFixed(2)}×: fair result = ${fairMult.toFixed(2)}× (would-win ${wouldWinFair}) → post-bias result = ${resultMultiplier.toFixed(2)}×, won=${won} (bias ${retained ? "retained" : "failed"}, float ${bias.toFixed(6)})`,
         );
       } else if (game === "crash") {
         const hash = await hmacSha256Hex(serverSeed.trim(), `${clientSeed.trim()}:${n}:0`);
@@ -219,12 +193,20 @@ export function VerifyRoundTool() {
           `Crash round — nonce ${n}: crash point = ${multiplier.toFixed(2)}× (raw float ${float.toFixed(6)}, hash ${hash.slice(0, 16)}…)`,
         );
       } else if (game === "roulette") {
-        const hash = await hmacSha256Hex(serverSeed.trim(), `${clientSeed.trim()}:${n}:0,1,2`);
-        const float = bytesToFloat(hash, 0);
-        const pocket = rouletteResult(float);
-        const color = pocketColor(pocket);
+        // Fair pocket (pre-bias) and the post-bias resolved outcome.
+        const fairPocket = await roulettePocketFromSeeds(serverSeed.trim(), clientSeed.trim(), n);
+        const fairColor = roulettePocketColor(fairPocket);
+        const { resultPocket, resultColor, won } = await resolveRouletteRound(
+          serverSeed.trim(),
+          clientSeed.trim(),
+          n,
+          rouletteBet,
+        );
+        const bias = await rtpBiasFloat(serverSeed.trim(), clientSeed.trim(), n, "roulette");
+        const retained = retainRouletteWin(bias);
+        const wouldWinFair = rouletteBet === fairColor;
         setResult(
-          `Roulette round — nonce ${n}: pocket = ${pocket} (${color}) (raw float ${float.toFixed(6)}, hash ${hash.slice(0, 16)}…)`,
+          `Roulette round — nonce ${n}, bet ${rouletteBet}: fair pocket = ${fairPocket} (${fairColor}, would-win ${wouldWinFair}) → post-bias pocket = ${resultPocket} (${resultColor}), won=${won} (bias ${retained ? "retained" : "failed"}, float ${bias.toFixed(6)})`,
         );
       } else if (game === "mines") {
         const mc = parseInt(mineCount, 10);
@@ -233,13 +215,45 @@ export function VerifyRoundTool() {
           return;
         }
         const tiles = await minesResult(serverSeed.trim(), clientSeed.trim(), n, mc);
+        // Mines has no separate bias roll — the 96.5% RTP is baked directly
+        // into the multiplier formula (`0.965 × C(25,g)/C(25-m,g)`), so the
+        // fair mine layout above IS the actual server layout. The multiplier
+        // at any reveal count can be computed deterministically.
+        const maxGems = 25 - mc;
+        const mults: string[] = [];
+        for (let g = 1; g <= Math.min(maxGems, 10); g++) {
+          mults.push(`${g}gem=${getMinesMultiplier(mc, g).toFixed(2)}×`);
+        }
+        const moreGems = maxGems > 10 ? ` … ${maxGems}gem=${getMinesMultiplier(mc, maxGems).toFixed(2)}×` : "";
         setResult(
-          `Mines round — nonce ${n}, ${mc} mines: mine tiles = [${tiles.join(", ")}] (tile indices 0–24, left→right top→bottom)`,
+          `Mines round — nonce ${n}, ${mc} mines: mine tiles = [${tiles.join(", ")}] (tile indices 0–24, left→right top→bottom). Multiplier per gems revealed: ${mults.join(", ")}${moreGems}. RTP baked into the multiplier (96.5% target, no separate bias roll).`,
         );
       } else if (game === "keno") {
-        const drawn = await kenoResult(serverSeed.trim(), clientSeed.trim(), n);
+        const picks = kenoPicks
+          .split(/[\s,]+/)
+          .map((s) => parseInt(s, 10))
+          .filter((v) => Number.isInteger(v) && v >= 1 && v <= 40);
+        if (picks.length < 1 || picks.length > 10) {
+          setError("Picks must be 1–10 comma-separated numbers in 1–40.");
+          return;
+        }
+        // Fair draw (pre-bias) and the post-bias resolved outcome.
+        const fairFloats = await kenoFloatsFromSeeds(serverSeed.trim(), clientSeed.trim(), n);
+        const fairDrawn = drawKenoNumbers(fairFloats);
+        const pickSet = new Set(picks);
+        const fairHits = fairDrawn.filter((x) => pickSet.has(x)).length;
+        const fairMult = getKenoMultiplier(picks.length, fairHits, kenoRisk);
+        const { drawn, hits, multiplier } = await playKenoRound({
+          serverSeed: serverSeed.trim(),
+          clientSeed: clientSeed.trim(),
+          nonce: n,
+          picks,
+          risk: kenoRisk,
+        });
+        const bias = await rtpBiasFloat(serverSeed.trim(), clientSeed.trim(), n, "keno");
+        const retained = retainStakeStyleWin(bias);
         setResult(
-          `Keno round — nonce ${n}: drawn numbers = [${drawn.join(", ")}] (10 of 40, fair draw before RTP bias)`,
+          `Keno round — nonce ${n}, picks=[${picks.join(",")}], risk=${kenoRisk}: fair drawn=[${fairDrawn.join(", ")}], hits=${fairHits}, mult=${fairMult}× → post-bias drawn=[${drawn.join(", ")}], hits=${hits}, mult=${multiplier}× (bias ${retained ? "retained" : "failed"}, float ${bias.toFixed(6)})`,
         );
       } else if (game === "blackjack") {
         const cc = parseInt(cardCount, 10);
@@ -249,7 +263,7 @@ export function VerifyRoundTool() {
         }
         const cards = await blackjackResult(serverSeed.trim(), clientSeed.trim(), n, cc);
         setResult(
-          `Blackjack round — nonce ${n}: first ${cc} cards = [${cards.join(", ")}] (shoe order, Stake card mapping ♦2→♣A)`,
+          `Blackjack round — nonce ${n}: first ${cc} cards = [${cards.join(", ")}] (shoe order, Stake card mapping ♦2→♣A). NOTE: blackjack applies its RTP bias at deal (tag \`bj-deal\`) and per-hand settle (tag \`bj-<handId>-<i>\`). The hand id is server-generated, so this tool shows only the fair shuffled shoe — if the server returned a different outcome on a natural blackjack or a stand/double/split resolve, the per-hand bias fired.`,
         );
       }
     } catch (err) {
@@ -308,6 +322,62 @@ export function VerifyRoundTool() {
               autoComplete="off"
             />
           </label>
+        )}
+        {game === "limbo" && (
+          <label className="settings__verify-label">
+            Target multiplier
+            <input
+              type="text"
+              className="settings__verify-input"
+              value={limboTarget}
+              onChange={(e) => setLimboTarget(e.target.value)}
+              placeholder="e.g. 2.00"
+              inputMode="decimal"
+              autoComplete="off"
+            />
+          </label>
+        )}
+        {game === "roulette" && (
+          <label className="settings__verify-label">
+            Bet type
+            <select
+              className="settings__verify-select"
+              value={rouletteBet}
+              onChange={(e) => setRouletteBet(e.target.value as "red" | "black" | "green")}
+            >
+              <option value="red">Red</option>
+              <option value="black">Black</option>
+              <option value="green">Green</option>
+            </select>
+          </label>
+        )}
+        {game === "keno" && (
+          <>
+            <label className="settings__verify-label">
+              Picks (1–10)
+              <input
+                type="text"
+                className="settings__verify-input"
+                value={kenoPicks}
+                onChange={(e) => setKenoPicks(e.target.value)}
+                placeholder="e.g. 1,5,10,15,20"
+                autoComplete="off"
+              />
+            </label>
+            <label className="settings__verify-label">
+              Risk
+              <select
+                className="settings__verify-select"
+                value={kenoRisk}
+                onChange={(e) => setKenoRisk(e.target.value as KenoRisk)}
+              >
+                <option value="classic">Classic</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+          </>
         )}
         <label className="settings__verify-label">
           Revealed server seed

@@ -81,16 +81,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (AUDIT_BYPASS) return;
     if (!isSupabaseConfigured) {
+      // Guest mode: synthesize a guest user so game bet buttons are enabled
+      // and the local-play fallback handles all game logic.
+      const guestUser = {
+        id: "guest",
+        aud: "authenticated",
+        role: "authenticated",
+        email: "guest@lottacash.local",
+        app_metadata: { provider: "guest" },
+        user_metadata: { username: "Guest" },
+        created_at: new Date().toISOString(),
+      } as unknown as User;
+      setUser(guestUser);
       setLoading(false);
       return;
     }
 
+    const guestUser = () => ({
+      id: "guest",
+      aud: "authenticated",
+      role: "authenticated",
+      email: "guest@lottacash.local",
+      app_metadata: { provider: "guest" },
+      user_metadata: { username: "Guest" },
+      created_at: new Date().toISOString(),
+    } as unknown as User);
+
     supabase.auth.getSession().then(({ data: { session: current } }) => {
       setSession(current);
-      setUser(current?.user ?? null);
+      setUser(current?.user ?? guestUser());
       if (current?.access_token) {
         supabase.realtime.setAuth(current.access_token);
       }
+      setLoading(false);
+    }).catch(() => {
+      // Supabase unreachable — fall back to guest mode so games are playable.
+      setUser(guestUser());
       setLoading(false);
     });
 
@@ -98,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
-      setUser(nextSession?.user ?? null);
+      setUser(nextSession?.user ?? guestUser());
       if (nextSession?.access_token) {
         supabase.realtime.setAuth(nextSession.access_token);
       }

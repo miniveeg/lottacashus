@@ -12,6 +12,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { normalizeUsername, validateUsername } from "../lib/username";
 import { useAuth } from "./AuthContext";
+import { localBalance } from "../lib/local-play";
 
 export type UserProfile = {
   username: string | null;
@@ -182,14 +183,68 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   );
 
   const refreshProfile = useCallback(async () => {
+    // In guest/local-play mode, refresh from the localStorage wallet.
+    if (!isSupabaseConfigured || (user?.id === "guest" && !session?.access_token)) {
+      setProfile((prev) => prev
+        ? { ...prev, balance: localBalance("balance"), sweepsCoins: localBalance("sweeps_coins") }
+        : prev);
+      return;
+    }
     await fetchProfile({ silent: true });
-  }, [fetchProfile]);
+  }, [fetchProfile, user?.id, session?.access_token]);
+
+  // Guest / local-play mode: when there's no real session (user is a guest),
+  // back the profile with the localStorage wallet so game balance checks work
+  // and the topbar shows the local balance.
+  useEffect(() => {
+    if (AUDIT_BYPASS) return;
+    if (user?.id === "guest" || !session?.access_token) {
+      const localProfile: UserProfile = {
+        username: "Guest",
+        email: null,
+        isAdmin: false,
+        balance: localBalance("balance"),
+        sweepsCoins: localBalance("sweeps_coins"),
+        totalWagered: 0,
+        totalDeposited: 0,
+        totalWithdrawn: 0,
+        totalWins: 0,
+        totalLosses: 0,
+        discordId: null,
+        discordUsername: null,
+        discordAvatar: null,
+        discordLinkedAt: null,
+      };
+      setProfile(localProfile);
+      setProfileLoading(false);
+      return;
+    }
+  }, [user?.id, session?.access_token]);
+
+  // Refresh the local profile whenever the tab regains focus (covers
+  // balance changes from local-play bets in another tab).
+  useEffect(() => {
+    if (!isSupabaseConfigured || user?.id !== "guest") return;
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        setProfile((prev) => prev ? { ...prev, balance: localBalance("balance"), sweepsCoins: localBalance("sweeps_coins") } : prev);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     if (AUDIT_BYPASS) return;
     if (!user?.id || !session?.access_token) {
-      setProfile(null);
-      setProfileLoading(false);
+      if (user?.id !== "guest") {
+        setProfile(null);
+        setProfileLoading(false);
+      }
       return;
     }
 

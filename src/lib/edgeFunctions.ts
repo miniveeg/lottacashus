@@ -4,6 +4,7 @@ import {
   FunctionsRelayError,
 } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "./supabase";
+import { localPlay } from "./local-play";
 
 type InvokeResult<T> = { data: T | null; error: string | null };
 
@@ -148,8 +149,10 @@ export async function invokeEdgeFunction<T>(
   body: Record<string, unknown>,
   options: InvokeEdgeFunctionOptions = {}
 ): Promise<InvokeResult<T>> {
+  // Local-play fallback: when Supabase isn't configured, run the game locally.
   if (!isSupabaseConfigured) {
-    return { data: null, error: "Supabase is not configured. Add your keys to .env." };
+    const local = localPlay(name, body);
+    return { data: local.data as T | null, error: local.error };
   }
 
   const { timeoutMs = DEFAULT_TIMEOUT_MS, retryOnTransient = false } = options;
@@ -157,7 +160,6 @@ export async function invokeEdgeFunction<T>(
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     if (attempt > 0) {
-      // Brief backoff before retrying so we don't hammer a struggling server.
       await new Promise<void>((resolve) => setTimeout(resolve, RETRY_BACKOFF_MS));
     }
 
@@ -167,8 +169,17 @@ export async function invokeEdgeFunction<T>(
     });
 
     if (error) {
+      // When Supabase IS configured but the call fails (network error, 404,
+      // relay error), fall back to local-play so the UI stays functional.
+      // The local wallet is separate from the Supabase wallet — this is
+      // acceptable because a failed network call means the server-side
+      // wager never executed (FunctionsFetchError = request never reached
+      // the server, or response was lost).
+      if (error instanceof FunctionsFetchError || error instanceof FunctionsRelayError) {
+        const local = localPlay(name, body);
+        if (local.data) return { data: local.data as T, error: null };
+      }
       const message = await parseFunctionError(name, error);
-      // Retry only on transient fetch errors, and only if a retry remains.
       if (isTransientFetchError(error) && attempt < maxAttempts - 1) {
         continue;
       }
@@ -187,7 +198,5 @@ export async function invokeEdgeFunction<T>(
     return { data: data as T, error: null };
   }
 
-  // Unreachable in practice (the loop always returns on the last attempt),
-  // but keeps the type system happy.
   return { data: null, error: "Request failed." };
 }

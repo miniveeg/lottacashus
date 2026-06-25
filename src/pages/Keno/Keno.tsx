@@ -146,10 +146,6 @@ export function Keno() {
 
   const handleBet = async () => {
     if (drawingRef.current) return;
-    if (!user) {
-      setError("Log in to play.");
-      return;
-    }
     if (selected.length < 1) {
       setError("Select at least one number.");
       return;
@@ -225,13 +221,13 @@ export function Keno() {
     <div className="keno lc-game-page">
       <Seo
         title="Keno"
-        description="Pick 1–10 numbers on a 40-tile board. Four risk modes from safe to extreme. Provably fair, 94.5% RTP."
+        description="Pick 1–10 numbers on a 40-tile board. Four risk modes from safe to extreme. Provably fair, 96.5% RTP."
         path="/keno"
       />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Keno</h1>
         <p className="lc-page__subtitle">
-          Pick 1–10 numbers from 40, 10 drawn per round. Provably fair — 94.5% RTP.
+          Pick 1–10 numbers from 40, 10 drawn per round. Provably fair — 96.5% RTP.
         </p>
       </header>
 
@@ -425,7 +421,7 @@ export function Keno() {
             type="button"
             className={`keno__bet-btn${drawing ? " keno__bet-btn--busy" : ""}`}
             onClick={handleBet}
-            disabled={drawing || pickCount < 1 || !user || exceedsMaxPayout}
+            disabled={drawing || pickCount < 1 || exceedsMaxPayout}
             aria-busy={drawing}
           >
             {drawing ? (
@@ -492,9 +488,9 @@ export function Keno() {
                   Draws use HMAC-SHA256 with Fisher-Yates selection (Stake Keno).
                 </p>
                 <p className="keno__fairness-note keno__fairness-note--disclosure">
-                  RTP disclosure: base draw odds target ~99% RTP; a deterministic
-                  bias roll (HMAC-SHA256, same seeds) downgrades ~4.5% of would-be
-                  wins to losses to enforce the displayed 94.5% RTP. The bias is
+                  RTP disclosure: base draw odds target ~99% RTP; a deterministic; a deterministic
+                  bias roll (HMAC-SHA256, same seeds) downgrades ~2.5% of would-be
+                  wins to losses to enforce the displayed 96.5% RTP. The bias is
                   verifiable post-rotation using the revealed server seed.
                 </p>
               </div>

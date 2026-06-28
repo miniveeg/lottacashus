@@ -150,7 +150,7 @@ export function GameAuthOverlay({
         You can browse the game board, but you need an account to place bets and win real balance.
       </p>
       <ul className="game-auth-overlay__perks">
-        <li>Play all 6 original games</li>
+        <li>Play all 8 original games</li>
         <li>Provably fair — verify every round</li>
         <li>Instant crypto deposits &amp; withdrawals</li>
         <li>Exclusive promotions &amp; affiliate rewards</li>

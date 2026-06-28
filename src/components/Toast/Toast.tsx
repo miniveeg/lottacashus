@@ -75,15 +75,15 @@ function ToastItemImpl({ toast, onDismiss }: ToastItemProps) {
       onTouchEnd={onTouchEnd}
     >
       {toast.variant === "loading" ? (
-        <Loader2 size={16} className="lc-toast__spinner" aria-hidden />
+        <Loader2 size={18} className="lc-toast__spinner" aria-hidden />
       ) : toast.variant === "success" ? (
-        <Check size={16} className="lc-toast__icon" aria-hidden />
+        <Check size={18} className="lc-toast__icon" aria-hidden />
       ) : toast.variant === "error" ? (
-        <X size={16} className="lc-toast__icon" aria-hidden />
+        <X size={18} className="lc-toast__icon" aria-hidden />
       ) : toast.variant === "warning" ? (
-        <AlertTriangle size={16} className="lc-toast__icon" aria-hidden />
+        <AlertTriangle size={18} className="lc-toast__icon" aria-hidden />
       ) : (
-        <Info size={16} className="lc-toast__icon" aria-hidden />
+        <Info size={18} className="lc-toast__icon" aria-hidden />
       )}
 
       <div className="lc-toast__body">

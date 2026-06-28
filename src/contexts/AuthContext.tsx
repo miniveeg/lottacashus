@@ -18,6 +18,11 @@ type AuthContextValue = {
   session: Session | null;
   loading: boolean;
   configured: boolean;
+  /** True when the user is a synthesized guest (no real Supabase session).
+   *  Guest users CANNOT call authenticated RPCs — the server rejects them.
+   *  Components that gate features on authentication MUST check `isGuest`
+   *  rather than just `user != null`. */
+  isGuest: boolean;
   sendSignupCode: (email: string, username?: string, birthDate?: string) => Promise<AuthResult>;
   completeSignup: (
     email: string,
@@ -47,10 +52,38 @@ function mapAuthError(message: string): string {
   return message;
 }
 
+// Guest user factory. Guests have a stable id="guest" and role="guest"
+// (NOT "authenticated") so client-side guards can distinguish them from real
+// logged-in users. The server-side RLS still treats them as anonymous
+// (auth.uid() IS NULL), so they cannot call authenticated RPCs anyway.
+function makeGuestUser(): User {
+  return {
+    id: "guest",
+    aud: "guest",
+    role: "guest",
+    email: "guest@lottacash.local",
+    app_metadata: { provider: "guest" },
+    user_metadata: { username: "Guest" },
+    created_at: new Date().toISOString(),
+  } as unknown as User;
+}
+
 // AUDIT-BYPASS: when VITE_AUDIT_BYPASS=1, synthesize a fake logged-in session
 // so auth-gated pages (Settings, Deposit, Withdraw, Profile, Admin) can be
 // viewed without real Supabase credentials. Only active in the audit build.
-const AUDIT_BYPASS = import.meta.env.VITE_AUDIT_BYPASS === "1";
+// PRODUCTION HARD-GUARD: this is FORBIDDEN in production via a build-time
+// constant check. If NODE_ENV=production and VITE_AUDIT_BYPASS=1, we throw
+// at module load to prevent an accidental deploy with bypass enabled.
+const AUDIT_BYPASS = import.meta.env.VITE_AUDIT_BYPASS === "1"
+  && import.meta.env.MODE !== "production";
+if (import.meta.env.PROD && import.meta.env.VITE_AUDIT_BYPASS === "1") {
+  // Refuse to load — an audit bypass in production is a critical security issue.
+  throw new Error(
+    "FATAL: VITE_AUDIT_BYPASS=1 is set in a production build. " +
+    "This synthesizes a fake auth session and must NEVER be deployed. " +
+    "Unset VITE_AUDIT_BYPASS before building for production."
+  );
+}
 const AUDIT_USER: User | null = AUDIT_BYPASS
   ? ({
       id: "audit-user-00000000",
@@ -82,41 +115,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (AUDIT_BYPASS) return;
     if (!isSupabaseConfigured) {
       // Guest mode: synthesize a guest user so game bet buttons are enabled
-      // and the local-play fallback handles all game logic.
-      const guestUser = {
-        id: "guest",
-        aud: "authenticated",
-        role: "authenticated",
-        email: "guest@lottacash.local",
-        app_metadata: { provider: "guest" },
-        user_metadata: { username: "Guest" },
-        created_at: new Date().toISOString(),
-      } as unknown as User;
-      setUser(guestUser);
+      // and the local-play fallback handles all game logic. The guest role
+      // is "guest" (NOT "authenticated") so client guards can distinguish.
+      setUser(makeGuestUser());
       setLoading(false);
       return;
     }
 
-    const guestUser = () => ({
-      id: "guest",
-      aud: "authenticated",
-      role: "authenticated",
-      email: "guest@lottacash.local",
-      app_metadata: { provider: "guest" },
-      user_metadata: { username: "Guest" },
-      created_at: new Date().toISOString(),
-    } as unknown as User);
-
     supabase.auth.getSession().then(({ data: { session: current } }) => {
       setSession(current);
-      setUser(current?.user ?? guestUser());
+      setUser(current?.user ?? makeGuestUser());
       if (current?.access_token) {
         supabase.realtime.setAuth(current.access_token);
       }
       setLoading(false);
     }).catch(() => {
       // Supabase unreachable — fall back to guest mode so games are playable.
-      setUser(guestUser());
+      setUser(makeGuestUser());
       setLoading(false);
     });
 
@@ -124,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
-      setUser(nextSession?.user ?? guestUser());
+      setUser(nextSession?.user ?? makeGuestUser());
       if (nextSession?.access_token) {
         supabase.realtime.setAuth(nextSession.access_token);
       }
@@ -191,6 +206,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       loading,
       configured: isSupabaseConfigured,
+      // A user is a guest iff they have no real Supabase session. Guests have
+      // id="guest" and role="guest". Real users have a UUID id from auth.users.
+      isGuest: !session || user?.id === "guest" || user?.role === "guest",
       sendSignupCode,
       completeSignup,
       signIn,

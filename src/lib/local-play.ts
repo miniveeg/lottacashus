@@ -93,6 +93,16 @@ function handValue(cards: { rank: string; suit: string }[]): number {
   while (total > 21 && aces > 0) { total -= 10; aces--; }
   return total;
 }
+/** True if the hand contains an ace counted as 11 (i.e. is "soft"). Matches
+ *  the `soft` flag returned by `handValue` in `src/lib/games/blackjack/cards.ts`
+ *  so local-play can apply the same H17 rule as the server + client engine. */
+function isSoftHand(cards: { rank: string; suit: string }[]): boolean {
+  let total = 0, aces = 0;
+  for (const c of cards) { if (c.rank === "A") { aces++; total += 11; } else if (["K","Q","J"].includes(c.rank)) total += 10; else total += Number(c.rank); }
+  let softAces = aces;
+  while (total > 21 && softAces > 0) { total -= 10; softAces--; }
+  return softAces > 0;
+}
 function cardToNum(card: { rank: string; suit: string }): number {
   const suitIdx = SUITS.indexOf(card.suit);
   const rankIdx = RANKS.indexOf(card.rank);
@@ -124,6 +134,11 @@ function placeLimboBet(body: Record<string, unknown>): Result {
   const wager = Number(body.wager); const target = Number(body.target); const coinType = String(body.coinType ?? "balance");
   if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
   if (!isFinite(target) || target < 1.01) return { data: null, error: "Target must be ≥ 1.01." };
+  // Max-payout cap (matches production place-limbo-bet/index.ts).
+  const LIMBO_MAX_PAYOUT = 100_000;
+  if (Math.round(wager * target * 100) / 100 > LIMBO_MAX_PAYOUT) {
+    return { data: null, error: `Payout exceeds the maximum allowed (${LIMBO_MAX_PAYOUT.toLocaleString()}). Lower your wager or target.` };
+  }
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
   const point = crashPoint();
   const won = point >= target;
@@ -135,15 +150,32 @@ function placeLimboBet(body: Record<string, unknown>): Result {
 function placeCrashBet(body: Record<string, unknown>): Result {
   const wager = Number(body.wager); const coinType = String(body.coinType ?? "balance");
   if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+  // Max-payout cap (matches production place-crash-bet/index.ts). The
+  // crash-point formula can produce up to ~1,000,000× but the server caps
+  // the potential payout at 100,000. With a worst-case multiplier of 1,000×
+  // (the 99.99th percentile), the max allowed wager is 100.
+  const CRASH_MAX_PAYOUT = 100_000;
+  const crashWorstCaseMultiplier = 1_000;
+  if (Math.round(wager * crashWorstCaseMultiplier * 100) / 100 > CRASH_MAX_PAYOUT) {
+    return { data: null, error: `Potential payout exceeds the maximum allowed (${CRASH_MAX_PAYOUT.toLocaleString()}). Lower your wager.` };
+  }
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
   const point = crashPoint();
   const betId = uid();
   crashBets.set(betId, { crashPoint: point, wager, coinType, busted: false });
-  return { data: { betId, crashPoint: point, won: false, payout: 0, cashedAt: null, nonce: randInt(999999), balance: localBalance(coinType), coinType }, error: null };
+  // LOW (audit fix-games): do NOT return crashPoint in the bet-creation
+  // response. The production server deliberately withholds it (provably-
+  // fair guarantee — the client learns the crash point only when the
+  // round resolves via cash-out or auto-settle). The Crash.tsx animation
+  // doesn't use it; it derives the curve from the cash-out response.
+  return { data: { betId, won: false, payout: 0, cashedAt: null, nonce: randInt(999999), balance: localBalance(coinType), coinType }, error: null };
 }
 
 function cashOutCrash(body: Record<string, unknown>): Result {
   const betId = String(body.betId); const cashedAt = Number(body.cashedAtMultiplier); const coinType = String(body.coinType ?? "balance");
+  // MEDIUM (audit fix-games): reject cashout at exactly 1.00× — a
+  // break-even bot could play indefinitely with zero risk. Min 1.01×.
+  if (!isFinite(cashedAt) || cashedAt < 1.01) return { data: null, error: "Minimum cash-out is 1.01×." };
   const bet = crashBets.get(betId);
   if (!bet) return { data: null, error: "Bet not found." };
   if (bet.busted) return { data: null, error: "Bet already crashed." };
@@ -162,6 +194,12 @@ function minesGame(body: Record<string, unknown>): Result {
     const wager = Number(body.wager); const mineCount = Number(body.mineCount);
     if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
     if (mineCount < 1 || mineCount > 24) return { data: null, error: "Mines must be 1–24." };
+    // Max-payout cap (matches production mines-game/index.ts).
+    const MINES_MAX_PAYOUT = 100_000;
+    const minesWorstCaseMultiplier = 24475;
+    if (Math.round(wager * minesWorstCaseMultiplier * 100) / 100 > MINES_MAX_PAYOUT) {
+      return { data: null, error: `Potential payout exceeds the maximum allowed (${MINES_MAX_PAYOUT.toLocaleString()}). Lower your wager.` };
+    }
     if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
     const gameId = uid();
     const mines = new Set(shuffle(Array.from({ length: 25 }, (_, i) => i)).slice(0, mineCount));
@@ -203,6 +241,13 @@ function placeKenoBet(body: Record<string, unknown>): Result {
   const wager = Number(body.wager); const picks = (body.picks as number[]) ?? []; const coinType = String(body.coinType ?? "balance");
   if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
   if (picks.length < 1 || picks.length > 10) return { data: null, error: "Pick 1–10 numbers." };
+  // Max-payout cap (matches production place-keno-bet/index.ts). Top
+  // paytable multiplier is 1000× (low/medium/high risk, 9 or 10 picks).
+  const KENO_MAX_PAYOUT = 100_000;
+  const kenoWorstCaseMultiplier = 1000;
+  if (Math.round(wager * kenoWorstCaseMultiplier * 100) / 100 > KENO_MAX_PAYOUT) {
+    return { data: null, error: `Potential payout exceeds the maximum allowed (${KENO_MAX_PAYOUT.toLocaleString()}). Lower your wager.` };
+  }
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
   const draw = shuffle(Array.from({ length: 40 }, (_, i) => i + 1)).slice(0, 10);
   const hits = draw.filter((n) => picks.includes(n)).length;
@@ -223,15 +268,29 @@ function placeKenoBet(body: Record<string, unknown>): Result {
 }
 
 function placeRouletteBet(body: Record<string, unknown>): Result {
-  const wager = Number(body.wager); const betType = String(body.betType) as "red"|"black"|"green"|"low"|"high"|"dozen1"|"dozen2"|"dozen3"; const coinType = String(body.coinType ?? "balance");
+  const wager = Number(body.wager); const betType = String(body.betType) as "red"|"black"|"green"; const coinType = String(body.coinType ?? "balance");
   if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+  // Match the production server's bet-type allow-list (audit MEDIUM):
+  // production only accepts red/black/green. The local-play previously
+  // accepted low/high/dozen1/dozen2/dozen3 — those would work in guest
+  // mode and fail in production ("Bet on red, black, or green.").
+  if (betType !== "red" && betType !== "black" && betType !== "green") {
+    return { data: null, error: "Bet on red, black, or green." };
+  }
+  // Max-payout cap (matches production place-roulette-bet/index.ts).
+  // Green pays 36×, red/black pay 2×. Cap potential payout at 100,000.
+  const ROULETTE_MAX_PAYOUT = 100_000;
+  const rouletteMultiplier = betType === "green" ? 36 : 2;
+  if (Math.round(wager * rouletteMultiplier * 100) / 100 > ROULETTE_MAX_PAYOUT) {
+    return { data: null, error: `Payout exceeds the maximum allowed (${ROULETTE_MAX_PAYOUT.toLocaleString()}). Lower your wager.` };
+  }
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
   const RED = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
   const colorOf = (n: number) => n === 0 ? "green" : RED.has(n) ? "red" : "black";
   const wins = (b: typeof betType, n: number) => {
-    switch (b) { case "red": return colorOf(n)==="red"; case "black": return colorOf(n)==="black"; case "green": return n===0; case "low": return n>=1&&n<=18; case "high": return n>=19&&n<=36; case "dozen1": return n>=1&&n<=12; case "dozen2": return n>=13&&n<=24; case "dozen3": return n>=25&&n<=36; }
+    switch (b) { case "red": return colorOf(n)==="red"; case "black": return colorOf(n)==="black"; case "green": return n===0; }
   };
-  const payoutMap: Record<string, number> = { red:2, black:2, green:36, low:2, high:2, dozen1:3, dozen2:3, dozen3:3 };
+  const payoutMap: Record<string, number> = { red:2, black:2, green:36 };
   let pocket = randInt(37);
   if (wins(betType, pocket) && !keepWin(36/37, GAME_RTP)) {
     const losing: number[] = []; for (let n = 0; n < 37; n++) if (!wins(betType, n)) losing.push(n);
@@ -249,6 +308,13 @@ function blackjackGame(body: Record<string, unknown>): Result {
   if (action === "start") {
     const wager = Number(body.wager);
     if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+    // Max-payout cap (matches production blackjack-game/index.ts).
+    // Worst case: 3:2 on a doubled hand = 5× wager.
+    const BLACKJACK_MAX_PAYOUT = 100_000;
+    const bjWorstCaseMultiplier = 5;
+    if (Math.round(wager * bjWorstCaseMultiplier * 100) / 100 > BLACKJACK_MAX_PAYOUT) {
+      return { data: null, error: `Potential payout exceeds the maximum allowed (${BLACKJACK_MAX_PAYOUT.toLocaleString()}). Lower your wager.` };
+    }
     if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
     const shoe = freshShoe();
     const player = [shoe.pop()!, shoe.pop()!];
@@ -290,7 +356,11 @@ function blackjackGame(body: Record<string, unknown>): Result {
 
 function standBj(handId: string, h: PendingBlackjack): Result {
   h.dealerRevealed = true;
-  while (handValue(h.dealer) < 17) h.dealer.push(h.shoe.pop()!);
+  // MEDIUM (audit fix-games): apply H17 (hit soft 17) consistently with the
+  // server `_shared/blackjack.ts` and client `engine.ts`. The prior code
+  // used S17 (stand on all 17s) — inconsistent with the rest of the
+  // codebase, and player-favorable by ~0.2% EV.
+  while (handValue(h.dealer) < 17 || (handValue(h.dealer) === 17 && isSoftHand(h.dealer))) h.dealer.push(h.shoe.pop()!);
   const pv = handValue(h.player), dv = handValue(h.dealer);
   let status: string, outcome: string, payout: number | undefined;
   if (dv > 21 || pv > dv) {
@@ -326,6 +396,13 @@ const SLOTS_PAYOUTS = [3, 5, 8, 15, 30, 80, 190]; // sum = 331 → 331/343 = 96.
 function placeSlotsBet(body: Record<string, unknown>): Result {
   const wager = Number(body.wager); const coinType = String(body.coinType ?? "balance");
   if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+  // Max-payout cap (matches production place-slots-bet/index.ts). Top
+  // symbol (👑) pays 190×.
+  const SLOTS_MAX_PAYOUT = 100_000;
+  const slotsWorstCaseMultiplier = 190;
+  if (Math.round(wager * slotsWorstCaseMultiplier * 100) / 100 > SLOTS_MAX_PAYOUT) {
+    return { data: null, error: `Potential payout exceeds the maximum allowed (${SLOTS_MAX_PAYOUT.toLocaleString()}). Lower your wager.` };
+  }
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
   const reels = [randInt(7), randInt(7), randInt(7)];
   const won = reels[0] === reels[1] && reels[1] === reels[2];

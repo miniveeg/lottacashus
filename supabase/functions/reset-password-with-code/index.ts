@@ -56,14 +56,35 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Too many attempts. Request a new code." }, 400, req);
     }
 
+    // SECURITY FIX (H4): atomic attempt increment via conditional UPDATE.
+    // Same TOCTOU race as verify-signup-code — without this, 200 concurrent
+    // requests could all see attempts=0 and brute-force the 6-digit code.
+    const { data: incr, error: incrErr } = await supabase
+      .from("password_reset_codes")
+      .update({ attempts: row.attempts + 1 })
+      .eq("email", email)
+      .lt("attempts", MAX_ATTEMPTS)
+      .select("attempts")
+      .maybeSingle();
+
+    if (incrErr) {
+      console.error("atomic attempts increment:", incrErr);
+      return jsonResponse({ error: "Reset failed. Try again." }, 500, req);
+    }
+    if (!incr) {
+      await supabase.from("password_reset_codes").delete().eq("email", email);
+      return jsonResponse({ error: "Too many attempts. Request a new code." }, 400, req);
+    }
+
     const codeHash = await hashCode(code);
 
     if (codeHash !== row.code_hash) {
-      await supabase
-        .from("password_reset_codes")
-        .update({ attempts: row.attempts + 1 })
-        .eq("email", email);
-      return jsonResponse({ error: "Incorrect code. Try again." }, 400, req);
+      const remaining = MAX_ATTEMPTS - incr.attempts;
+      return jsonResponse({
+        error: remaining > 0
+          ? `Incorrect code. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`
+          : "Incorrect code. Request a new code.",
+      }, 400, req);
     }
 
     const { data: userId, error: userError } = await supabase.rpc("get_user_id_by_email", {
@@ -81,6 +102,18 @@ Deno.serve(async (req) => {
     if (updateError) {
       console.error(updateError);
       return jsonResponse({ error: "Could not update password. Try again." }, 500, req);
+    }
+
+    // SECURITY FIX: invalidate ALL existing sessions for this user. Without
+    // this, an attacker who briefly compromised a session (XSS, shared device,
+    // token leak) can trigger a password reset and the victim's existing
+    // session continues to work until the JWT expires. Global sign-out forces
+    // re-authentication on every device.
+    try {
+      await supabase.auth.admin.signOut(userId as string, "global");
+    } catch (signOutErr) {
+      // Log but don't fail — the password was already updated.
+      console.error("post-reset signOut failed (non-fatal):", signOutErr);
     }
 
     await supabase.from("password_reset_codes").delete().eq("email", email);

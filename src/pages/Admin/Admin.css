@@ -299,6 +299,16 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(220, 20, 60, 0.08);
 }
 
+/* C2 (UI/UX audit): the overview cards act as buttons (role="button" + Enter/Space
+   keyboard activation), so mirror the hover lift on keyboard focus too. */
+.admin__overview-card:focus-visible {
+  outline: 2px solid var(--lc-crimson);
+  outline-offset: 2px;
+  border-color: var(--lc-crimson);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(220, 20, 60, 0.08);
+}
+
 .admin__overview-card-head {
   display: flex;
   align-items: center;

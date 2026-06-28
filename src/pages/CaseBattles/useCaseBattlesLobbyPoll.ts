@@ -2,7 +2,13 @@ import { useEffect } from "react";
 
 const POLL_MS = 2000;
 
-/** Poll lobby on an interval and whenever the tab becomes visible again. */
+/** Poll lobby on an interval and whenever the tab becomes visible again.
+ *
+ * The `focus` event listener was removed (audit H1) — it fired a lobby
+ * refetch every time the user alt-tabbed back to the tab, which is
+ * excessive. The realtime subscription in useLobbySubscription covers
+ * instant updates, the 2 s poll covers the rest, and `visibilitychange`
+ * still fires one refetch when the user returns to the tab. */
 export function useCaseBattlesLobbyPoll(
   enabled: boolean,
   loadLobby: () => void | Promise<void>
@@ -23,13 +29,9 @@ export function useCaseBattlesLobbyPoll(
     };
     document.addEventListener("visibilitychange", onVisibility);
 
-    const onFocus = () => tick();
-    window.addEventListener("focus", onFocus);
-
     return () => {
       window.clearInterval(intervalId);
       document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("focus", onFocus);
     };
   }, [enabled, loadLobby]);
 }

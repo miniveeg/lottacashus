@@ -202,6 +202,24 @@
   color: #fca5a5;
 }
 
+/* M13: distinct amber styling for the cashout-failed outcome. This is NOT
+   a natural crash — the user tried to cash out but the multiplier had
+   already passed the crash point. The amber color signals "your action
+   failed" rather than "you lost the round" (which is red). Includes a
+   subtle left-border accent + entrance animation so it draws the eye. */
+.crash__outcome--cashout-failed {
+  background: rgba(245, 185, 66, 0.1);
+  border: 1px solid rgba(245, 185, 66, 0.3);
+  border-left: 3px solid var(--lc-amber);
+  color: var(--lc-amber);
+  animation: crash-outcome-enter 0.3s ease-out;
+}
+
+@keyframes crash-outcome-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .crash__cashout-btn {
   min-height: 3rem;
   padding: 0.85rem 1rem;
@@ -223,6 +241,11 @@
 .crash__cashout-btn:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
+}
+
+/* Press feedback — satisfying "click" feel on the cashout button. */
+.crash__cashout-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .crash__cashout-btn:disabled {
@@ -251,6 +274,10 @@
 .crash__bet-btn:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
+}
+
+.crash__bet-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .crash__bet-btn:disabled {

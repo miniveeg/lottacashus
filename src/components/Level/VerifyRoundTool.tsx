@@ -17,7 +17,7 @@ import { retainStakeStyleWin, retainRouletteWin } from "../../lib/games/rtp";
  * the house didn't cheat. Complements the rotate-seed feature: after
  * rotating, the player gets the revealed seed and can verify any past round.
  *
- * Supports all 6 games: Limbo, Crash, Roulette, Mines, Keno, Blackjack.
+ * Supports all 8 games: Keno, Mines, Limbo, Roulette, Blackjack, Crash, Slots, Case Battles.
  * For Limbo / Roulette / Keno the verifier replicates the full RTP bias
  * step (retainStakeStyleWin / retainRouletteWin) so the post-bias result
  * matches what the server actually returned. Crash and Mines have no
@@ -277,7 +277,7 @@ export function VerifyRoundTool() {
       <p className="settings__hint">
         After rotating your server seed, paste the revealed seed plus the client seed and nonce from
         a past round to recompute the outcome. If it matches what the game displayed, the round was
-        fair. Supports all 6 games: Limbo, Crash, Roulette, Mines, Keno, and Blackjack.
+        fair. Supports all 8 games: Keno, Mines, Limbo, Roulette, Blackjack, Crash, Slots, and Case Battles.
       </p>
       <div className="settings__verify-row">
         <label className="settings__verify-label">

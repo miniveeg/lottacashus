@@ -515,8 +515,20 @@
   .lc-select-native,
   .wallet__input,
   .admin__input,
-  .settings__input {
+  .settings__input,
+  /* C4/C5/C6 (UI/UX audit): game wager adjust buttons (½, 2×, MAX) and the
+     wager input were ~41.6px (2.6rem) on mobile — below the 44px WCAG
+     2.5.5 / 2.5.8 touch-target minimum. The toast close, sidebar collapse,
+     topbar coin-info and coin-popover close buttons are also sub-44px on
+     hybrid/touch devices. Bump all of them on mobile. */
+  .game-controls__wager-adj,
+  .game-controls__wager-input,
+  .lc-toast__close,
+  .sidebar__collapse-btn,
+  .topbar__coin-info,
+  .topbar__coin-popover-close {
     min-height: 44px;
+    min-width: 44px;
   }
 }
 

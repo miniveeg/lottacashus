@@ -11,6 +11,7 @@ import {
   cashOutCrash,
   setCrashClientSeed,
 } from "../../lib/crash";
+import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import { truncateCrashMultiplier } from "../../lib/games/crash";
 import "../../styles/game-controls.css";
 import "./Crash.css";
@@ -22,6 +23,15 @@ const CRASH_SPEED_K = 0.008;
 const CRASH_SPEED_EXP = 1.6;
 const CANVAS_BASE_WIDTH = 600;
 const CANVAS_BASE_HEIGHT = 320;
+// Maximum multiplier the client animation will render. The server caps actual
+// payouts at 100,000x but the curve can climb higher mathematically; we hard-
+// stop the animation here so an uncashed-out user sees a crash rather than an
+// infinitely climbing chart. The server's auto-settle cron closes the bet.
+const CLIENT_MAX_MULTIPLIER = 1_000_000;
+// Polling interval for detecting server-side bet settlement (when the user
+// never cashes out). The server's crash_settle_expired_bets cron runs every
+// 60s; we poll every 2s for a responsive UX.
+const SETTLEMENT_POLL_MS = 2_000;
 
 export function Crash() {
   const { user } = useAuth();
@@ -30,8 +40,23 @@ export function Crash() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
+  // tickRef holds the most recent rAF `tick` closure so the visibilitychange
+  // handler (audit H5) can resume the animation when the tab becomes visible
+  // again. The closure captures the per-round `startTime`, `pts`, and canvas
+  // context, so we must reuse the SAME function — not recreate it.
+  const tickRef = useRef<(() => void) | null>(null);
   const phaseRef = useRef<CrashPhaseLocal>("idle");
-  const crashPointRef = useRef(1);
+  // The client NEVER knows the crash point during an active round (this is
+  // the core provably-fair guarantee). The animation runs without an upper
+  // bound; it stops when:
+  //   1. The user clicks cash out (server returns success=true, payout)
+  //   2. The user clicks cash out at the wrong moment (server returns
+  //      success=false with the actual crash_point so we can show the crash)
+  //   3. The server's auto-settle cron closes the bet (we poll for this via
+  //      crash_bets_safe.completed_at)
+  // crashPointRef holds the crash point ONLY AFTER the round is over.
+  const crashPointRef = useRef<number | null>(null);
+  const settlementPollRef = useRef<number | null>(null);
   // busyRef guards handleBet against double-clicks (Bet button disappears
   // immediately on phase=running, but a sub-ms race window exists between the
   // click and the re-render). cashingOutRef + cashingOut state guard
@@ -55,6 +80,11 @@ export function Crash() {
     won: boolean;
     payout: number;
     cashedAt: number | null;
+    /** M13: true when the user attempted to cash out but the server rejected
+     *  it because the multiplier had already passed the crash point. The UI
+     *  shows a distinct "cashout failed" banner instead of the generic
+     *  "crashed" message so the user understands what happened. */
+    cashoutFailed?: boolean;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cashingOut, setCashingOut] = useState(false);
@@ -88,6 +118,31 @@ export function Crash() {
   useEffect(() => {
     if (user) loadPf();
   }, [user, loadPf]);
+
+  // Pause the rAF loop when the tab is hidden (audit H5). Browsers throttle
+  // rAF to ~1 fps on hidden tabs, but each throttled tick still calls
+  // setMultiplier → React reconciliation + Canvas redraw. Cancelling the
+  // rAF entirely eliminates that waste. When the tab becomes visible again
+  // and the round is still running, resume the loop with the SAME tick
+  // closure (captured via tickRef) so the chart continues smoothly.
+  // NOTE: this does NOT pause the wall-clock `startTime` — the chart will
+  // visually jump forward when the tab regains visibility. That drift is a
+  // known limitation (the audit calls it out separately) and is bounded by
+  // the server's auto-settle cron.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (animRef.current) {
+          cancelAnimationFrame(animRef.current);
+          animRef.current = 0;
+        }
+      } else if (phaseRef.current === "running" && tickRef.current) {
+        animRef.current = requestAnimationFrame(tickRef.current);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, []);
 
   const applyWager = (value: number) => {
     const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
@@ -243,7 +298,7 @@ export function Crash() {
     }
   }
 
-  function startAnimation(crashPt: number) {
+  function startAnimation() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctxRaw = canvas.getContext("2d");
@@ -257,7 +312,9 @@ export function Crash() {
     pts.length = 0;
     pts.push({ x: 0, y: 1 });
     phaseRef.current = "running";
-    crashPointRef.current = crashPt;
+    // CRITICAL FIX: do NOT set crashPointRef here — the client doesn't know
+    // the crash point. It remains null until the server reveals it (via
+    // cashOutCrash response or settlement poll).
 
     // Use wall-clock time so the growth rate is independent of the display's
     // refresh rate. The original `elapsed += 1/60` per tick made the animation
@@ -274,27 +331,28 @@ export function Crash() {
       const current = Math.exp(CRASH_SPEED_K * Math.pow(elapsed, CRASH_SPEED_EXP));
       const truncated = truncateCrashMultiplier(current);
 
-      if (truncated >= crashPt) {
-        // If a cashout is currently in-flight, don't visually crash yet —
-        // let the cashout response determine the outcome. The server is the
-        // source of truth; if the cashout failed, the error handler will
-        // show the crashed state.
-        if (cashingOutRef.current) {
-          // Keep the chart at the crash point but don't change phase
-          pts.push({ x: elapsed, y: crashPt });
-          drawGraph(ctx, w, h, pts, crashPt, false);
-          animRef.current = requestAnimationFrame(tick);
-          return;
-        }
-        pts.push({ x: elapsed, y: crashPt });
-        drawGraph(ctx, w, h, pts, crashPt, true);
-        multiplierRef.current = crashPt;
-        setMultiplier(crashPt);
+      // If a cashout is currently in-flight, freeze the chart at the current
+      // multiplier and wait for the server response.
+      if (cashingOutRef.current) {
+        pts.push({ x: elapsed, y: truncated });
+        drawGraph(ctx, w, h, pts, truncated, false);
+        animRef.current = requestAnimationFrame(tick);
+        return;
+      }
+
+      // Hard-stop at CLIENT_MAX_MULTIPLIER to prevent the chart from climbing
+      // forever if the user never cashes out and the settlement poll hasn't
+      // fired yet. The server's auto-settle cron will close the bet shortly.
+      if (truncated >= CLIENT_MAX_MULTIPLIER) {
+        pts.push({ x: elapsed, y: CLIENT_MAX_MULTIPLIER });
+        drawGraph(ctx, w, h, pts, CLIENT_MAX_MULTIPLIER, true);
+        multiplierRef.current = CLIENT_MAX_MULTIPLIER;
+        setMultiplier(CLIENT_MAX_MULTIPLIER);
         phaseRef.current = "idle";
         displayPhaseRef.current = "crashed";
         setPhase("crashed");
         setLastResult((prev) => ({
-          crashedAt: crashPt,
+          crashedAt: CLIENT_MAX_MULTIPLIER,
           won: false,
           payout: 0,
           cashedAt: prev?.cashedAt ?? null,
@@ -310,14 +368,74 @@ export function Crash() {
       animRef.current = requestAnimationFrame(tick);
     }
 
+    // Expose tick to the visibilitychange handler so it can resume the loop
+    // when the tab becomes visible again (audit H5).
+    tickRef.current = tick;
     animRef.current = requestAnimationFrame(tick);
   }
 
+  /** Stop the settlement poll (if running) and the animation. */
   function stopAnimation() {
     if (animRef.current) {
       cancelAnimationFrame(animRef.current);
       animRef.current = 0;
     }
+    tickRef.current = null;
+    if (settlementPollRef.current) {
+      clearInterval(settlementPollRef.current);
+      settlementPollRef.current = null;
+    }
+  }
+
+  /** Mark the round as crashed at `crashPoint` and update the UI. Used by both
+   *  the cashout-failed path and the settlement-poll path. */
+  function showCrashed(crashPoint: number) {
+    stopAnimation();
+    crashPointRef.current = crashPoint;
+    phaseRef.current = "idle";
+    displayPhaseRef.current = "crashed";
+    setPhase("crashed");
+    multiplierRef.current = crashPoint;
+    setMultiplier(crashPoint);
+    setLastResult((prev) => ({
+      crashedAt: crashPoint,
+      won: false,
+      payout: 0,
+      cashedAt: prev?.cashedAt ?? null,
+    }));
+  }
+
+  /** Start polling crash_bets_safe for the server-side settlement of this bet.
+   *  The server's auto-settle cron marks the bet as completed_at=now() after
+   *  2 minutes if the user never cashed out. We detect this and reveal the
+   *  crash_point (which the safe view exposes only after completed_at is set). */
+  function startSettlementPoll(betId: string) {
+    if (!isSupabaseConfigured) return;
+    if (settlementPollRef.current) clearInterval(settlementPollRef.current);
+    settlementPollRef.current = window.setInterval(async () => {
+      if (cancelledRef.current) {
+        if (settlementPollRef.current) clearInterval(settlementPollRef.current);
+        return;
+      }
+      if (phaseRef.current !== "running") {
+        if (settlementPollRef.current) clearInterval(settlementPollRef.current);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("crash_bets_safe")
+          .select("crash_point, completed_at, won")
+          .eq("id", betId)
+          .maybeSingle();
+        if (error) return;
+        if (data?.completed_at && data.crash_point != null) {
+          showCrashed(Number(data.crash_point));
+          void refreshProfile();
+        }
+      } catch {
+        // Swallow — polling errors are non-fatal; the next interval retries.
+      }
+    }, SETTLEMENT_POLL_MS);
   }
 
   // Responsive canvas: scale the backing store to match the displayed size × DPR
@@ -406,7 +524,12 @@ export function Crash() {
     setBetId(data.betId);
     setPfNonce(data.nonce + 1);
     busyRef.current = false;
-    startAnimation(data.crashPoint);
+    // CRITICAL FIX: do NOT pass data.crashPoint — the server deliberately
+    // withholds it (provably-fair guarantee). The animation runs without an
+    // upper bound; it stops when the user cashes out, the cashout fails (server
+    // reveals crash_point), or the settlement poll detects server-side close.
+    startAnimation();
+    startSettlementPoll(data.betId);
     void refreshProfile();
   };
 
@@ -434,42 +557,60 @@ export function Crash() {
 
     if (cashErr || !data) {
       if (cancelledRef.current) return;
-      // Stop animation now that we know the result
-      stopAnimation();
-      phaseRef.current = "idle";
+      // Network/server error: we don't know the outcome. Stop animation and
+      // let the settlement poll (still running) reveal the crash_point when
+      // the server's auto-settle cron closes the bet. Don't fabricate a
+      // crashPoint — show a generic error.
       cashingOutRef.current = false;
       setCashingOut(false);
-      displayPhaseRef.current = "crashed";
-      setPhase("crashed");
-      multiplierRef.current = crashPointRef.current;
-      setMultiplier(crashPointRef.current);
-      setLastResult((prev) => ({
-        crashedAt: crashPointRef.current,
-        won: false,
-        payout: 0,
-        cashedAt: prev?.cashedAt ?? null,
-      }));
-      setError(cashErr ?? "Cash out failed — bet crashed.");
+      setError(cashErr ?? "Cash out failed. The bet will be settled by the server.");
       void refreshProfile();
       return;
     }
 
-    // Stop the animation now that we have the server result
+    // Stop the animation + settlement poll now that we have the server result.
     stopAnimation();
     cashingOutRef.current = false;
     setCashingOut(false);
     phaseRef.current = "idle";
-    displayPhaseRef.current = "cashed_out";
-    setPhase("cashed_out");
-    const cashedAtMult = data.cashedAt;
-    multiplierRef.current = cashedAtMult;
-    setMultiplier(cashedAtMult);
-    setLastResult({
-      crashedAt: crashPointRef.current,
-      won: true,
-      payout: data.payout,
-      cashedAt: cashedAtMult,
-    });
+
+    if (data.won) {
+      // Successful cashout.
+      displayPhaseRef.current = "cashed_out";
+      setPhase("cashed_out");
+      const cashedAtMult = data.cashedAt;
+      multiplierRef.current = cashedAtMult;
+      setMultiplier(cashedAtMult);
+      // If the server also revealed the crash_point (it does in the new schema),
+      // store it for the result display.
+      const crashPt = data.crashPoint ?? null;
+      if (crashPt != null) crashPointRef.current = crashPt;
+      setLastResult({
+        crashedAt: crashPt ?? cashedAtMult,
+        won: true,
+        payout: data.payout,
+        cashedAt: cashedAtMult,
+      });
+    } else {
+      // Cashout failed because the user tried to cash out AFTER the crash point.
+      // The server has settled the bet as a loss and revealed the crash_point.
+      const crashPt = data.crashPoint ?? multAtClick;
+      crashPointRef.current = crashPt;
+      displayPhaseRef.current = "crashed";
+      setPhase("crashed");
+      multiplierRef.current = crashPt;
+      setMultiplier(crashPt);
+      // M13: flag this as a cashout-failure (not a natural crash) so the
+      // outcome banner shows a distinct message explaining what happened.
+      setLastResult((prev) => ({
+        crashedAt: crashPt,
+        won: false,
+        payout: 0,
+        cashedAt: prev?.cashedAt ?? null,
+        cashoutFailed: true,
+      }));
+      setError("Cash out failed — the multiplier had already crashed.");
+    }
     void refreshProfile();
   };
 
@@ -541,11 +682,23 @@ export function Crash() {
           </div>
 
           {lastResult && phase === "crashed" && (
-            <div className="crash__outcome crash__outcome--loss" role="status" aria-live="assertive">
-              <p>
-                Crashed at <strong>{lastResult.crashedAt.toFixed(2)}x</strong> — lost{" "}
-                <strong>{formatCoins(wager, coinType)}</strong>
-              </p>
+            <div
+              className={`crash__outcome ${lastResult.cashoutFailed ? "crash__outcome--cashout-failed" : "crash__outcome--loss"}`}
+              role="status"
+              aria-live="assertive"
+            >
+              {lastResult.cashoutFailed ? (
+                <p>
+                  <strong>Cash out failed</strong> — the multiplier had already
+                  crashed at <strong>{lastResult.crashedAt.toFixed(2)}x</strong>.
+                  Your wager of <strong>{formatCoins(wager, coinType)}</strong> was lost.
+                </p>
+              ) : (
+                <p>
+                  Crashed at <strong>{lastResult.crashedAt.toFixed(2)}x</strong> — lost{" "}
+                  <strong>{formatCoins(wager, coinType)}</strong>
+                </p>
+              )}
             </div>
           )}
         </section>
@@ -613,6 +766,7 @@ export function Crash() {
               onClick={handleCashOut}
               disabled={cashingOut}
               aria-busy={cashingOut}
+              aria-disabled={cashingOut}
             >
               {cashingOut
                 ? "Cashing out…"
@@ -624,6 +778,7 @@ export function Crash() {
               className="crash__bet-btn"
               onClick={handleBet}
               disabled={exceedsMaxPayout}
+              aria-disabled={exceedsMaxPayout}
             >
               {exceedsMaxPayout
                 ? "Payout exceeds cap"

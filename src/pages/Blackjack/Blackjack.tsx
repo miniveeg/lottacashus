@@ -189,7 +189,10 @@ export function Blackjack() {
     applyHand(data);
     if (data.status === "settled") finishSettled(data);
     if (data.nonce != null) setPfNonce(data.nonce + 1);
-    void refreshProfile();
+    // No refreshProfile() here — ProfileContext's realtime subscription on
+    // `profiles` pushes the new balance (wager debit) the instant the server
+    // commits start_blackjack_hand. Calling it would fire 2 redundant RPCs
+    // (ensure_user_profile + is_current_user_admin) per bet.
   };
 
   const runAction = async (
@@ -230,7 +233,10 @@ export function Blackjack() {
     } else {
       applyHand(data);
     }
-    void refreshProfile();
+    // No refreshProfile() here — ProfileContext's realtime subscription on
+    // `profiles` pushes the new balance the instant the server commits any
+    // debit/credit from this action (double/split/insurance or settlement).
+    // Calling it would fire 2 redundant RPCs per action.
   };
 
   const dealerTotal =
@@ -255,8 +261,14 @@ export function Blackjack() {
           ]
         : [];
 
+  // L11 (UI/UX audit): whitelist valid outcomes before interpolating into a
+  // CSS class — an unexpected `hand.outcome` from the server would otherwise
+  // produce a non-matching class name and silently skip the colored treatment.
+  const VALID_BJ_OUTCOMES = ["blackjack", "win", "push", "bust", "lose"] as const;
   const tableOutcomeClass =
-    settled && hand?.outcome ? ` bj__table-panel--${hand.outcome}` : "";
+    settled && hand?.outcome && (VALID_BJ_OUTCOMES as readonly string[]).includes(hand.outcome)
+      ? ` bj__table-panel--${hand.outcome}`
+      : "";
 
   return (
     <div className="bj lc-game-page">

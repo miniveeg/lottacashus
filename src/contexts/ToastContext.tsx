@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -160,10 +161,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [loading, resolve]
   );
 
+  // PERFORMANCE: memoize the context value so consumers only re-render when
+  // the `toasts` array changes (or when one of the stable callbacks changes,
+  // which is never — they're all useCallback'd). The previous literal
+  // `value={{...}}` re-rendered every consumer on EVERY toast event, even
+  // when the toast array was unchanged.
+  const value = useMemo<ToastContextValue>(
+    () => ({ toasts, toast, success, error, info, warning, loading, dismiss, resolve, promise }),
+    [toasts, toast, success, error, info, warning, loading, dismiss, resolve, promise]
+  );
+
   return (
-    <ToastContext.Provider
-      value={{ toasts, toast, success, error, info, warning, loading, dismiss, resolve, promise }}
-    >
+    <ToastContext.Provider value={value}>
       {children}
     </ToastContext.Provider>
   );

@@ -160,10 +160,27 @@ export function BattleReel({ lootCase, targetItem, spinKey, accent, onLanded }: 
       }
     }
 
+    // Pause the rAF loop when the tab is hidden (audit H5). Browsers throttle
+    // rAF to ~1 fps on hidden tabs, but each throttled tick still recomputes
+    // the strip + writes to the DOM. Cancelling the rAF entirely eliminates
+    // that waste. When the tab becomes visible again, resume the loop with
+    // the SAME tick closure so the spin/landing continues smoothly.
+    function handleVisibility() {
+      if (cancelled) return;
+      if (document.hidden) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = 0;
+      } else if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       cancelled = true;
       cancelAnimationFrame(rafRef.current);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [phase, lootCase]);
 

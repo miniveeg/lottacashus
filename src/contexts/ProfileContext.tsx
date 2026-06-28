@@ -118,9 +118,15 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     if (!row) return;
     setProfile((prev) => {
       const next = rowToProfile(row, isAdminOverride);
-      if (isAdminOverride === undefined && prev?.isAdmin && !next.isAdmin) {
-        return { ...next, isAdmin: true };
-      }
+      // SECURITY FIX (M2): previously, if a user was ever an admin and was
+      // then demoted (admin sets is_admin=false), the client kept isAdmin=true
+      // until a full page reload — leaking admin-only UI (user list, redemptions)
+      // to the demoted user for the duration of the session. The original
+      // "stickiness" was meant to prevent a one-render flicker, but the cost
+      // (UI leak after demotion) outweighs the benefit. Trust the server.
+      // The AdminRoute + server-side require_admin() still gate actual admin
+      // actions; this only affects whether the admin UI is *visible*.
+      void prev; // (prev still read to keep the setter signature stable)
       return next;
     });
   }, []);

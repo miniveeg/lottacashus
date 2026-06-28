@@ -19,6 +19,17 @@ const GRID_SIZE = 40;
 const MAX_PICKS = 10;
 const REVEAL_STAGGER_MS = 110;
 
+// M7 (UI/UX audit): detect prefers-reduced-motion so the staggered reveal
+// collapses to an instant reveal. The CSS keyframes are already suppressed
+// by the global `@media (prefers-reduced-motion: reduce)` rule, but the JS
+// setTimeout chain still fired 10 times — making the reveal take 1.1s even
+// for users who explicitly asked for less motion. Now: stagger = 0 when
+// reduced-motion is on, so all 10 numbers reveal at once.
+function readPrefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 function randomPick(count: number): number[] {
   const pool = Array.from({ length: GRID_SIZE }, (_, i) => i + 1);
   const picked: number[] = [];
@@ -61,6 +72,10 @@ export function Keno() {
   // can't fire setState on an unmounted component or interleave with a
   // new round's reveal.
   const revealTimeoutsRef = useRef<number[]>([]);
+  // M7: track reduced-motion preference + a "skip" flag so the user can
+  // instantly reveal all 10 numbers without waiting for the stagger.
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const skipRevealRef = useRef(false);
 
   const pickCount = selected.length;
   const paytable = useMemo(
@@ -100,6 +115,43 @@ export function Keno() {
       drawingRef.current = false;
     };
   }, []);
+
+  // M7: live-track prefers-reduced-motion. The OS setting can be toggled
+  // while the page is open, so we re-read on the `change` event.
+  useEffect(() => {
+    setReduceMotion(readPrefersReducedMotion());
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = (e: MediaQueryListEvent) => setReduceMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  // M7: skip the staggered reveal — instantly show all 10 numbers + result.
+  // Called by the "Skip" button (visible only while the reveal is in progress).
+  const skipReveal = useCallback(() => {
+    if (!drawn) return;
+    for (const id of revealTimeoutsRef.current) {
+      window.clearTimeout(id);
+    }
+    revealTimeoutsRef.current = [];
+    skipRevealRef.current = true;
+    setRevealCount(drawn.length);
+    if (drawn.length > 0) {
+      // lastResult is set by the original setTimeout chain — but we just
+      // cancelled it, so set it here instead. We need the result data from
+      // the closure of the most recent placeKenoBet call.
+      // It's stored in lastResultRef.current.
+      const r = lastResultRef.current;
+      if (r) {
+        setLastResult(r);
+      }
+      drawingRef.current = false;
+      setDrawing(false);
+      setPfNonce((pfNonceRef.current ?? 0) + 1);
+      void loadPf();
+    }
+  }, [drawn, loadPf]);
 
   const toggleNumber = (n: number) => {
     if (drawingRef.current) return;
@@ -187,7 +239,19 @@ export function Keno() {
     }
 
     // Reveal drawn numbers one-by-one for satisfying stagger.
+    // M7: when prefers-reduced-motion is set, collapse the stagger to 0
+    // (all 10 numbers reveal instantly) — the user explicitly asked for
+    // less motion, and the CSS keyframes are already suppressed.
     setDrawn(data.drawn);
+    // Stash the result + nonce so the skip button can finalize instantly
+    // without waiting for the last setTimeout to fire.
+    lastResultRef.current = {
+      hits: data.hits,
+      multiplier: data.multiplier,
+      payout: data.payout,
+    };
+    pfNonceRef.current = data.nonce;
+    const stagger = reduceMotion ? 0 : REVEAL_STAGGER_MS;
     revealTimeoutsRef.current = data.drawn.map((_, i) =>
       window.setTimeout(() => {
         setRevealCount(i + 1);
@@ -201,12 +265,15 @@ export function Keno() {
           setDrawing(false);
           setPfNonce(data.nonce + 1);
           revealTimeoutsRef.current = [];
-          void refreshProfile();
           void loadPf();
         }
-      }, (i + 1) * REVEAL_STAGGER_MS)
+      }, (i + 1) * stagger)
     );
   };
+
+  // M7: refs to expose the pending result + nonce to the skipReveal callback.
+  const lastResultRef = useRef<{ hits: number; multiplier: number; payout: number } | null>(null);
+  const pfNonceRef = useRef<number>(0);
 
   const saveClientSeed = async () => {
     const { error: seedErr } = await setKenoClientSeed(clientSeed);
@@ -254,6 +321,20 @@ export function Keno() {
             >
               Clear
             </button>
+            {/* M7: Skip-animation button — visible only while the staggered
+                reveal is in progress (drawing=true AND not all 10 revealed
+                AND reduced-motion is NOT set — reduced-motion users already
+                get instant reveal). Lets impatient players skip to the result. */}
+            {drawing && !revealComplete && !reduceMotion && (
+              <button
+                type="button"
+                className="keno__tool-btn keno__tool-btn--skip"
+                onClick={skipReveal}
+                aria-label="Skip reveal animation"
+              >
+                Skip ⏭
+              </button>
+            )}
           </div>
 
           <div className="keno__grid" role="group" aria-label="Keno number grid">

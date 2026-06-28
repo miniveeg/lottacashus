@@ -239,7 +239,10 @@ export function NotificationsPanel({ open, onClose }: Props) {
               Loading…
             </p>
           ) : notifications.length === 0 ? (
-            <p className="notifications-panel__empty">
+            // M3 (UI/UX audit): the loading state had `role="status"` but the
+            // empty state didn't — the loading → empty transition was silent
+            // for SR users. Match the loading state's live-region semantics.
+            <p className="notifications-panel__empty" role="status" aria-live="polite">
               No notifications yet. Deposits, withdrawals, and Discord activity will show up here.
             </p>
           ) : (

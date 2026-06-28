@@ -126,11 +126,22 @@ export function useLobbySubscription() {
       return () => { cancelledRef.current = true; clearInterval(iv); };
     }
 
+    // Filter the lobby subscription to only receive events for battles the
+    // user can actually see in the lobby (status waiting/committing/running).
+    // Without this filter, Supabase broadcasts EVERY case_battles change to
+    // EVERY client — at 1000+ rooms this is N² traffic. The filter pushes
+    // filtering server-side so each client only receives relevant events.
+    // (Completed/cancelled battles no longer broadcast to lobby subscribers.)
     const channel = supabase
       .channel("lobby")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "case_battles" },
+        {
+          event: "*",
+          schema: "public",
+          table: "case_battles",
+          filter: "status=in.(waiting,committing,running)",
+        },
         () => fetchLobby(),
       )
       .on(

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { safeRedirectPath } from "../../lib/authRedirect";
 import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
@@ -8,6 +8,17 @@ import { analytics } from "../../lib/analytics";
 import { Seo } from "../../components/Seo/Seo";
 import "../../components/BrandLogo/BrandLogo.css";
 import "../Auth/Auth.css";
+
+// SECURITY (H7): client-side rate limiting on login attempts. Without this,
+// an attacker could brute-force passwords at the speed of the network round-
+// trip. The cap is 5 attempts per 60 seconds per email — generous enough for
+// legitimate typo retries, but blocks distributed brute force from a single
+// browser. Server-side rate limiting (Supabase Auth's built-in throttling)
+// provides the real backstop; this is a UX-layer defense.
+const MAX_ATTEMPTS = 5;
+const WINDOW_MS = 60_000;
+
+type AttemptEntry = { at: number };
 
 export function Login() {
   const { signIn, user, loading, configured } = useAuth();
@@ -19,6 +30,8 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Track recent attempts in a ref (no re-render needed) — array of timestamps.
+  const attemptsRef = useRef<AttemptEntry[]>([]);
 
   if (loading) {
     return (
@@ -50,6 +63,19 @@ export function Login() {
       return;
     }
 
+    // SECURITY (H7): enforce the rate limit before sending the request.
+    const now = Date.now();
+    attemptsRef.current = attemptsRef.current.filter((a) => now - a.at < WINDOW_MS);
+    if (attemptsRef.current.length >= MAX_ATTEMPTS) {
+      const oldest = attemptsRef.current[0]!.at;
+      const retryIn = Math.ceil((WINDOW_MS - (now - oldest)) / 1000);
+      const msg = `Too many login attempts. Try again in ${retryIn} second${retryIn === 1 ? "" : "s"}.`;
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
+    attemptsRef.current.push({ at: now });
+
     setSubmitting(true);
     const { error: authError } = await signIn(trimmedEmail, password);
     setSubmitting(false);
@@ -60,6 +86,8 @@ export function Login() {
       return;
     }
 
+    // Success — clear the attempt history so a legit user doesn't carry it.
+    attemptsRef.current = [];
     analytics.login.success();
     toast.success("Welcome back!");
     navigate(redirectTo, { replace: true });

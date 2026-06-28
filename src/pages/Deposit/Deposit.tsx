@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
-import QRCode from "qrcode";
+// NOTE: `qrcode` is dynamically imported inside `loadAddress` (audit M2/L1).
+// The library is ~50 KB raw / ~15 KB gzipped and is only needed once a
+// deposit address is generated. Eager-importing it pulled it into the main
+// `index-*.js` chunk and shipped it to every user on every route.
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -59,6 +62,10 @@ export function Deposit() {
     // accept this for SOL/LTC/ETH).
     if (addr) {
       try {
+        // Lazy-load the qrcode library only when we actually need to render
+        // a QR code (audit M2/L1). This keeps the 50 KB library out of the
+        // main bundle for users who never visit /deposit.
+        const QRCode = (await import("qrcode")).default;
         const url = await QRCode.toDataURL(addr, {
           width: 180,
           margin: 1,
@@ -73,6 +80,13 @@ export function Deposit() {
     }
   }, []);
 
+  // PERFORMANCE: hold the toast API in a ref so `loadDeposits` can use it
+  // without taking `toast` as a dependency. This breaks the re-render loop
+  // where every toast event would invalidate `loadDeposits`, re-fire the
+  // deposits fetch, and recreate the 15s polling interval.
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+
   const loadDeposits = useCallback(async () => {
     if (!isSupabaseConfigured) return;
     const { data } = await fetchMyDeposits();
@@ -83,12 +97,12 @@ export function Deposit() {
     // the user with toasts for every existing deposit when the page mounts).
     rows.forEach((d) => {
       if (!knownDepositIds.current.has(d.id) && knownDepositIds.current.size > 0) {
-        toast.success(`Deposit detected: ${formatUsd(d.usd_amount)} ${d.chain.toUpperCase()}`);
+        toastRef.current.success(`Deposit detected: ${formatUsd(d.usd_amount)} ${d.chain.toUpperCase()}`);
         analytics.wallet.depositDetected(d.chain, d.usd_amount);
       }
       knownDepositIds.current.add(d.id);
     });
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -269,9 +283,20 @@ export function Deposit() {
               </div>
             </>
           ) : (
-            <p className="wallet__hint" role="alert">
-              Could not load address. {configured ? "Please try again later." : "Supabase is not configured."}
-            </p>
+            <div className="wallet__error-row" role="alert">
+              <p className="wallet__hint">
+                Could not load address. {configured ? "Please try again later." : "Supabase is not configured."}
+              </p>
+              {configured && (
+                <button
+                  type="button"
+                  className="wallet__btn"
+                  onClick={() => loadAddress(chain)}
+                >
+                  Retry
+                </button>
+              )}
+            </div>
           )}
         </div>
 

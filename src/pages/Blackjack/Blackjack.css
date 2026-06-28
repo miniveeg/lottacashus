@@ -343,10 +343,16 @@
   background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
   color: #fff;
   cursor: pointer;
+  transition: filter var(--lc-transition), transform var(--lc-transition-spring);
 }
 
 .bj__deal-btn:hover:not(:disabled) {
   filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.bj__deal-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .bj__deal-btn:disabled {
@@ -369,10 +375,22 @@
   background: var(--lc-bg-elevated);
   color: var(--lc-text-primary);
   cursor: pointer;
+  transition:
+    transform var(--lc-transition-spring),
+    filter var(--lc-transition),
+    border-color var(--lc-transition),
+    background var(--lc-transition);
 }
 
 .bj__action-btn:hover:not(:disabled) {
   border-color: var(--lc-gold-dim);
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+/* Press feedback — the button visually "clicks" down on active. */
+.bj__action-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
 }
 
 .bj__action-btn--stand {

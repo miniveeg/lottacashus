@@ -306,6 +306,14 @@
   border: 1px solid var(--lc-border);
   background: var(--lc-bg-elevated);
   color: var(--lc-text-secondary);
+  /* Entrance animation — matches Roulette's chip-enter for cross-game
+     consistency. The newest chip (first in the array) pops in. */
+  animation: limbo-chip-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes limbo-chip-enter {
+  from { opacity: 0; transform: scale(0.7) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .limbo__history-chip--win {
@@ -371,6 +379,10 @@
 .limbo__bet-btn:hover:not(:disabled) {
   filter: brightness(1.08);
   transform: translateY(-1px);
+}
+
+.limbo__bet-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .limbo__bet-btn:focus-visible {

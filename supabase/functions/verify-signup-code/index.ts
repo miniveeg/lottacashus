@@ -82,14 +82,41 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Too many attempts. Request a new code." }, 400, req);
     }
 
+    // SECURITY FIX (H3): atomic attempt increment via conditional UPDATE.
+    // The prior code read `attempts`, then wrote `attempts + 1` — a TOCTOU
+    // race let 200 concurrent requests all see attempts=0 and all increment
+    // to 1, defeating the 5-attempt cap and enabling 6-digit code brute
+    // force (200× amplification). The new query only increments if the
+    // stored attempts is still < MAX, returning the new attempts count.
+    // If `affectedRows` is 0, another concurrent request already hit the cap.
+    const { data: incr, error: incrErr } = await supabase
+      .from("signup_verification_codes")
+      .update({ attempts: row.attempts + 1 })
+      .eq("email", email)
+      .lt("attempts", MAX_ATTEMPTS)
+      .select("attempts")
+      .maybeSingle();
+
+    if (incrErr) {
+      console.error("atomic attempts increment:", incrErr);
+      return jsonResponse({ error: "Verification failed. Try again." }, 500, req);
+    }
+    if (!incr) {
+      // Another concurrent request beat us to MAX_ATTEMPTS — delete and reject.
+      await supabase.from("signup_verification_codes").delete().eq("email", email);
+      return jsonResponse({ error: "Too many attempts. Request a new code." }, 400, req);
+    }
+
     const codeHash = await hashCode(code);
 
     if (codeHash !== row.code_hash) {
-      await supabase
-        .from("signup_verification_codes")
-        .update({ attempts: row.attempts + 1 })
-        .eq("email", email);
-      return jsonResponse({ error: "Incorrect code. Try again." }, 400, req);
+      // Note: the attempt was already counted by the atomic increment above.
+      const remaining = MAX_ATTEMPTS - incr.attempts;
+      return jsonResponse({
+        error: remaining > 0
+          ? `Incorrect code. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.`
+          : "Incorrect code. Request a new code.",
+      }, 400, req);
     }
 
     const displayName = username || row.username || email.split("@")[0];

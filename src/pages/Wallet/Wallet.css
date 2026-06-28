@@ -266,6 +266,19 @@
   margin-top: 1rem;
 }
 
+/* H1 (UI/UX audit): error + retry row for deposit-address load failures.
+   Keeps the inline error text and a "Retry" button side-by-side. */
+.wallet__error-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.wallet__error-row .wallet__hint {
+  margin: 0;
+  flex: 1 1 220px;
+}
+
 .wallet__field {
   display: flex;
   flex-direction: column;

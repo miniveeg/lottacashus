@@ -5,8 +5,17 @@ export { GENERATED_CASE_CATALOG as CASE_CATALOG } from "./caseCatalog.generated"
 import type { LootCase } from "./caseTypes";
 import { GENERATED_CASE_CATALOG } from "./caseCatalog.generated";
 
+// Pre-index the case catalog by ID at module load (audit M5). The previous
+// linear `.find()` scanned up to 248 entries per call, and `getCaseById` is
+// invoked ~250× per lobby render (50 rows × ~5 thumbnails) plus once per
+// `caseId` in `battleEntryCostFromCaseIds`. The Map turns each lookup into
+// an O(1) hash probe.
+const CASE_BY_ID: ReadonlyMap<string, LootCase> = new Map(
+  GENERATED_CASE_CATALOG.map((c) => [c.id, c]),
+);
+
 export function getCaseById(id: string): LootCase | undefined {
-  return GENERATED_CASE_CATALOG.find((c) => c.id === id);
+  return CASE_BY_ID.get(id);
 }
 
 export function battleEntryCost(caseId: string, rounds: number): number {

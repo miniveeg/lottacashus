@@ -1,4 +1,11 @@
 # Supabase local dev config (optional). Deploy functions with: supabase functions deploy <name>
+#
+# SECURITY NOTES:
+# - Functions marked verify_jwt=false MUST validate the user themselves
+#   inside the function body (via supabaseUser.auth.getUser()).
+# - The case-battle (V1) function is legacy/dead code — replaced by
+#   case-battle-v2. verify_jwt=true here so the open endpoint cannot be
+#   invoked without auth, even if it is accidentally deployed.
 
 [functions.send-signup-code]
 verify_jwt = false
@@ -24,5 +31,36 @@ verify_jwt = false
 [functions.sweep-deposits]
 verify_jwt = false
 
+# SECURITY FIX: V1 case-battle was deployed with verify_jwt=false (open endpoint).
+# It's superseded by case-battle-v2 but still in the deployment list — force
+# verify_jwt=true so anonymous abuse is blocked at the gateway. If V1 is no
+# longer needed, delete the function entirely: `supabase functions delete case-battle`.
 [functions.case-battle]
-verify_jwt = false
+verify_jwt = true
+
+[functions.case-battle-v2]
+verify_jwt = true
+
+[functions.place-keno-bet]
+verify_jwt = true
+
+[functions.mines-game]
+verify_jwt = true
+
+[functions.place-limbo-bet]
+verify_jwt = true
+
+[functions.place-roulette-bet]
+verify_jwt = true
+
+[functions.place-slots-bet]
+verify_jwt = true
+
+[functions.place-crash-bet]
+verify_jwt = true
+
+[functions.cash-out-crash]
+verify_jwt = true
+
+[functions.blackjack-game]
+verify_jwt = true

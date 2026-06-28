@@ -186,23 +186,40 @@ export function ObsidianScene({ className }: ObsidianSceneProps) {
   // Hold the WebGLRenderer so we can dispose it *immediately* on unmount
   // rather than waiting for R3F's internal 500ms timeout (see
   // `unmountComponentAtNode` in @react-three/fiber). Prompt disposal is
-  // important because the home page mounts TWO ObsidianScene instances (one
-  // from AtmosphericLayer in AppShell, one from Home.tsx's hero) and a
-  // fast / → /#/mines → / navigation can otherwise exceed the browser's
-  // ~16-context WebGL limit.
+  // important because a fast / → /#/mines → / navigation cycle mounts and
+  // unmounts ObsidianScene twice in quick succession (one in AppShell's
+  // AtmosphericLayer), and the brief double-existence window could
+  // otherwise exceed the browser's ~16-context WebGL limit on low-end
+  // devices. The component itself is only ever mounted once at a time
+  // (Home.tsx intentionally does NOT mount a second instance — see
+  // Home.tsx:11-16). Audit issue M4 (stale "two instances" comment).
   const glRef = useRef<WebGLRenderer | null>(null);
+
+  // Pause the 3D scene's render loop when the tab is hidden (audit H5).
+  // R3F's `useFrame` callbacks (and drei's <Float>) only run when
+  // `frameloop="always"`. Switching to "never" stops the rAF loop, freeing
+  // the GPU and avoiding wasted composites on background tabs. Browsers
+  // already throttle rAF to ~1 fps on hidden tabs, but 1 fps × WebGL
+  // composite still adds up on mobile.
+  const [frameloop, setFrameloop] = useState<"always" | "never">(
+    typeof document !== "undefined" && document.hidden ? "never" : "always"
+  );
+  useEffect(() => {
+    const onVisibility = () => setFrameloop(document.hidden ? "never" : "always");
+    onVisibility();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
 
   // Dispose the WebGLRenderer *immediately* on unmount or when the scene is
   // gated off (mobile / reduced-motion toggle), rather than waiting for
   // R3F's internal 500ms timeout (see `unmountComponentAtNode` in
-  // @react-three/fiber). Prompt disposal matters because the home page
-  // mounts TWO ObsidianScene instances (one from AtmosphericLayer in
-  // AppShell, one from Home.tsx's hero), so a fast / → /#/mines → /
-  // navigation can otherwise approach the browser's ~16-context WebGL
-  // limit. The cleanup reads `glRef.current` at *cleanup* time (not at
-  // effect-run time) because `onCreated` fires asynchronously after the
-  // Canvas mounts — capturing `gl` in the effect body would always see
-  // `null` on the first run.
+  // @react-three/fiber). Prompt disposal matters because a fast
+  // / → /#/mines → / navigation cycle can otherwise approach the
+  // browser's ~16-context WebGL limit. The cleanup reads `glRef.current`
+  // at *cleanup* time (not at effect-run time) because `onCreated` fires
+  // asynchronously after the Canvas mounts — capturing `gl` in the effect
+  // body would always see `null` on the first run.
   useEffect(() => {
     return () => {
       const gl = glRef.current;
@@ -230,6 +247,7 @@ export function ObsidianScene({ className }: ObsidianSceneProps) {
       <Canvas
         camera={{ position: [0, 0, 8], fov: 45 }}
         dpr={[1, 1.5]}
+        frameloop={frameloop}
         gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
         onCreated={({ gl }) => {

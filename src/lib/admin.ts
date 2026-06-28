@@ -393,11 +393,20 @@ export async function processAdminRedemption(
     return { data: null, error: { message: `Invalid action: ${action}`, code: "INVALID_INPUT" } };
   }
   const trimmedNotes = notes?.trim() || undefined;
+  // SECURITY FIX: the SQL function signature is admin_process_redemption(
+  //   p_redemption_id uuid, p_status text, p_tx_hash text default null
+  // ) where p_status is "completed" or "failed". The previous call sent
+  // p_action and p_notes — PostgREST rejected it with "Could not find the
+  // function public.admin_process_redemption(p_redemption_id, p_action, p_notes)".
+  // The admin could never approve or reject redemptions from the UI.
+  // Map: approve → status="completed", reject → status="failed".
+  // For approve: p_tx_hash carries the on-chain transaction hash (from notes).
+  // For reject: p_tx_hash carries the failure reason (from notes).
   return safeCall(() =>
     supabase.rpc("admin_process_redemption", {
       p_redemption_id: redemptionId,
-      p_action: action,
-      p_notes: trimmedNotes ?? null,
+      p_status: action === "approve" ? "completed" : "failed",
+      p_tx_hash: trimmedNotes ?? null,
     })
   );
 }
@@ -414,10 +423,16 @@ export async function adminCreditUser(
   if (!isNonEmptyString(userId)) {
     return { data: null, error: { message: "User ID is required.", code: "INVALID_INPUT" } };
   }
-  if (!Number.isFinite(amount) || amount <= 0) {
+  if (!Number.isFinite(amount) || amount === 0) {
     return {
       data: null,
-      error: { message: "Amount must be a positive number.", code: "INVALID_INPUT" },
+      error: { message: "Amount must be a non-zero number.", code: "INVALID_INPUT" },
+    };
+  }
+  if (Math.abs(amount) > 1_000_000) {
+    return {
+      data: null,
+      error: { message: "Amount exceeds the per-call limit (1,000,000).", code: "INVALID_INPUT" },
     };
   }
   if (!VALID_COIN_TYPES.includes(coinType)) {

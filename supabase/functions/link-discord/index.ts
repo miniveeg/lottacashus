@@ -22,9 +22,19 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const code = String(body?.code ?? "");
     const redirectUri = String(body?.redirectUri ?? "");
+    // SECURITY FIX (CSRF): validate the OAuth `state` parameter. The client
+    // generates a random state before redirecting to Discord; the Discord
+    // callback includes it in the POST body. We compare it to the user's
+    // Supabase user_metadata.discord_oauth_state (set by the client before
+    // redirecting). Without this, an attacker could trick a logged-in user
+    // into linking the attacker's Discord (login CSRF).
+    const state = String(body?.state ?? "");
 
     if (!code) {
       return jsonResponse({ error: "Missing Discord authorization code." }, 400, req);
+    }
+    if (!state) {
+      return jsonResponse({ error: "Missing OAuth state parameter." }, 400, req);
     }
 
     const clientId = Deno.env.get("DISCORD_CLIENT_ID");
@@ -49,6 +59,23 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Invalid session. Log in again." }, 401, req);
     }
 
+    // Validate OAuth state against the value stored in user_metadata.
+    const expectedState = (user.user_metadata?.discord_oauth_state as string | undefined) ?? null;
+    if (!expectedState || expectedState !== state) {
+      return jsonResponse({ error: "OAuth state mismatch. Restart the Discord link flow." }, 400, req);
+    }
+
+    // SECURITY FIX: do not trust client-supplied redirectUri — use a
+    // server-known value. This prevents an attacker from using a malicious
+    // redirect to capture authorization codes.
+    const expectedRedirectUri = Deno.env.get("DISCORD_REDIRECT_URI");
+    if (!expectedRedirectUri) {
+      return jsonResponse({ error: "Discord redirect URI is not configured on the server." }, 500, req);
+    }
+    if (redirectUri && redirectUri !== expectedRedirectUri) {
+      return jsonResponse({ error: "Invalid redirect URI." }, 400, req);
+    }
+
     const tokenRes = await fetch(DISCORD_TOKEN_URL, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -57,7 +84,7 @@ Deno.serve(async (req) => {
         client_secret: clientSecret,
         grant_type: "authorization_code",
         code,
-        redirect_uri: redirectUri,
+        redirect_uri: expectedRedirectUri,
       }),
     });
 
@@ -133,6 +160,25 @@ Deno.serve(async (req) => {
             hint: "Run supabase/migrations/20250520700000_discord_link_profiles.sql in SQL Editor",
           }, 500, req);
         }
+      }
+
+      // SECURITY FIX (M6): re-check discord_id uniqueness in the fallback path.
+      // The primary path (link_discord_profile RPC) checks uniqueness, but a
+      // TOCTOU race could let two users link the same Discord ID via the
+      // fallback. The DB-level UNIQUE partial index (profiles_discord_id_unique_idx
+      // from migration 001_audit_fixes.sql) is the final backstop — if the
+      // UPDATE below violates it, the error is surfaced to the user instead
+      // of silently linking a duplicate.
+      const { data: discordTaken } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("discord_id", discordId)
+        .neq("id", user.id)
+        .maybeSingle();
+      if (discordTaken) {
+        return jsonResponse({
+          error: "This Discord account is already linked to another user.",
+        }, 400, req);
       }
 
       const { error: updateError } = await supabaseAdmin

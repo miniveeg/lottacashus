@@ -60,6 +60,12 @@ export function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimMsg, setClaimMsg] = useState<string | null>(null);
+  // C3 (UI/UX audit): claim success/error styling was previously decided by
+  // substring-matching "error"/"Error" in `claimMsg` — a real success message
+  // that happens to contain "error" would render red, and an error phrased
+  // without the literal word "error" would render green. Track an explicit
+  // `claimIsError` flag set by `handleClaim` based on the API outcome.
+  const [claimIsError, setClaimIsError] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const isOwnProfile = !routeUsername;
@@ -125,9 +131,15 @@ export function ProfilePage() {
   const handleClaim = useCallback(async () => {
     setClaiming(true);
     setClaimMsg(null);
+    setClaimIsError(false);
     const { error } = await claimAffiliateBalance();
-    if (error) setClaimMsg(error);
-    else setClaimMsg("Balance claimed successfully!");
+    if (error) {
+      setClaimMsg(error);
+      setClaimIsError(true);
+    } else {
+      setClaimMsg("Balance claimed successfully!");
+      setClaimIsError(false);
+    }
     setClaiming(false);
     // Refresh referral info
     const r = await fetchReferralInfo();
@@ -375,7 +387,7 @@ export function ProfilePage() {
             )}
             {claimMsg && (
               <p
-                className={`profile-referral__msg${claimMsg.includes("error") || claimMsg.includes("Error") ? " profile-referral__msg--error" : ""}`}
+                className={`profile-referral__msg${claimIsError ? " profile-referral__msg--error" : ""}`}
                 role="status"
               >
                 {claimMsg}

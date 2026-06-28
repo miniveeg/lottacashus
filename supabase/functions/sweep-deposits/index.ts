@@ -91,6 +91,26 @@ Deno.serve(async (req) => {
     for (const row of addresses ?? []) {
       const chain = row.chain as Chain;
       try {
+        // SECURITY FIX: before sweeping, verify that ALL deposits at this
+        // address have status='credited'. If any deposit is still pending
+        // or confirming, skip the sweep until the next cron run — otherwise
+        // funds would be moved to the hot wallet but the user would never
+        // be credited (the `credit_crypto_deposit` RPC only runs from
+        // poll-deposits when confirmations >= required).
+        const { data: pendingDeposits, error: pendingError } = await supabase
+          .from("crypto_deposits")
+          .select("id, status, crypto_amount")
+          .eq("address", row.address)
+          .in("status", ["pending", "confirming", "detected"]);
+        if (pendingError) {
+          sweepErrors.push(`${chain} ${row.address}: failed to check pending deposits (${pendingError.message})`);
+          continue;
+        }
+        if (pendingDeposits && pendingDeposits.length > 0) {
+          // Skip sweeping this address until all its deposits are credited.
+          continue;
+        }
+
         const wallet = await deriveWallet(chain, row.derivation_index);
         if (chain === "ltc" && !blockcypherToken) {
           sweepErrors.push(`ltc ${wallet.address}: BLOCKCYPHER_TOKEN not set`);

@@ -345,7 +345,26 @@ Deno.serve(async (req) => {
         }
       }
 
-      const result = resolveInsurance(state, take);
+      // Pre-compute the deal-time RTP bias so `resolveInsurance` can apply
+      // it when the player has BJ and the dealer doesn't (settle as 3:2
+      // blackjack win, downgraded ~2.5% of the time to a loss). Matches the
+      // bias tag used by `dealNewHand` ("bj-deal") on the same seeds+nonce.
+      const { data: pfIns } = await admin
+        .from("game_pf_seeds")
+        .select("server_seed, client_seed")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      let dealBias: number | undefined;
+      if (typeof pfIns?.server_seed === "string" && pfIns.server_seed) {
+        dealBias = await rtpBiasFloat(
+          pfIns.server_seed,
+          String(pfIns.client_seed ?? "default"),
+          Number(row.nonce),
+          "bj-deal"
+        );
+      }
+
+      const result = resolveInsurance(state, take, dealBias);
 
       if (result.insuranceDebit > 0) {
         const { error: debitErr } = await admin.rpc("blackjack_debit_extra", {

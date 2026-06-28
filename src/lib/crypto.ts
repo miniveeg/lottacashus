@@ -10,39 +10,46 @@ export async function fetchDepositAddress(
   return invokeEdgeFunction<DepositAddressResponse>("get-deposit-address", { chain });
 }
 
-export async function fetchMyDeposits(): Promise<{
+export async function fetchMyDeposits(userId?: string): Promise<{
   data: CryptoDepositRow[] | null;
   error: string | null;
 }> {
   if (!isSupabaseConfigured) return { data: null, error: NOT_CONFIGURED_ERROR };
 
-  const { data, error } = await supabase
+  // SECURITY (M5): add an explicit user_id filter as defense-in-depth. RLS
+  // already restricts to auth.uid(), but if a future migration accidentally
+  // drops the policy, this filter prevents mass leakage.
+  let query = supabase
     .from("crypto_deposits")
     .select(
       "id, chain, tx_hash, crypto_amount, usd_amount, confirmations, required_confirmations, status, created_at"
     )
     .order("created_at", { ascending: false })
     .limit(20);
+  if (userId) query = query.eq("user_id", userId);
+
+  const { data, error } = await query;
 
   if (error) return { data: null, error: error.message };
   return { data: (data ?? []) as CryptoDepositRow[], error: null };
 }
 
 export async function requestWithdrawal(
-  chain: CryptoChain,
-  destination: string,
-  usdAmount: number
+  _chain: CryptoChain,
+  _destination: string,
+  _usdAmount: number
 ): Promise<{ data: string | null; error: string | null }> {
   if (!isSupabaseConfigured) return { data: null, error: NOT_CONFIGURED_ERROR };
 
-  const { data, error } = await supabase.rpc("request_crypto_withdrawal", {
-    p_chain: chain,
-    p_destination: destination.trim(),
-    p_usd_amount: usdAmount,
-  });
-
-  if (error) return { data: null, error: error.message };
-  return { data: data as string, error: null };
+  // SECURITY: request_crypto_withdrawal was DROPPED in migration 001_audit_fixes.sql
+  // (it treated Gold Coins as USD 1:1, letting users withdraw real crypto for
+  // play money). The UI uses request_sc_redemption via Supabase RPC instead —
+  // see src/pages/Withdraw/Withdraw.tsx. This function is kept for backward
+  // compat but always returns an error.
+  return {
+    data: null,
+    error: "Direct crypto withdrawals are disabled. Use the SC redemption flow on the Withdraw page.",
+  };
 }
 
 export type CryptoWithdrawalRow = {
@@ -55,17 +62,21 @@ export type CryptoWithdrawalRow = {
   completed_at: string | null;
 };
 
-export async function fetchMyWithdrawals(): Promise<{
+export async function fetchMyWithdrawals(userId?: string): Promise<{
   data: CryptoWithdrawalRow[] | null;
   error: string | null;
 }> {
   if (!isSupabaseConfigured) return { data: null, error: NOT_CONFIGURED_ERROR };
 
-  const { data, error } = await supabase
+  // SECURITY (M5): explicit user_id filter (defense-in-depth).
+  let query = supabase
     .from("crypto_withdrawals")
     .select("id, chain, destination_address, usd_amount, status, created_at, completed_at")
     .order("created_at", { ascending: false })
     .limit(20);
+  if (userId) query = query.eq("user_id", userId);
+
+  const { data, error } = await query;
 
   if (error) return { data: null, error: error.message };
   return { data: (data ?? []) as CryptoWithdrawalRow[], error: null };

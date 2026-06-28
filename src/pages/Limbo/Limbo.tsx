@@ -24,7 +24,10 @@ const REVEAL_DELAY_MS = 1500;
 const POP_DURATION_MS = 600;
 const HISTORY_MAX = 8;
 
-type HistoryEntry = { result: number; won: boolean };
+// L15 (UI/UX audit): history entries include a monotonic id so React keys
+// don't collide when two consecutive rounds have the same result multiplier
+// (the prior `key={`${h.result}-${i}`}` could collide after rotation).
+type HistoryEntry = { id: number; result: number; won: boolean };
 
 function formatMultiplier(n: number): string {
   if (n >= 1000) return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -49,6 +52,9 @@ export function Limbo() {
   const [popIn, setPopIn] = useState(false);
   const [displayMult, setDisplayMult] = useState(1);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  // Monotonic counter for HistoryEntry.id — bumped each time a new entry is
+  // pushed so React keys are stable across rotations.
+  const historyIdRef = useRef(0);
   const [lastResult, setLastResult] = useState<{
     result: number;
     won: boolean;
@@ -178,18 +184,21 @@ export function Limbo() {
       payout: data.payout,
     });
     setHistory((h) =>
-      [{ result: data.resultMultiplier, won: data.won }, ...h].slice(0, HISTORY_MAX)
+      [{ id: ++historyIdRef.current, result: data.resultMultiplier, won: data.won }, ...h].slice(0, HISTORY_MAX)
     );
     setPfNonce(data.nonce + 1);
 
-    // Schedule the popIn reset immediately so the animation duration is fixed,
-    // independent of how long refreshProfile takes. Cleared on unmount.
+    // Schedule the popIn reset immediately so the animation duration is fixed.
+    // Cleared on unmount.
     popInTimeoutRef.current = window.setTimeout(() => {
       popInTimeoutRef.current = null;
       if (!cancelledRef.current) setPopIn(false);
     }, POP_DURATION_MS);
 
-    void refreshProfile();
+    // No refreshProfile() here — ProfileContext's realtime subscription on
+    // `profiles` pushes the new balance the instant the server commits the
+    // bet. Calling it would fire 2 redundant RPCs (ensure_user_profile +
+    // is_current_user_admin) per bet.
   };
 
   const saveClientSeed = async () => {
@@ -289,9 +298,9 @@ export function Limbo() {
 
           {history.length > 0 && (
             <div className="limbo__history" aria-label="Recent results">
-              {history.map((h, i) => (
+              {history.map((h) => (
                 <span
-                  key={`${h.result}-${i}`}
+                  key={h.id}
                   className={`limbo__history-chip${h.won ? " limbo__history-chip--win" : " limbo__history-chip--loss"}`}
                   title={`${formatMultiplier(h.result)}× — ${h.won ? "win" : "loss"}`}
                 >

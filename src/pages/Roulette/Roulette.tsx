@@ -34,7 +34,10 @@ const BET_OPTIONS: {
   { type: "green", label: "Green (0)", payout: "36×", odds: "1/37" },
 ];
 
-type HistoryEntry = { pocket: number; color: RouletteColor };
+// L15 (UI/UX audit): history entries include a monotonic id so React keys
+// don't collide when two consecutive rounds land on the same pocket (the
+// prior `key={`${h.pocket}-${i}`}` could collide after rotation).
+type HistoryEntry = { id: number; pocket: number; color: RouletteColor };
 
 export function Roulette() {
   const { user } = useAuth();
@@ -48,6 +51,9 @@ export function Roulette() {
   const [displayPocket, setDisplayPocket] = useState<number | null>(null);
   const [displayColor, setDisplayColor] = useState<RouletteColor | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  // Monotonic counter for HistoryEntry.id — bumped each time a new entry is
+  // pushed so React keys are stable across rotations.
+  const historyIdRef = useRef(0);
   const [lastResult, setLastResult] = useState<{
     pocket: number;
     color: RouletteColor;
@@ -151,7 +157,7 @@ export function Roulette() {
     setSpinning(false);
     spinningRef.current = false;
     setHistory((h) =>
-      [{ pocket: data.resultPocket, color: data.resultColor }, ...h].slice(0, HISTORY_MAX)
+      [{ id: ++historyIdRef.current, pocket: data.resultPocket, color: data.resultColor }, ...h].slice(0, HISTORY_MAX)
     );
 
     // Wait for the wheel settle animation (4.2s CSS transition) before showing
@@ -168,7 +174,10 @@ export function Roulette() {
       betType: data.betType,
     });
     setPfNonce(data.nonce + 1);
-    void refreshProfile();
+    // No refreshProfile() here — ProfileContext's realtime subscription on
+    // `profiles` pushes the new balance the instant the server commits the
+    // bet. Calling it would fire 2 redundant RPCs (ensure_user_profile +
+    // is_current_user_admin) per bet.
   };
 
   const saveClientSeed = async () => {
@@ -202,9 +211,9 @@ export function Roulette() {
             </span>
             {history.length > 0 && (
               <div className="roulette__history" aria-label="Recent results">
-                {history.map((h, i) => (
+                {history.map((h) => (
                   <span
-                    key={`${h.pocket}-${i}`}
+                    key={h.id}
                     className={`roulette__history-chip roulette__history-chip--${h.color}`}
                     title={`${h.color} ${h.pocket}`}
                   >

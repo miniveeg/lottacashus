@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useCallback, useMemo, useState, type MouseEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Package } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -116,15 +116,13 @@ export function CaseBattlesHub() {
   // first render before the poll hook's initial tick resolves.
   useCaseBattlesLobbyPoll(true, loadLobby);
 
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setOpenBattles((rows) => {
-        const next = filterListedBattles(rows);
-        return next.length === rows.length ? rows : next;
-      });
-    }, 1000);
-    return () => window.clearInterval(id);
-  }, []);
+  // NOTE: A redundant 1 s `setInterval` that re-ran `filterListedBattles` on
+  // the open-battles list was removed here (audit H6). The 2 s
+  // `useCaseBattlesLobbyPoll` already keeps the list fresh, the realtime
+  // subscription pushes instant updates, and `filterListedBattles` is
+  // idempotent so re-running it on stale data was a no-op most of the time.
+  // The V1 Hub is also dead code (App.tsx routes only V2), so this loop
+  // would never have executed in production — but it's removed for hygiene.
 
   const sortedBattles = useMemo(
     () => sortBattles(applyFilters(openBattles, gamemodeFilter, playerFilter), sort),

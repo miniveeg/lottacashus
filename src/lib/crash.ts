@@ -9,7 +9,12 @@ export type CrashPfState = {
 
 export type CrashBetResult = {
   betId: string;
-  crashPoint: number;
+  // Note: crashPoint is intentionally NOT returned by place-crash-bet (the
+  // server withholds it to preserve the provably-fair guarantee). The client
+  // never knows the crash point during an active round. It's revealed only
+  // via cashOutCrash (on failure) or via the crash_bets_safe view (after
+  // completed_at is set).
+  crashPoint?: number;
   won: boolean;
   payout: number;
   cashedAt: number | null;
@@ -83,7 +88,15 @@ export async function cashOutCrash(params: {
   cashedAtMultiplier: number;
   coinType?: string;
 }): Promise<{
-  data: { payout: number; cashedAt: number; balance: number; coinType: string } | null;
+  data: {
+    payout: number;
+    cashedAt: number;
+    balance: number;
+    coinType: string;
+    won: boolean;
+    crashPoint: number | null;
+    alreadySettled: boolean;
+  } | null;
   error: string | null;
 }> {
   const { data, error } = await invokeEdgeFunction<{
@@ -91,6 +104,9 @@ export async function cashOutCrash(params: {
     cashedAt: number;
     balance: number;
     coinType: string;
+    won: boolean;
+    crashPoint: number | null;
+    alreadySettled: boolean;
   }>("cash-out-crash", {
     betId: params.betId,
     cashedAtMultiplier: params.cashedAtMultiplier,

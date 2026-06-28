@@ -192,7 +192,29 @@ export async function dealNewHand(
   const playerBJ = isBlackjack(playerCards);
   const dealerBJ = isBlackjack(dealerCards);
 
-  if (playerBJ || (dealerShowsAceOrTen(dealerCards) && dealerBJ)) {
+  // CRITICAL (audit fix-games): If dealer shows Ace, offer insurance BEFORE
+  // checking for dealer-BJ. The prior code auto-settled when the dealer
+  // showed Ace AND had BJ — so insurance was only ever offered when the
+  // dealer did NOT have BJ, making it a guaranteed loser. The correct flow:
+  //   1. Deal cards
+  //   2. If dealer upcard is Ace → offer insurance (player decides)
+  //   3. After insurance decision, check for dealer BJ
+  //   4. If dealer has BJ → insurance pays 2:1, main bet loses (or pushes
+  //      if player also has BJ)
+  //   5. If dealer doesn't have BJ → insurance loses; continue normal play
+  //      (if player also has BJ, settle as 3:2 blackjack win)
+  if (dealerShowsAce(dealerCards)) {
+    state = {
+      ...state,
+      phase: "insurance_offer",
+      insuranceDecided: false,
+    };
+    return { state, outcome: null, payout: 0, instantSettle: false };
+  }
+
+  // Dealer doesn't show Ace (shows 2–10/face). Standard "peek" rule: if
+  // either side has BJ, settle immediately (no insurance was offered).
+  if (playerBJ || dealerBJ) {
     state.dealerRevealed = true;
     state.phase = "settled";
     let outcome: BlackjackOutcome;
@@ -201,14 +223,6 @@ export async function dealNewHand(
     else outcome = "lose";
     const payout = calculatePayout(outcome, wager, wager);
     return { state, outcome, payout, instantSettle: true };
-  }
-
-  if (dealerShowsAce(dealerCards)) {
-    state = {
-      ...state,
-      phase: "insurance_offer",
-      insuranceDecided: false,
-    };
   }
 
   return { state, outcome: null, payout: 0, instantSettle: false };
@@ -305,6 +319,9 @@ export function resolveInsurance(
     insuranceWager: insWager,
   };
 
+  // After the player decides, check for dealer BJ. Insurance pays 2:1
+  // (handled in `settleDealerBlackjack`); main bet loses (or pushes if
+  // player also has BJ).
   if (isBlackjack(state.dealerCards)) {
     const settled = settleDealerBlackjack(next);
     return {
@@ -316,6 +333,26 @@ export function resolveInsurance(
     };
   }
 
+  // Dealer doesn't have BJ. If player has BJ, settle as a 3:2 blackjack
+  // win (insurance loses if taken).
+  if (isBlackjack(state.playerCards)) {
+    const outcome: BlackjackOutcome = "blackjack";
+    const settled: BlackjackHandState = {
+      ...next,
+      dealerRevealed: true,
+      phase: "settled",
+      playerHands: next.playerHands.map((h) => ({ ...h, finished: true })),
+    };
+    return {
+      state: syncActiveHand(settled),
+      outcome,
+      payout: calculatePayout(outcome, next.wager, next.wager),
+      instantSettle: true,
+      insuranceDebit: insWager,
+    };
+  }
+
+  // Neither side has BJ. Insurance (if taken) is lost; continue normal play.
   return {
     state: syncActiveHand({ ...next, phase: "player_turn" }),
     outcome: null,

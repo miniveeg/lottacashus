@@ -82,12 +82,15 @@
 /* Variant accents */
 .lc-toast--success { border-left: 3px solid var(--lc-emerald); box-shadow: var(--lc-shadow-md), 0 0 20px rgba(0,232,122,0.08), inset 0 1px 0 rgba(255,255,255,0.06); }
 .lc-toast--error   { border-left: 3px solid var(--lc-ruby);    box-shadow: var(--lc-shadow-md), 0 0 20px rgba(255,59,92,0.08), inset 0 1px 0 rgba(255,255,255,0.06); }
-.lc-toast--warning { border-left: 3px solid var(--lc-gold);    box-shadow: var(--lc-shadow-md), 0 0 20px var(--lc-crimson-glow), inset 0 1px 0 rgba(255,255,255,0.06); }
+/* M6 (UI/UX audit): the warning variant mixed an amber border with a
+   crimson glow. Switched the glow to amber to match the border color. */
+.lc-toast--warning { border-left: 3px solid var(--lc-gold);    box-shadow: var(--lc-shadow-md), 0 0 20px rgba(245, 158, 11, 0.18), inset 0 1px 0 rgba(255,255,255,0.06); }
 .lc-toast--info    { border-left: 3px solid var(--lc-violet);  }
 .lc-toast--loading { border-left: 3px solid rgba(255,255,255,0.15); }
 
-/* Icon */
-.lc-toast__icon { flex-shrink: 0; width: 1.1rem; height: 1.1rem; margin-top: 0.12rem; }
+/* Icon — L13 (UI/UX audit): bumped from 1.1rem to 1.25rem to match the
+   18px lucide icons and improve visual hierarchy against the message text. */
+.lc-toast__icon { flex-shrink: 0; width: 1.25rem; height: 1.25rem; margin-top: 0.12rem; }
 
 .lc-toast--success .lc-toast__icon { color: var(--lc-emerald); }
 .lc-toast--error   .lc-toast__icon { color: var(--lc-ruby); }

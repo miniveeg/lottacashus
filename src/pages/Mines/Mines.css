@@ -321,6 +321,11 @@
   box-shadow: 0 6px 28px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
 }
 
+/* Press feedback — satisfying "click" feel. */
+.mines__bet-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
 .mines__cashout-btn {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #fff;
@@ -329,6 +334,10 @@
 .mines__cashout-btn:hover:not(:disabled) {
   filter: brightness(1.06);
   transform: translateY(-1px);
+}
+
+.mines__cashout-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
 }
 
 .mines__cashout-btn:not(:disabled) {

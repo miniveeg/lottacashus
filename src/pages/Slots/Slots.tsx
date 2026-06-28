@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
@@ -61,6 +62,10 @@ export default function Slots() {
   const [showFairness, setShowFairness] = useState(false);
 
   const rafRef = useRef<number>(0);
+  // tickRef holds the most recent rAF `tick` closure so the visibilitychange
+  // handler (audit H5) can resume the spin loop when the tab becomes visible
+  // again.
+  const tickRef = useRef<((now: number) => void) | null>(null);
   const lastCycleRef = useRef<number>(0);
   const reelStatesRef = useRef<ReelState[]>(["idle", "idle", "idle"]);
   const landingTimersRef = useRef<number[]>([]);
@@ -73,6 +78,27 @@ export default function Slots() {
   // users get the result without the flicker.
   useEffect(() => {
     prefersReducedMotionRef.current = readPrefersReducedMotion();
+  }, []);
+
+  // Pause the spin rAF loop when the tab is hidden (audit H5). Browsers
+  // throttle rAF to ~1 fps on hidden tabs, but each throttled tick still
+  // calls setReels → React reconciliation. Cancelling the rAF entirely
+  // eliminates that waste. When the tab becomes visible again and a spin
+  // is still in progress, resume the loop with the SAME tick closure
+  // (captured via tickRef) so the spin continues smoothly.
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = 0;
+        }
+      } else if (rollingRef.current && tickRef.current && !rafRef.current) {
+        rafRef.current = requestAnimationFrame(tickRef.current);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
   // Keep ref in sync so the rAF closure always sees the latest reel states.
@@ -141,6 +167,9 @@ export default function Slots() {
       }
       rafRef.current = requestAnimationFrame(tick);
     };
+    // Expose tick to the visibilitychange handler so it can resume the loop
+    // when the tab becomes visible again (audit H5).
+    tickRef.current = tick;
     rafRef.current = requestAnimationFrame(tick);
   }
 
@@ -238,7 +267,10 @@ export default function Slots() {
 
     // Server returns the nonce USED for this bet; the next nonce is +1.
     if (data.nonce != null) setPfNonce(data.nonce + 1);
-    refreshProfile();
+    // No refreshProfile() here — ProfileContext's realtime subscription on
+    // `profiles` pushes the new balance the instant the server commits the
+    // spin's wager/win transaction. Calling it would fire 2 redundant RPCs
+    // (ensure_user_profile + is_current_user_admin) per spin.
   }
 
   function handleSaveClientSeed() {
@@ -383,6 +415,7 @@ export default function Slots() {
                       setWager(clamped);
                       setWagerInput(String(clamped));
                     }}
+                    aria-label="Half bet"
                   >
                     1/2
                   </button>
@@ -391,6 +424,7 @@ export default function Slots() {
                     className="game-controls__wager-adj"
                     disabled={rolling}
                     onClick={() => applyWager(String(Math.min(wager * 2, activeBalance)))}
+                    aria-label="Double bet"
                   >
                     2x
                   </button>
@@ -444,6 +478,13 @@ export default function Slots() {
             </p>
           )}
 
+          {/* H9 (UI/UX audit): every other game (Keno, Mines, Limbo, Crash,
+              Blackjack) has an inline "Need funds? Deposit" link at the
+              bottom of the controls panel — Slots was missing it. */}
+          <p className="slots__hint">
+            Need funds? <Link to="/deposit">Deposit</Link>
+          </p>
+
           <div className="game-controls__stats">
             <div className="game-controls__stat-row">
               <span className="game-controls__stat-label">Balance ({coinLabel})</span>
@@ -472,21 +513,12 @@ export default function Slots() {
           >
             <summary>Provably Fair</summary>
             <div className="slots__fairness-body">
-              <div className="slots__paytable" aria-label="Paytable">
-                <h4 className="slots__paytable-title">Paytable (3 of a kind)</h4>
-                <div className="slots__paytable-grid">
-                  <span className="slots__paytable-row"><SlotSymbol id={6} size={22} /> Crown</span><span className="slots__paytable-mult slots__paytable-mult--top">100×</span>
-                  <span className="slots__paytable-row"><SlotSymbol id={5} size={22} /> Star</span><span className="slots__paytable-mult">35×</span>
-                  <span className="slots__paytable-row"><SlotSymbol id={2} size={22} /> Seven</span><span className="slots__paytable-mult">20×</span>
-                  <span className="slots__paytable-row"><SlotSymbol id={3} size={22} /> Bar</span><span className="slots__paytable-mult">10×</span>
-                  <span className="slots__paytable-row"><SlotSymbol id={4} size={22} /> Watermelon</span><span className="slots__paytable-mult">8×</span>
-                  <span className="slots__paytable-row"><SlotSymbol id={1} size={22} /> Bell</span><span className="slots__paytable-mult">5×</span>
-                  <span className="slots__paytable-row"><SlotSymbol id={0} size={22} /> Cherry</span><span className="slots__paytable-mult">3×</span>
-                  <span className="slots__paytable-row slots__paytable-row--cherry">2× Cherry</span><span className="slots__paytable-mult">2×</span>
-                  <span className="slots__paytable-row slots__paytable-row--cherry">1× Cherry</span><span className="slots__paytable-mult">1×</span>
-                </div>
-                <p className="slots__paytable-rtp">Theoretical RTP: 96.5%</p>
-              </div>
+              {/* H8 (UI/UX audit): the paytable was previously duplicated here
+                  byte-for-byte from the always-visible block above. Removed
+                  the duplicate — the fairness panel now contains only the
+                  provably-fair disclosure (seed hash, nonce, client seed, RTP
+                  note). The always-visible paytable at the top of the controls
+                  remains the single source of truth. */}
               <label className="slots__fairness-label">
                 Server seed hash
                 <input

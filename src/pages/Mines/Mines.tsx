@@ -157,7 +157,10 @@ export function Mines() {
     setPfNonce(data.nonce + 1);
     busyRef.current = false;
     setBusy(false);
-    await refreshProfile();
+    // No refreshProfile() here — ProfileContext's realtime subscription on
+    // `profiles` pushes the new balance (entry debit) the instant the server
+    // commits start_mines_game. Calling it would fire 2 redundant RPCs
+    // (ensure_user_profile + is_current_user_admin) per bet.
   };
 
   const handleReveal = async (tile: number) => {

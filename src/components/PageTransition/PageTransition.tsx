@@ -38,17 +38,20 @@ type TransitionKind = "initial" | "major" | "minor" | "same";
 /* Local variants — intentionally avoid `filter: blur()` because blurring
    the entire page wrapper on every route change triggers a full-content
    repaint on the GPU and is the main source of jank during navigation.
-   Opacity + a small translate is perceptually equivalent and far cheaper. */
+   Opacity + a small translate is perceptually equivalent and far cheaper.
+   M12 (UI/UX audit): durations shortened — major 0.32s→0.2s, minor 0.22s→0.14s.
+   The prior durations felt sluggish on repeated navigation (e.g. clicking
+   through game tabs). The new values are still smooth but feel instant. */
 const majorVariants: Variants = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.32, ease: [0.22, 1, 0.36, 1] } },
-  exit: { opacity: 0, y: -8, transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] } },
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, y: -4, transition: { duration: 0.12, ease: [0.4, 0, 0.2, 1] } },
 };
 
 const minorVariants: Variants = {
-  initial: { opacity: 0, y: 6 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.22, ease: [0.22, 1, 0.36, 1] } },
-  exit: { opacity: 0, y: -4, transition: { duration: 0.16, ease: [0.4, 0, 0.2, 1] } },
+  initial: { opacity: 0, y: 4 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.14, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, y: -2, transition: { duration: 0.1, ease: [0.4, 0, 0.2, 1] } },
 };
 
 interface PageTransitionProps {

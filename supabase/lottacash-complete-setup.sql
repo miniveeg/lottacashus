@@ -962,26 +962,31 @@ grant select        on public.keno_bets               to authenticated;
 grant select (id, user_id, wager, mine_count, revealed_tiles, gems_revealed, multiplier, payout, status, nonce, created_at, completed_at)
                   on public.mines_games             to authenticated;
 grant select        on public.limbo_bets              to authenticated;
-grant select (id, user_id, wager, total_wager, doubled, shoe_index, player_cards, dealer_cards, dealer_revealed, status, outcome, payout, nonce, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, created_at, completed_at)
+-- SECURITY FIX: do NOT grant dealer_cards to authenticated — clients could
+-- read the dealer hole card mid-hand via direct select. The dealer_revealed
+-- flag is the only column needed; the edge function returns the visible cards.
+grant select (id, user_id, wager, total_wager, doubled, shoe_index, player_cards, dealer_revealed, status, outcome, payout, nonce, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, created_at, completed_at)
                   on public.blackjack_hands         to authenticated;
-grant select        on public.case_battles            to authenticated;
+-- SECURITY FIX: do NOT grant case_battles table-level select here — it would
+-- re-expose internal_seed (provably-fair violation). The v2 migration
+-- (case-battles-v2-setup.sql) creates a case_battles_safe view that hides
+-- internal_seed/battle_seed until status='completed'. Grant that view instead.
+-- grant select        on public.case_battles            to authenticated;
 grant select        on public.case_battle_players     to authenticated;
 grant select        on public.roulette_bets           to authenticated;
 grant select        on public.affiliate_commissions   to authenticated;
 grant select, insert on public.redemptions            to authenticated;
--- SECURITY: hide crash_point + cashed_at until the round is completed so a
--- player cannot read the bust point before deciding to cash out. Service_role
--- (edge functions) retains full access.
+-- SECURITY: hide crash_point until the round is completed so a player cannot
+-- read the bust point before deciding to cash out. The `crash_bets_safe`
+-- view (defined later) NULLs out crash_point until completed_at is set.
+-- Service_role (edge functions) retains full access to the base table.
 revoke select on public.crash_bets from authenticated;
-grant select (id, user_id, wager, coin_type, nonce, won, payout, cashed_at, crash_point, created_at, completed_at)
+-- SECURITY FIX: do NOT include crash_point in this column grant — clients
+-- could read it mid-round via direct select and binary-search the crash point
+-- for guaranteed wins. The `crash_bets_safe` view exposes it only after
+-- completed_at is set; clients must read from there.
+grant select (id, user_id, wager, coin_type, nonce, won, payout, cashed_at, created_at, completed_at)
   on public.crash_bets to authenticated;
--- NOTE: Postgres column-level grants still expose crash_point to the bettor.
--- The real protection is the `crash_bets_rls_hide_crash_point` policy below
--- which uses a separate security_barrier view. For now the edge function
--- already strips crash_point from the bet-creation response (place-crash-bet),
--- and cash_out_crash validates cashed_at <= crash_point server-side. The
--- column grant above limits mass-scraping; the RLS policy below is the true
--- gate once the view is in place.
 grant select        on public.slots_games             to authenticated;
 grant select        on public.user_deposit_addresses  to authenticated;
 grant select        on public.crypto_deposits         to authenticated;

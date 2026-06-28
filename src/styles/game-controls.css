@@ -164,6 +164,12 @@
   box-shadow: 0 6px 32px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
 }
 
+/* Press feedback — satisfying "click" feel on the primary bet button. */
+.game-controls__play:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 10px var(--lc-crimson-glow), var(--lc-shadow-inset);
+}
+
 .game-controls__play:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -224,13 +230,18 @@
   color: var(--lc-text-secondary);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
-  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
+  transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition), transform var(--lc-transition-spring);
 }
 
 .game-controls__wager-adj:hover:not(:disabled) {
   background: var(--lc-bg-hover);
   color: var(--lc-crimson-soft);
   border-color: var(--lc-border-accent);
+}
+
+/* Press feedback — subtle scale-down on click for tactile feel. */
+.game-controls__wager-adj:active:not(:disabled) {
+  transform: scale(0.93);
 }
 
 .game-controls__wager-adj:disabled {

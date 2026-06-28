@@ -191,6 +191,7 @@ export function CaseBattlesCreateV2() {
             className={"cb-toggle" + (borrowPercent > 0 ? " cb-toggle--on" : "")}
             onClick={() => setBorrowPercent(borrowPercent > 0 ? 0 : 50)}
             aria-pressed={borrowPercent > 0}
+            aria-label={`Borrow toggle, currently ${borrowPercent > 0 ? "on at " + borrowPercent + " percent" : "off"}`}
           >
             <span className="cb-toggle__knob" />
           </button>
@@ -212,10 +213,10 @@ export function CaseBattlesCreateV2() {
             <div className="cb-create__case-list-header">
               <span>{caseIds.length} cases · {formatCoins(entryCost, coinType)}</span>
               <div className="cb-create__case-list-actions">
-                <button type="button" className="cb-create__small-btn" onClick={() => setShowCaseModal(true)}>
+                <button type="button" className="cb-create__small-btn" onClick={() => setShowCaseModal(true)} aria-label="Add more cases">
                   + Add more
                 </button>
-                <button type="button" className="cb-create__small-btn cb-create__small-btn--danger" onClick={clearCases}>
+                <button type="button" className="cb-create__small-btn cb-create__small-btn--danger" onClick={clearCases} aria-label="Clear all cases">
                   Clear
                 </button>
               </div>
@@ -227,7 +228,7 @@ export function CaseBattlesCreateV2() {
                   <div key={i} className="cb-create__case-item">
                     <span className="cb-create__case-item-name">{c?.name ?? id}</span>
                     <span className="cb-create__case-item-price">${c?.price.toFixed(2) ?? "?"}</span>
-                    <button type="button" className="cb-create__case-remove" onClick={() => removeCase(i)}>
+                    <button type="button" className="cb-create__case-remove" onClick={() => removeCase(i)} aria-label={`Remove ${c?.name ?? id} from battle`}>
                       <X size={14} />
                     </button>
                   </div>
@@ -272,7 +273,7 @@ export function CaseBattlesCreateV2() {
           <div className="cb-modal" onClick={(e) => e.stopPropagation()}>
             <div className="cb-modal__header">
               <h2>Add Cases</h2>
-              <button type="button" className="cb-modal__close" onClick={() => setShowCaseModal(false)}>
+              <button type="button" className="cb-modal__close" onClick={() => setShowCaseModal(false)} aria-label="Close case picker">
                 <X size={20} />
               </button>
             </div>
@@ -287,7 +288,7 @@ export function CaseBattlesCreateV2() {
                 />
               </div>
               <div className="cb-modal__sort">
-                <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
+                <select value={sort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sort cases">
                   <option value="popular">Most Popular</option>
                   <option value="price-high">Highest Price</option>
                   <option value="price-low">Lowest Price</option>

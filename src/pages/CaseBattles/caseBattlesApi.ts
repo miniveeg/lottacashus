@@ -100,14 +100,42 @@ function parseDrop(row: Record<string, unknown>): BattleDrop {
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
+/**
+ * Explicit column list for `case_battles_safe` / `case_battles` reads.
+ *
+ * Auditing (perf H4 + security R3): `select("*")` previously leaked
+ * `internal_seed` and `battle_seed` to the client (the safe view exposes
+ * them only when status='completed', but `*` would still ship the columns
+ * in the response payload). It also fetched ~10 unused columns (eos fields,
+ * seeds) per row, inflating bandwidth on the lobby list.
+ *
+ * `parseBattle` consumes exactly these fields. `battle_seed` and
+ * `internal_seed` are intentionally NOT selected — the V2 client does not
+ * read `battleSeed` from the parsed view (verified by grep: `battle.battleSeed`
+ * is only referenced inside `localToView` for the local-play path).
+ */
+const BATTLE_COLUMNS =
+  "id, creator_id, gamemode, crazy, player_mode, max_players, case_ids, " +
+  "rounds, entry_cost, coin_type, borrow_percent, pot_total, status, " +
+  "seed_hash, eos_block_target, eos_block_id, created_at, started_at, completed_at";
+
+const PLAYER_COLUMNS = "slot, user_id, is_bot, username, avatar_seed";
+const DROP_COLUMNS =
+  "slot, round, case_id, item_id, item_name, item_value, item_rarity";
+
+// Safety cap on drops fetched per battle. The schema's
+// `unique(battle_id, slot, round)` constraint bounds the actual row count
+// to max_players(6) × max_rounds(≤50) = 300; 3600 is a generous safety net.
+const DROPS_LIMIT = 3600;
+
 export async function listOpenBattles(): Promise<{
   data: CaseBattleView[] | null;
   error: string | null;
 }> {
   if (!isSupabaseConfigured) return { data: localListOpenBattles().map(localToView), error: null };
   const { data, error } = await supabase
-    .from("case_battles")
-    .select("*")
+    .from("case_battles_safe")
+    .select(BATTLE_COLUMNS)
     .in("status", ["waiting", "committing", "running"])
     .order("created_at", { ascending: false })
     .limit(50);
@@ -115,7 +143,12 @@ export async function listOpenBattles(): Promise<{
     // Fallback to local battles on error.
     return { data: localListOpenBattles().map(localToView), error: null };
   }
-  const battles = (data ?? []).map(parseBattle);
+  // Cast via `unknown` because the supabase-js column-list type inference
+  // (no Database schema is wired up in this client — see lib/supabase.ts)
+  // produces a `GenericStringError` sentinel type for non-`*` select strings
+  // when it can't validate the columns against a schema. At runtime `data`
+  // is the row array we asked for.
+  const battles = ((data ?? []) as unknown as Record<string, unknown>[]).map(parseBattle);
   return { data: battles, error: null };
 }
 
@@ -130,20 +163,35 @@ export async function viewCaseBattle(battleId: string): Promise<{
 
   const [{ data: battleRow, error: battleErr }, { data: playerRows }, { data: dropRows }] =
     await Promise.all([
-      supabase.from("case_battles").select("*").eq("id", battleId).maybeSingle(),
-      supabase.from("case_battle_players").select("*").eq("battle_id", battleId).order("slot"),
-      supabase.from("case_battle_drops").select("*").eq("battle_id", battleId).order("round, slot"),
+      supabase
+        .from("case_battles_safe")
+        .select(BATTLE_COLUMNS)
+        .eq("id", battleId)
+        .maybeSingle(),
+      supabase
+        .from("case_battle_players")
+        .select(PLAYER_COLUMNS)
+        .eq("battle_id", battleId)
+        .order("slot"),
+      supabase
+        .from("case_battle_drops")
+        .select(DROP_COLUMNS)
+        .eq("battle_id", battleId)
+        .order("round, slot")
+        .limit(DROPS_LIMIT),
     ]);
 
   if (battleErr) return { data: null, error: battleErr.message };
   if (!battleRow) return { data: null, error: "Battle not found." };
 
-  const battle = parseBattle(battleRow as Record<string, unknown>);
+  // Cast via `unknown` — see note in listOpenBattles about the supabase-js
+  // column-list type inference producing a `GenericStringError` sentinel.
+  const battle = parseBattle(battleRow as unknown as Record<string, unknown>);
   battle.players = (playerRows ?? []).map((p) => {
-    const parsed = parsePlayer(p as Record<string, unknown>);
+    const parsed = parsePlayer(p as unknown as Record<string, unknown>);
     return parsed;
   });
-  battle.drops = (dropRows ?? []).map((d) => parseDrop(d as Record<string, unknown>));
+  battle.drops = (dropRows ?? []).map((d) => parseDrop(d as unknown as Record<string, unknown>));
   return { data: battle, error: null };
 }
 

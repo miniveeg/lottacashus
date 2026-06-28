@@ -150,6 +150,11 @@ export function Admin() {
       action === "approve"
         ? "The user's crypto will be sent from the treasury wallet."
         : "The user's SC will be refunded.";
+    // H2/H11 (UI/UX audit): window.confirm breaks the visual design language
+    // and is blocked by some iframe/extension configurations. Settings.tsx
+    // has been migrated to the styled `<ConfirmDialog>` component; the same
+    // refactor is recommended here (tracking which redemption + action is
+    // pending in state, then rendering a single ConfirmDialog).
     const confirmed = window.confirm(
       `${verb} ${r.scAmount} SC withdrawal for ${displayUser(r.username, r.email)}? ${detail}`
     );
@@ -191,6 +196,8 @@ export function Admin() {
       return;
     }
     const next = !u.isAdmin;
+    // H2/H11 (UI/UX audit): see handleWithdrawalAction note — recommend
+    // migrating to <ConfirmDialog>.
     const confirmed = window.confirm(
       next
         ? `Grant admin access to ${displayUser(u.username, u.email)}?`
@@ -231,6 +238,8 @@ export function Admin() {
       return;
     }
     const coinLabel = creditCoinType === "sweeps_coins" ? "SC" : "GC";
+    // H2/H11 (UI/UX audit): see handleWithdrawalAction note — recommend
+    // migrating to <ConfirmDialog>.
     const confirmed = window.confirm(
       `Credit ${amount.toFixed(2)} ${coinLabel} to user ${uid}?`
     );
@@ -364,7 +373,19 @@ export function Admin() {
         {activeTab === "overview" && (
           <div className="admin__overview">
             <div className="admin__overview-grid">
-              <div className="admin__overview-card" onClick={() => setActiveTab("withdrawals")}>
+              <div
+                className="admin__overview-card"
+                role="button"
+                tabIndex={0}
+                aria-label="View pending withdrawals"
+                onClick={() => setActiveTab("withdrawals")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActiveTab("withdrawals");
+                  }
+                }}
+              >
                 <div className="admin__overview-card-head">
                   <ArrowUpRight size={18} aria-hidden />
                   <span>Pending Withdrawals</span>
@@ -377,7 +398,19 @@ export function Admin() {
                 </p>
               </div>
 
-              <div className="admin__overview-card" onClick={() => setActiveTab("deposits")}>
+              <div
+                className="admin__overview-card"
+                role="button"
+                tabIndex={0}
+                aria-label="View recent deposits"
+                onClick={() => setActiveTab("deposits")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActiveTab("deposits");
+                  }
+                }}
+              >
                 <div className="admin__overview-card-head">
                   <ArrowDownLeft size={18} aria-hidden />
                   <span>Recent Deposits</span>
@@ -386,7 +419,19 @@ export function Admin() {
                 <p className="admin__overview-meta">Last 15 credited</p>
               </div>
 
-              <div className="admin__overview-card" onClick={() => setActiveTab("users")}>
+              <div
+                className="admin__overview-card"
+                role="button"
+                tabIndex={0}
+                aria-label="Open user management"
+                onClick={() => setActiveTab("users")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActiveTab("users");
+                  }
+                }}
+              >
                 <div className="admin__overview-card-head">
                   <Users size={18} aria-hidden />
                   <span>User Management</span>
@@ -395,7 +440,19 @@ export function Admin() {
                 <p className="admin__overview-meta">Search & manage admins</p>
               </div>
 
-              <div className="admin__overview-card" onClick={() => setActiveTab("credit")}>
+              <div
+                className="admin__overview-card"
+                role="button"
+                tabIndex={0}
+                aria-label="Open credit user form"
+                onClick={() => setActiveTab("credit")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setActiveTab("credit");
+                  }
+                }}
+              >
                 <div className="admin__overview-card-head">
                   <CreditCard size={18} aria-hidden />
                   <span>Credit User</span>

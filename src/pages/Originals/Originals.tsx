@@ -34,7 +34,13 @@ function FeaturedCard({ game }: { game: OriginalGame }) {
             {game.tag && <span className="originals__badge originals__badge--featured">{game.tag}</span>}
           </div>
           <h2 className="originals__featured-title">{game.name}</h2>
-          <p className="originals__featured-hook">{game.hook ?? game.description}</p>
+          {/* M5 (UI/UX audit): previously this rendered `game.hook ?? game.description`
+              followed by `game.description` — when `game.hook` was undefined, both
+              paragraphs rendered the same text back-to-back. Now we only render
+              the hook when it's distinct from the description. */}
+          {game.hook && game.hook !== game.description && (
+            <p className="originals__featured-hook">{game.hook}</p>
+          )}
           <p className="originals__featured-desc">{game.description}</p>
           <div className="originals__featured-meta">
             {game.rtp && <span className="originals__meta-chip">{game.rtp}</span>}
@@ -114,7 +120,9 @@ export function Originals() {
 
       <div className="originals__stats">
         <div className="originals__stat">
-          <span className="originals__stat-num">8</span>
+          {/* L10 (UI/UX audit): "8" was hardcoded — derive from ORIGINAL_GAMES
+              length so the stat updates automatically when games are added. */}
+          <span className="originals__stat-num">{ORIGINAL_GAMES.length}</span>
           <span className="originals__stat-label">House games</span>
         </div>
         <div className="originals__stat">

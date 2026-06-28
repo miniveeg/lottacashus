@@ -6,7 +6,7 @@ import "./NotFound.css";
 export function NotFound() {
   return (
     <div className="not-found lc-page">
-      <Seo title="Page not found" description="That page doesn't exist or may have moved." path="/404" />
+      <Seo title="Page not found" description="That page doesn't exist or may have moved." path="/404" noindex />
       <div className="not-found__card">
         <p className="not-found__code" aria-hidden="true">
           404

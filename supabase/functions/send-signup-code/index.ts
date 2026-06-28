@@ -60,8 +60,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    // SECURITY FIX (email enumeration): previously returned 400 "An account
+    // with this email already exists." — attackers could probe whether any
+    // email is registered by calling this endpoint. Now we always return
+    // success, but skip sending the code if the account exists. This matches
+    // the behavior of send-password-reset-code (which already does this).
     if (alreadyRegistered) {
-      return jsonResponse({ error: "An account with this email already exists." }, 400, req);
+      // Optionally notify the registered address that a signup probe occurred.
+      // For now, silently succeed so the attacker can't distinguish.
+      return jsonResponse({ success: true, expiresInMinutes: 10 });
     }
 
     const { data: existing, error: selectError } = await supabase

@@ -600,6 +600,7 @@ export function CaseBattlesCreate() {
                     className="cbc__tool-btn"
                     onClick={sortCasesAsc}
                     title="Sort by price ascending"
+                    aria-label="Sort by price ascending"
                   >
                     ↑
                   </button>
@@ -608,6 +609,7 @@ export function CaseBattlesCreate() {
                     className="cbc__tool-btn"
                     onClick={sortCasesDesc}
                     title="Sort by price descending"
+                    aria-label="Sort by price descending"
                   >
                     ↓
                   </button>
@@ -616,6 +618,7 @@ export function CaseBattlesCreate() {
                     className="cbc__tool-btn"
                     onClick={randomizeCases}
                     title="Shuffle order"
+                    aria-label="Shuffle order"
                   >
                     ⇄
                   </button>
@@ -624,6 +627,7 @@ export function CaseBattlesCreate() {
                     className="cbc__tool-btn cbc__tool-btn--danger"
                     onClick={() => setSelectedCaseIds([])}
                     title="Clear all"
+                    aria-label="Clear all"
                   >
                     ✕
                   </button>

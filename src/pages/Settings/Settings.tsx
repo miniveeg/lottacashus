@@ -26,6 +26,7 @@ import {
   type DepositLimits,
 } from "../../lib/responsibleGaming";
 import { Seo } from "../../components/Seo/Seo";
+import { ConfirmDialog } from "../../components/ConfirmDialog/ConfirmDialog";
 import "./Settings.css";
 
 export function Settings() {
@@ -56,6 +57,11 @@ export function Settings() {
   const [seDuration, setSeDuration] = useState<30 | 90 | 180>(30);
   const [seReason, setSeReason] = useState("");
   const [seBusy, setSeBusy] = useState(false);
+  // H2/H11 (UI/UX audit): self-exclusion confirmation used to use
+  // `window.confirm` (native dialog — breaks visual design, blocked by some
+  // iframe/extension configs, no destructive variant). Replaced with the
+  // styled `<ConfirmDialog>` below.
+  const [seConfirmOpen, setSeConfirmOpen] = useState(false);
   const [depositLimits, setDepositLimitsState] = useState<DepositLimits | null>(null);
   const [dlDaily, setDlDaily] = useState("");
   const [dlWeekly, setDlWeekly] = useState("");
@@ -531,13 +537,21 @@ export function Settings() {
               type="button"
               className="settings__btn settings__btn--danger"
               disabled={seBusy}
-              onClick={async () => {
-                if (
-                  !window.confirm(
-                    `Are you sure? You will be excluded for ${seDuration} days. This cannot be undone.`
-                  )
-                )
-                  return;
+              onClick={() => setSeConfirmOpen(true)}
+            >
+              {seBusy && <span className="settings__btn__spinner" aria-hidden="true" />}
+              {seBusy ? "Activating…" : "Activate self-exclusion"}
+            </button>
+            <ConfirmDialog
+              open={seConfirmOpen}
+              title={`Self-exclude for ${seDuration} days?`}
+              body="You will be unable to play, deposit, or withdraw until the period ends. This action cannot be undone early."
+              confirmLabel="Activate self-exclusion"
+              cancelLabel="Cancel"
+              destructive
+              busy={seBusy}
+              onClose={() => setSeConfirmOpen(false)}
+              onConfirm={async () => {
                 setError(null);
                 setSuccess(null);
                 setSeBusy(true);
@@ -546,18 +560,17 @@ export function Settings() {
                   seReason.trim() || undefined
                 );
                 setSeBusy(false);
-                if (seError) setError(seError);
-                else {
+                if (seError) {
+                  setError(seError);
+                } else {
                   setSuccess(
                     `Self-exclusion activated for ${seDuration} days.`
                   );
                   fetchSelfExclusion().then(setSelfExclusion);
+                  setSeConfirmOpen(false);
                 }
               }}
-            >
-              {seBusy && <span className="settings__btn__spinner" aria-hidden="true" />}
-              {seBusy ? "Activating…" : "Activate self-exclusion"}
-            </button>
+            />
           </>
         )}
       </section>

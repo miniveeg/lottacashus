@@ -86,11 +86,15 @@ export function GameGuestBanner() {
           onClick={handleDismiss}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            {/* L6 (UI/UX audit): defense in depth — the parent <svg> is already
+                aria-hidden, but explicit aria-hidden on the path ensures no SR
+                configuration announces the path data. */}
             <path
               d="M6 6l12 12M18 6L6 18"
               stroke="currentColor"
               strokeWidth="2"
               strokeLinecap="round"
+              aria-hidden="true"
             />
           </svg>
         </button>

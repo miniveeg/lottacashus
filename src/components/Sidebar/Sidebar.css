@@ -132,12 +132,20 @@
   background: radial-gradient(ellipse at left center, var(--lc-crimson-glow) 0%, transparent 70%);
   opacity: 0.45;
   pointer-events: none;
-  animation: sidebar-glow-pulse 3.2s ease-in-out infinite;
+  /* M11 (UI/UX audit): previously `sidebar-glow-pulse 3.2s ease-in-out infinite`
+   * — an infinite ambient pulse that distracted users on every active route.
+   * Now: a single 2.4s ease-out entrance animation plays once when the link
+   * becomes active (via the React key change on route navigation), then the
+   * glow settles to a static opacity. Animation is reserved for state changes,
+   * not ambient decoration. Reduced-motion users get no animation (handled
+   * by the global @media rule). */
+  animation: sidebar-glow-enter 2.4s ease-out 1 forwards;
 }
 
-@keyframes sidebar-glow-pulse {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 0.55; }
+@keyframes sidebar-glow-enter {
+  0% { opacity: 0; transform: scale(0.92); }
+  40% { opacity: 0.6; transform: scale(1.02); }
+  100% { opacity: 0.45; transform: scale(1); }
 }
 
 .sidebar__icon {

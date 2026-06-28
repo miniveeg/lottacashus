@@ -19,8 +19,13 @@ Deno.serve(async (req) => {
     const cashedAtMultiplier = Number(body?.cashedAtMultiplier ?? 0);
     const coinType = String(body?.coinType ?? "balance");
 
-    if (!betId || !Number.isFinite(cashedAtMultiplier) || cashedAtMultiplier < 1) {
-      return jsonResponse({ error: "Invalid cash-out params." }, 400, req);
+    // MEDIUM (audit fix-games): reject cashout at exactly 1.00×. The crash
+    // formula's minimum is `Math.max(1, raw)` → 1.00×, so a 1.00× cashout
+    // would always succeed (1.00 <= crash_point) and return the wager
+    // unchanged — a break-even bot could play indefinitely with zero risk,
+    // defeating the house edge. Minimum cashout must be 1.01×.
+    if (!betId || !Number.isFinite(cashedAtMultiplier) || cashedAtMultiplier < 1.01) {
+      return jsonResponse({ error: "Minimum cash-out is 1.01×." }, 400, req);
     }
 
     const supabaseUser = createClient(
@@ -62,16 +67,33 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: cashError.message }, 400, req);
     }
 
+    // The SQL function now returns: (out_balance, payout, cashed_at, success,
+    // crash_point, already_settled). When success=false, the bet was settled
+    // as a loss because the user tried to cash out after the crash point.
+    // We return the crash_point so the client can show the crash animation.
     const row = (Array.isArray(result) ? result[0] : result) as
       | Record<string, unknown>
       | undefined;
 
+    const success = Boolean(row?.success);
+    const crashPoint = row?.crash_point !== null && row?.crash_point !== undefined
+      ? Number(row.crash_point)
+      : null;
+    const payout = Number(row?.payout ?? 0);
+    const balance = Number(row?.out_balance ?? 0);
+    const alreadySettled = Boolean(row?.already_settled);
+
     return jsonResponse({
       betId,
-      cashedAtMultiplier,
-      payout: Number(row?.payout ?? 0),
-      balance: Number(row?.out_balance ?? 0),
-      won: true,
+      cashedAtMultiplier: Number(row?.cashed_at ?? cashedAtMultiplier),
+      payout,
+      balance,
+      won: success,
+      // Reveal the crash point to the client only when the round is over
+      // (success=false OR alreadySettled=true). The client uses this to
+      // animate the crash and is NOT used for payout calculation.
+      crashPoint,
+      alreadySettled,
       coinType,
     });
   } catch (err) {

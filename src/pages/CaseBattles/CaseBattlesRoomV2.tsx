@@ -34,21 +34,52 @@ export function CaseBattlesRoomV2() {
   const [claimed, setClaimed] = useState(false);
   const eosPollRef = useRef<number>(0);
 
-  // Poll EOS block while status = 'committing'
+  // Poll EOS block while status = 'committing'.
+  // M8 (UI/UX audit): use a recursive setTimeout pattern instead of setInterval
+  // so a slow response doesn't cause overlapping polls (which cause jank on
+  // slow connections). The next poll is scheduled only after the current one
+  // resolves. Also pauses when the tab is hidden — no point burning requests
+  // the user can't see.
   useEffect(() => {
     if (!battle || battle.status !== "committing") return;
+
+    let cancelled = false;
+    let consecutiveErrors = 0;
+
     const poll = async () => {
-      const { data, error: err } = await checkEosBlock(battle.battleId);
-      if (err) {
-        // Silently retry — EOS RPC can be flaky
+      if (cancelled) return;
+      // Pause when tab is hidden — resume on visibility change.
+      if (typeof document !== "undefined" && document.hidden) {
+        eosPollRef.current = window.setTimeout(poll, EOS_POLL_MS);
         return;
       }
-      if (data?.ready) {
-        // The realtime subscription will pick up the status change
+      const { data, error: err } = await checkEosBlock(battle.battleId);
+      if (cancelled) return;
+      if (err) {
+        // Silently retry — EOS RPC can be flaky. Exponential backoff after
+        // 3 consecutive errors to avoid hammering a dead endpoint.
+        consecutiveErrors++;
+        const delay = consecutiveErrors > 3
+          ? Math.min(EOS_POLL_MS * 2 ** (consecutiveErrors - 3), 30_000)
+          : EOS_POLL_MS;
+        eosPollRef.current = window.setTimeout(poll, delay);
+        return;
       }
+      consecutiveErrors = 0;
+      if (data?.ready) {
+        // The realtime subscription will pick up the status change.
+        // No need to keep polling — the component will re-render via the
+        // subscription and this effect will tear down (status !== 'committing').
+        return;
+      }
+      eosPollRef.current = window.setTimeout(poll, EOS_POLL_MS);
     };
-    eosPollRef.current = window.setInterval(poll, EOS_POLL_MS);
-    return () => window.clearInterval(eosPollRef.current);
+
+    eosPollRef.current = window.setTimeout(poll, EOS_POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(eosPollRef.current);
+    };
   }, [battle?.battleId, battle?.status]);
 
   if (!battleId) return <Navigate to="/case-battles" replace />;

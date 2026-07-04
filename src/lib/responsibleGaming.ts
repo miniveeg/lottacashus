@@ -100,11 +100,31 @@ export async function createSelfExclusion(
   return { error: error?.message ?? null };
 }
 
+/** @internal Lifts a previously-set self-exclusion.
+ *
+ *  Per the ResponsibleGaming page ("no early lift path, even via support")
+ *  and the schema (the `cancel_self_exclusion()` RPC revokes EXECUTE from
+ *  `authenticated` and grants only to `service_role`), this is a stub that
+ *  returns a friendly "contact support" error rather than attempting a
+ *  call that would reliably fail at runtime with a Postgres permission
+ *  error. It is exported only so future ResponsibleGaming UI can surface
+ *  a consistent message without re-deriving the policy; do NOT wire this
+ *  to a user-facing button without reading the schema policy first.
+ *
+ *  Expired self-exclusions are cleared automatically by the periodic
+ *  `check_self_exclusion()` check based on `self_excluded_until < now()`.
+ *  No current UI calls this function — see ripgrep for the verifed zero
+ *  caller count at audit time. */
 export async function cancelSelfExclusion(): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured) return { error: NOT_CONFIGURED_ERROR };
 
-  const { error } = await supabase.rpc("cancel_self_exclusion");
-  return { error: error?.message ?? null };
+  // Intentionally do NOT call `supabase.rpc("cancel_self_exclusion")` — the
+  // schema revokes EXECUTE from `authenticated`, so the call would fail with
+  // a Postgres permission error that exposes internal SQL state to the user.
+  return {
+    error:
+      "Self-exclusion cannot be lifted from the app. Once the exclusion period ends, your account will be re-enabled automatically. If the period has elapsed and your account is still locked, please contact support.",
+  };
 }
 
 /** Coerce an unknown RPC row into a `DepositLimits | null`. Returns null if

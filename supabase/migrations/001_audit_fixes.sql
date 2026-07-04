@@ -344,6 +344,13 @@ grant select (id, user_id, wager, total_wager, doubled, shoe_index, player_cards
 -- ────────────────────────────────────────────────────────────────────────────
 -- FIX 3: Crash binary-search exploit — settle as loss on over-cap cashout
 -- ────────────────────────────────────────────────────────────────────────────
+-- Postgres refuses CREATE OR REPLACE when OUT / return table changes
+-- (error 42P13: "cannot change return type of existing function"). This
+-- migration is meant to be applied atop the V1 schema, which defined
+-- cash_out_crash with a 3-col return. Drop the prior signature here so the
+-- OR REPLACE below acts as a clean CREATE on whatever state the DB is in
+-- (V1 partial install, V2 already-applied, or fresh).
+drop function if exists public.cash_out_crash(uuid, uuid, numeric);
 create or replace function public.cash_out_crash(
   p_user_id uuid,
   p_bet_id uuid,
@@ -664,10 +671,14 @@ create policy "deny all reset codes" on public.password_reset_codes
 
 
 -- 9b. Restrict the profiles UPDATE policy so users can't directly write
---     discord_id, affiliate_code, etc. Only username and avatar_seed are
---     user-writable directly.
+--     discord_id, affiliate_code, etc. Only username is user-writable
+--     directly. (avatar_seed was originally included here but the column
+--     was never declared on profiles — it lives on case_battle_players
+--     instead, where it's used for per-slot battle context. Granting update
+--     on a non-existent column fails with error 42703, so the column was
+--     dropped from this grant.)
 revoke update on public.profiles from authenticated;
-grant update (username, avatar_seed) on public.profiles to authenticated;
+grant update (username) on public.profiles to authenticated;
 
 drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile"

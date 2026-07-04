@@ -13,8 +13,14 @@ import {
   cashOutCrash,
   setCrashClientSeed,
 } from "../../lib/crash";
+import {
+  CRASH_MAX_PAYOUT,
+  CRASH_MAX_WAGER,
+  CRASH_MIN_WAGER,
+  CRASH_WORST_CASE_MULTIPLIER,
+  truncateCrashMultiplier,
+} from "../../lib/games/crash";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
-import { truncateCrashMultiplier } from "../../lib/games/crash";
 import "../../styles/game-controls.css";
 import "./Crash.css";
 
@@ -147,8 +153,12 @@ export function Crash() {
   }, []);
 
   const applyWager = (value: number) => {
-    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
-    const v = Math.max(1, Math.min(maxBet, value));
+    // CRASH_MAX_WAGER is derived from CRASH_MAX_PAYOUT /
+    // CRASH_WORST_CASE_MULTIPLIER (= 100 in either currency). Using it here
+    // keeps the wager input below the regulatory cap so the Bet button never
+    // enters the "exceeds cap" state from a UI overshoot — and matches what
+    // the server accepts (see supabase/functions/place-crash-bet/index.ts).
+    const v = Math.max(CRASH_MIN_WAGER, Math.min(CRASH_MAX_WAGER, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -158,13 +168,16 @@ export function Crash() {
     [wager, multiplier]
   );
 
-  // Max-payout cap (audit R6): server enforces 100,000. The crash point is
-  // unknown at bet time, but if the wager alone exceeds the cap (wager >
-  // 100,000 / 1.01 ≈ 99,010), even a minimum (1.01×) cashout would exceed
-  // it. We also warn the player about the cap so they understand the
-  // server-side limit.
-  const CRASH_MAX_PAYOUT = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
-  const exceedsMaxPayout = wager > CRASH_MAX_PAYOUT / 1.01;
+  // Max-payout cap: server enforces CRASH_MAX_PAYOUT (regulatory 100,000 cap
+  // in the player's coin currency). The crash point is unknown at bet time,
+  // so we pre-check the worst-case payout bound: `wager ×
+  // CRASH_WORST_CASE_MULTIPLIER ≤ CRASH_MAX_PAYOUT`. Anything over that the
+  // server would reject before the round starts.
+  // IMPORTANT: do NOT use the min-cashout multiplier (1.01×) — the server
+  // uses the worst-case multiplier (1,000×) and would reject later, but the
+  // UI allowing it first creates a confusing "Bet OK → server rejects" loop.
+  // Single source of truth for the cap is in src/lib/games/crash/constants.ts.
+  const exceedsMaxPayout = wager * CRASH_WORST_CASE_MULTIPLIER > CRASH_MAX_PAYOUT;
 
   /** Resolve theme color for the chart line so it stays consistent with the site palette. */
   function resolveChartColor(): { line: string; fill: string; crashed: string } {
@@ -750,7 +763,11 @@ export function Crash() {
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
                   const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
+                  // Cap at the regulatory max wager the server will ever
+                  // accept (= 100 in either currency). The previous
+                  // 100k/10m heuristic was tied to GC-vs-SC currency splits
+                  // that don't match the server's worst-case cap math.
+                  applyWager(Math.min(CRASH_MAX_WAGER, activeBalance));
                 }}
                 disabled={phase === "running"}
                 aria-label="Max bet"
@@ -787,8 +804,8 @@ export function Crash() {
 
           {exceedsMaxPayout && phase === "idle" && (
             <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {formatCoins(CRASH_MAX_PAYOUT, coinType)}. Lower your wager — even a minimum
-              cashout at this wager would exceed the cap.
+              Max wager is {formatCoins(CRASH_MAX_WAGER, coinType)} ({formatCoins(CRASH_MAX_PAYOUT, coinType)} max
+              payout at the {CRASH_WORST_CASE_MULTIPLIER.toLocaleString()}× worst-case cap). Lower your wager.
             </p>
           )}
 

@@ -462,6 +462,63 @@
   margin: 0;
 }
 
+/* Recent-hands history strip — parity with Roulette/Limbo. Newest chip
+   slides in from the left; win/loss/push are tinted via outcome class.
+   Reduced-motion users (see the @media block at the bottom of the file)
+   get an instant reveal at full opacity instead of the slide-in. */
+.bj__history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--lc-border);
+}
+
+.bj__history-chip {
+  min-width: 3.25rem;
+  padding: 0.28rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--lc-font-mono);
+  text-align: center;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  color: var(--lc-text-secondary);
+  animation: bj-chip-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes bj-chip-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.bj__history-chip--blackjack,
+.bj__history-chip--win {
+  border-color: rgba(34, 197, 94, 0.5);
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.bj__history-chip--push {
+  border-color: var(--lc-border-amber);
+  color: var(--lc-amber);
+  background: rgba(245, 185, 66, 0.07);
+}
+
+.bj__history-chip--lose,
+.bj__history-chip--bust {
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.06);
+}
+
 .bj__fairness {
   padding-top: 0.75rem;
   border-top: 1px solid var(--lc-border);
@@ -569,7 +626,8 @@
 @media (prefers-reduced-motion: reduce) {
   .bj__card,
   .bj__result-banner,
-  .bj__card:hover {
+  .bj__card:hover,
+  .bj__history-chip {
     animation: none !important;
     transition: none !important;
     transform: none !important;

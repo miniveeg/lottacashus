@@ -92,7 +92,12 @@ export function ProfilePage() {
             totalWithdrawn: authProfile.totalWithdrawn,
             totalWins: authProfile.totalWins,
             totalLosses: authProfile.totalLosses,
-            memberSince: null,
+            // audit v3.3: was hardcoded `null` here, which permanently locked
+            // the Veteran badge (>30 days member) for own-profile views even
+            // for accounts that qualified. Now sourced from ProfileContext's
+            // `createdAt` (ProfileContext's PROFILE_SELECT now includes
+            // `created_at`).
+            memberSince: authProfile.createdAt ?? null,
             referralCode: null,
           };
         } else if (routeUsername) {
@@ -115,6 +120,9 @@ export function ProfilePage() {
     authProfile?.totalWithdrawn,
     authProfile?.totalWins,
     authProfile?.totalLosses,
+    // Include createdAt so the Veteran badge flips from "locked" to "earned"
+    // the instant Supabase delivers the row (or realtime updates it).
+    authProfile?.createdAt,
   ]);
 
   useEffect(() => {
@@ -228,9 +236,8 @@ export function ProfilePage() {
 
   // Badges only inspect `totalWagered` and `memberSince`. Build a minimal
   // ProfileStats-like input so the badge predicates don't need to know about
-  // the UserProfile | ProfileStats union (UserProfile doesn't expose
-  // memberSince, which is fine — veteran badge just won't unlock for the
-  // own-profile view until ProfileContext exposes `created_at`).
+  // the UserProfile | ProfileStats union. `memberSince` is now sourced from
+  // `authProfile.createdAt` for own-profile views (audit v3.3).
   const badgeInput: ProfileStats = {
     username: p.username ?? null,
     balance: 0,
@@ -259,7 +266,15 @@ export function ProfilePage() {
           <h1 className="profile-hero__name">{p.username ?? "Player"}</h1>
           {memberSince && <p className="profile-hero__since">Member since {memberSince}</p>}
           <div className="profile-hero__level">
-            <div className="profile-hero__level-bar">
+            <div
+              className="profile-hero__level-bar"
+              role="progressbar"
+              aria-label={`Level ${level} progress`}
+              aria-valuenow={xp}
+              aria-valuemin={0}
+              aria-valuemax={xpMax}
+              aria-valuetext={`${xp.toLocaleString()} of ${xpMax.toLocaleString()} experience points`}
+            >
               <div className="profile-hero__level-fill" style={{ width: `${(xp / xpMax) * 100}%` }} />
             </div>
             <span className="profile-hero__level-text">Level {level} · {xp}/{xpMax} XP</span>

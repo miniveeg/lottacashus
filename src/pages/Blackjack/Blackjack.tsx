@@ -67,6 +67,43 @@ function outcomeLabel(outcome: string | null | undefined) {
   }
 }
 
+// Recent-hands history parity with Roulette/Limbo (which both surface a
+// last-N results strip on the board panel). Each entry carries a monotonic
+// id so React keys are stable across identical-outcome runs (e.g. two
+// consecutive pushes would otherwise collide on `key={i}`).
+const BJ_HISTORY_MAX = 5;
+type BjHistoryEntry = {
+  id: number;
+  outcome: string; // whitelist: "blackjack" | "win" | "push" | "bust" | "lose"
+  payout: number;
+};
+
+// L11 (UI/UX audit): whitelist valid outcomes before interpolating into a
+// CSS class — an unexpected `hand.outcome` from the server would otherwise
+// produce a non-matching class name and silently skip the colored treatment.
+// Reused by finishSettled (history entry filtering) AND by tableOutcomeClass
+// (table-panel tinted ring). Declared here so it's available to both.
+const VALID_BJ_OUTCOMES = ["blackjack", "win", "push", "bust", "lose"] as const;
+
+// Trimmed outcome labels for the tight chip pill (vs. the full phrase used
+// for the result banner — "Blackjack!" and "Dealer wins" don't fit there).
+function outcomeChipLabel(outcome: string): string {
+  switch (outcome) {
+    case "blackjack":
+      return "BJ";
+    case "win":
+      return "Win";
+    case "push":
+      return "Push";
+    case "bust":
+      return "Bust";
+    case "lose":
+      return "Lose";
+    default:
+      return outcome;
+  }
+}
+
 export function Blackjack() {
   const { user } = useAuth();
   const { profile, refreshProfile } = useProfile();
@@ -78,6 +115,10 @@ export function Blackjack() {
   const [error, setError] = useState<string | null>(null);
   const [hand, setHand] = useState<BlackjackActionResult | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
+  const [handHistory, setHandHistory] = useState<BjHistoryEntry[]>([]);
+  // Monotonic id source for hand-history entries. Bumped each push so React
+  // keys stay stable across identical-outcome runs.
+  const handHistoryIdRef = useRef(0);
 
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
@@ -156,6 +197,20 @@ export function Blackjack() {
       `${outcomeLabel(data.outcome)}${data.payout ? ` — ${formatCoins(data.payout, coinType)}` : ""}`
     );
     applyHand({ ...data, status: "settled" });
+    const outcome =
+      data.outcome && (VALID_BJ_OUTCOMES as readonly string[]).includes(data.outcome)
+        ? data.outcome
+        : "lose";
+    setHandHistory((h) =>
+      [
+        {
+          id: ++handHistoryIdRef.current,
+          outcome,
+          payout: Number(data.payout ?? 0),
+        },
+        ...h,
+      ].slice(0, BJ_HISTORY_MAX)
+    );
   };
 
   const handleStart = async () => {
@@ -264,7 +319,6 @@ export function Blackjack() {
   // L11 (UI/UX audit): whitelist valid outcomes before interpolating into a
   // CSS class — an unexpected `hand.outcome` from the server would otherwise
   // produce a non-matching class name and silently skip the colored treatment.
-  const VALID_BJ_OUTCOMES = ["blackjack", "win", "push", "bust", "lose"] as const;
   const tableOutcomeClass =
     settled && hand?.outcome && (VALID_BJ_OUTCOMES as readonly string[]).includes(hand.outcome)
       ? ` bj__table-panel--${hand.outcome}`
@@ -484,6 +538,29 @@ export function Blackjack() {
               Max payout is {BLACKJACK_MAX_PAYOUT.toLocaleString()}. Lower your wager — a doubled
               blackjack would exceed the cap.
             </p>
+          )}
+
+          {handHistory.length > 0 && (
+            <div className="bj__history" aria-label="Recent hands">
+              {handHistory.map((h) => (
+                <span
+                  key={h.id}
+                  className={`bj__history-chip bj__history-chip--${h.outcome}`}
+                  title={`${outcomeLabel(h.outcome)} · ${
+                    h.payout > 0
+                      ? `+${formatCoins(h.payout, coinType)}`
+                      : "no win"
+                  }`}
+                  aria-label={`${outcomeLabel(h.outcome)}${
+                    h.payout > 0 ? `, won ${formatCoins(h.payout, coinType)}` : ""
+                  }`}
+                >
+                  {h.payout > 0
+                    ? `+${formatCoins(h.payout, coinType)}`
+                    : outcomeChipLabel(h.outcome)}
+                </span>
+              ))}
+            </div>
           )}
 
           <p className="bj__hint">

@@ -29,6 +29,10 @@ export type UserProfile = {
   discordUsername: string | null;
   discordAvatar: string | null;
   discordLinkedAt: string | null;
+  /** ISO timestamp from the profiles row's `created_at` column. Drives the
+   *  Profile page's Veteran badge (audit v3.3 — previously hardcoded null
+   *  for own-profile views, which permanently locked the badge). */
+  createdAt: string | null;
 };
 
 type ProfileContextValue = {
@@ -45,7 +49,7 @@ const ProfileContext = createContext<ProfileContextValue | null>(null);
 // without the redundant polling that caused Topbar to re-render every 1.5s.
 
 const PROFILE_SELECT =
-  "username, email, is_admin, balance, sweeps_coins, total_wagered, total_deposited, total_withdrawn, total_wins, total_losses, discord_id, discord_username, discord_avatar, discord_linked_at";
+  "username, email, is_admin, balance, sweeps_coins, total_wagered, total_deposited, total_withdrawn, total_wins, total_losses, discord_id, discord_username, discord_avatar, discord_linked_at, created_at";
 
 function parseNum(value: unknown): number {
   const n = Number(value);
@@ -74,6 +78,7 @@ function rowToProfile(row: Record<string, unknown>, isAdminOverride?: boolean): 
     discordUsername: (row.discord_username as string | null) ?? null,
     discordAvatar: (row.discord_avatar as string | null) ?? null,
     discordLinkedAt: (row.discord_linked_at as string | null) ?? null,
+    createdAt: (row.created_at as string | null) ?? null,
   };
 }
 
@@ -97,6 +102,10 @@ const AUDIT_PROFILE: UserProfile | null = AUDIT_BYPASS
       discordUsername: null,
       discordAvatar: null,
       discordLinkedAt: null,
+      // Pretend the audit account is 90 days old so the Veteran badge (>=30d)
+      // also exercises the "earned" branch in visual-regression audits instead
+      // of always rendering in the locked slot.
+      createdAt: new Date(Date.now() - 90 * 86400000).toISOString(),
     }
   : null;
 
@@ -168,6 +177,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
             discordUsername: null,
             discordAvatar: null,
             discordLinkedAt: null,
+            createdAt: null,
           });
         }
       } else {
@@ -220,6 +230,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         discordUsername: null,
         discordAvatar: null,
         discordLinkedAt: null,
+        // Guests have no real account — keep the Veteran badge locked.
+        createdAt: null,
       };
       setProfile(localProfile);
       setProfileLoading(false);
@@ -346,6 +358,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
               discordUsername: null,
               discordAvatar: null,
               discordLinkedAt: null,
+              createdAt: null,
             }
       );
 

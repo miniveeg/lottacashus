@@ -1,0 +1,154 @@
+/* LottaCash — Cracked Obsidian Error Boundary
+   Render-error fallback. Keeps the topbar/sidebar interactive so the user
+   can navigate away from a broken page without a full reload. */
+
+.lc-error-boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 1.5rem;
+  max-width: 36rem;
+  margin: 2rem auto;
+  text-align: center;
+  background: rgba(14, 14, 22, 0.72);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-lg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.lc-error-boundary__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: rgba(220, 20, 60, 0.12);
+  color: var(--lc-crimson-soft);
+  border: 1px solid rgba(220, 20, 60, 0.25);
+}
+
+.lc-error-boundary__title {
+  font-family: var(--lc-font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--lc-text-primary);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.lc-error-boundary__body {
+  font-size: 0.95rem;
+  color: var(--lc-text-secondary);
+  line-height: 1.55;
+  margin: 0;
+  max-width: 28rem;
+}
+
+.lc-error-boundary__details {
+  width: 100%;
+  max-width: 32rem;
+  margin-top: 0.5rem;
+  text-align: left;
+  font-size: 0.85rem;
+  color: var(--lc-text-muted);
+}
+
+.lc-error-boundary__details summary {
+  cursor: pointer;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--lc-radius-sm);
+  background: var(--lc-bg-hover);
+  border: 1px solid var(--lc-border);
+  list-style: none;
+  transition: background var(--lc-transition);
+}
+
+.lc-error-boundary__details summary:hover {
+  background: var(--lc-bg-elevated);
+}
+
+.lc-error-boundary__details summary::-webkit-details-marker {
+  display: none;
+}
+
+.lc-error-boundary__details pre {
+  margin: 0.6rem 0 0;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  overflow: auto;
+  max-height: 14rem;
+  font-size: 0.75rem;
+  font-family: var(--lc-font-mono);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--lc-text-secondary);
+}
+
+.lc-error-boundary__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.lc-error-boundary__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.1rem;
+  font-family: var(--lc-font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-sm);
+  cursor: pointer;
+  transition: all var(--lc-transition);
+}
+
+.lc-error-boundary__btn:hover:not(:disabled) {
+  border-color: var(--lc-crimson);
+  color: var(--lc-crimson-soft);
+  background: var(--lc-bg-hover);
+}
+
+.lc-error-boundary__btn:focus-visible {
+  outline: 2px solid var(--lc-crimson);
+  outline-offset: 2px;
+}
+
+.lc-error-boundary__btn--primary {
+  background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson));
+  color: #fff;
+  border-color: var(--lc-crimson);
+  box-shadow: 0 2px 12px var(--lc-crimson-glow);
+}
+
+.lc-error-boundary__btn--primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px var(--lc-crimson-glow-strong);
+}
+
+.lc-error-boundary__btn--primary:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-error-boundary__btn,
+  .lc-error-boundary__btn--primary {
+    transition: none !important;
+  }
+  .lc-error-boundary__btn--primary:hover:not(:disabled) {
+    transform: none;
+  }
+}

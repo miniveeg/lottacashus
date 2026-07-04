@@ -1828,3 +1828,26 @@ Top-priority fixes (recommended for next pass):
 13. **Check self-exclusion in `request_sc_redemption`** — block redemption for self-excluded users.
 14. **Delete V1 `case-battle` edge function** or set `verify_jwt = true` in `supabase/config.toml:27-28`.
 15. **Rate-limit chat_messages inserts** — add a per-user throttle (e.g. 5 messages/minute) via a SQL trigger or edge-function check.
+
+---
+Task ID: POLISH-V3
+Agent: Coordinator
+Task: Polish pass from the "fix or update everything and test it" directive. Targeted, behaviour-preserving improvements; full typecheck + production build verification; live browser smoke-test.
+
+Work Log:
+- **Deletions (v3.0)** — lenis dep + SmoothScroll.tsx (orphan; broke typecheck); entire CaseBattles V1 dead-code subtree (~26 files; App.tsx only routes V2 trio).
+- **Login/Signup password show/hide toggle** — parity with ForgotPassword. aria-label flips; Signup toggle controls both password + confirm fields.
+- **Blackjack recent-hands history strip** — 5-entry chip row showing outcome + payout, tinted by result type. Slide-in entrance animation, reduced-motion respect, per-chip aria-label.
+- **Admin.tsx — 3-site window.confirm → ConfirmDialog migration** (H2/H11 UI/UX audit follow-up). Split handlers into state-setter + run-function. Esc-during-busy guarded in onClose. Credit form captures pendingCredit to preserve synchronous semantics of old window.confirm; error path preserves form-fill for retry.
+- **Profile hero level bar a11y** — role=progressbar + aria-valuetext="X of Y experience points" so screen readers announce formatted progress with the XP unit.
+- **Veteran badge fix** (this round) — Profile.tsx:95 hardcoded memberSince=null for own-profile views, permanently locking the Veteran badge (>30 days). Added createdAt:string|null to UserProfile, extended PROFILE_SELECT to include created_at, mapped it through rowToProfile, re-threaded into AUDIT_PROFILE (set to 90 days ago for visual-audit coverage), guest fallback, no-row fallback, updateUsername fallback. Profile.tsx now sources memberSince from authProfile.createdAt ?? null and includes createdAt in the useEffect dep list.
+
+Verification:
+- TypeScript: npx tsc --noEmit returns 0 errors.
+- Production build: npm run build succeeds (Vite 6, ~5s). Main bundle 198.75 kB / 57.68 kB gzip (unchanged). Admin 22.24 kB / 5.95 kB gzip. Profile ~10 kB / 3.1 kB gzip. No warnings, no regressions.
+- Code review (code-reviewer-minimax-m3): all polish-v3 changes approved as minimal and behaviour-preserving.
+- Browser smoke-test: dev server + browser-use capture in next stage.
+
+Stage Summary:
+- Files changed this round (v3 only): src/contexts/ProfileContext.tsx (createdAt threading across 5 constructor sites); src/pages/Profile/Profile.tsx (memberSince from createdAt; comment refresh; useEffect deps).
+- Real bug fixed this round: 1 (Veteran badge permanent-lock).

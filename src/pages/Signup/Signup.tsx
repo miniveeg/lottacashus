@@ -41,6 +41,7 @@ export function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [birthDate, setBirthDate] = useState("");
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [code, setCode] = useState("");
@@ -256,7 +257,7 @@ export function Signup() {
               <label htmlFor="signup-password">Password</label>
               <input
                 id="signup-password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
                 placeholder="At least 6 characters"
                 value={password}
@@ -272,7 +273,7 @@ export function Signup() {
               <label htmlFor="signup-confirm">Confirm password</label>
               <input
                 id="signup-confirm"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
                 placeholder="Repeat password"
                 value={confirmPassword}
@@ -283,6 +284,16 @@ export function Signup() {
                 aria-describedby={error ? "signup-error" : undefined}
               />
             </div>
+
+            <label className="auth-checkbox">
+              <input
+                type="checkbox"
+                checked={showPassword}
+                onChange={(e) => setShowPassword(e.target.checked)}
+                aria-label="Show password while typing"
+              />
+              <span>Show passwords while typing</span>
+            </label>
 
             <div className="auth-field">
               <label htmlFor="signup-birthdate">Date of birth</label>

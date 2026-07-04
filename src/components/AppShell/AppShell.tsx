@@ -5,6 +5,7 @@ import { isGuestBrowsableGamePath } from "../../content/originals";
 import { useSessionReminder } from "../../lib/useSessionReminder";
 import { AffiliateRefCapture } from "../AffiliateRefCapture/AffiliateRefCapture";
 import { AtmosphericLayer } from "../atmosphere/AtmosphericLayer";
+import { ErrorBoundary } from "../ErrorBoundary/ErrorBoundary";
 import { GameGuestBanner } from "../GameGuestBanner/GameGuestBanner";
 import { Topbar } from "../Topbar/Topbar";
 import { Sidebar } from "../Sidebar/Sidebar";
@@ -213,11 +214,19 @@ function AppShellInner({ children }: AppShellProps) {
         id="lc-main-content"
         className={`app-shell__main${showHero3d ? " app-shell__main--hero" : ""}`}
       >
-        <PageTransition>
-          {showGuestBanner ? <GameGuestBanner /> : null}
-          {children}
-          <Footer />
-        </PageTransition>
+        {/* Production readiness (audit v3.4): wrap the page surface in an
+            ErrorBoundary keyed by pathname so a single broken page doesn't
+            white-screen the whole app. Topbar/sidebar/footer stay
+            interactive, the user gets a styled "Something went wrong"
+            fallback with Try-again + Reload actions, and a route change
+            automatically resets the boundary (the `key` remounts it). */}
+        <ErrorBoundary key={pathname}>
+          <PageTransition>
+            {showGuestBanner ? <GameGuestBanner /> : null}
+            {children}
+            <Footer />
+          </PageTransition>
+        </ErrorBoundary>
       </main>
     </div>
   );

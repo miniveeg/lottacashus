@@ -15,6 +15,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { formatUsd } from "../../lib/format";
 import { Seo } from "../../components/Seo/Seo";
+import { ConfirmDialog } from "../../components/ConfirmDialog/ConfirmDialog";
 import {
   RefreshCw,
   Copy,
@@ -95,6 +96,27 @@ export function Admin() {
   const [creditIsError, setCreditIsError] = useState(false);
   const [creditBusy, setCreditBusy] = useState(false);
 
+  // Pending confirmation dialogs (H2/H11 UI/UX audit follow-up: Settings.tsx
+  // self-exclusion was migrated to <ConfirmDialog>; same refactor applied
+  // here to all three destructive actions). Each dialog's open state is
+  // driven independently, so the user only sees one dialog at a time.
+  const [withdrawalConfirm, setWithdrawalConfirm] = useState<
+    { redemption: AdminRedemption; action: "approve" | "reject" } | null
+  >(null);
+  const [adminToggleConfirm, setAdminToggleConfirm] = useState<AdminUserResult | null>(null);
+  const [adminToggleBusy, setAdminToggleBusy] = useState<string | null>(null);
+  const [creditConfirmOpen, setCreditConfirmOpen] = useState(false);
+  // Captured credit-form values when the confirm dialog opens. Reading the
+  // current form values inside the async confirm handler would let the user
+  // edit the fields while the dialog is open and silently change what gets
+  // credited — old `window.confirm` was synchronous so this was impossible.
+  const [pendingCredit, setPendingCredit] = useState<{
+    uid: string;
+    amount: number;
+    coinType: "balance" | "sweeps_coins";
+    note: string;
+  } | null>(null);
+
   const loadWithdrawals = useCallback(async () => {
     setWithdrawalsLoading(true);
     setWithdrawalsError(null);
@@ -145,32 +167,30 @@ export function Admin() {
     r: AdminRedemption,
     action: "approve" | "reject"
   ) {
-    const verb = action === "approve" ? "Approve" : "Reject";
-    const detail =
-      action === "approve"
-        ? "The user's crypto will be sent from the treasury wallet."
-        : "The user's SC will be refunded.";
-    // H2/H11 (UI/UX audit): window.confirm breaks the visual design language
-    // and is blocked by some iframe/extension configurations. Settings.tsx
-    // has been migrated to the styled `<ConfirmDialog>` component; the same
-    // refactor is recommended here (tracking which redemption + action is
-    // pending in state, then rendering a single ConfirmDialog).
-    const confirmed = window.confirm(
-      `${verb} ${r.scAmount} SC withdrawal for ${displayUser(r.username, r.email)}? ${detail}`
-    );
-    if (!confirmed) return;
+    // H2/H11 (UI/UX audit): Settings.tsx self-exclusion migrates
+    // `window.confirm` to `<ConfirmDialog>` for the same reasons — native
+    // dialog breaks visual design and is blocked in some iframe/extension
+    // contexts. Approve/reject now opens the shared ConfirmDialog in render;
+    // the actual API call lives in `runWithdrawalAction()` so Esc / Cancel
+    // cancel cleanly without firing a half-completed request.
+    setWithdrawalConfirm({ redemption: r, action });
+  }
 
+  async function runWithdrawalAction() {
+    if (!withdrawalConfirm) return;
+    const { redemption, action } = withdrawalConfirm;
     setActionError(null);
-    if (action === "approve") setApproveBusy(r.id);
-    else setRejectBusy(r.id);
-    const { error: err } = await processAdminRedemption(r.id, action);
+    if (action === "approve") setApproveBusy(redemption.id);
+    else setRejectBusy(redemption.id);
+    const { error: err } = await processAdminRedemption(redemption.id, action);
     if (action === "approve") setApproveBusy(null);
     else setRejectBusy(null);
     if (err) {
       flashError(err.message);
       return;
     }
-    flashSuccess(`Withdrawal ${r.id.slice(0, 8)} ${action === "approve" ? "approved" : "rejected"}.`);
+    flashSuccess(`Withdrawal ${redemption.id.slice(0, 8)} ${action === "approve" ? "approved" : "rejected"}.`);
+    setWithdrawalConfirm(null);
     await Promise.all([loadWithdrawals(), loadDashboard()]);
   }
 
@@ -195,25 +215,29 @@ export function Admin() {
       setUserSearchError("You cannot change your own admin status.");
       return;
     }
-    const next = !u.isAdmin;
-    // H2/H11 (UI/UX audit): see handleWithdrawalAction note — recommend
-    // migrating to <ConfirmDialog>.
-    const confirmed = window.confirm(
-      next
-        ? `Grant admin access to ${displayUser(u.username, u.email)}?`
-        : `Remove admin access from ${displayUser(u.username, u.email)}?`
-    );
-    if (!confirmed) return;
+    // H2/H11 (UI/UX audit): see handleWithdrawalAction note. The actual
+    // grant/revoke lives in `runAdminToggle()` so the ConfirmDialog's Esc
+    // and Cancel button cancel cleanly mid-flow.
+    setAdminToggleConfirm(u);
+  }
 
+  async function runAdminToggle() {
+    if (!adminToggleConfirm) return;
+    const u = adminToggleConfirm;
+    const next = !u.isAdmin;
     setUserSearchError(null);
+    setAdminToggleBusy(u.id);
     const { error: err } = await setUserAdmin(u.id, next);
+    setAdminToggleBusy(null);
     if (err) {
       setUserSearchError(err.message);
+      setAdminToggleConfirm(null);
       return;
     }
     setUserResults((prev) =>
       prev.map((row) => (row.id === u.id ? { ...row, isAdmin: next } : row))
     );
+    setAdminToggleConfirm(null);
   }
 
   async function copyText(text: string, id: string) {
@@ -237,31 +261,49 @@ export function Admin() {
       setCreditIsError(true);
       return;
     }
-    const coinLabel = creditCoinType === "sweeps_coins" ? "SC" : "GC";
-    // H2/H11 (UI/UX audit): see handleWithdrawalAction note — recommend
-    // migrating to <ConfirmDialog>.
-    const confirmed = window.confirm(
-      `Credit ${amount.toFixed(2)} ${coinLabel} to user ${uid}?`
-    );
-    if (!confirmed) return;
-    setCreditBusy(true);
-    const { error: err } = await adminCreditUser(
+    // H2/H11 (UI/UX audit): see handleWithdrawalAction note. Validation is
+    // synchronous, but the actual `adminCreditUser` call now waits inside
+    // `runCreditConfirm()` so the styled ConfirmDialog (open during
+    // capture, busy+frozen during the API call) replaces `window.confirm`.
+    // Capturing form values into `pendingCredit` here means editing fields
+    // after the dialog opens cannot change what actually gets credited —
+    // mirrors the synchronous semantics of the old window.confirm.
+    setPendingCredit({
       uid,
       amount,
-      creditNote.trim() || "Admin credit",
-      creditCoinType
+      coinType: creditCoinType,
+      note: creditNote.trim() || "Admin credit",
+    });
+    setCreditConfirmOpen(true);
+  }
+
+  async function runCreditConfirm() {
+    if (!pendingCredit) return;
+    setCreditConfirmOpen(false);
+    setCreditBusy(true);
+    const { error: err } = await adminCreditUser(
+      pendingCredit.uid,
+      pendingCredit.amount,
+      pendingCredit.note,
+      pendingCredit.coinType
     );
     setCreditBusy(false);
     if (err) {
       setCreditStatus(err.message);
       setCreditIsError(true);
+      // Don't clear `pendingCredit` on error — the form fields still hold the
+      // values the user typed. Clicking "Credit user" again re-validates and
+      // reopens the dialog with the same (or edited) inputs, so a transient
+      // API failure doesn't force a re-entry of UID + amount.
       return;
     }
-    setCreditStatus(`Credited ${amount.toFixed(2)} ${coinLabel} to user.`);
+    const coinLabel = pendingCredit.coinType === "sweeps_coins" ? "SC" : "GC";
+    setCreditStatus(`Credited ${pendingCredit.amount.toFixed(2)} ${coinLabel} to user.`);
     setCreditIsError(false);
     setCreditAmount("");
     setCreditNote("");
     setCreditUserId("");
+    setPendingCredit(null);
   }
 
   const pendingWithdrawalsCount = withdrawals.length;
@@ -744,6 +786,87 @@ export function Admin() {
           </div>
         )}
       </div>
+
+      {/* Confirmation dialogs (H2/H11 UI/UX audit). Each is independent so
+          only one shows at a time — Esc and Cancel cleanly back out without
+          firing the API call. During the in-flight mutation we keep the
+          dialog mounted with `busy` so the buttons stay disabled and Esc is
+          a no-op (returns early in onClose). */}
+      <ConfirmDialog
+        open={withdrawalConfirm !== null}
+        title={
+          withdrawalConfirm
+            ? `${withdrawalConfirm.action === "approve" ? "Approve" : "Reject"} ${withdrawalConfirm.redemption.scAmount} SC withdrawal?`
+            : ""
+        }
+        body={
+          withdrawalConfirm
+            ? withdrawalConfirm.action === "approve"
+              ? `${displayUser(withdrawalConfirm.redemption.username, withdrawalConfirm.redemption.email)} will receive ${formatUsd(withdrawalConfirm.redemption.scAmount / 100)} from the treasury wallet. This action is recorded in the audit log.`
+              : `${withdrawalConfirm.redemption.scAmount} SC will be refunded to ${displayUser(withdrawalConfirm.redemption.username, withdrawalConfirm.redemption.email)} (their redemption will be marked as failed).`
+            : ""
+        }
+        confirmLabel={withdrawalConfirm?.action === "approve" ? "Approve & send" : "Reject & refund"}
+        destructive={withdrawalConfirm?.action === "reject"}
+        busy={
+          withdrawalConfirm != null &&
+          ((withdrawalConfirm.action === "approve" && approveBusy === withdrawalConfirm.redemption.id) ||
+            (withdrawalConfirm.action === "reject" && rejectBusy === withdrawalConfirm.redemption.id))
+        }
+        onConfirm={runWithdrawalAction}
+        onClose={() => {
+          if (
+            withdrawalConfirm != null &&
+            ((withdrawalConfirm.action === "approve" && approveBusy === withdrawalConfirm.redemption.id) ||
+              (withdrawalConfirm.action === "reject" && rejectBusy === withdrawalConfirm.redemption.id))
+          ) {
+            return;
+          }
+          setWithdrawalConfirm(null);
+        }}
+      />
+      <ConfirmDialog
+        open={adminToggleConfirm !== null}
+        title={
+          adminToggleConfirm
+            ? adminToggleConfirm.isAdmin
+              ? `Remove admin access from ${displayUser(adminToggleConfirm.username, adminToggleConfirm.email)}?`
+              : `Grant admin access to ${displayUser(adminToggleConfirm.username, adminToggleConfirm.email)}?`
+            : ""
+        }
+        body={
+          adminToggleConfirm
+            ? adminToggleConfirm.isAdmin
+              ? "They will lose access to the admin dashboard, withdrawals, deposits, and the ability to credit users. This action is reversible — you can re-grant admin later."
+              : "They will gain full access to the admin dashboard, including managing withdrawals, viewing deposits, and the ability to credit user balances."
+            : ""
+        }
+        confirmLabel={adminToggleConfirm?.isAdmin ? "Remove admin" : "Grant admin"}
+        destructive={adminToggleConfirm?.isAdmin ?? false}
+        busy={adminToggleConfirm != null && adminToggleBusy === adminToggleConfirm.id}
+        onConfirm={runAdminToggle}
+        onClose={() => {
+          if (adminToggleConfirm && adminToggleBusy === adminToggleConfirm.id) return;
+          setAdminToggleConfirm(null);
+        }}
+      />
+      <ConfirmDialog
+        open={creditConfirmOpen && pendingCredit !== null}
+        title="Credit user balance?"
+        body={
+          pendingCredit
+            ? `Credit ${pendingCredit.amount.toFixed(2)} ${pendingCredit.coinType === "sweeps_coins" ? "SC" : "GC"} to user ${pendingCredit.uid}${pendingCredit.note ? ` (note: “${pendingCredit.note}”)` : ""}? This is logged on the user's transaction history.`
+            : ""
+        }
+        confirmLabel="Credit user"
+        busy={creditBusy}
+        onConfirm={runCreditConfirm}
+        onClose={() => {
+          if (creditBusy) return;
+          setCreditConfirmOpen(false);
+          setPendingCredit(null);
+        }}
+      />
     </div>
   );
 }

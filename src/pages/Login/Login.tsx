@@ -28,6 +28,7 @@ export function Login() {
   const redirectTo = safeRedirectPath(searchParams.get("redirect"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   // Track recent attempts in a ref (no re-render needed) — array of timestamps.
@@ -132,7 +133,7 @@ export function Login() {
             <label htmlFor="login-password">Password</label>
             <input
               id="login-password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               placeholder="••••••••"
               value={password}
@@ -142,9 +143,20 @@ export function Login() {
               aria-invalid={Boolean(error) || undefined}
               aria-describedby={error ? "login-error" : undefined}
             />
-            <p className="auth-forgot">
-              <Link to="/forgot-password">Forgot password?</Link>
-            </p>
+            <div className="auth-field__row">
+              <label className="auth-checkbox auth-checkbox--inline">
+                <input
+                  type="checkbox"
+                  checked={showPassword}
+                  onChange={(e) => setShowPassword(e.target.checked)}
+                  aria-label="Show password while typing"
+                />
+                <span>Show password</span>
+              </label>
+              <p className="auth-forgot">
+                <Link to="/forgot-password">Forgot password?</Link>
+              </p>
+            </div>
           </div>
 
           <button type="submit" className="auth-submit" disabled={submitting || !configured}>

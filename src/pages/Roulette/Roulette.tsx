@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { Seo } from "../../components/Seo/Seo";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
+import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
+import { BetButton } from "../../components/BetButton/BetButton";
 import {
   type RouletteBetType,
   type RouletteColor,
@@ -350,11 +352,7 @@ export function Roulette() {
 
           </div>
 
-          {error && (
-            <p className="roulette__error" role="alert">
-              {error}
-            </p>
-          )}
+          {error && <FormAlert>{error}</FormAlert>}
 
           {lastResult && !spinning && (
             <div
@@ -374,28 +372,16 @@ export function Roulette() {
             </div>
           )}
 
-          <button
-            type="button"
-            className="roulette__bet-btn"
+          <BetButton
             onClick={handleBet}
-            disabled={spinning || exceedsMaxPayout}
-            aria-busy={spinning}
-          >
-            {spinning ? (
-              <>
-                <span className="roulette__spinner" aria-hidden="true" />
-                <span>Spinning…</span>
-              </>
-            ) : exceedsMaxPayout ? (
-              "Payout exceeds cap"
-            ) : (
-              "Bet"
-            )}
-          </button>
+            busy={spinning}
+            exceedsCap={exceedsMaxPayout}
+            busyLabel="Spinning…"
+            exceedsCapLabel="Payout exceeds cap"
+            label="Bet"
+          />
 
-          <p className="roulette__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
+          <NeedFundsHint />
 
           <div className="roulette__fairness">
             <button

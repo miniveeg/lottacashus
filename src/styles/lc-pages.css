@@ -461,7 +461,14 @@
    override that used to live here was a duplicate of the global rule
    and has been removed. */
 
-/* ── Text inputs ── */
+/* ── Text inputs ──
+   `.lc-input` is the canonical form-control utility. Every page should use it
+   for inputs/selects/textareas instead of declaring its own per-page input
+   class. The previous per-page aliases (`.wallet__input`, `.admin__input`,
+   `.settings__input`, `.login__field input`, `.redeem__input`,
+   `.withdraw__input`, etc.) are kept here as bridge selectors so existing
+   markup still picks up the styling without an immediate rewrite. */
+.lc-input,
 .wallet__input, .admin__input, .settings__input {
   min-height: 2.6rem;
   padding: 0.55rem 0.9rem;
@@ -472,13 +479,49 @@
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-md);
+  width: 100%;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
+.lc-input:focus, .lc-input:focus-visible,
 .wallet__input:focus, .admin__input:focus, .settings__input:focus {
   outline: none;
   border-color: var(--lc-border-accent);
   box-shadow: var(--lc-focus-ring);
+}
+
+/* Invalid state — wired to aria-invalid="true". Wraps the input in a ring so
+   screen-reader users see an error color and visual users see a red ring. */
+.lc-input--invalid,
+.lc-input[aria-invalid="true"] {
+  border-color: rgba(255, 59, 92, 0.6);
+}
+.lc-input--invalid:focus,
+.lc-input[aria-invalid="true"]:focus {
+  border-color: var(--lc-ruby);
+  box-shadow: 0 0 0 3px var(--lc-ruby-glow);
+}
+
+/* Helper text. Pairs with a sibling input for the standard label / input /
+   helper-stacked layout (used by Quote dialogs, free-entry copy, etc). */
+.lc-input-helper {
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--lc-text-muted);
+  line-height: 1.4;
+}
+
+/* Label that sits above the input. Mirrors the existing `.auth-field label`
+   + `.wallet__field label` markup so LC inputs work identically to legacy
+   pages until those get swept. */
+.lc-input-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--lc-text-secondary);
+  margin-bottom: 0.3rem;
+  display: inline-block;
 }
 
 /* ── Mobile ── */

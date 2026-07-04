@@ -5,6 +5,7 @@ import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { analytics } from "../../lib/analytics";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
 import { Seo } from "../../components/Seo/Seo";
 import "../../components/BrandLogo/BrandLogo.css";
 import "../Auth/Auth.css";
@@ -103,16 +104,20 @@ export function Login() {
         <p className="auth-card__subtitle">Log in to your LottaCash account</p>
 
         {!configured && (
-          <p className="auth-config-warning" role="note">
-            {import.meta.env.PROD
-              ? "Service temporarily unavailable. Please try again later."
-              : <>Supabase is not configured. Add your project URL and anon key to the{" "}
-                 <code>.env</code> file to enable authentication.</>}
-          </p>
+          <FormAlert kind="warning">
+            {import.meta.env.PROD ? (
+              "Service temporarily unavailable. Please try again later."
+            ) : (
+              <>
+                Supabase is not configured. Add your project URL and anon key to the{" "}
+                <code>.env</code> file to enable authentication.
+              </>
+            )}
+          </FormAlert>
         )}
 
         <form className="auth-form" onSubmit={handleSubmit} noValidate>
-          {error && <p className="auth-error" role="alert" id="login-error">{error}</p>}
+          {error && <FormAlert id="login-error">{error}</FormAlert>}
 
           <div className="auth-field">
             <label htmlFor="login-email">Email</label>

@@ -48,7 +48,29 @@
   justify-content: space-between;
   margin-bottom: 1.5rem;
 }
-.cb-hub__title { font-family: var(--lc-font-display); font-size: 1.75rem; font-weight: 800; margin: 0; }
+.cb-hub__title {
+  font-family: var(--lc-font-display);
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.cb-hub__coin-badge {
+  display: inline-grid;
+  place-items: center;
+  padding: 0.2rem 0.55rem;
+  font-family: var(--lc-font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 999px;
+  background: var(--lc-bg-active);
+  color: var(--lc-text-secondary);
+  border: 1px solid var(--lc-border-strong);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
 .cb-hub__subtitle { color: var(--lc-text-secondary); margin: 0.25rem 0 0; font-size: 0.9rem; }
 .cb-hub__create-btn {
   padding: 0.6rem 1.2rem;
@@ -63,6 +85,14 @@
   transition: filter 0.15s, transform 0.15s;
 }
 .cb-hub__create-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* Empty state hint — points users at the topbar toggle if the wrong
+   currency is selected. */
+.cb-hub__empty-hint {
+  color: var(--lc-text-muted);
+  font-size: 0.78rem;
+  margin: 0.5rem 0 0;
+}
 
 .cb-hub__modes {
   display: grid;
@@ -139,10 +169,36 @@
   text-decoration: none; transition: color 0.15s;
 }
 .cb-room__back:hover { color: var(--lc-crimson-soft); }
-.cb-room__info { display: flex; gap: 1rem; align-items: center; }
+.cb-room__info { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
 .cb-room__mode { font-weight: 700; font-size: 0.85rem; }
 .cb-room__pmode { font-size: 0.75rem; color: var(--lc-text-muted); }
 .cb-room__pot { font-family: var(--lc-font-mono); font-weight: 700; color: var(--lc-amber); font-size: 0.9rem; }
+
+/* Per-battle coin badge — pinned next to the pot so users always know
+   which currency the battle is denominated in (the lobby filters by
+   the active currency, but the room view of an entered battle should
+   reinforce it). */
+.cb-room__coin-badge {
+  display: inline-grid;
+  place-items: center;
+  padding: 0.2rem 0.55rem;
+  font-family: var(--lc-font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 999px;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--lc-border-strong);
+}
+.cb-room__coin-badge--balance {
+  background: rgba(245,185,66,0.08);
+  color: var(--lc-amber);
+  border-color: var(--lc-amber);
+}
+.cb-room__coin-badge--sweeps_coins {
+  background: rgba(56,189,248,0.08);
+  color: var(--lc-cyan);
+  border-color: var(--lc-cyan);
+}
 
 .cb-room__actions { display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
 .cb-room__hint { font-size: 0.8rem; color: var(--lc-text-muted); }
@@ -227,6 +283,86 @@
 }
 
 .cb-col__reel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0.5rem; }
+
+/* Past-items history strip — one tile per round already revealed in the
+   current battle. Sits above the active reel so the player sees what
+   they've earned before the next round spins. */
+.cb-col__history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  border-top: 1px solid var(--lc-border);
+  background: rgba(0,0,0,0.15);
+  max-height: 6rem;
+  overflow-y: auto;
+}
+.cb-col__history-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.2rem 0.45rem;
+  border-left: 2px solid var(--lc-border-strong);
+  border-radius: 2px;
+  background: var(--lc-bg-base);
+  font-size: 0.7rem;
+}
+.cb-col__history-round {
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+  color: var(--lc-text-muted);
+}
+.cb-col__history-value {
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+}
+
+/* Ledger view (completed battles) — replaces the reel entirely with a
+   vertical grid of all items won across every round. */
+.cb-col--ledger { /* nothing extra, just a state marker */ }
+.cb-col__ledger {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  overflow-y: auto;
+}
+.cb-col__ledger-empty {
+  margin: auto;
+  text-align: center;
+  color: var(--lc-text-muted);
+  font-size: 0.8rem;
+}
+.cb-col__ledger-tile {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.55rem;
+  background: var(--lc-bg-base);
+  border-left: 3px solid var(--lc-border-strong);
+  border-radius: 3px;
+  font-size: 0.78rem;
+}
+.cb-col__ledger-round {
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+  font-size: 0.68rem;
+  color: var(--lc-text-muted);
+}
+.cb-col__ledger-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cb-col__ledger-value {
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+  font-size: 0.72rem;
+}
 
 .cb-col__total {
   display: flex; justify-content: space-between; align-items: center;
@@ -465,7 +601,168 @@
   .cb-arena__columns { grid-template-columns: 1fr; }
   .cb-hub__row { grid-template-columns: 1fr; gap: 0.5rem; }
   .cb-hub__modes { grid-template-columns: 1fr 1fr; }
+  .cb-col__history { max-height: 4rem; }
 }
+
+/* ─── Provably-fair panel ───────────────────────────────────────────── */
+
+.cb-fairness {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--lc-bg-glass);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-md);
+}
+.cb-fairness > summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--lc-text-muted);
+  list-style: none;
+  user-select: none;
+}
+.cb-fairness > summary::-webkit-details-marker { display: none; }
+.cb-fairness > summary::before {
+  content: "▶";
+  display: inline-block;
+  margin-right: 0.4rem;
+  font-size: 0.7rem;
+  transition: transform 0.15s;
+}
+.cb-fairness[open] > summary::before { transform: rotate(90deg); }
+.cb-fairness__body {
+  margin-top: 0.6rem;
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+.cb-fairness__k {
+  display: block;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lc-text-muted);
+  margin-bottom: 0.15rem;
+}
+.cb-fairness__hash {
+  font-family: var(--lc-font-mono);
+  font-size: 0.72rem;
+  word-break: break-all;
+  padding: 0.3rem 0.5rem;
+  background: var(--lc-bg-base);
+  border-radius: 4px;
+  color: var(--lc-text-secondary);
+  display: block;
+}
+.cb-fairness__note {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--lc-text-muted);
+  font-style: italic;
+}
+
+/* ─── Create page thumbnail grid + currency badge ───────────────── */
+
+.cb-create__currency-badge {
+  margin-left: auto;
+}
+.cb-create__currency-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+  color: var(--lc-text-secondary);
+  background: var(--lc-bg-glass);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+}
+.cb-create__currency-note strong { color: var(--lc-text-primary); }
+.cb-create__currency-note svg { color: var(--lc-text-muted); flex-shrink: 0; }
+
+.cb-create__case-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.6rem;
+}
+.cb-create__case-thumb-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem;
+  background: var(--lc-bg-base);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-md);
+  text-align: center;
+  overflow: hidden;
+}
+.cb-create__case-thumb-bg {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #fff;
+  background: var(--lc-crimson-dim);
+}
+.cb-create__case-thumb-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+  width: 100%;
+}
+.cb-create__case-thumb-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--lc-text-primary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cb-create__case-thumb-price {
+  font-family: var(--lc-font-mono);
+  font-size: 0.65rem;
+  color: var(--lc-amber);
+}
+.cb-create__case-thumb-count {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  background: var(--lc-crimson);
+  color: #fff;
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+}
+.cb-create__case-thumb-remove {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.3rem;
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  color: var(--lc-text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.cb-create__case-thumb-remove:hover { background: var(--lc-ruby); color: #fff; }
+.cb-create__small-btn--ghost { color: var(--lc-text-muted); }
 
 /* ─── Crazy toggle ────────────────────────────────────────────────────────── */
 

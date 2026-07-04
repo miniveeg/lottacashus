@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
 import { useAuth } from "../../contexts/AuthContext";
 import { requestPasswordResetCode, resetPasswordWithCode } from "../../lib/passwordReset";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
 import { Seo } from "../../components/Seo/Seo";
 import "../../components/BrandLogo/BrandLogo.css";
 import "../Auth/Auth.css";
@@ -132,15 +133,15 @@ export function ForgotPassword() {
         </p>
 
         {!configured && (
-          <p className="auth-config-warning" role="note">
+          <FormAlert kind="warning">
             Supabase is not configured. Add your project URL and anon key to the{" "}
             <code>.env</code> file to enable authentication.
-          </p>
+          </FormAlert>
         )}
 
         {step === "email" && (
           <form className="auth-form" onSubmit={handleSendCode} noValidate>
-            {error && <p className="auth-error" role="alert" id="reset-error">{error}</p>}
+            {error && <FormAlert id="reset-error">{error}</FormAlert>}
             <div className="auth-field">
               <label htmlFor="reset-email">Email</label>
               <input
@@ -164,8 +165,8 @@ export function ForgotPassword() {
 
         {step === "code" && (
           <form className="auth-form" onSubmit={handleCodeContinue} noValidate>
-            {error && <p className="auth-error" role="alert" id="reset-code-error">{error}</p>}
-            {info && <p className="auth-success" role="status">{info}</p>}
+            {error && <FormAlert id="reset-code-error">{error}</FormAlert>}
+            {info && <FormAlert kind="success">{info}</FormAlert>}
             <p className="auth-hint">Code expires in 10 minutes.</p>
             <div className="auth-field">
               <label htmlFor="reset-code">Reset code</label>
@@ -206,7 +207,7 @@ export function ForgotPassword() {
 
         {step === "password" && (
           <form className="auth-form" onSubmit={handleResetPassword} noValidate>
-            {error && <p className="auth-error" role="alert" id="reset-pwd-error">{error}</p>}
+            {error && <FormAlert id="reset-pwd-error">{error}</FormAlert>}
             <p className="auth-hint">
               For security, your old password cannot be shown. Set a new one below.
             </p>
@@ -265,9 +266,7 @@ export function ForgotPassword() {
         )}
 
         {step === "done" && info && (
-          <p className="auth-success" role="status">
-            {info}
-          </p>
+          <FormAlert kind="success">{info}</FormAlert>
         )}
 
         <p className="auth-footer">

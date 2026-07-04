@@ -1,0 +1,31 @@
+/* LottaCash — small opt-in tweaks to the shared `.lc-alert` system used by
+   <FormAlert />. The base error/success/warning colors are defined in
+   lc-pages.css so they remain single-sourced. This file only adds the
+   optional leading icon + body wrap used when `showIcon` is true. */
+
+.form-alert__icon {
+  display: inline-block;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-right: 0.5rem;
+  border-radius: 999px;
+  text-align: center;
+  font-family: var(--lc-font-mono);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.1rem;
+  color: var(--lc-bg-base);
+  background: currentColor;
+  opacity: 0.9;
+  vertical-align: -2px;
+}
+
+.form-alert__body {
+  display: inline;
+}
+
+/* When an icon is present, the alert stacks inline-items with a tiny gap. */
+.lc-alert .form-alert__icon + .form-alert__body {
+  display: inline;
+  vertical-align: middle;
+}

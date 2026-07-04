@@ -1,0 +1,47 @@
+/* LottaCash — shared long-form document renderer used by Privacy,
+   Sweepstakes Rules, Responsible Gaming, and Help's TOS tab. The
+   visual rules shadow the existing `.help__tos-block` rules so legal
+   docs render the same way everywhere; future tweaks to legal-doc
+   typography ship from one site. */
+
+.legal-doc {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  font-family: var(--lc-font-body);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--lc-text-secondary);
+}
+
+.legal-doc__block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.legal-doc__heading {
+  margin: 0;
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.005em;
+  color: var(--lc-text-primary);
+  /* Print rule: never break a heading across a page boundary. */
+  page-break-after: avoid;
+}
+
+.legal-doc__paragraph {
+  margin: 0;
+  color: var(--lc-text-secondary);
+  line-height: 1.65;
+  /* Print rule: avoid widows/orphans in section bodies. */
+  page-break-inside: avoid;
+}
+
+.legal-doc__meta {
+  margin: 0;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--lc-text-muted);
+}

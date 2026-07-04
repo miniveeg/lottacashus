@@ -1851,3 +1851,35 @@ Verification:
 Stage Summary:
 - Files changed this round (v3 only): src/contexts/ProfileContext.tsx (createdAt threading across 5 constructor sites); src/pages/Profile/Profile.tsx (memberSince from createdAt; comment refresh; useEffect deps).
 - Real bug fixed this round: 1 (Veteran badge permanent-lock).
+
+---
+Task ID: CASE-BATTLES-V4
+Agent: Coordinator
+Task: Wire all game modes to the global GC/SC toggle and ship a full case-battles pass per user request.
+
+Work Log:
+- **Auto-currency across all gamemodes** — 6 house games (Slots/Roulette/Mines/Keno/Crash/Blackjack/Limbo) already drive `coinType` from `usePlayMode()`. CaseBattlesCreateV2 was the only gamemode with its own local `coinType` state + redundant GC/SC toggle in the settings bar. Removed the local state, removed the UI toggle, dropped in `usePlayMode()` — switching in the topbar now retargets the create-flow (balance, prices, entry cost) immediately. Added a currency note + a coin-type badge so users can see what they're creating in.
+
+- **Lobby player-count bug (real production issue)** — The `BATTLE_COLUMNS` select intentionally omits the `players` array to keep payload small (audit v3 perf fix). The hub was reading `(battle as any)._playerCount ?? battle.players.length` which always returned 0. Fixed: added `playerCount: number` to `CaseBattleView`, added a batch `supabasePlayerCounts(battleIds)` helper that does a single SELECT against `case_battle_players` and aggregates in JS, dropped the synthetic `_playerCount` field hack.
+
+- **Lobby coin-type filter (real production issue)** — `useLobbySubscription` accepted no parameters and showed all currencies. Extended to `useLobbySubscription({ coinType })`; `listOpenBattles` now appends `eq("coin_type", coinType)` to the server query (local-play path filters client-side too). Hub shows only GC battles when in GC mode, only SC battles when in SC mode. Empty state shows the active currency name.
+
+- **Hardcoded "balance" in 4 files** — `CaseBattlesHubV2` / `CaseBattlesRoomV2` / `CaseBattleArenaV2` were calling `formatCoins(potTotal, "balance")` even when the battle was in SC. Fixed: every `formatCoins(...)` call now passes `battle.coinType`. SC battles now correctly label amounts as $100.00 SC, $10.00 SC, etc.
+
+- **Arena round-advance race fix** — `CaseBattleArenaV2` was advancing `currentRound` on a 2s timer once `landedSlots.size >= activePlayerCount`. If the next round's drops arrived late from realtime, every reel would spin forever waiting for a `targetItem`. Fixed: gate advance on BOTH `animationReady` (settled after 1.5s pause) AND `nextRoundReady` (`battle.drops.some(d => d.round === currentRound + 1)`). Reels hold gracefully on the last landed round until data arrives.
+
+- **Drop data masking** — `PlayerColumn` previously received all `battle.drops` and could compute totals for unrounded rounds. Fixed: parent splits data into `visibleDrops` (past + this round only) and `roundDrops` (this round only). The reel only sees its own target; the history strip only sees `round < currentRound`. Strict anti-spoiler.
+
+- **Past-items history strip** — `PlayerColumn` now renders a vertical strip of past-round items above the active reel (one tile per round already revealed, with rarity color and value). Lets the player see what they've earned before the next spin lands.
+
+- **Completed-battle ledger view** — On `status === "completed"`, the arena drops the round indicator entirely. Each PlayerColumn renders a full grid of every-round items instead of a reel. Strong satisfaction signal — players get a readable summary, not a movie.
+
+- **Inline provably-fair panel** — `CaseBattlesRoomV2` now renders a collapsible details/summary panel below the arena showing `seed_hash`, `eos_block_target`, and (once the battle completes) `battle_seed` + `eos_block_id`. Players can verify results against HMAC-SHA256(server seed, nonce) post-rotation.
+
+- **Create-page polish** — Replaced the vertical case-list strip with a thumbnail grid: groups identical case IDs (one tile with ×N badge instead of N identical tiles), added Undo to drop just the last addition, kept Clear for everything. Currency note explains how to switch.
+
+- **Round indicator a11y** — Each `cb-round-dot` now has an aria-label ("Round N complete" / "in progress" / "upcoming").
+
+Files (8): types.ts, caseBattlesApi.ts, useBattleSubscription.ts, CaseBattlesHubV2.tsx, CaseBattlesRoomV2.tsx, CaseBattleArenaV2.tsx, PlayerColumn.tsx, CaseBattlesCreateV2.tsx, CaseBattlesV2.css.
+
+Verified: `npx tsc --noEmit` clean, `npm run build` clean (10.21s), code-reviewer-minimax-m3 approved the refactor and flagged 3 follow-up fixes (missing `isCurrentUser` on live-mode PlayerColumn, unused `localPlayerCounts` helper, wasCommittedRef-gated reset to avoid nav-away flicker, double `playerTotalValue` call) — all fixed in a follow-up round.

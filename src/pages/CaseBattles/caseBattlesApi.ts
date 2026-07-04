@@ -46,6 +46,7 @@ function localToView(b: LocalBattle): CaseBattleView {
       slot: d.slot, round: d.round, caseId: d.caseId, itemId: d.itemId,
       itemName: d.itemName, itemValue: d.itemValue, itemRarity: d.itemRarity,
     })),
+    playerCount: b.players.length,
   };
 }
 
@@ -73,6 +74,7 @@ function parseBattle(row: Record<string, unknown>): CaseBattleView {
     completedAt: (row.completed_at as string) ?? null,
     players: [],
     drops: [],
+    playerCount: 0,
   };
 }
 
@@ -111,13 +113,26 @@ function parseDrop(row: Record<string, unknown>): BattleDrop {
  *
  * `parseBattle` consumes exactly these fields. `battle_seed` and
  * `internal_seed` are intentionally NOT selected — the V2 client does not
- * read `battleSeed` from the parsed view (verified by grep: `battle.battleSeed`
- * is only referenced inside `localToView` for the local-play path).
+ * read `battleSeed` from the parsed view except inside the provably-fair
+ * panel on completed battles. To support that panel we use a separate
+ * `ROOM_BATTLE_COLUMNS` (declared below) when fetching a single battle
+ * for the room view.
  */
-const BATTLE_COLUMNS =
+const LOBBY_BATTLE_COLUMNS =
   "id, creator_id, gamemode, crazy, player_mode, max_players, case_ids, " +
   "rounds, entry_cost, coin_type, borrow_percent, pot_total, status, " +
-  "seed_hash, eos_block_target, eos_block_id, created_at, started_at, completed_at";
+  "seed_hash, created_at, started_at, completed_at";
+
+/**
+ * Room view column list — includes `battle_seed` and `eos_block_id` so
+ * the provably-fair panel can show the revealed seed + EOS block binding
+ * once the battle completes.
+ */
+const ROOM_BATTLE_COLUMNS =
+  "id, creator_id, gamemode, crazy, player_mode, max_players, case_ids, " +
+  "rounds, entry_cost, coin_type, borrow_percent, pot_total, status, " +
+  "seed_hash, eos_block_target, eos_block_id, battle_seed, created_at, " +
+  "started_at, completed_at";
 
 const PLAYER_COLUMNS = "slot, user_id, is_bot, username, avatar_seed";
 const DROP_COLUMNS =
@@ -128,27 +143,68 @@ const DROP_COLUMNS =
 // to max_players(6) × max_rounds(≤50) = 300; 3600 is a generous safety net.
 const DROPS_LIMIT = 3600;
 
-export async function listOpenBattles(): Promise<{
-  data: CaseBattleView[] | null;
-  error: string | null;
-}> {
-  if (!isSupabaseConfigured) return { data: localListOpenBattles().map(localToView), error: null };
+/**
+ * Batch player-count query — returns a Map<battleId, count> for all
+ * given battle IDs. Used by the lobby to surface accurate player counts
+ * without shipping the full `players` array on every battle in the list.
+ *
+ * Only the Supabase path needs this — the local-play path already
+ * supplies player lengths via `localToView`.
+ */
+export type PlayerCountMap = Map<string, number>;
+
+async function supabasePlayerCounts(battleIds: string[]): Promise<PlayerCountMap> {
+  const map: PlayerCountMap = new Map();
+  if (battleIds.length === 0) return map;
   const { data, error } = await supabase
+    .from("case_battle_players")
+    .select("battle_id")
+    .in("battle_id", battleIds);
+  if (error || !data) return map;
+  for (const row of data as unknown as Record<string, unknown>[]) {
+    const id = String(row.battle_id ?? "");
+    if (!id) continue;
+    map.set(id, (map.get(id) ?? 0) + 1);
+  }
+  return map;
+}
+
+export async function listOpenBattles(options?: {
+  coinType?: "balance" | "sweeps_coins";
+}): Promise<{ data: CaseBattleView[] | null; error: string | null }> {
+  if (!isSupabaseConfigured) {
+    // Local-play: filter by coinType + supply the count from in-memory.
+    const all = localListOpenBattles().map(localToView);
+    const filtered = options?.coinType
+      ? all.filter((b) => b.coinType === options.coinType)
+      : all;
+    return { data: filtered, error: null };
+  }
+
+  let query = supabase
     .from("case_battles_safe")
-    .select(BATTLE_COLUMNS)
+    .select(LOBBY_BATTLE_COLUMNS)
     .in("status", ["waiting", "committing", "running"])
     .order("created_at", { ascending: false })
     .limit(50);
+  if (options?.coinType) {
+    query = query.eq("coin_type", options.coinType);
+  }
+  const { data, error } = await query;
   if (error) {
     // Fallback to local battles on error.
     return { data: localListOpenBattles().map(localToView), error: null };
   }
-  // Cast via `unknown` because the supabase-js column-list type inference
-  // (no Database schema is wired up in this client — see lib/supabase.ts)
-  // produces a `GenericStringError` sentinel type for non-`*` select strings
-  // when it can't validate the columns against a schema. At runtime `data`
-  // is the row array we asked for.
+  // Cast via `unknown` — see note in supabasePlayerCounts about schema-less inference.
   const battles = ((data ?? []) as unknown as Record<string, unknown>[]).map(parseBattle);
+
+  // Batch-fetch player counts for the rendered row set so each card shows
+  // "n / max" instead of the broken "0 / max" the old code produced
+  // (because BATTLE_COLUMNS intentionally omits the players array).
+  const counts = await supabasePlayerCounts(battles.map((b) => b.battleId));
+  for (const b of battles) {
+    b.playerCount = counts.get(b.battleId) ?? 0;
+  }
   return { data: battles, error: null };
 }
 
@@ -165,7 +221,7 @@ export async function viewCaseBattle(battleId: string): Promise<{
     await Promise.all([
       supabase
         .from("case_battles_safe")
-        .select(BATTLE_COLUMNS)
+        .select(ROOM_BATTLE_COLUMNS)
         .eq("id", battleId)
         .maybeSingle(),
       supabase
@@ -192,6 +248,9 @@ export async function viewCaseBattle(battleId: string): Promise<{
     return parsed;
   });
   battle.drops = (dropRows ?? []).map((d) => parseDrop(d as unknown as Record<string, unknown>));
+  // The room view includes full players, so the player count is just
+  // the array length — no separate count query needed here.
+  battle.playerCount = battle.players.length;
   return { data: battle, error: null };
 }
 

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
@@ -12,6 +11,10 @@ import {
 } from "../../lib/slots";
 import { SlotSymbol } from "./SlotSymbols";
 import { Seo } from "../../components/Seo/Seo";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
+import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
+import { BetButton } from "../../components/BetButton/BetButton";
+import { formatCoins } from "../../lib/format";
 import "../../styles/game-controls.css";
 import "./Slots.css";
 
@@ -442,11 +445,7 @@ export default function Slots() {
             </div>
           </div>
 
-          {error && (
-            <p className="game-controls__error" role="alert">
-              {error}
-            </p>
-          )}
+          {error && <FormAlert>{error}</FormAlert>}
 
           {/* Always-visible paytable so players know what to aim for */}
           <div className="slots__paytable" aria-label="Paytable">
@@ -462,28 +461,22 @@ export default function Slots() {
             </div>
           </div>
 
-          <button
-            type="button"
-            className="game-controls__play"
-            disabled={rolling || exceedsMaxPayout}
+          <BetButton
             onClick={handleSpin}
-            aria-disabled={rolling || exceedsMaxPayout}
-          >
-            {rolling ? "Spinning\u2026" : exceedsMaxPayout ? "Payout exceeds cap" : "Spin"}
-          </button>
+            busy={rolling}
+            exceedsCap={exceedsMaxPayout}
+            busyLabel="Spinning…"
+            exceedsCapLabel="Payout exceeds cap"
+            label="Spin"
+          />
 
           {exceedsMaxPayout && (
             <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {SLOTS_MAX_PAYOUT.toLocaleString()}. Lower your wager — Crown (100×) would exceed the cap.
+              Max payout is {formatCoins(SLOTS_MAX_PAYOUT, coinType)}. Lower your wager — Crown (100×) would exceed the cap.
             </p>
           )}
 
-          {/* H9 (UI/UX audit): every other game (Keno, Mines, Limbo, Crash,
-              Blackjack) has an inline "Need funds? Deposit" link at the
-              bottom of the controls panel — Slots was missing it. */}
-          <p className="slots__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
+          <NeedFundsHint />
 
           <div className="game-controls__stats">
             <div className="game-controls__stat-row">

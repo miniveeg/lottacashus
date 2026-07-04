@@ -155,7 +155,7 @@ export function CaseBattlesRoomV2() {
   return (
     <div className="cb-room lc-page">
       <Seo
-        title={`${formatCoins(battle.potTotal, "balance")} pot · ${battle.playerMode.toUpperCase()} ${gamemodeLabelWithCrazy(battle.gamemode, battle.crazy)}`}
+        title={`${formatCoins(battle.potTotal, battle.coinType)} pot · ${battle.playerMode.toUpperCase()} ${gamemodeLabelWithCrazy(battle.gamemode, battle.crazy)}`}
         description="Live Case Battle room. Watch the reels spin in real time."
         path={`/case-battles/${battleId}`}
       />
@@ -166,7 +166,10 @@ export function CaseBattlesRoomV2() {
         <div className="cb-room__info">
           <span className="cb-room__mode">{gamemodeLabelWithCrazy(battle.gamemode, battle.crazy)}</span>
           <span className="cb-room__pmode">{battle.playerMode.toUpperCase()}</span>
-          <span className="cb-room__pot">Pot: {formatCoins(battle.potTotal, "balance")}</span>
+          <span className="cb-room__pot">Pot: {formatCoins(battle.potTotal, battle.coinType)}</span>
+          <span className={`cb-room__coin-badge cb-room__coin-badge--${battle.coinType}`}>
+            {battle.coinType === "sweeps_coins" ? "SC" : "GC"}
+          </span>
         </div>
       </div>
 
@@ -177,7 +180,7 @@ export function CaseBattlesRoomV2() {
         <div className="cb-room__actions">
           {canJoin && (
             <button type="button" className="cb-btn cb-btn--primary" onClick={handleJoin} disabled={busy}>
-              Join battle ({formatCoins(battle.entryCost, "balance")})
+              Join battle ({formatCoins(battle.entryCost, battle.coinType)})
             </button>
           )}
           {canAddBot && (
@@ -200,7 +203,7 @@ export function CaseBattlesRoomV2() {
       {canClaim && (
         <div className="cb-room__claim">
           <button type="button" className="cb-btn cb-btn--primary cb-btn--claim" onClick={handleClaim} disabled={busy}>
-            {busy ? "Claiming…" : `Claim ${formatCoins(myPayout, "balance")}`}
+            {busy ? "Claiming…" : `Claim ${formatCoins(myPayout, battle.coinType)}`}
           </button>
         </div>
       )}
@@ -212,6 +215,41 @@ export function CaseBattlesRoomV2() {
 
       {/* Arena */}
       <CaseBattleArenaV2 battle={battle} userId={user?.id} />
+
+      {/* Provably-fair panel — inline collapsible under the arena so it
+          doesn't disturb gameplay but stays one click away. Shows the
+          commit hash / EOS block binding / battle seed. */}
+      <details className="cb-fairness" data-testid="cb-fairness">
+        <summary>Provably fair</summary>
+        <div className="cb-fairness__body">
+          <p>
+            <span className="cb-fairness__k">Server seed (hash)</span>
+            <code className="cb-fairness__hash">{battle.seedHash ?? "—"}</code>
+          </p>
+          <p>
+            <span className="cb-fairness__k">EOS target block</span>
+            <code>{battle.eosBlockTarget?.toLocaleString() ?? "—"}</code>
+          </p>
+          {isCompleted && (
+            <>
+              <p>
+                <span className="cb-fairness__k">EOS block ID</span>
+                <code className="cb-fairness__hash">{battle.eosBlockId ?? "—"}</code>
+              </p>
+              <p>
+                <span className="cb-fairness__k">Battle seed (revealed)</span>
+                <code className="cb-fairness__hash">{battle.battleSeed ?? "—"}</code>
+              </p>
+            </>
+          )}
+          {!isCompleted && (
+            <p className="cb-fairness__note">
+              The revealed seed is published here once the battle completes —
+              you can then verify every drop against HMAC-SHA256(server seed, nonce).
+            </p>
+          )}
+        </div>
+      </details>
     </div>
   );
 }

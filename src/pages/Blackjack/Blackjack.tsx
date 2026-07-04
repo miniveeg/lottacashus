@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { Seo } from "../../components/Seo/Seo";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
+import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
+import { BetButton } from "../../components/BetButton/BetButton";
 import { cardRank, cardSuit, handValue, isRedCard } from "../../lib/games/blackjack";
 import { formatCoins } from "../../lib/format";
 import {
@@ -451,21 +453,17 @@ export function Blackjack() {
             </div>
           </div>
 
-          {error && (
-            <p className="bj__error" role="alert">
-              {error}
-            </p>
-          )}
+          {error && <FormAlert>{error}</FormAlert>}
 
           {!playing ? (
-            <button
-              type="button"
-              className="bj__deal-btn"
+            <BetButton
               onClick={handleStart}
-              disabled={busy || exceedsMaxPayout}
-            >
-              {busy ? "Dealing…" : exceedsMaxPayout ? "Payout exceeds cap" : showTable && settled ? "New hand" : "Deal"}
-            </button>
+              busy={busy}
+              exceedsCap={exceedsMaxPayout}
+              busyLabel="Dealing…"
+              exceedsCapLabel="Payout exceeds cap"
+              label={showTable && settled ? "New hand" : "Deal"}
+            />
           ) : insuranceOffer ? (
             <div className="bj__insurance">
               <p className="bj__insurance-text">
@@ -535,7 +533,7 @@ export function Blackjack() {
 
           {exceedsMaxPayout && !playing && (
             <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {BLACKJACK_MAX_PAYOUT.toLocaleString()}. Lower your wager — a doubled
+              Max payout is {formatCoins(BLACKJACK_MAX_PAYOUT, coinType)}. Lower your wager — a doubled
               blackjack would exceed the cap.
             </p>
           )}
@@ -563,9 +561,7 @@ export function Blackjack() {
             </div>
           )}
 
-          <p className="bj__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
+          <NeedFundsHint />
 
           <div className="bj__fairness">
             <button

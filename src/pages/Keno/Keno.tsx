@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { Seo } from "../../components/Seo/Seo";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
+import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
+import { BetButton } from "../../components/BetButton/BetButton";
 import { LcSelect } from "../../components/LcSelect/LcSelect";
 import {
   getPaytableRow,
@@ -474,11 +476,7 @@ export function Keno() {
             </div>
           </div>
 
-          {error && (
-            <p className="keno__error" role="alert">
-              {error}
-            </p>
-          )}
+          {error && <FormAlert>{error}</FormAlert>}
 
           {lastResult && drawn && (
             <div
@@ -499,35 +497,24 @@ export function Keno() {
             </div>
           )}
 
-          <button
-            type="button"
-            className={`keno__bet-btn${drawing ? " keno__bet-btn--busy" : ""}`}
+          <BetButton
             onClick={handleBet}
-            disabled={drawing || pickCount < 1 || exceedsMaxPayout}
-            aria-busy={drawing}
-          >
-            {drawing ? (
-              <>
-                <span className="keno__spinner" aria-hidden="true" />
-                <span>{revealComplete ? "Done…" : "Drawing…"}</span>
-              </>
-            ) : exceedsMaxPayout ? (
-              "Payout exceeds cap"
-            ) : (
-              "Bet"
-            )}
-          </button>
+            busy={drawing}
+            exceedsCap={exceedsMaxPayout && pickCount >= 1}
+            busyLabel={revealComplete ? "Done…" : "Drawing…"}
+            exceedsCapLabel="Payout exceeds cap"
+            label="Bet"
+            disabled={pickCount < 1}
+          />
 
           {exceedsMaxPayout && (
             <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {KENO_MAX_PAYOUT.toLocaleString()}. Lower your wager — a max-hit round
+              Max payout is {formatCoins(KENO_MAX_PAYOUT, coinType)}. Lower your wager — a max-hit round
               would exceed the cap.
             </p>
           )}
 
-          <p className="keno__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
+          <NeedFundsHint />
 
           <div className="keno__fairness">
             <button

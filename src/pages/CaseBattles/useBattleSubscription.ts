@@ -96,28 +96,35 @@ export function useBattleSubscription(battleId: string | undefined): {
 /**
  * Subscribes to the lobby list (all open battles).
  * Returns the list + a manual refresh function.
+ *
+ * Optionally filters by `coinType` so the user only sees battles in the
+ * currency they currently have selected (driven by `usePlayMode()`).
  */
-export function useLobbySubscription() {
+export function useLobbySubscription(options?: {
+  coinType?: "balance" | "sweeps_coins";
+}) {
   const [battles, setBattles] = useState<CaseBattleView[]>([]);
   const [loading, setLoading] = useState(true);
   const cancelledRef = useRef(false);
+  const coinType = options?.coinType;
 
   const fetchLobby = useCallback(async () => {
-    const { data, error } = await listOpenBattles();
+    const { data, error } = await listOpenBattles(
+      coinType ? { coinType } : undefined,
+    );
     if (cancelledRef.current) return;
     if (error || !data) {
       setBattles([]);
     } else {
-      // Attach player count as a synthetic field for display.
-      const views = data as any[];
-      views.forEach((v) => { v._playerCount = v.players?.length ?? 0; });
-      setBattles(views);
+      setBattles(data);
     }
     setLoading(false);
-  }, []);
+  }, [coinType]);
 
   useEffect(() => {
     cancelledRef.current = false;
+    setLoading(true);
+    setBattles([]);
     fetchLobby();
 
     if (!isSupabaseConfigured) {

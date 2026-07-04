@@ -1,20 +1,24 @@
 /**
  * Case Battles v2 — Create battle (Diceblox-style)
  * - "Add Cases" button opens a modal picker
- * - GC/SC coin toggle
- * - Mode dropdown + Crazy toggle + Borrow toggle + game type buttons
+ * - Currency follows the global usePlayMode() (topbar GC/SC toggle).
+ *   Previously had its own local coinType state + GC/SC toggle that
+ *   duplicated the global one and could drift out of sync with the
+ *   user's actual selected currency. Removed in audit v4.
+ * - Mode dropdown + Crazy toggle + Borrow toggle + game type buttons.
  */
 
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../contexts/ProfileContext";
+import { usePlayMode } from "../../contexts/PlayModeContext";
 import { Seo } from "../../components/Seo/Seo";
 import { createCaseBattle } from "./caseBattlesApi";
 import { GAMEMODES, playerModeOptions, type BattleGamemode } from "./types";
 import { CASE_CATALOG, getCaseById } from "../../lib/games/case-battles";
 import { formatCoins } from "../../lib/format";
 import { entryAfterBorrow } from "../../lib/games/case-battles/config";
-import { Plus, X, Search, ChevronDown } from "lucide-react";
+import { Plus, X, Search, ChevronDown, Info } from "lucide-react";
 import "./CaseBattlesV2.css";
 
 type SortKey = "popular" | "price-high" | "price-low" | "newest";
@@ -22,12 +26,12 @@ type SortKey = "popular" | "price-high" | "price-low" | "newest";
 export function CaseBattlesCreateV2() {
   const navigate = useNavigate();
   const { profile } = useProfile();
+  const { coinType, label: coinLabel } = usePlayMode();
   const [gamemode, setGamemode] = useState<BattleGamemode>("standard");
   const [crazy, setCrazy] = useState(false);
   const [playerMode, setPlayerMode] = useState("1v1");
   const [caseIds, setCaseIds] = useState<string[]>([]);
   const [borrowPercent, setBorrowPercent] = useState(0);
-  const [coinType, setCoinType] = useState<"balance" | "sweeps_coins">("balance");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showCaseModal, setShowCaseModal] = useState(false);
@@ -36,6 +40,9 @@ export function CaseBattlesCreateV2() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortKey>("popular");
 
+  // The currency the create-flow uses is now identical to the user's
+  // selected currency — switching in the topbar immediately retargets
+  // the balance check, prize labels, and entry cost.
   const balance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
   const entryCost = useMemo(
     () => caseIds.reduce((sum, id) => sum + (getCaseById(id)?.price ?? 0), 0),
@@ -67,7 +74,11 @@ export function CaseBattlesCreateV2() {
     });
   }
 
-  function removeCase(index: number) {
+  function removeLastCase(): void {
+    setCaseIds((prev) => prev.slice(0, -1));
+  }
+
+  function removeAtIndex(index: number): void {
     setCaseIds((prev) => prev.filter((_, i) => i !== index));
   }
 
@@ -95,7 +106,14 @@ export function CaseBattlesCreateV2() {
     }
   }
 
-  const coinLabel = coinType === "sweeps_coins" ? "SC" : "GC";
+  // Group identical case IDs for the active-battle strip — a player who
+  // adds "Phoenix Case" twice sees one tile with a ×2 badge instead of two
+  // identical tiles eating visual space.
+  const groupedCases = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const id of caseIds) counts.set(id, (counts.get(id) ?? 0) + 1);
+    return Array.from(counts.entries()).map(([id, count]) => ({ id, count }));
+  }, [caseIds]);
 
   return (
     <div className="cb-create lc-page">
@@ -107,7 +125,19 @@ export function CaseBattlesCreateV2() {
           ← Exit
         </button>
         <h1 className="cb-create__title">Create Battle</h1>
+        <span
+          className={`cb-room__coin-badge cb-create__currency-badge cb-room__coin-badge--${coinType}`}
+          aria-label={`Playing in ${coinLabel}`}
+        >
+          {coinLabel}
+        </span>
       </div>
+
+      {/* Currency notice: linkable to the topbar toggle so confused users */}
+      <p className="cb-create__currency-note">
+        <Info size={14} aria-hidden />
+        Creating in <strong>{coinLabel}</strong>. Switch in the topbar to use the other balance.
+      </p>
 
       {/* Settings bar */}
       <div className="cb-create__settings">
@@ -147,27 +177,6 @@ export function CaseBattlesCreateV2() {
           </div>
         </div>
 
-        {/* Coin toggle */}
-        <div className="cb-create__setting">
-          <label>Coin</label>
-          <div className="cb-create__coin-toggle">
-            <button
-              type="button"
-              className={coinType === "balance" ? "cb-coin-btn cb-coin-btn--active" : "cb-coin-btn"}
-              onClick={() => setCoinType("balance")}
-            >
-              GC
-            </button>
-            <button
-              type="button"
-              className={coinType === "sweeps_coins" ? "cb-coin-btn cb-coin-btn--active" : "cb-coin-btn"}
-              onClick={() => setCoinType("sweeps_coins")}
-            >
-              SC
-            </button>
-          </div>
-        </div>
-
         {/* Crazy toggle */}
         {canBeCrazy && (
           <div className="cb-create__setting">
@@ -203,7 +212,7 @@ export function CaseBattlesCreateV2() {
 
       {/* Case area */}
       <div className="cb-create__case-area">
-        {caseIds.length === 0 ? (
+        {groupedCases.length === 0 ? (
           <button type="button" className="cb-create__add-cases-btn" onClick={() => setShowCaseModal(true)}>
             <Plus size={24} />
             <span>Add Cases</span>
@@ -211,25 +220,50 @@ export function CaseBattlesCreateV2() {
         ) : (
           <>
             <div className="cb-create__case-list-header">
-              <span>{caseIds.length} cases · {formatCoins(entryCost, coinType)}</span>
+              <span>
+                <strong>{caseIds.length}</strong> case{caseIds.length === 1 ? "" : "s"} · {formatCoins(entryCost, coinType)}
+              </span>
               <div className="cb-create__case-list-actions">
                 <button type="button" className="cb-create__small-btn" onClick={() => setShowCaseModal(true)} aria-label="Add more cases">
                   + Add more
+                </button>
+                <button type="button" className="cb-create__small-btn cb-create__small-btn--ghost" onClick={removeLastCase} aria-label="Undo last added case" disabled={caseIds.length === 0}>
+                  Undo
                 </button>
                 <button type="button" className="cb-create__small-btn cb-create__small-btn--danger" onClick={clearCases} aria-label="Clear all cases">
                   Clear
                 </button>
               </div>
             </div>
-            <div className="cb-create__case-list">
-              {caseIds.map((id, i) => {
+            <div className="cb-create__case-grid">
+              {groupedCases.map(({ id, count }) => {
                 const c = getCaseById(id);
                 return (
-                  <div key={i} className="cb-create__case-item">
-                    <span className="cb-create__case-item-name">{c?.name ?? id}</span>
-                    <span className="cb-create__case-item-price">${c?.price.toFixed(2) ?? "?"}</span>
-                    <button type="button" className="cb-create__case-remove" onClick={() => removeCase(i)} aria-label={`Remove ${c?.name ?? id} from battle`}>
-                      <X size={14} />
+                  <div
+                    key={id}
+                    className="cb-create__case-thumb-card"
+                    style={{ borderColor: c?.accent ?? "var(--lc-border)" }}
+                    title={c?.name}
+                  >
+                    <div
+                      className="cb-create__case-thumb-bg"
+                      style={{ background: c?.accent ?? "var(--lc-bg-active)" }}
+                      aria-hidden
+                    >
+                      {c?.name.charAt(0).toUpperCase() ?? "?"}
+                    </div>
+                    <div className="cb-create__case-thumb-meta">
+                      <span className="cb-create__case-thumb-name">{c?.name ?? id}</span>
+                      <span className="cb-create__case-thumb-price">{formatCoins(c?.price ?? 0, coinType)}</span>
+                    </div>
+                    {count > 1 && <span className="cb-create__case-thumb-count" aria-label={`${count} of this case`}>×{count}</span>}
+                    <button
+                      type="button"
+                      className="cb-create__case-thumb-remove"
+                      onClick={() => removeAtIndex(caseIds.lastIndexOf(id))}
+                      aria-label={`Remove one ${c?.name ?? id}`}
+                    >
+                      <X size={12} />
                     </button>
                   </div>
                 );

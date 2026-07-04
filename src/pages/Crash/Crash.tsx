@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { Seo } from "../../components/Seo/Seo";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
+import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
+import { BetButton } from "../../components/BetButton/BetButton";
 import { formatCoins } from "../../lib/format";
 import {
   fetchCrashPfState,
@@ -773,37 +775,26 @@ export function Crash() {
                 : `Cash out at ${multiplier.toFixed(2)}x (${formatCoins(potentialPayout, coinType)})`}
             </button>
           ) : (
-            <button
-              type="button"
-              className="crash__bet-btn"
+            <BetButton
               onClick={handleBet}
-              disabled={exceedsMaxPayout}
-              aria-disabled={exceedsMaxPayout}
-            >
-              {exceedsMaxPayout
-                ? "Payout exceeds cap"
-                : phase === "crashed" || phase === "cashed_out"
-                  ? "Bet again"
-                  : "Bet"}
-            </button>
+              exceedsCap={exceedsMaxPayout}
+              exceedsCapLabel="Payout exceeds cap"
+              label={
+                phase === "crashed" || phase === "cashed_out" ? "Bet again" : "Bet"
+              }
+            />
           )}
 
           {exceedsMaxPayout && phase === "idle" && (
             <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {CRASH_MAX_PAYOUT.toLocaleString()}. Lower your wager — even a minimum
+              Max payout is {formatCoins(CRASH_MAX_PAYOUT, coinType)}. Lower your wager — even a minimum
               cashout at this wager would exceed the cap.
             </p>
           )}
 
-          {error && (
-            <p className="crash__error" role="alert">
-              {error}
-            </p>
-          )}
+          {error && <FormAlert>{error}</FormAlert>}
 
-          <p className="crash__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
+          <NeedFundsHint />
 
           <div className="crash__fairness">
             <button

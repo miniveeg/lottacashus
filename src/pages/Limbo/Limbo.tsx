@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { Seo } from "../../components/Seo/Seo";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
+import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
+import { BetButton } from "../../components/BetButton/BetButton";
 import {
   LIMBO_MAX_TARGET,
   LIMBO_MIN_TARGET,
@@ -408,34 +410,18 @@ export function Limbo() {
             </div>
           </div>
 
-          {error && (
-            <p className="limbo__error" role="alert">
-              {error}
-            </p>
-          )}
+          {error && <FormAlert>{error}</FormAlert>}
 
-          <button
-            type="button"
-            className="limbo__bet-btn"
+          <BetButton
             onClick={handleBet}
-            disabled={rolling || exceedsMaxPayout}
-            aria-busy={rolling}
-          >
-            {rolling ? (
-              <>
-                <span className="limbo__spinner" aria-hidden="true" />
-                <span>Rolling…</span>
-              </>
-            ) : exceedsMaxPayout ? (
-              "Payout exceeds cap"
-            ) : (
-              "Bet"
-            )}
-          </button>
+            busy={rolling}
+            exceedsCap={exceedsMaxPayout}
+            busyLabel="Rolling…"
+            exceedsCapLabel="Payout exceeds cap"
+            label="Bet"
+          />
 
-          <p className="limbo__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
+          <NeedFundsHint />
 
           <div className="limbo__fairness">
             <button

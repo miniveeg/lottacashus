@@ -1,0 +1,27 @@
+/* LottaCash — shared "Need funds? Deposit" footer.
+   Replaces per-page `.slots__hint` / `.mines__hint` / `.bj__hint` / etc.
+   with a single canonical hint so every betting surface points users to
+   Deposit (and the free SC mail-in entry) with identical copy + styling. */
+
+.need-funds-hint {
+  margin: 0.25rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--lc-border);
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--lc-text-muted);
+  text-align: center;
+}
+
+.need-funds-hint__link {
+  color: var(--lc-amber);
+  font-weight: 700;
+  border-bottom: 1px dashed transparent;
+  transition: color var(--lc-transition), border-color var(--lc-transition);
+}
+
+.need-funds-hint__link:hover {
+  color: var(--lc-amber-soft);
+  border-bottom-color: var(--lc-amber);
+}

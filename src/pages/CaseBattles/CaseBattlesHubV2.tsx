@@ -1,6 +1,8 @@
 /**
  * Case Battles v2 — Hub (lobby list)
- * Uses realtime subscription (no polling).
+ * Uses realtime subscription (no polling). Filters by the user's active
+ * currency (from usePlayMode) so GC-mode users don't see SC lobbies and
+ * vice versa.
  */
 
 import { Link } from "react-router-dom";
@@ -9,11 +11,13 @@ import { useLobbySubscription } from "./useBattleSubscription";
 import { gamemodeLabelWithCrazy } from "./types";
 import { formatCoins } from "../../lib/format";
 import { getCaseById } from "../../lib/games/case-battles";
+import { usePlayMode } from "../../contexts/PlayModeContext";
 import { GAMEMODES } from "./types";
 import "./CaseBattlesV2.css";
 
 export function CaseBattlesHubV2() {
-  const { battles, loading } = useLobbySubscription();
+  const { coinType, label: coinLabel } = usePlayMode();
+  const { battles, loading } = useLobbySubscription({ coinType });
 
   return (
     <div className="cb-hub lc-page">
@@ -24,7 +28,9 @@ export function CaseBattlesHubV2() {
       />
       <header className="cb-hub__header">
         <div>
-          <h1 className="cb-hub__title">Case Battles</h1>
+          <h1 className="cb-hub__title">
+            Case Battles <span className="cb-hub__coin-badge">{coinLabel}</span>
+          </h1>
           <p className="cb-hub__subtitle">
             Open cases head-to-head. Highest total value wins the pot.
           </p>
@@ -50,26 +56,31 @@ export function CaseBattlesHubV2() {
       {/* Lobby list */}
       <div className="cb-hub__list">
         {loading ? (
-          <div className="cb-hub__loading">
+          <div className="cb-hub__loading" aria-live="polite">
             <div className="lc-loading__pulse" aria-hidden />
-            <p>Loading battles…</p>
+            <p>Loading {coinLabel} battles…</p>
           </div>
         ) : battles.length === 0 ? (
           <div className="cb-hub__empty">
-            <p>No active battles right now.</p>
+            <p>
+              No active <strong>{coinLabel}</strong> battles right now.
+            </p>
+            <p className="cb-hub__empty-hint">
+              Switch currency in the top bar to see others,
+              or open one yourself.
+            </p>
             <Link to="/case-battles/create" className="cb-hub__create-btn">
-              Create the first one
+              Create the first {coinLabel} battle
             </Link>
           </div>
         ) : (
           battles.map((battle) => {
-            const playerCount = (battle as any)._playerCount ?? battle.players.length;
             return (
               <Link key={battle.battleId} to={`/case-battles/${battle.battleId}`} className="cb-hub__row">
                 <div className="cb-hub__row-info">
                   <span className="cb-hub__row-mode">{gamemodeLabelWithCrazy(battle.gamemode, battle.crazy)}</span>
                   <span className="cb-hub__row-players">
-                    {battle.playerMode.toUpperCase()} · {playerCount}/{battle.maxPlayers}
+                    {battle.playerMode.toUpperCase()} · {battle.playerCount}/{battle.maxPlayers}
                   </span>
                 </div>
                 <div className="cb-hub__row-cases">
@@ -87,7 +98,7 @@ export function CaseBattlesHubV2() {
                 </div>
                 <div className="cb-hub__row-pot">
                   <span className="cb-hub__pot-label">Pot</span>
-                  <span className="cb-hub__pot-value">{formatCoins(battle.potTotal, "balance")}</span>
+                  <span className="cb-hub__pot-value">{formatCoins(battle.potTotal, battle.coinType)}</span>
                 </div>
                 <div className="cb-hub__row-status">
                   <span className={`cb-status cb-status--${battle.status}`}>{battle.status}</span>

@@ -12,6 +12,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { analytics } from "../../lib/analytics";
 import { MAX_USERNAME_LENGTH, normalizeUsername, validateUsername } from "../../lib/username";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
 import { Seo } from "../../components/Seo/Seo";
 import "../../components/BrandLogo/BrandLogo.css";
 import "../Auth/Auth.css";
@@ -203,12 +204,16 @@ export function Signup() {
         </p>
 
         {!configured && (
-          <p className="auth-config-warning" role="note">
-            {import.meta.env.PROD
-              ? "Service temporarily unavailable. Please try again later."
-              : <>Supabase is not configured. Add your project URL and anon key to the{" "}
-                 <code>.env</code> file to enable authentication.</>}
-          </p>
+          <FormAlert kind="warning">
+            {import.meta.env.PROD ? (
+              "Service temporarily unavailable. Please try again later."
+            ) : (
+              <>
+                Supabase is not configured. Add your project URL and anon key to the{" "}
+                <code>.env</code> file to enable authentication.
+              </>
+            )}
+          </FormAlert>
         )}
 
         <div className="auth-steps" aria-hidden="true">
@@ -219,7 +224,7 @@ export function Signup() {
 
         {step === "details" ? (
           <form className="auth-form" onSubmit={handleSendCode} noValidate>
-            {error && <p className="auth-error" role="alert" id="signup-error">{error}</p>}
+            {error && <FormAlert id="signup-error">{error}</FormAlert>}
 
             <div className="auth-field">
               <label htmlFor="signup-email">Email</label>
@@ -352,7 +357,7 @@ export function Signup() {
           </form>
         ) : (
           <form className="auth-form" onSubmit={handleVerify} noValidate>
-            {error && <p className="auth-error" role="alert" id="signup-verify-error">{error}</p>}
+            {error && <FormAlert id="signup-verify-error">{error}</FormAlert>}
 
             <p className="auth-hint">Code expires in 10 minutes.</p>
 

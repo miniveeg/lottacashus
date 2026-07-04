@@ -54,6 +54,13 @@ export type CaseBattleView = {
   completedAt: string | null;
   players: BattlePlayer[];
   drops: BattleDrop[];
+  /**
+   * Number of players currently in the battle. Populated by the lobby
+   * query (a separate batch count against `case_battle_players` — the
+   * `BATTLE_COLUMNS` SELECT for the lobby intentionally omits the
+   * `players` array to keep payload small). Defaults to 0 when unknown.
+   */
+  playerCount: number;
 };
 
 export type GamemodeInfo = {

@@ -85,3 +85,42 @@ These Sweepstakes Rules are governed by the laws applicable to the jurisdiction 
 10. Contact
 For questions about these rules or to request free entry via mail, contact support@lottacash.us.
 `.trim();
+
+export const RESPONSIBLE_GAMING = `
+1. Our commitment
+LottaCash promotes responsible gaming and is committed to providing a safe, fair, and enjoyable experience for all players. If gambling stops being fun, we provide tools and resources to help you stay in control.
+
+2. Self-assessment
+Ask yourself these questions. If you answer "yes" to any of them, consider seeking help:
+- Have you ever needed to gamble with increasing amounts of money to achieve the desired excitement?
+- Have you ever felt restless or irritable when trying to stop gambling?
+- Have you ever chased losses by gambling again to win back money you lost?
+- Have you ever lied to friends or family about the extent of your gambling?
+- Has gambling ever caused problems in your relationships, work, or finances?
+- Do you gamble to escape from stress, anxiety, or depression?
+
+3. Self-exclusion
+You can request self-exclusion from your account any time by contacting support@lottacash.us. Self-exclusion periods range from 6 months to permanent. During exclusion, your account is locked, you cannot place any bets, and we will not send marketing communications. You cannot reverse a self-exclusion until the period ends.
+
+4. Deposit limits
+Set daily, weekly, or monthly deposit limits from your account settings. Limits take effect immediately. Decreasing a limit is instant. Increasing a limit takes 24 hours to apply (cooling-off period) so impulsive changes are minimized.
+
+5. Time-out
+Take a break from your account for 24 hours, 7 days, or 30 days. During a time-out period you cannot log in, deposit, or place bets. Time-outs end automatically and your account becomes active again at the end of the period.
+
+6. Session reality checks
+We remind you how long you have been playing during extended sessions, and we suggest taking a break. You can disable these reminders from settings but we encourage you to keep them on.
+
+7. Underage gambling
+Our services are strictly for users 18 years of age or older. We verify age at signup and run ongoing checks. Accounts opened by minors are closed and any funds are returned. Parents who believe their child has opened an account should contact us immediately.
+
+8. Resources
+If you or someone you know has a gambling problem, free and confidential help is available:
+- National Council on Problem Gambling: 1-800-522-4700 · ncpgambling.org
+- Gamblers Anonymous: gamblersanonymous.org
+- BeGambleAware: begambleaware.org
+- National Suicide Prevention Lifeline: 988
+
+9. Support
+For questions about responsible gaming tools or to discuss any of these options, email support@lottacash.us. We respond within 24 hours and can guide you through self-exclusion, limit setting, or connecting with professional support.
+`.trim();

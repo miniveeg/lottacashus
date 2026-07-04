@@ -1,0 +1,18 @@
+/* LottaCash — shared page chrome for Privacy / Sweepstakes Rules /
+   Responsible Gaming pages. Each page uses <LegalDocument> to render
+   the long-form text; this CSS just styles the page wrapper + panel. */
+
+.legal-page__header {
+  margin-bottom: 1.85rem;
+}
+
+.legal-page__panel {
+  /* extra padding so long paragraphs have air on both sides */
+  padding: 1.75rem 2rem;
+}
+
+@media (max-width: 640px) {
+  .legal-page__panel {
+    padding: 1.4rem 1.25rem;
+  }
+}

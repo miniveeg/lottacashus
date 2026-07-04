@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
 import { useToast } from "../../contexts/ToastContext";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import {
   fetchMyWithdrawals,
@@ -168,15 +169,15 @@ export function Withdraw() {
       </p>
 
       {!configured && (
-        <p className="wallet__error" role="note">
+        <FormAlert kind="warning">
           Supabase is not configured. Add your project URL and anon key to the <code>.env</code> file
           to enable withdrawals. The form below is non-functional until keys are provided.
-        </p>
+        </FormAlert>
       )}
 
       <section className="wallet__section">
-        {error && <p className="wallet__error" role="alert" id="withdraw-error">{error}</p>}
-        {success && <p className="wallet__success" role="status" id="withdraw-success">{success}</p>}
+        {error && <FormAlert id="withdraw-error">{error}</FormAlert>}
+        {success && <FormAlert kind="success" id="withdraw-success">{success}</FormAlert>}
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="wallet__chain-picker" role="group" aria-label="Select withdrawal chain">
@@ -198,6 +199,7 @@ export function Withdraw() {
             <label htmlFor="withdraw-address">Destination {chain.toUpperCase()} address</label>
             <input
               id="withdraw-address"
+              className="lc-input"
               value={destination}
               onChange={(e) => {
                 setDestination(e.target.value);
@@ -217,6 +219,7 @@ export function Withdraw() {
             <label htmlFor="withdraw-amount">Amount (SC)</label>
             <input
               id="withdraw-amount"
+              className="lc-input"
               type="number"
               min={MIN_WITHDRAW_SC}
               step="0.01"

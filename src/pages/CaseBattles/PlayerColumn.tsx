@@ -1,6 +1,18 @@
 /**
  * Case Battles v2 — PlayerColumn
- * One player's column in the arena: avatar, name, reel, running total.
+ * One player's column in the arena.
+ *
+ * Two visual modes:
+ * - Live (isCompleted=false): avatar + name, scrollable past-items history,
+ *   active reel, running total at the bottom.
+ * - Ledger (isCompleted=true): avatar + name, full grid of items won across
+ *   every round, total at the bottom. Reels are not rendered — completed
+ *   battles are static summaries.
+ *
+ * Past rounds are passed in via `visibleDrops` (parent pre-filters to
+ * `d.round < currentRound`). The current round's drops stay separate so
+ * the reel only ever sees its own target — never a future-round item
+ * (anti-spoiler masking at the component level).
  */
 
 import { useMemo } from "react";
@@ -8,16 +20,24 @@ import type { CaseBattleView, BattlePlayer, BattleDrop } from "./types";
 import { getCaseById } from "../../lib/games/case-battles";
 import { BattleReel } from "./BattleReel";
 import { playerTotalValue } from "./caseBattlesApi";
+import { formatCoins } from "../../lib/format";
 
 type PlayerColumnProps = {
   battle: CaseBattleView;
   player: BattlePlayer;
   currentRound: number;
-  roundDrops: BattleDrop[]; // drops for the current round
-  allDrops: BattleDrop[]; // all drops (for running total)
-  isWinner: boolean;
-  isCurrentUser: boolean;
-  onReelLanded: (slot: number) => void;
+  /** Drops for the current round only — used to compute the reel's target. */
+  roundDrops: BattleDrop[];
+  /**
+   * Drops already revealed (past rounds + this round). Drives the
+   * past-items history strip and the running total. Filtered upstream so
+   * each column never sees the next round's items.
+   */
+  visibleDrops: BattleDrop[];
+  isCompleted: boolean;
+  isWinner?: boolean;
+  isCurrentUser?: boolean;
+  onReelLanded?: (slot: number) => void;
 };
 
 export function PlayerColumn({
@@ -25,9 +45,10 @@ export function PlayerColumn({
   player,
   currentRound,
   roundDrops,
-  allDrops,
-  isWinner,
-  isCurrentUser,
+  visibleDrops,
+  isCompleted,
+  isWinner = false,
+  isCurrentUser = false,
   onReelLanded,
 }: PlayerColumnProps) {
   const lootCase = useMemo(() => {
@@ -35,25 +56,41 @@ export function PlayerColumn({
     return caseId ? getCaseById(caseId) : null;
   }, [battle.caseIds, currentRound]);
 
-  // The target item for this player's reel in the current round
+  // The target item for this player's reel in the current round.
   const targetDrop = roundDrops.find((d) => d.slot === player.slot);
   const targetItem = useMemo(() => {
     if (!targetDrop || !lootCase) return null;
     return lootCase.items.find((i) => i.id === targetDrop.itemId) ?? null;
   }, [targetDrop, lootCase]);
 
-  const totalValue = playerTotalValue(allDrops, player.slot);
+  // Past-round drops (strictly < currentRound so we never leak the
+  // current round's item into the history stack before it lands).
+  const pastDrops = useMemo(
+    () => visibleDrops.filter((d) => d.round < currentRound && d.slot === player.slot),
+    [visibleDrops, currentRound, player.slot],
+  );
+
+  // For ledger view (completed), we render ALL the player's drops in one
+  // grid; the pastDrops / roundDrops partition is irrelevant there.
+  const ledgerDrops = useMemo(
+    () => (isCompleted ? visibleDrops.filter((d) => d.slot === player.slot) : []),
+    [isCompleted, visibleDrops, player.slot],
+  );
+
+  const totalValue = playerTotalValue(visibleDrops, player.slot);
 
   // The spinKey changes when a new round starts — this triggers the reel
   // to reset and start a new spin.
   const spinKey = `${battle.battleId}-${player.slot}-${currentRound}`;
+  const showReel = !isCompleted && Boolean(lootCase) && Boolean(onReelLanded);
 
   return (
     <div
       className={
         "cb-col" +
         (isCurrentUser ? " cb-col--me" : "") +
-        (isWinner ? " cb-col--winner" : "")
+        (isWinner ? " cb-col--winner" : "") +
+        (isCompleted ? " cb-col--ledger" : "")
       }
     >
       {/* Header: avatar + name */}
@@ -65,6 +102,7 @@ export function PlayerColumn({
               ? `linear-gradient(135deg, hsl(${hashHue(player.avatarSeed)}, 70%, 50%), hsl(${hashHue(player.avatarSeed) + 60}, 70%, 40%))`
               : "var(--lc-crimson-dim)",
           }}
+          aria-hidden
         >
           {player.username.charAt(0).toUpperCase()}
         </div>
@@ -74,18 +112,70 @@ export function PlayerColumn({
         </div>
       </div>
 
-      {/* Reel */}
-      <div className="cb-col__reel">
-        {lootCase && (
+      {/* Past items strip — vertical stack of round-1..N-1 items already revealed. */}
+      {!isCompleted && pastDrops.length > 0 && (
+        <div className="cb-col__history" aria-label="Past rounds">
+          {pastDrops.map((d) => {
+            const c = getCaseById(d.caseId);
+            const item = c?.items.find((i) => i.id === d.itemId);
+            const rarityColor = item?.rarity ? RARITY_HEX[item.rarity] ?? "#7a7a98" : "#7a7a98";
+            return (
+              <div
+                key={`${d.round}-${d.itemId}`}
+                className="cb-col__history-tile"
+                style={{ borderLeftColor: rarityColor }}
+                title={`${item?.name ?? d.itemName} \u2014 ${formatCoins(d.itemValue, battle.coinType)}`}
+              >
+                <span className="cb-col__history-round">R{d.round + 1}</span>
+                <span className="cb-col__history-value" style={{ color: rarityColor }}>
+                  {formatCoins(d.itemValue, battle.coinType)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Live arena row: reel OR completed ledger grid */}
+      {showReel ? (
+        <div className="cb-col__reel">
           <BattleReel
-            lootCase={lootCase}
+            lootCase={lootCase!}
             targetItem={targetItem}
             spinKey={spinKey}
-            accent={lootCase.accent ?? "#e8254c"}
-            onLanded={() => onReelLanded(player.slot)}
+            accent={lootCase?.accent ?? "#e8254c"}
+            onLanded={() => onReelLanded!(player.slot)}
           />
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="cb-col__ledger" aria-label={isCompleted ? "All items won" : "No case"}>
+          {ledgerDrops.length === 0 ? (
+            <p className="cb-col__ledger-empty">
+              {isCompleted ? "No items won" : "—"}
+            </p>
+          ) : (
+            ledgerDrops.map((d) => {
+              const c = getCaseById(d.caseId);
+              const item = c?.items.find((i) => i.id === d.itemId);
+              const rarityColor = item?.rarity ? RARITY_HEX[item.rarity] ?? "#7a7a98" : "#7a7a98";
+              return (
+                <div
+                  key={`ledger-${d.round}-${d.itemId}`}
+                  className="cb-col__ledger-tile"
+                  style={{ borderColor: rarityColor }}
+                  title={item?.name ?? d.itemName}
+                >
+                  <span className="cb-col__ledger-round">R{d.round + 1}</span>
+                  <span className="cb-col__ledger-name">{item?.name ?? d.itemName}</span>
+                  <span className="cb-col__ledger-value" style={{ color: rarityColor }}>
+                    {formatCoins(d.itemValue, battle.coinType)}
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
 
       {/* Running total */}
       <div className="cb-col__total">
@@ -96,7 +186,7 @@ export function PlayerColumn({
             (totalValue > 0 ? " cb-col__total-value--active" : "")
           }
         >
-          ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+          {formatCoins(totalValue, battle.coinType)}
         </span>
       </div>
     </div>
@@ -110,3 +200,13 @@ function hashHue(str: string): number {
   }
   return Math.abs(hash) % 360;
 }
+
+// Local rarity → hex map (keeps the PlayerColumn self-contained; the reel
+// shares the same palette via RARITY_COLORS exported from games/case-battles).
+const RARITY_HEX: Record<string, string> = {
+  common: "#7a7a98",
+  uncommon: "#22c55e",
+  rare: "#38bdf8",
+  epic: "#a855f7",
+  legendary: "#f59e0b",
+};

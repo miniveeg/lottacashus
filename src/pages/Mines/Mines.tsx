@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { Seo } from "../../components/Seo/Seo";
+import { FormAlert } from "../../components/FormAlert/FormAlert";
+import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
+import { BetButton } from "../../components/BetButton/BetButton";
 import {
   getMaxGems,
   getMinesMultiplier,
@@ -449,11 +451,7 @@ export function Mines() {
 
           </div>
 
-          {error && (
-            <p className="mines__error" role="alert">
-              {error}
-            </p>
-          )}
+          {error && <FormAlert>{error}</FormAlert>}
 
           {lastMessage && (
             <p
@@ -466,53 +464,33 @@ export function Mines() {
           )}
 
           {!playing ? (
-            <button
-              type="button"
-              className="mines__bet-btn"
+            <BetButton
               onClick={handleStart}
-              disabled={busy || exceedsMaxPayout}
-              aria-busy={busy}
-            >
-              {busy ? (
-                <>
-                  <span className="mines__spinner" aria-hidden="true" />
-                  <span>Starting…</span>
-                </>
-              ) : exceedsMaxPayout ? (
-                "Payout exceeds cap"
-              ) : (
-                "Bet"
-              )}
-            </button>
+              busy={busy}
+              exceedsCap={exceedsMaxPayout}
+              busyLabel="Starting…"
+              exceedsCapLabel="Payout exceeds cap"
+              label="Bet"
+            />
           ) : (
-            <button
-              type="button"
-              className="mines__cashout-btn"
+            <BetButton
+              variant="win"
               onClick={() => handleCashout(false)}
-              disabled={busy || gemsRevealed < 1}
-              aria-busy={busy}
-            >
-              {busy ? (
-                <>
-                  <span className="mines__spinner mines__spinner--light" aria-hidden="true" />
-                  <span>…</span>
-                </>
-              ) : (
-                `Cash out ${formatCoins(potentialPayout, coinType)}`
-              )}
-            </button>
+              busy={busy}
+              busyLabel="…"
+              disabled={gemsRevealed < 1}
+              label={`Cash out ${formatCoins(potentialPayout, coinType)}`}
+            />
           )}
 
           {exceedsMaxPayout && (
             <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {MINES_MAX_PAYOUT.toLocaleString()}. Lower your wager or mine count — a
+              Max payout is {formatCoins(MINES_MAX_PAYOUT, coinType)}. Lower your wager or mine count — a
               full-clear cashout would exceed the cap.
             </p>
           )}
 
-          <p className="mines__hint">
-            Need funds? <Link to="/deposit">Deposit</Link>
-          </p>
+          <NeedFundsHint />
 
           <div className="mines__fairness">
             <button

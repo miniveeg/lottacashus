@@ -142,7 +142,7 @@ export function CaseBattlesRoomV2() {
     if (!myPlayer || !battle) return;
     setBusy(true);
     setActionError(null);
-    const { error: err } = await claimPayout(battleId!, myPlayer.slot, myPayout);
+    const { error: err } = await claimPayout(battleId!, myPlayer.slot);
     setBusy(false);
     if (err) {
       setActionError(err);

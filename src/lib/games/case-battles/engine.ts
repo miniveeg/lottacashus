@@ -12,7 +12,6 @@ import {
 import { getCaseById } from "./cases";
 import { bytesToFloat, rollCaseItem } from "./provablyFair";
 
-export const BATTLE_RAKE = 0.05;
 export const BOT_CLIENT_SEED = "case-battle-bot";
 
 /** Round to 2 decimal places (cents). Used for all monetary math in this
@@ -229,22 +228,6 @@ function totalUnboxedPool(players: BattlePlayerResult[]): number {
   return roundCents(players.reduce((s, p) => s + p.totalValue, 0));
 }
 
-function pickExtremeIndex(
-  players: BattlePlayerResult[],
-  score: (p: BattlePlayerResult) => number,
-  pickMax: boolean
-): number {
-  let idx = 0;
-  for (let i = 1; i < players.length; i++) {
-    const a = score(players[i]!);
-    const b = score(players[idx]!);
-    const better = pickMax ? a > b : a < b;
-    const tie = a === b && players[i]!.slot < players[idx]!.slot;
-    if (better || tie) idx = i;
-  }
-  return idx;
-}
-
 function jackpotWeightsForPlayers(players: BattlePlayerResult[], crazy: boolean): number[] {
   const values = players.map((p) => p.totalValue);
   if (!crazy) return values;
@@ -252,17 +235,80 @@ function jackpotWeightsForPlayers(players: BattlePlayerResult[], crazy: boolean)
   return values.map((v) => Math.max(0.01, sum - v + 0.01));
 }
 
-function resolveNormal(
+/**
+ * Cryptographic tie-break (audit #002).
+ *
+ * Previously, ties were broken by lowest slot index — whoever joined first
+ * always won. We replace this with a deterministic SHA-256-based coinflip
+ * derived from the battleSeed: SHA-256(`${battleSeed}:tie:${slot}`) acts as
+ * each slot's "vote". The tied slots are sorted by the hex output and the
+ * lowest hex digest wins. The SQL mirror in supabase/migrations/002_ uses
+ * the same domain separator so server- and client-side resolutions agree.
+ *
+ * Falls back to lowest-slot order when `battleSeed` is unknown.
+ */
+async function coinflipWinningSlot(
+  tiedSlots: number[],
+  battleSeed: string | null,
+  domain: 'tie' | 'team-tie',
+): Promise<number> {
+  if (tiedSlots.length <= 1) return tiedSlots[0] ?? -1;
+  if (!battleSeed) return tiedSlots.reduce((a, b) => (a < b ? a : b));
+  const enc = new TextEncoder();
+  const ranked = await Promise.all(
+    tiedSlots.map(async (slot) => {
+      const buf = await crypto.subtle.digest(
+        'SHA-256',
+        enc.encode(`${battleSeed}:${domain}:${slot}`),
+      );
+      return {
+        slot,
+        hash: Array.from(new Uint8Array(buf))
+          .map((b) => b.toString(16).padStart(2, '0'))
+          .join(''),
+      };
+    }),
+  );
+  ranked.sort((a, b) =>
+    a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : a.slot - b.slot,
+  );
+  return ranked[0]!.slot;
+}
+
+/**
+ * Async extreme-picker used by resolveXxx. Ties broken by `coinflipWinningSlot`.
+ */
+async function pickExtremeByScore(
+  players: BattlePlayerResult[],
+  score: (p: BattlePlayerResult) => number,
+  pickMax: boolean,
+  battleSeed: string | null,
+): Promise<number> {
+  if (players.length === 0) return -1;
+  const scored = players.map((p) => ({ slot: p.slot, v: score(p) }));
+  let bestV = scored[0]!.v;
+  for (let i = 1; i < scored.length; i++) {
+    const s = scored[i]!;
+    if (pickMax ? s.v > bestV : s.v < bestV) bestV = s.v;
+  }
+  const tied = scored.filter((s) => s.v === bestV).map((s) => s.slot);
+  return coinflipWinningSlot(tied, battleSeed, 'tie');
+}
+
+async function resolveNormal(
   players: BattlePlayerResult[],
   playerMode: string,
   _potTotal: number,
-  crazy: boolean
-): OutcomeResult {
+  crazy: boolean,
+  battleSeed: string | null,
+): Promise<OutcomeResult> {
   const unboxedPool = totalUnboxedPool(players);
 
   if (!isTeamMode(playerMode)) {
-    const bestIdx = pickExtremeIndex(players, (p) => p.totalValue, !crazy);
-    const winner = players[bestIdx]!;
+    const winnerSlot = await pickExtremeByScore(
+      players, (p) => p.totalValue, !crazy, battleSeed,
+    );
+    const winner = players.find((p) => p.slot === winnerSlot)!;
     const winnerPayouts: WinnerPayout[] = [];
     if (!winner.isBot && winner.userId) {
       winnerPayouts.push({ userId: winner.userId, amount: unboxedPool });
@@ -286,17 +332,11 @@ function resolveNormal(
     teamSlots.set(t, slots);
   }
 
-  let bestTeam = 0;
-  let bestTotal = crazy ? Number.POSITIVE_INFINITY : -1;
-  for (const [t, total] of teamTotals) {
-    const better = crazy
-      ? total < bestTotal || (total === bestTotal && t < bestTeam)
-      : total > bestTotal || (total === bestTotal && t < bestTeam);
-    if (better) {
-      bestTotal = total;
-      bestTeam = t;
-    }
-  }
+  const teamIds = Array.from(teamTotals.keys());
+  const minS = Math.min(...teamIds.map((t) => teamTotals.get(t) ?? 0));
+  const maxS = Math.max(...teamIds.map((t) => teamTotals.get(t) ?? 0));
+  const tiedTeams = teamIds.filter((t) => teamTotals.get(t) === (crazy ? minS : maxS));
+  const bestTeam = await coinflipWinningSlot(tiedTeams, battleSeed, 'team-tie');
 
   const winningSlots = [...(teamSlots.get(bestTeam) ?? [])].sort((a, b) => a - b);
   const winnerPayouts = splitWinningTeamPayouts(
@@ -332,18 +372,21 @@ function resolveGroup(players: BattlePlayerResult[], _potTotal: number): Outcome
   };
 }
 
-function resolveTerminal(
+async function resolveTerminal(
   players: BattlePlayerResult[],
   playerMode: string,
   _potTotal: number,
-  crazy: boolean
-): OutcomeResult {
+  crazy: boolean,
+  battleSeed: string | null,
+): Promise<OutcomeResult> {
   const unboxedPool = totalUnboxedPool(players);
   const scoreOf = (p: BattlePlayerResult) => lastRoundValue(p);
 
   if (!isTeamMode(playerMode)) {
-    const bestIdx = pickExtremeIndex(players, scoreOf, !crazy);
-    const winner = players[bestIdx]!;
+    const winnerSlot = await pickExtremeByScore(
+      players, scoreOf, !crazy, battleSeed,
+    );
+    const winner = players.find((p) => p.slot === winnerSlot)!;
     const winnerPayouts: WinnerPayout[] = [];
     if (!winner.isBot && winner.userId) {
       winnerPayouts.push({ userId: winner.userId, amount: unboxedPool });
@@ -548,12 +591,12 @@ async function resolveOutcome(
     case "group":
       return resolveGroup(players, potTotal);
     case "terminal":
-      return resolveTerminal(players, playerMode, potTotal, crazy);
+      return await resolveTerminal(players, playerMode, potTotal, crazy, battleSeed);
     case "jackpot":
       return await resolveJackpot(players, playerMode, potTotal, battleSeed, crazy);
     case "normal":
     default:
-      return resolveNormal(players, playerMode, potTotal, crazy);
+      return await resolveNormal(players, playerMode, potTotal, crazy, battleSeed);
   }
 }
 

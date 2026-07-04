@@ -340,8 +340,8 @@ grant execute on function public.cb_leave_battle(uuid) to authenticated;
 -- player row. Previously accepted any client amount with no double-claim guard.
 create or replace function public.cb_claim_payout(
   p_battle_id uuid,
-  p_slot int,
-  p_amount numeric  -- ignored; recomputed server-side
+  p_slot int  -- payout amount is now recomputed server-side from stored drops
+              -- (audit #002 dropped the legacy `p_amount numeric` param)
 )
 returns numeric
 language plpgsql
@@ -373,13 +373,16 @@ begin
     return coalesce(v_balance, 0);
   end if;
 
-  -- Recompute the winner server-side: highest total item value, ties → lowest slot.
+  -- Recompute the winner server-side: highest total. audit #002 added a
+  -- SHA-256-based cryptographic tie-break that mirrors the TS-side
+  -- `coinflipWinningSlot` helper so ties aren't biased by lowest slot index.
   select slot into v_winner_slot from (
     select d.slot, sum(d.item_value) as total
     from public.case_battle_drops d
     where d.battle_id = p_battle_id
     group by d.slot
-    order by total desc, d.slot asc
+    order by total desc,
+      encode(sha256(convert_to(v_battle.battle_seed || ':tie:' || d.slot::text, 'UTF8')), 'hex') asc
     limit 1
   ) t;
   if v_winner_slot is null then raise exception 'No drops found for this battle'; end if;
@@ -412,5 +415,5 @@ begin
   return v_balance;
 end;
 $$;
-revoke all on function public.cb_claim_payout(uuid,int,numeric) from public;
-grant execute on function public.cb_claim_payout(uuid,int,numeric) to authenticated;
+revoke all on function public.cb_claim_payout(uuid,int) from public;
+grant execute on function public.cb_claim_payout(uuid,int) to authenticated;

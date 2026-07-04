@@ -340,16 +340,16 @@ export async function checkEosBlock(battleId: string): Promise<{
 export async function claimPayout(
   battleId: string,
   slot: number,
-  _amount: number,
 ): Promise<{ data: { balance: number } | null; error: string | null }> {
   // Check local first.
   const local = localClaimPayout(battleId, slot);
   if (local.data) return local;
+  // Edge fn recomputes payout server-side from stored drops — audit #002
+  // dropped the legacy `amount` param.
   const { data, error } = await invokeEdgeFunction<{ balance: number }>("case-battle-v2", {
     action: "claim",
     battleId,
     slot,
-    amount: _amount,
   });
   if (error) return local;
   return { data, error: null };
@@ -389,8 +389,7 @@ export function calculateWinner(
       // Highest total wins (normal) or lowest total wins (crazy)
       winnerSlot = totals.reduce((best, t) => {
         const better = battle.crazy ? t.total < best.total : t.total > best.total;
-        const tie = t.total === best.total && t.slot < best.slot;
-        return better || tie ? t : best;
+        return better ? t : best;
       }).slot;
       break;
     case "terminal": {
@@ -400,8 +399,7 @@ export function calculateWinner(
       if (lastDrops.length === 0) return null;
       winnerSlot = lastDrops.reduce((best, d) => {
         const better = battle.crazy ? d.itemValue < best.itemValue : d.itemValue > best.itemValue;
-        const tie = d.itemValue === best.itemValue && d.slot < best.slot;
-        return better || tie ? d : best;
+        return better ? d : best;
       }).slot;
       break;
     }
@@ -420,8 +418,7 @@ export function calculateWinner(
       // Fallback: highest (or lowest if crazy) total
       winnerSlot = totals.reduce((best, t) => {
         const better = battle.crazy ? t.total < best.total : t.total > best.total;
-        const tie = t.total === best.total && t.slot < best.slot;
-        return better || tie ? t : best;
+        return better ? t : best;
       }).slot;
       break;
     }

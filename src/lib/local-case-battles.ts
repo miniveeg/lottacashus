@@ -167,6 +167,12 @@ function resolveBattle(b: LocalBattle) {
       });
     }
   }
+  // Deterministic tie-break by lowest slot index.
+  // NOTE: this local-play fallback differs from the server's SHA-256
+  // coinflip on exact-tie cases — intentional because the local case
+  // doesn't have a battle_seed for verification. Mismatches between
+  // local preview + real server resolution are an acceptable trade-off
+  // for keeping the local fallback dependency-free.
   let bestSlot = 0, bestTotal = -1;
   for (const p of b.players) {
     const total = b.drops.filter((d) => d.slot === p.slot).reduce((s, d) => s + d.itemValue, 0);
@@ -184,10 +190,15 @@ export function localClaimPayout(battleId: string, slot: number): { data: { bala
   if (b.winnerSlot !== slot) return { data: null, error: "You didn't win this battle." };
   if (b.claimed.has(slot)) return { data: null, error: "Already claimed." };
   b.claimed.add(slot);
-  const totalValue = b.drops.filter((d) => d.slot === slot).reduce((s, d) => s + d.itemValue, 0)
-    + b.drops.filter((d) => d.slot !== slot).reduce((s, d) => s + d.itemValue, 0);
-  const keepMult = (100 - b.borrowPercent) / 100;
-  const payout = Math.round(totalValue * keepMult * 100) / 100;
+  // Winner takes the pot adjusted for borrow (matches SQL cb_claim_payout):
+  // payout = pot_total * (1 - borrow%). Previously summed ALL drops twice
+  // (winner + everyone-else) as the base, which inflated payouts ~2x.
+  // Clamp borrowPercent to 0..80 to mirror the SQL CHECK constraint
+  // `borrow_percent int check (borrow_percent between 0 and 80)`. Defense
+  // in-depth against malformed local-play data.
+  const clamped = Math.max(0, Math.min(80, b.borrowPercent));
+  const keepMult = (100 - clamped) / 100;
+  const payout = Math.round(b.potTotal * keepMult * 100) / 100;
   localCredit(b.coinType, payout);
   return { data: { balance: localBalance(b.coinType) }, error: null };
 }

@@ -32,6 +32,7 @@ import { getEosBlock, getEosHead, waitForEosBlock } from "../_shared/eos.ts";
 import {
   BOT_CLIENT_SEED,
   CASE_CATALOG,
+  coinflipWinningSlot,
   deriveBattleSeedFromEos,
   generateBattleSeed,
   getCaseById,
@@ -395,16 +396,19 @@ async function computePayouts(
     // Crazy = pick min; normal = pick max
     const pickMax = !params.crazy;
 
-    let bestIdx = 0;
-    for (let i = 1; i < rolls.length; i++) {
-      const a = scoreOf(rolls[i]!);
-      const b = scoreOf(rolls[bestIdx]!);
-      const better = pickMax ? a > b : a < b;
-      // Tie → lower slot wins (deterministic).
-      const tie = a === b && rolls[i]!.slot < rolls[bestIdx]!.slot;
-      if (better || tie) bestIdx = i;
+    // Find best score then SHA-256-based tie-break (audit #002).
+    const scores = rolls.map((r) => scoreOf(r));
+    let winningScore = scores[0]!;
+    for (let i = 1; i < scores.length; i++) {
+      const a = scores[i]!;
+      const better = pickMax ? a > winningScore : a < winningScore;
+      if (better) winningScore = a;
     }
-    winnerSlot = rolls[bestIdx]!.slot;
+    const tiedSlots = rolls
+      .filter((_, i) => scores[i] === winningScore)
+      .map((r) => r.slot)
+      .sort((a, b) => a - b);
+    winnerSlot = await coinflipWinningSlot(tiedSlots, params.battleSeed, 'tie');
   }
 
   const winner = rolls.find((r) => r.slot === winnerSlot)!;
@@ -962,10 +966,10 @@ async function handleCheckEos(
  * 3. Call `cb_claim_payout(battle_id, slot, amount)` RPC.
  * 4. Return `{ balance: newBalance }`.
  *
- * NOTE: the v2 `cb_claim_payout` SQL doesn't track "already claimed" state,
- * so a duplicate claim would double-credit. The frontend must guard against
- * this (e.g. disable the claim button after success). The RPC itself enforces
- * only that the caller owns the slot.
+ * NOTE: idempotency is enforced server-side by the `claimed_at` column on
+ * `case_battle_players`. A duplicate claim returns the current balance
+ * without re-crediting (audit #002 dropped the legacy `p_amount` param;
+ * the SQL payout is determined purely from stored drops).
  */
 async function handleClaim(
   admin: ReturnType<typeof createClient>,
@@ -1036,10 +1040,11 @@ async function handleClaim(
   }
 
   // ── Call the payout RPC ────────────────────────────────────────────────
+  // audit #002: cb_claim_payout recomputes the payout server-side from the
+  // stored drops; client no longer passes an amount.
   const { data, error } = await admin.rpc("cb_claim_payout", {
     p_battle_id: battleId,
     p_slot: slot,
-    p_amount: payout.amount,
   });
 
   if (error) {

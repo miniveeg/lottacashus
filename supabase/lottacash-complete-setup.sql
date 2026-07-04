@@ -5285,8 +5285,8 @@ grant execute on function public.cb_leave_battle(uuid) to authenticated;
 -- player row. Previously accepted any client amount with no double-claim guard.
 create or replace function public.cb_claim_payout(
   p_battle_id uuid,
-  p_slot int,
-  p_amount numeric  -- ignored; recomputed server-side
+  p_slot int  -- payout amount is now recomputed server-side from stored drops
+              -- (audit #002 dropped the legacy `p_amount numeric` param)
 )
 returns numeric
 language plpgsql
@@ -5357,8 +5357,8 @@ begin
   return v_balance;
 end;
 $$;
-revoke all on function public.cb_claim_payout(uuid,int,numeric) from public;
-grant execute on function public.cb_claim_payout(uuid,int,numeric) to authenticated;
+revoke all on function public.cb_claim_payout(uuid,int) from public;
+grant execute on function public.cb_claim_payout(uuid,int) to authenticated;
 
 
 -- ─────────────────────────────────────────────────────────────────────────
@@ -6372,25 +6372,48 @@ begin
 
   if v_battle.gamemode in ('standard', 'terminal', 'jackpot') then
     -- Standard/Terminal/Jackpot: highest wins; crazy flips to lowest.
+    -- audit #002: cryptographic tie-break using SHA-256(battle_seed || ':tie:' || slot).
+    -- Mirrors the TS-side `coinflipWinningSlot` helper in supabase/functions/_shared/caseBattles.ts.
     if v_battle.crazy then
-      select slot into v_winner_slot from _slot_totals order by total asc, slot asc limit 1;
+      select slot into v_winner_slot from _slot_totals
+      order by total asc,
+        encode(sha256(convert_to(v_battle.battle_seed || ':tie:' || slot::text, 'UTF8')), 'hex') asc
+      limit 1;
     else
-      select slot into v_winner_slot from _slot_totals order by total desc, slot asc limit 1;
+      select slot into v_winner_slot from _slot_totals
+      order by total desc,
+        encode(sha256(convert_to(v_battle.battle_seed || ':tie:' || slot::text, 'UTF8')), 'hex') asc
+      limit 1;
     end if;
     v_winner_slots := ARRAY[v_winner_slot];
 
   elsif v_battle.gamemode = 'group' then
     -- Group: split slots into two equal halves; team with higher total wins.
     -- Winning team splits the pot proportional to each member's drop value.
-    select max(slot) into v_half from _slot_totals;
-    v_half := (v_half + 1) / 2;
-    for v_row in select * from _slot_totals loop
-      if v_row.slot < v_half then
-        v_group_a := v_group_a + v_row.total;
+          select max(slot) into v_half from _slot_totals;
+      v_half := (v_half + 1) / 2;
+      for v_row in select * from _slot_totals loop
+        if v_row.slot < v_half then
+          v_group_a := v_group_a + v_row.total;
+        else
+          v_group_b := v_group_b + v_row.total;
+        end if;
+      end loop;
+      if v_group_a > v_group_b then
+        select array_agg(slot) into v_winner_slots from _slot_totals where slot < v_half;
+      elsif v_group_b > v_group_a then
+        select array_agg(slot) into v_winner_slots from _slot_totals where slot >= v_half;
       else
-        v_group_b := v_group_b + v_row.total;
+        -- Equal-total group tie → coinflip on team indices a=0, b=1.
+        if encode(sha256(convert_to(v_battle.battle_seed || ':team-tie:0', 'UTF8')), 'hex')
+         < encode(sha256(convert_to(v_battle.battle_seed || ':team-tie:1', 'UTF8')), 'hex') then
+          select array_agg(slot) into v_winner_slots from _slot_totals where slot < v_half;
+        else
+          select array_agg(slot) into v_winner_slots from _slot_totals where slot >= v_half;
+        end if;
       end if;
-    end loop;
+
+end;    end loop;
     if v_group_a >= v_group_b then
       select array_agg(slot) into v_winner_slots from _slot_totals where slot < v_half;
     else

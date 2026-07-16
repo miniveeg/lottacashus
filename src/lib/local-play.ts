@@ -9,6 +9,7 @@
  */
 
 import { GAME_RTP } from "./games/rtp";
+import { getKenoMultiplier, type KenoRisk } from "./games/keno";
 
 // ── Wallet (localStorage) ──────────────────────────────────────────────────
 const BAL_KEY = "lottacash:local:balance";
@@ -178,12 +179,53 @@ function cashOutCrash(body: Record<string, unknown>): Result {
   if (!isFinite(cashedAt) || cashedAt < 1.01) return { data: null, error: "Minimum cash-out is 1.01×." };
   const bet = crashBets.get(betId);
   if (!bet) return { data: null, error: "Bet not found." };
-  if (bet.busted) return { data: null, error: "Bet already crashed." };
-  if (cashedAt > bet.crashPoint) return { data: null, error: "Cash out after crash." };
+  if (bet.busted) {
+    return {
+      data: {
+        payout: 0,
+        cashedAt,
+        balance: localBalance(coinType),
+        coinType,
+        won: false,
+        crashPoint: bet.crashPoint,
+        alreadySettled: true,
+      },
+      error: null,
+    };
+  }
+  // Too late — settle as loss and reveal crash point (matches production
+  // cash_out_crash success=false path so the UI can animate the crash).
+  if (cashedAt > bet.crashPoint) {
+    bet.busted = true;
+    crashBets.delete(betId);
+    return {
+      data: {
+        payout: 0,
+        cashedAt,
+        balance: localBalance(coinType),
+        coinType,
+        won: false,
+        crashPoint: bet.crashPoint,
+        alreadySettled: false,
+      },
+      error: null,
+    };
+  }
   const payout = Math.round(bet.wager * cashedAt * 100) / 100;
   localCredit(coinType, payout);
   crashBets.delete(betId);
-  return { data: { payout, cashedAt, balance: localBalance(coinType), coinType }, error: null };
+  return {
+    data: {
+      payout,
+      cashedAt,
+      balance: localBalance(coinType),
+      coinType,
+      won: true,
+      crashPoint: bet.crashPoint,
+      alreadySettled: false,
+    },
+    error: null,
+  };
 }
 
 function minesGame(body: Record<string, unknown>): Result {
@@ -249,22 +291,18 @@ function placeKenoBet(body: Record<string, unknown>): Result {
     return { data: null, error: `Potential payout exceeds the maximum allowed (${KENO_MAX_PAYOUT.toLocaleString()}). Lower your wager.` };
   }
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
+  const riskRaw = String(body.risk ?? "classic");
+  const risk: KenoRisk =
+    riskRaw === "low" || riskRaw === "medium" || riskRaw === "high" || riskRaw === "classic"
+      ? riskRaw
+      : "classic";
   const draw = shuffle(Array.from({ length: 40 }, (_, i) => i + 1)).slice(0, 10);
   const hits = draw.filter((n) => picks.includes(n)).length;
-  const BASE: Record<number, number[]> = {
-    1: [0, 3.5], 2: [0, 1, 9], 3: [0, 0, 2, 40], 4: [0, 0, 1, 5, 90], 5: [0, 0, 0, 3, 15, 300],
-    6: [0, 0, 0, 2, 8, 50, 700], 7: [0, 0, 0, 1, 4, 20, 120, 1000], 8: [0, 0, 0, 0, 3, 10, 50, 250, 2000],
-    9: [0, 0, 0, 0, 2, 6, 25, 100, 500, 3000], 10: [0, 0, 0, 0, 1, 4, 18, 75, 300, 1500, 8000],
-  };
-  const k = picks.length;
-  const base = BASE[k] ?? [];
-  const probHits = (h: number) => (binomial(k, h) * binomial(40 - k, 10 - h)) / binomial(40, 10);
-  const baseRtp = base.reduce((s, p, h) => s + probHits(h) * p, 0);
-  const scale = GAME_RTP / baseRtp;
-  const mult = (base[hits] ?? 0) * scale;
+  // Use the same risk-tier paytables as the UI + production server.
+  const mult = getKenoMultiplier(picks.length, hits, risk);
   const payout = Math.round(wager * mult * 100) / 100;
   if (payout > 0) localCredit(coinType, payout);
-  return { data: { betId: uid(), balance: localBalance(coinType), drawn: draw, hits, multiplier: mult, payout, profit: payout - wager, nonce: randInt(999999), picks, risk: body.risk ?? "classic", coinType }, error: null };
+  return { data: { betId: uid(), balance: localBalance(coinType), drawn: draw, hits, multiplier: mult, payout, profit: payout - wager, nonce: randInt(999999), picks, risk, coinType }, error: null };
 }
 
 function placeRouletteBet(body: Record<string, unknown>): Result {
@@ -320,17 +358,32 @@ function blackjackGame(body: Record<string, unknown>): Result {
     const player = [shoe.pop()!, shoe.pop()!];
     const dealer = [shoe.pop()!, shoe.pop()!];
     const handId = uid();
-    bjHands.set(handId, { shoe, player, dealer, wager, coinType, doubled: false, phase: "player_turn", dealerRevealed: false });
+    const hand: PendingBlackjack = {
+      shoe, player, dealer, wager, coinType, doubled: false, phase: "player_turn", dealerRevealed: false,
+    };
     const pv = handValue(player), dv = handValue(dealer);
     let status = "player_turn", outcome: string | null = null, payout: number | undefined;
-    if (pv === 21 && dv === 21) { status = "push"; outcome = "push"; payout = wager; localCredit(coinType, wager); }
-    else if (pv === 21) {
-      status = "bj"; outcome = "bj";
-      if (keepWin(0.993, GAME_RTP)) { payout = Math.round(wager * 2.5 * 100) / 100; localCredit(coinType, payout); }
-      else { status = "lose"; outcome = "lose"; }
+    if (pv === 21 && dv === 21) {
+      status = "push"; outcome = "push"; payout = wager; localCredit(coinType, wager); hand.dealerRevealed = true;
+    } else if (pv === 21) {
+      status = "bj"; outcome = "bj"; hand.dealerRevealed = true;
+      if (keepWin(0.993, GAME_RTP)) {
+        payout = Math.round(wager * 2.5 * 100) / 100;
+        localCredit(coinType, payout);
+      } else {
+        status = "lose"; outcome = "lose";
+      }
+    } else if (dv === 21) {
+      status = "dealer_blackjack"; outcome = "lose"; hand.dealerRevealed = true;
     }
-    else if (dv === 21) { status = "dealer_blackjack"; outcome = "lose"; }
-    return { data: mapBj(handId, bjHands.get(handId)!, status, outcome, payout), error: null };
+    // Drop finished hands so they don't leak memory; active hands stay.
+    if (status !== "player_turn") {
+      /* keep in map briefly for mapBj consistency, then delete */
+    }
+    bjHands.set(handId, hand);
+    const result = mapBj(handId, hand, status, outcome, payout);
+    if (status !== "player_turn") bjHands.delete(handId);
+    return { data: result, error: null };
   }
   const handId = String(body.handId);
   const h = bjHands.get(handId);
@@ -345,7 +398,8 @@ function blackjackGame(body: Record<string, unknown>): Result {
   if (action === "stand") return standBj(handId, h);
   if (action === "double") {
     if (h.player.length !== 2) return { data: null, error: "Can only double on first two cards." };
-    if (!localDebit(coinType, h.wager)) return { data: null, error: "Insufficient balance to double." };
+    // Always debit the hand's locked coin type (not the live topbar body.coinType).
+    if (!localDebit(h.coinType, h.wager)) return { data: null, error: "Insufficient balance to double." };
     h.wager *= 2; h.doubled = true;
     h.player.push(h.shoe.pop()!);
     if (handValue(h.player) > 21) { bjHands.delete(handId); return { data: mapBj(handId, h, "bust", "lose", undefined, true), error: null }; }
@@ -372,20 +426,54 @@ function standBj(handId: string, h: PendingBlackjack): Result {
   return { data: mapBj(handId, h, status, outcome, payout), error: null };
 }
 
+/** Map local status/outcome strings onto the production Blackjack client contract. */
+function normalizeBjStatus(status: string): string {
+  if (status === "player_turn") return "player_turn";
+  if (status === "insurance_offer") return "insurance_offer";
+  return "settled";
+}
+function normalizeBjOutcome(outcome: string | null): string | null {
+  if (!outcome) return null;
+  if (outcome === "bj") return "blackjack";
+  if (outcome === "dealer_blackjack") return "lose";
+  return outcome;
+}
+
 function mapBj(handId: string, h: PendingBlackjack, status: string, outcome: string | null, payout?: number, dealerRevealed?: boolean): Record<string, unknown> {
   const pv = handValue(h.player), dv = handValue(h.dealer);
+  const revealed = dealerRevealed ?? (h.dealerRevealed || status !== "player_turn");
+  // Mask hole card until the hand is resolved (matches production).
+  const dealerCards = revealed
+    ? h.dealer.map(cardToNum)
+    : h.dealer.slice(0, 1).map(cardToNum);
+  const clientStatus = normalizeBjStatus(status);
+  const clientOutcome = normalizeBjOutcome(outcome);
+  const settledPayout =
+    payout ??
+    (clientOutcome === "push" ? h.wager : clientStatus === "settled" && clientOutcome === "win" ? 0 : 0);
   return {
-    handId, balance: localBalance(h.coinType), status, outcome: outcome ?? null,
-    payout: payout ?? (status === "push" ? h.wager : 0),
+    handId, balance: localBalance(h.coinType),
+    status: clientStatus,
+    outcome: clientOutcome,
+    payout: settledPayout,
     nonce: randInt(999999), coinType: h.coinType,
     wager: h.doubled ? h.wager / 2 : h.wager, totalWager: h.wager, doubled: h.doubled,
-    playerCards: h.player.map(cardToNum), dealerCards: h.dealer.map(cardToNum),
-    dealerRevealed: dealerRevealed ?? (h.dealerRevealed || status !== "player_turn"),
-    playerTotal: pv, dealerTotal: dv,
-    canDouble: h.player.length === 2 && !h.doubled, canSplit: false, canInsurance: false, insuranceAmount: 0,
-    phase: status === "player_turn" ? "player_turn" : "resolved",
+    playerCards: h.player.map(cardToNum),
+    dealerCards,
+    dealerRevealed: revealed,
+    playerTotal: pv,
+    dealerTotal: revealed ? dv : handValue(h.dealer.slice(0, 1)),
+    canDouble: h.player.length === 2 && !h.doubled && clientStatus === "player_turn",
+    canSplit: false, canInsurance: false, insuranceAmount: 0,
+    phase: clientStatus === "player_turn" ? "player_turn" : "resolved",
     isSplit: false, activeHandIndex: 0,
-    playerHands: [{ cards: h.player.map(cardToNum), total: pv, wager: h.wager, doubled: h.doubled, finished: status !== "player_turn" }],
+    playerHands: [{
+      cards: h.player.map(cardToNum),
+      total: pv,
+      wager: h.wager,
+      doubled: h.doubled,
+      finished: clientStatus !== "player_turn",
+    }],
   };
 }
 

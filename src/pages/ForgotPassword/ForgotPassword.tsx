@@ -26,7 +26,7 @@ export function ForgotPassword() {
 
   if (authLoading) {
     return (
-      <div className="auth-page lc-page--auth">
+      <div className="auth-page lc-page lc-page--auth">
         <div className="lc-loading">
           <div className="lc-loading__pulse" aria-hidden />
           <p>Loading…</p>
@@ -120,7 +120,7 @@ export function ForgotPassword() {
   }
 
   return (
-    <div className="auth-page lc-page--auth">
+    <div className="auth-page lc-page lc-page--auth">
       <Seo title="Reset password" path="/forgot-password" noindex />
       <div className="auth-card">
         <BrandLogo className="auth-card__logo" size={72} />

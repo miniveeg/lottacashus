@@ -101,7 +101,8 @@ export async function cashOutCrash(params: {
 }> {
   const { data, error } = await invokeEdgeFunction<{
     payout: number;
-    cashedAt: number;
+    cashedAt?: number;
+    cashedAtMultiplier?: number;
     balance: number;
     coinType: string;
     won: boolean;
@@ -115,5 +116,29 @@ export async function cashOutCrash(params: {
 
   if (error) return { data: null, error };
   if (!data) return { data: null, error: "No response from server." };
-  return { data, error: null };
+
+  // Normalize field name: edge function historically returned
+  // `cashedAtMultiplier`; client always uses `cashedAt`.
+  const cashedAt = Number(
+    data.cashedAt ?? data.cashedAtMultiplier ?? params.cashedAtMultiplier
+  );
+  if (!Number.isFinite(cashedAt) || cashedAt < 1) {
+    return { data: null, error: "Invalid cash-out response from server." };
+  }
+
+  return {
+    data: {
+      payout: Number(data.payout ?? 0),
+      cashedAt,
+      balance: Number(data.balance ?? 0),
+      coinType: String(data.coinType ?? params.coinType ?? "balance"),
+      won: Boolean(data.won),
+      crashPoint:
+        data.crashPoint != null && Number.isFinite(Number(data.crashPoint))
+          ? Number(data.crashPoint)
+          : null,
+      alreadySettled: Boolean(data.alreadySettled),
+    },
+    error: null,
+  };
 }

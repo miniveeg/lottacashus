@@ -15,6 +15,8 @@ export type MinesActiveGame = {
   gemsRevealed: number;
   multiplier: number;
   status: string;
+  /** Coin type locked when the game started (authoritative for cashout). */
+  coinType: string;
 };
 
 export type MinesStartResult = {
@@ -107,6 +109,7 @@ export async function fetchActiveMinesGame(): Promise<{
     gemsRevealed?: number;
     multiplier?: number;
     status?: string;
+    coinType?: string;
   }>("mines-game", { action: "active" });
 
   if (error) return { data: null, error };
@@ -121,6 +124,7 @@ export async function fetchActiveMinesGame(): Promise<{
       gemsRevealed: Number(data.gemsRevealed ?? 0),
       multiplier: Number(data.multiplier ?? 1),
       status: String(data.status),
+      coinType: String(data.coinType ?? "balance"),
     },
     error: null,
   };
@@ -186,6 +190,7 @@ export async function fetchMyActiveMinesGame(): Promise<{
       gemsRevealed: Number(row.gems_revealed ?? 0),
       multiplier: Number(row.multiplier ?? 1),
       status: String(row.status),
+      coinType: String(row.coin_type ?? row.coinType ?? "balance"),
     },
     error: null,
   };

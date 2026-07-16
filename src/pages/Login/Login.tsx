@@ -37,7 +37,7 @@ export function Login() {
 
   if (loading) {
     return (
-      <div className="auth-page lc-page--auth">
+      <div className="auth-page lc-page lc-page--auth">
         <div className="lc-loading">
           <div className="lc-loading__pulse" aria-hidden />
           <p>Loading…</p>
@@ -96,7 +96,7 @@ export function Login() {
   }
 
   return (
-    <div className="auth-page lc-page--auth">
+    <div className="auth-page lc-page lc-page--auth">
       <Seo title="Log in" path="/login" noindex />
       <div className="auth-card">
         <BrandLogo className="auth-card__logo" size={72} />

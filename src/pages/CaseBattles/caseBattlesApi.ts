@@ -41,6 +41,10 @@ function localToView(b: LocalBattle): CaseBattleView {
     players: b.players.map((p) => ({
       slot: p.slot, userId: p.userId, isBot: p.isBot,
       username: p.username, avatarSeed: p.avatarSeed,
+      payoutAmount: b.winnerSlot === p.slot
+        ? Math.round(b.potTotal * (100 - Math.max(0, Math.min(80, b.borrowPercent))) / 100 * 100) / 100
+        : 0,
+      claimedAt: b.claimed.has(p.slot) ? new Date().toISOString() : null,
     })),
     drops: b.drops.map((d) => ({
       slot: d.slot, round: d.round, caseId: d.caseId, itemId: d.itemId,
@@ -85,6 +89,8 @@ function parsePlayer(row: Record<string, unknown>): BattlePlayer {
     isBot: Boolean(row.is_bot),
     username: String(row.username ?? "Player"),
     avatarSeed: (row.avatar_seed as string) ?? null,
+    payoutAmount: Number(row.payout_amount ?? row.payoutAmount ?? 0),
+    claimedAt: (row.claimed_at as string) ?? (row.claimedAt as string) ?? null,
   };
 }
 
@@ -134,7 +140,7 @@ const ROOM_BATTLE_COLUMNS =
   "seed_hash, eos_block_target, eos_block_id, battle_seed, created_at, " +
   "started_at, completed_at";
 
-const PLAYER_COLUMNS = "slot, user_id, is_bot, username, avatar_seed";
+const PLAYER_COLUMNS = "slot, user_id, is_bot, username, avatar_seed, payout_amount, claimed_at";
 const DROP_COLUMNS =
   "slot, round, case_id, item_id, item_name, item_value, item_rarity";
 
@@ -192,8 +198,8 @@ export async function listOpenBattles(options?: {
   }
   const { data, error } = await query;
   if (error) {
-    // Fallback to local battles on error.
-    return { data: localListOpenBattles().map(localToView), error: null };
+    // Never mix real Supabase errors with the local demo lobby.
+    return { data: null, error: error.message };
   }
   // Cast via `unknown` — see note in supabasePlayerCounts about schema-less inference.
   const battles = ((data ?? []) as unknown as Record<string, unknown>[]).map(parseBattle);
@@ -277,8 +283,7 @@ export async function createCaseBattle(params: {
     p_borrow_percent: params.borrowPercent,
   });
   if (error) {
-    const local = localCreateBattle(params);
-    return { data: local.battleId, error: local.error };
+    return { data: null, error: error.message };
   }
   const battleId = Array.isArray(data) ? data[0] : data;
   return { data: battleId ? String(battleId) : null, error: null };
@@ -295,55 +300,52 @@ export async function joinCaseBattle(battleId: string): Promise<{ error: string 
 
 export async function addBotToBattle(battleId: string): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured) return localAddBot(battleId);
+  // Prefer local only when this battle is already an in-memory demo battle.
+  if (localViewCaseBattle(battleId)) return localAddBot(battleId);
   const { error } = await supabase.rpc("cb_add_bot", { p_battle_id: battleId });
-  if (error) return localAddBot(battleId);
-  return { error: null };
+  return { error: error?.message ?? null };
 }
 
 export async function leaveBattle(battleId: string): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured) return localLeaveBattle(battleId);
+  if (localViewCaseBattle(battleId)) return localLeaveBattle(battleId);
   const { error } = await supabase.rpc("cb_leave_battle", { p_battle_id: battleId });
-  if (error) return localLeaveBattle(battleId);
-  return { error: null };
+  return { error: error?.message ?? null };
 }
 
 export async function startCaseBattle(battleId: string): Promise<{
   data: { seedHash: string; eosBlockTarget: number } | null;
   error: string | null;
 }> {
-  // Check local first.
-  const local = localStartBattle(battleId);
-  if (local.data) return local;
+  // Local demo battles only — never start a real battle via local engine.
+  if (localViewCaseBattle(battleId)) return localStartBattle(battleId);
+  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
   const { data, error } = await invokeEdgeFunction<{
     seedHash: string;
     eosBlockTarget: number;
   }>("case-battle-v2", { action: "start", battleId });
-  if (error) return local;
-  return { data, error: null };
+  return { data, error };
 }
 
 export async function checkEosBlock(battleId: string): Promise<{
   data: { ready: boolean; status?: string } | null;
   error: string | null;
 }> {
-  // Check local first.
-  const local = localCheckEos(battleId);
-  if (local.data) return local;
+  if (localViewCaseBattle(battleId)) return localCheckEos(battleId);
+  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
   const { data, error } = await invokeEdgeFunction<{ ready: boolean; status?: string }>(
     "case-battle-v2",
     { action: "check_eos", battleId },
   );
-  if (error) return local;
-  return { data, error: null };
+  return { data, error };
 }
 
 export async function claimPayout(
   battleId: string,
   slot: number,
 ): Promise<{ data: { balance: number } | null; error: string | null }> {
-  // Check local first.
-  const local = localClaimPayout(battleId, slot);
-  if (local.data) return local;
+  if (localViewCaseBattle(battleId)) return localClaimPayout(battleId, slot);
+  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
   // Edge fn recomputes payout server-side from stored drops — audit #002
   // dropped the legacy `amount` param.
   const { data, error } = await invokeEdgeFunction<{ balance: number }>("case-battle-v2", {
@@ -351,8 +353,7 @@ export async function claimPayout(
     battleId,
     slot,
   });
-  if (error) return local;
-  return { data, error: null };
+  return { data, error };
 }
 
 // ─── Derived helpers ─────────────────────────────────────────────────────────
@@ -370,83 +371,68 @@ export function isPlayerSlot(battle: CaseBattleView, slot: number, userId?: stri
   return player?.userId === userId;
 }
 
-export function calculateWinner(
-  battle: CaseBattleView,
-): { slot: number; amount: number } | null {
-  if (battle.status !== "completed" || battle.players.length === 0) return null;
-
-  const totals = battle.players.map((p) => ({
-    slot: p.slot,
-    total: playerTotalValue(battle.drops, p.slot),
-    isBot: p.isBot,
-  }));
-
-  if (totals.length === 0) return null;
-
-  let winnerSlot: number;
-  switch (battle.gamemode) {
-    case "standard":
-      // Highest total wins (normal) or lowest total wins (crazy)
-      winnerSlot = totals.reduce((best, t) => {
-        const better = battle.crazy ? t.total < best.total : t.total > best.total;
-        return better ? t : best;
-      }).slot;
-      break;
-    case "terminal": {
-      // Highest (or lowest if crazy) value in the LAST round only
-      const lastRound = battle.rounds - 1;
-      const lastDrops = battle.drops.filter((d) => d.round === lastRound);
-      if (lastDrops.length === 0) return null;
-      winnerSlot = lastDrops.reduce((best, d) => {
-        const better = battle.crazy ? d.itemValue < best.itemValue : d.itemValue > best.itemValue;
-        return better ? d : best;
-      }).slot;
-      break;
-    }
-    case "group": {
-      // Split among all humans (crazy N/A)
-      const humans = totals.filter((t) => !t.isBot);
-      if (humans.length === 0) return null;
-      const share = battle.potTotal / humans.length;
-      return { slot: humans[0]!.slot, amount: share };
-    }
-    case "jackpot": {
-      // For client display: the edge function determines the winner
-      // via weighted random. We can't recompute that client-side without
-      // the battle seed, so we use the stored drops to find the winner
-      // by checking which slot has a non-zero payout (edge function sets this).
-      // Fallback: highest (or lowest if crazy) total
-      winnerSlot = totals.reduce((best, t) => {
-        const better = battle.crazy ? t.total < best.total : t.total > best.total;
-        return better ? t : best;
-      }).slot;
-      break;
-    }
-    default:
-      winnerSlot = totals.reduce((max, t) => (t.total > max.total ? t : max)).slot;
-      break;
-  }
-
-  const keepMult = (100 - battle.borrowPercent) / 100;
-  const amount = battle.potTotal * keepMult;
-  return { slot: winnerSlot, amount };
-}
-
+/**
+ * Prefer server-stored `payoutAmount` (written at resolve). Fall back to a
+ * client estimate only when the column is missing (pre-migration battles).
+ */
 export function calculatePayoutForSlot(
   battle: CaseBattleView,
   slot: number,
 ): number {
   if (battle.status !== "completed") return 0;
-  const winner = calculateWinner(battle);
-  if (!winner) return 0;
 
-  if (battle.gamemode === "group") {
-    const player = battle.players.find((p) => p.slot === slot);
-    if (player?.isBot) return 0;
-    const humans = battle.players.filter((p) => !p.isBot);
-    const keepMult = (100 - battle.borrowPercent) / 100;
-    return (battle.potTotal * keepMult) / humans.length;
+  const player = battle.players.find((p) => p.slot === slot);
+  if (player && player.payoutAmount > 0) {
+    return player.payoutAmount;
   }
 
-  return winner.slot === slot ? winner.amount : 0;
+  // Fallback for battles resolved before payout_amount was persisted.
+  const keepMult = (100 - Math.max(0, Math.min(80, battle.borrowPercent))) / 100;
+  const pot = battle.potTotal * keepMult;
+
+  if (battle.gamemode === "group") {
+    if (player?.isBot) return 0;
+    const humans = battle.players.filter((p) => !p.isBot);
+    if (humans.length === 0) return 0;
+    return Math.round((pot / humans.length) * 100) / 100;
+  }
+
+  const totals = battle.players.map((p) => ({
+    slot: p.slot,
+    total: playerTotalValue(battle.drops, p.slot),
+  }));
+  if (totals.length === 0) return 0;
+
+  let winnerSlot: number;
+  if (battle.gamemode === "terminal") {
+    const lastRound = battle.rounds - 1;
+    const lastDrops = battle.drops.filter((d) => d.round === lastRound);
+    if (lastDrops.length === 0) return 0;
+    winnerSlot = lastDrops.reduce((best, d) => {
+      const better = battle.crazy ? d.itemValue < best.itemValue : d.itemValue > best.itemValue;
+      return better ? d : best;
+    }).slot;
+  } else {
+    // standard / jackpot fallback: extreme total (jackpot is seed-weighted —
+    // without payout_amount this is approximate only).
+    winnerSlot = totals.reduce((best, t) => {
+      const better = battle.crazy ? t.total < best.total : t.total > best.total;
+      return better ? t : best;
+    }).slot;
+  }
+
+  return winnerSlot === slot ? Math.round(pot * 100) / 100 : 0;
+}
+
+/** @deprecated Prefer calculatePayoutForSlot — kept for call sites that need a single winner. */
+export function calculateWinner(
+  battle: CaseBattleView,
+): { slot: number; amount: number } | null {
+  if (battle.status !== "completed" || battle.players.length === 0) return null;
+  const paid = battle.players
+    .map((p) => ({ slot: p.slot, amount: calculatePayoutForSlot(battle, p.slot) }))
+    .filter((p) => p.amount > 0)
+    .sort((a, b) => b.amount - a.amount);
+  if (paid.length === 0) return null;
+  return paid[0]!;
 }

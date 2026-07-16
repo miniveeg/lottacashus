@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -30,20 +29,31 @@ function readPrefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+/** Display names — must match server SYMBOLS in place-slots-bet. */
 const SYMBOL_NAMES: Record<number, string> = {
   0: "Cherry",
   1: "Bell",
   2: "Seven",
-  3: "Dollar",
+  3: "Bar",
   4: "Watermelon",
   5: "Star",
   6: "Crown",
 };
 
+/** 3-of-a-kind paytable (96.5% RTP) — single source of truth for the UI. */
+const SLOTS_PAYTABLE: { id: number; mult: number }[] = [
+  { id: 6, mult: 190 }, // Crown
+  { id: 5, mult: 80 },  // Star
+  { id: 4, mult: 30 },  // Watermelon
+  { id: 3, mult: 15 },  // Bar
+  { id: 2, mult: 8 },   // Seven
+  { id: 1, mult: 5 },   // Bell
+  { id: 0, mult: 3 },   // Cherry
+];
+
 type ReelState = "idle" | "spinning" | "landed";
 
 export default function Slots() {
-  const { user } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const { coinType, label: coinLabel } = usePlayMode();
   const toast = useToast();
@@ -115,15 +125,17 @@ export default function Slots() {
   }, []);
 
   const activeBalance = useMemo(() => {
-    if (!user) return 0;
+    // Guests / local-play: ProfileContext still holds the demo wallet.
     return coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-  }, [user, coinType, profile]);
+  }, [coinType, profile]);
 
-  // Max-payout cap (audit R6): Crown pays 100×, so wager × 100 > 100,000
-  // when wager > 1,000. The server enforces the cap; this is the UX.
+  // Max-payout cap: Crown pays 190× (see place-slots-bet PAYTABLE).
+  // Cap potential payout at 100,000 — matches the edge function.
   const SLOTS_MAX_PAYOUT = 100_000;
-  const slotsMaxWin = wager * 100;
+  const SLOTS_MAX_MULT = 190;
+  const slotsMaxWin = wager * SLOTS_MAX_MULT;
   const exceedsMaxPayout = slotsMaxWin > SLOTS_MAX_PAYOUT;
+  const wagerCap = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
 
   useEffect(() => {
     fetchSlotsPfState().then(({ data }) => {
@@ -142,12 +154,13 @@ export default function Slots() {
         setWager(1);
         setWagerInput("1");
       } else {
-        const clamped = Math.min(Math.max(parsed, 1), coinType === "sweeps_coins" ? 100_000 : 10_000_000);
+        const maxWager = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+        const clamped = Math.min(Math.max(parsed, 1), maxWager);
         setWager(clamped);
         setWagerInput(String(clamped));
       }
     },
-    []
+    [coinType]
   );
 
   function startRollAnimation() {
@@ -307,12 +320,12 @@ export default function Slots() {
     <div className="slots lc-game-page">
       <Seo
         title="Slots"
-        description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 100×, Star pays 35×. 96.5% RTP."
+        description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 190×, Star pays 80×. 96.5% RTP."
         path="/slots"
       />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Slots</h1>
-        <p className="lc-page__subtitle">Three reels. Match symbols to win. Crown pays 100×, Star pays 35×. 96.5% RTP.</p>
+        <p className="lc-page__subtitle">Three reels. Match symbols to win. Crown pays 190×, Star pays 80×. 96.5% RTP.</p>
       </header>
 
       <div className="slots__layout">
@@ -393,10 +406,13 @@ export default function Slots() {
         <aside className="slots__controls game-controls">
           <div className="game-controls__options">
             <div className="game-controls__option">
-              <span className="game-controls__option-label">Wager ({coinLabel})</span>
+              <label className="game-controls__option-label" htmlFor="slots-wager">
+                Wager ({coinLabel})
+              </label>
               <div className="game-controls__wager-block">
                 <div className="game-controls__wager-row">
                   <input
+                    id="slots-wager"
                     className="game-controls__wager-input"
                     type="text"
                     inputMode="decimal"
@@ -407,6 +423,7 @@ export default function Slots() {
                       if (e.key === "Enter") applyWager(wagerInput);
                     }}
                     disabled={rolling}
+                    aria-label={`Wager amount in ${coinLabel}`}
                   />
                   <button
                     type="button"
@@ -420,25 +437,25 @@ export default function Slots() {
                     }}
                     aria-label="Half bet"
                   >
-                    1/2
+                    ½
                   </button>
                   <button
                     type="button"
                     className="game-controls__wager-adj"
                     disabled={rolling}
-                    onClick={() => applyWager(String(Math.min(wager * 2, activeBalance)))}
+                    onClick={() => applyWager(String(Math.min(wager * 2, activeBalance, wagerCap)))}
                     aria-label="Double bet"
                   >
-                    2x
+                    2×
                   </button>
                   <button
                     type="button"
                     className="game-controls__wager-adj game-controls__wager-adj--max"
-                    onClick={() => applyWager(String(Math.min(100_000, activeBalance)))}
+                    onClick={() => applyWager(String(Math.min(wagerCap, activeBalance)))}
                     disabled={rolling}
                     aria-label="Max bet"
                   >
-                    MAX
+                    Max
                   </button>
                 </div>
               </div>
@@ -451,13 +468,22 @@ export default function Slots() {
           <div className="slots__paytable" aria-label="Paytable">
             <h4 className="slots__paytable-title">Paytable (3 of a kind)</h4>
             <div className="slots__paytable-grid">
-              <span className="slots__paytable-row"><SlotSymbol id={6} size={22} /> Crown</span><span className="slots__paytable-mult slots__paytable-mult--top">100×</span>
-              <span className="slots__paytable-row"><SlotSymbol id={5} size={22} /> Star</span><span className="slots__paytable-mult">35×</span>
-              <span className="slots__paytable-row"><SlotSymbol id={2} size={22} /> Seven</span><span className="slots__paytable-mult">20×</span>
-              <span className="slots__paytable-row"><SlotSymbol id={3} size={22} /> Bar</span><span className="slots__paytable-mult">10×</span>
-              <span className="slots__paytable-row"><SlotSymbol id={4} size={22} /> Watermelon</span><span className="slots__paytable-mult">8×</span>
-              <span className="slots__paytable-row"><SlotSymbol id={1} size={22} /> Bell</span><span className="slots__paytable-mult">5×</span>
-              <span className="slots__paytable-row"><SlotSymbol id={0} size={22} /> Cherry</span><span className="slots__paytable-mult">3×</span>
+              {SLOTS_PAYTABLE.map((row) => (
+                <span key={`${row.id}-name`} className="slots__paytable-row">
+                  <SlotSymbol id={row.id} size={22} /> {SYMBOL_NAMES[row.id]}
+                </span>
+              )).flatMap((nameNode, i) => {
+                const row = SLOTS_PAYTABLE[i]!;
+                return [
+                  nameNode,
+                  <span
+                    key={`${row.id}-mult`}
+                    className={`slots__paytable-mult${row.id === 6 ? " slots__paytable-mult--top" : ""}`}
+                  >
+                    {row.mult}×
+                  </span>,
+                ];
+              })}
             </div>
           </div>
 
@@ -472,7 +498,7 @@ export default function Slots() {
 
           {exceedsMaxPayout && (
             <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {formatCoins(SLOTS_MAX_PAYOUT, coinType)}. Lower your wager — Crown (100×) would exceed the cap.
+              Max payout is {formatCoins(SLOTS_MAX_PAYOUT, coinType)}. Lower your wager — Crown (190×) would exceed the cap.
             </p>
           )}
 

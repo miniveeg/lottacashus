@@ -51,7 +51,11 @@ const FILL: Record<RouletteColor, string> = {
 export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
   // Use proper refs for mutable values (not useState tuples used as refs)
   const accumulatedRotationRef = useRef(0);
-  const prevResultPocketRef = useRef<number | null>(null);
+  // Spin generation counter — increments each time a spin *starts* so two
+  // consecutive landings on the same pocket still trigger a settle animation.
+  const spinGenRef = useRef(0);
+  const settledGenRef = useRef(0);
+  const wasSpinningRef = useRef(false);
 
   const [rotation, setRotation] = useState(0);
   const [settling, setSettling] = useState(false);
@@ -59,15 +63,26 @@ export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
 
   useEffect(() => {
     if (spinning) {
-      // Start spinning from current rotation
+      // Start spinning from current rotation. Bump generation so the next
+      // settle always runs, even if the pocket number is unchanged.
+      if (!wasSpinningRef.current) {
+        spinGenRef.current += 1;
+        wasSpinningRef.current = true;
+      }
       setSpinFrom(accumulatedRotationRef.current % 360);
       setSettling(false);
       return;
     }
 
-    // When spin stops, land on result pocket
-    if (resultPocket !== null && resultPocket !== prevResultPocketRef.current) {
-      prevResultPocketRef.current = resultPocket;
+    wasSpinningRef.current = false;
+
+    // When spin stops, land on result pocket for this generation only.
+    if (
+      resultPocket !== null &&
+      spinGenRef.current > 0 &&
+      settledGenRef.current !== spinGenRef.current
+    ) {
+      settledGenRef.current = spinGenRef.current;
 
       const index = EUROPEAN_WHEEL_ORDER.indexOf(
         resultPocket as (typeof EUROPEAN_WHEEL_ORDER)[number]

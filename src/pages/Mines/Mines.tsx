@@ -45,6 +45,8 @@ export function Mines() {
   const [error, setError] = useState<string | null>(null);
 
   const [gameId, setGameId] = useState<string | null>(null);
+  /** Coin type locked when the round started (must match server debit). */
+  const [gameCoinType, setGameCoinType] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [gemsRevealed, setGemsRevealed] = useState(0);
   const [multiplier, setMultiplier] = useState(1);
@@ -96,6 +98,7 @@ export function Mines() {
     const { data, error: resumeErr } = await fetchMyActiveMinesGame();
     if (resumeErr || !data) return;
     setGameId(data.gameId);
+    setGameCoinType(data.coinType ?? "balance");
     setWager(Number(data.wager));
     setWagerInput(Number(data.wager).toFixed(2));
     setMineCount(data.mineCount);
@@ -115,6 +118,7 @@ export function Mines() {
 
   const resetRound = () => {
     setGameId(null);
+    setGameCoinType(null);
     setRevealed(new Set());
     setGemsRevealed(0);
     setMultiplier(1);
@@ -124,7 +128,8 @@ export function Mines() {
   };
 
   const applyWager = (value: number) => {
-    const v = Math.max(1, Math.min(100_000, value));
+    const maxWager = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    const v = Math.max(1, Math.min(maxWager, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -156,6 +161,7 @@ export function Mines() {
     }
 
     setGameId(data.gameId);
+    setGameCoinType(data.coinType ?? coinType);
     setPfNonce(data.nonce + 1);
     busyRef.current = false;
     setBusy(false);
@@ -242,7 +248,11 @@ export function Mines() {
     setBusy(true);
     setError(null);
 
-    const { data, error: cashErr } = await cashoutMinesGame({ gameId, coinType });
+    // Always cash out in the coin type locked at start — never the live topbar.
+    const { data, error: cashErr } = await cashoutMinesGame({
+      gameId,
+      coinType: gameCoinType ?? coinType,
+    });
     busyRef.current = false;
     setBusy(false);
 
@@ -382,9 +392,11 @@ export function Mines() {
                   value={mineCount}
                   onChange={(e) => setMineCount(Number(e.target.value))}
                   disabled={playing || busy}
+                  aria-label="Number of mines"
                   aria-valuemin={MINES_MIN_COUNT}
                   aria-valuemax={MINES_MAX_COUNT}
                   aria-valuenow={mineCount}
+                  aria-valuetext={`${mineCount} mines`}
                 />
                 <span className="game-controls__mines-value" aria-hidden="true">
                   {mineCount}
@@ -440,12 +452,13 @@ export function Mines() {
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
                   const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(100_000, activeBalance));
+                  const maxWager = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+                  applyWager(Math.min(maxWager, activeBalance));
                 }}
                 disabled={playing || busy}
                 aria-label="Max bet"
               >
-                MAX
+                Max
               </button>
             </div>
 
@@ -497,6 +510,8 @@ export function Mines() {
               type="button"
               className="mines__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
+            
+              aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair
             </button>

@@ -20,6 +20,7 @@ import {
 } from "./caseBattlesApi";
 import { gamemodeLabelWithCrazy } from "./types";
 import { formatCoins } from "../../lib/format";
+import { entryAfterBorrow } from "../../lib/games/case-battles/config";
 import "./CaseBattlesV2.css";
 
 const EOS_POLL_MS = 2000;
@@ -30,6 +31,7 @@ export function CaseBattlesRoomV2() {
   const { refreshProfile } = useProfile();
   const { battle, loading, error } = useBattleSubscription(battleId);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [claimed, setClaimed] = useState(false);
   const eosPollRef = useRef<number>(0);
@@ -112,37 +114,50 @@ export function CaseBattlesRoomV2() {
   const canJoin = isWaiting && !myPlayer;
   const canAddBot = isWaiting && isCreator && battle.players.length < battle.maxPlayers;
   const myPayout = myPlayer ? calculatePayoutForSlot(battle, myPlayer.slot) : 0;
-  const canClaim = isCompleted && myPayout > 0 && !claimed;
+  const alreadyClaimed = claimed || Boolean(myPlayer?.claimedAt);
+  const canClaim = isCompleted && myPayout > 0 && !alreadyClaimed;
+  const joinCharge = entryAfterBorrow(battle.entryCost, battle.borrowPercent);
 
   async function handleJoin() {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     setActionError(null);
     const { error: err } = await joinCaseBattle(battleId!);
+    busyRef.current = false;
     setBusy(false);
     if (err) setActionError(err);
   }
 
   async function handleAddBot() {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     setActionError(null);
     const { error: err } = await addBotToBattle(battleId!);
+    busyRef.current = false;
     setBusy(false);
     if (err) setActionError(err);
   }
 
   async function handleStart() {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     setActionError(null);
     const { error: err } = await startCaseBattle(battleId!);
+    busyRef.current = false;
     setBusy(false);
     if (err) setActionError(err);
   }
 
   async function handleClaim() {
-    if (!myPlayer || !battle) return;
+    if (!myPlayer || !battle || busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     setActionError(null);
     const { error: err } = await claimPayout(battleId!, myPlayer.slot);
+    busyRef.current = false;
     setBusy(false);
     if (err) {
       setActionError(err);
@@ -180,7 +195,8 @@ export function CaseBattlesRoomV2() {
         <div className="cb-room__actions">
           {canJoin && (
             <button type="button" className="cb-btn cb-btn--primary" onClick={handleJoin} disabled={busy}>
-              Join battle ({formatCoins(battle.entryCost, battle.coinType)})
+              Join battle ({formatCoins(joinCharge, battle.coinType)}
+              {battle.borrowPercent > 0 ? ` after ${battle.borrowPercent}% borrow` : ""})
             </button>
           )}
           {canAddBot && (
@@ -207,7 +223,7 @@ export function CaseBattlesRoomV2() {
           </button>
         </div>
       )}
-      {claimed && (
+      {alreadyClaimed && isCompleted && myPayout > 0 && (
         <div className="cb-room__claimed">
           <p>Payout claimed! Your balance has been updated.</p>
         </div>

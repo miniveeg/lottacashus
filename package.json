@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "deploy:functions": "node -e \"console.log('Use: pwsh scripts/deploy-edge-functions.ps1  OR  bash scripts/deploy-edge-functions.sh')\"",
     "sweep:remote": "node scripts/invoke-sweep-deposits.mjs",
     "sweep:remote:health": "node scripts/invoke-sweep-deposits.mjs --health",
     "sweep:dry": "node scripts/manual-sweep-deposits.mjs --dry-run",

@@ -156,17 +156,20 @@ export function Roulette() {
 
     setDisplayPocket(data.resultPocket);
     setDisplayColor(data.resultColor);
+    // Keep spinningRef true through the settle animation so a second bet
+    // cannot fire mid-wheel. Visual spin stops so the CSS settle transition runs.
     setSpinning(false);
-    spinningRef.current = false;
     setHistory((h) =>
       [{ id: ++historyIdRef.current, pocket: data.resultPocket, color: data.resultColor }, ...h].slice(0, HISTORY_MAX)
     );
 
     // Wait for the wheel settle animation (4.2s CSS transition) before showing
-    // the result banner and crediting the balance, so the player sees the
-    // outcome exactly when the wheel lands.
+    // the result banner, so the player sees the outcome exactly when the wheel lands.
     await wait(4400);
-    if (cancelledRef.current) return;
+    if (cancelledRef.current) {
+      spinningRef.current = false;
+      return;
+    }
 
     setLastResult({
       pocket: data.resultPocket,
@@ -176,6 +179,7 @@ export function Roulette() {
       betType: data.betType,
     });
     setPfNonce(data.nonce + 1);
+    spinningRef.current = false;
     // No refreshProfile() here — ProfileContext's realtime subscription on
     // `profiles` pushes the new balance the instant the server commits the
     // bet. Calling it would fire 2 redundant RPCs (ensure_user_profile +
@@ -388,6 +392,8 @@ export function Roulette() {
               type="button"
               className="roulette__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
+            
+              aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair
             </button>

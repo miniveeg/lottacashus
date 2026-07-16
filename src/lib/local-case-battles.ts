@@ -119,6 +119,8 @@ export function localAddBot(battleId: string): { error: string | null } {
   const slot = b.players.length;
   const name = BOT_NAMES[slot % BOT_NAMES.length] ?? `Bot${slot}`;
   b.players.push({ slot, userId: null, isBot: true, username: name, avatarSeed: name });
+  // Bots contribute full entry_cost to pot (house-sponsored seats) — matches SQL.
+  b.potTotal = Math.round((b.potTotal + b.entryCost) * 100) / 100;
   return { error: null };
 }
 
@@ -162,21 +164,41 @@ function resolveBattle(b: LocalBattle) {
     for (const p of b.players) {
       const item = dropItem(c);
       b.drops.push({
-        slot: p.slot, round, caseId, itemId: uid(),
+        slot: p.slot, round, caseId, itemId: item.id,
         itemName: item.name, itemValue: item.value, itemRarity: item.rarity,
       });
     }
   }
-  // Deterministic tie-break by lowest slot index.
-  // NOTE: this local-play fallback differs from the server's SHA-256
-  // coinflip on exact-tie cases — intentional because the local case
-  // doesn't have a battle_seed for verification. Mismatches between
-  // local preview + real server resolution are an acceptable trade-off
-  // for keeping the local fallback dependency-free.
-  let bestSlot = 0, bestTotal = -1;
+  // Gamemode-aware winner (mirrors edge computePayouts pot-based payouts).
+  const slotTotals = new Map<number, number>();
+  const lastRound = b.rounds - 1;
+  const lastRoundTotals = new Map<number, number>();
   for (const p of b.players) {
-    const total = b.drops.filter((d) => d.slot === p.slot).reduce((s, d) => s + d.itemValue, 0);
-    if (total > bestTotal) { bestTotal = total; bestSlot = p.slot; }
+    const drops = b.drops.filter((d) => d.slot === p.slot);
+    slotTotals.set(p.slot, drops.reduce((s, d) => s + d.itemValue, 0));
+    const last = drops.find((d) => d.round === lastRound);
+    lastRoundTotals.set(p.slot, last?.itemValue ?? 0);
+  }
+
+  const scoreOf = (slot: number) =>
+    b.gamemode === "terminal"
+      ? (lastRoundTotals.get(slot) ?? 0)
+      : (slotTotals.get(slot) ?? 0);
+
+  let bestSlot = b.players[0]?.slot ?? 0;
+  if (b.gamemode === "group") {
+    // Every human is a "winner" for claim purposes; winnerSlot is first human.
+    const human = b.players.find((p) => !p.isBot);
+    bestSlot = human?.slot ?? bestSlot;
+  } else {
+    let bestScore = b.crazy ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+    for (const p of b.players) {
+      const score = scoreOf(p.slot);
+      if (b.crazy ? score < bestScore : score > bestScore) {
+        bestScore = score;
+        bestSlot = p.slot;
+      }
+    }
   }
   b.winnerSlot = bestSlot;
   b.status = "completed";
@@ -187,18 +209,25 @@ export function localClaimPayout(battleId: string, slot: number): { data: { bala
   const b = battles.get(battleId);
   if (!b) return { data: null, error: "Battle not found." };
   if (b.status !== "completed") return { data: null, error: "Battle not completed." };
-  if (b.winnerSlot !== slot) return { data: null, error: "You didn't win this battle." };
   if (b.claimed.has(slot)) return { data: null, error: "Already claimed." };
-  b.claimed.add(slot);
-  // Winner takes the pot adjusted for borrow (matches SQL cb_claim_payout):
-  // payout = pot_total * (1 - borrow%). Previously summed ALL drops twice
-  // (winner + everyone-else) as the base, which inflated payouts ~2x.
-  // Clamp borrowPercent to 0..80 to mirror the SQL CHECK constraint
-  // `borrow_percent int check (borrow_percent between 0 and 80)`. Defense
-  // in-depth against malformed local-play data.
+
   const clamped = Math.max(0, Math.min(80, b.borrowPercent));
   const keepMult = (100 - clamped) / 100;
-  const payout = Math.round(b.potTotal * keepMult * 100) / 100;
+  const pot = Math.round(b.potTotal * keepMult * 100) / 100;
+
+  let payout = 0;
+  if (b.gamemode === "group") {
+    const player = b.players.find((p) => p.slot === slot);
+    if (!player || player.isBot) return { data: null, error: "You didn't win this battle." };
+    const humans = b.players.filter((p) => !p.isBot);
+    payout = Math.round((pot / Math.max(1, humans.length)) * 100) / 100;
+  } else {
+    if (b.winnerSlot !== slot) return { data: null, error: "You didn't win this battle." };
+    payout = pot;
+  }
+
+  if (payout <= 0) return { data: null, error: "No payout available for this slot." };
+  b.claimed.add(slot);
   localCredit(b.coinType, payout);
   return { data: { balance: localBalance(b.coinType) }, error: null };
 }

@@ -2,7 +2,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(100dvh - var(--lc-topbar-height) - 4rem);
+  /* Grow inside the sticky-footer flex column without forcing the footer
+     past the fold (100dvh - topbar would fill the scrollport alone). */
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 2rem 0;
 }
 
 .not-found__card {
@@ -62,7 +66,7 @@
 
 .not-found__btn--gold {
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
-  color: var(--lc-bg-base);
+  color: var(--lc-text-on-primary, #ffffff);
 }
 
 .not-found__btn--outline {

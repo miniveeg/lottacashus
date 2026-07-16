@@ -82,6 +82,8 @@ type PlayerRow = {
   is_bot: boolean;
   username: string;
   avatar_seed: string | null;
+  payout_amount?: number | null;
+  claimed_at?: string | null;
 };
 
 type DropRow = {
@@ -554,6 +556,26 @@ async function resolveBattle(
     rolls
   );
 
+  // Persist edge-computed payouts onto player rows BEFORE marking completed
+  // so claim can credit a stored amount (SQL no longer re-derives winners).
+  // Reset all slots to 0 first so re-resolves don't leave stale credits.
+  await admin
+    .from("case_battle_players")
+    .update({ payout_amount: 0 })
+    .eq("battle_id", battle.id);
+  for (const entry of payouts.payouts) {
+    if (!entry.userId || entry.amount <= 0) continue;
+    const { error: payErr } = await admin
+      .from("case_battle_players")
+      .update({ payout_amount: entry.amount })
+      .eq("battle_id", battle.id)
+      .eq("slot", entry.slot)
+      .eq("user_id", entry.userId);
+    if (payErr) {
+      throw new Error(`Store payout for slot ${entry.slot}: ${payErr.message}`);
+    }
+  }
+
   // Finalise: running → completed. We hold the resolution lock (status=
   // running), so this should always update exactly one row. If it updates
   // zero rows, something else mutated the status mid-resolution — bail so
@@ -670,12 +692,20 @@ async function handleStart(
   }
 
   // ── Verify the pot reflects every player's entry fee ───────────────────
-  const expectedPot =
-    Math.round(Number(battle.entry_cost) * players.length * 100) / 100;
+  // Humans pay entry_cost * (100 - borrow%) / 100; bots contribute the full
+  // entry_cost to pot without debiting a wallet (house-sponsored seats).
+  const entryCost = Number(battle.entry_cost);
+  const borrowPct = Math.max(0, Math.min(80, Number(battle.borrow_percent ?? 0)));
+  const humanCharge = (entryCost * (100 - borrowPct)) / 100;
+  let expectedPot = 0;
+  for (const p of players as Array<{ is_bot?: boolean }>) {
+    expectedPot += p.is_bot ? entryCost : humanCharge;
+  }
+  expectedPot = Math.round(expectedPot * 100) / 100;
   const actualPot = Math.round(Number(battle.pot_total) * 100) / 100;
   if (expectedPot !== actualPot) {
     console.warn(
-      `[case-battle-v2] pot mismatch battle=${battleId} expected=${expectedPot} actual=${actualPot}`
+      `[case-battle-v2] pot mismatch battle=${battleId} expected=${expectedPot} actual=${actualPot} borrow=${borrowPct}`
     );
     return jsonResponse(
       {
@@ -973,6 +1003,7 @@ async function handleCheckEos(
  */
 async function handleClaim(
   admin: ReturnType<typeof createClient>,
+  supabaseUser: ReturnType<typeof createClient>,
   user: { id: string },
   body: { battleId?: unknown; slot?: unknown }
 ) {
@@ -1003,46 +1034,48 @@ async function handleClaim(
     );
   }
 
-  // ── Recompute payouts from the stored drops ────────────────────────────
-  if (!battle.battle_seed) {
-    return jsonResponse(
-      { error: "Battle seed not set — resolution incomplete." },
-      400
-    );
-  }
-
-  const drops = await loadDrops(admin, battleId);
-  if (drops.length === 0) {
-    return jsonResponse(
-      { error: "No drops recorded for this battle." },
-      400
-    );
-  }
-  const rolls = reconstructRolls(players, drops);
-
-  const payouts = await computePayouts(
-    {
-      gamemode: battle.gamemode,
-      crazy: Boolean(battle.crazy),
-      potTotal: Number(battle.pot_total),
-      borrowPercent: Number(battle.borrow_percent),
-      battleSeed: battle.battle_seed,
-    },
-    rolls
+  // Stored payout is the source of truth (written at resolve). Prefer the
+  // player row so claim works even if re-derivation would disagree.
+  const storedPayout = Number(
+    (player as PlayerRow & { payout_amount?: number }).payout_amount ?? 0
   );
-
-  const payout = payouts.payouts.find((p) => p.slot === slot);
-  if (!payout || payout.amount <= 0) {
-    return jsonResponse(
-      { error: "No payout available for this slot." },
-      400
+  if (storedPayout <= 0) {
+    // Backward-compat: older battles without payout_amount — recompute once.
+    if (!battle.battle_seed) {
+      return jsonResponse(
+        { error: "No payout available for this slot." },
+        400
+      );
+    }
+    const drops = await loadDrops(admin, battleId);
+    if (drops.length === 0) {
+      return jsonResponse({ error: "No drops recorded for this battle." }, 400);
+    }
+    const rolls = reconstructRolls(players, drops);
+    const payouts = await computePayouts(
+      {
+        gamemode: battle.gamemode,
+        crazy: Boolean(battle.crazy),
+        potTotal: Number(battle.pot_total),
+        borrowPercent: Number(battle.borrow_percent),
+        battleSeed: battle.battle_seed,
+      },
+      rolls
     );
+    const recomputed = payouts.payouts.find((p) => p.slot === slot);
+    if (!recomputed || recomputed.amount <= 0) {
+      return jsonResponse({ error: "No payout available for this slot." }, 400);
+    }
+    // Persist for future claims / idempotent UI.
+    await admin
+      .from("case_battle_players")
+      .update({ payout_amount: recomputed.amount })
+      .eq("battle_id", battleId)
+      .eq("slot", slot);
   }
 
-  // ── Call the payout RPC ────────────────────────────────────────────────
-  // audit #002: cb_claim_payout recomputes the payout server-side from the
-  // stored drops; client no longer passes an amount.
-  const { data, error } = await admin.rpc("cb_claim_payout", {
+  // Must use the USER JWT client — cb_claim_payout reads auth.uid().
+  const { data, error } = await supabaseUser.rpc("cb_claim_payout", {
     p_battle_id: battleId,
     p_slot: slot,
   });
@@ -1055,7 +1088,6 @@ async function handleClaim(
     return jsonResponse({ error: error.message }, 400);
   }
 
-  // RPC returns the new balance as a numeric.
   const row = (Array.isArray(data) ? data[0] : data) as
     | { cb_claim_payout?: number }
     | number
@@ -1065,13 +1097,20 @@ async function handleClaim(
       ? row
       : Number((row as { cb_claim_payout?: number })?.cb_claim_payout ?? 0);
 
+  const amount =
+    storedPayout > 0
+      ? storedPayout
+      : Number(
+          (player as PlayerRow & { payout_amount?: number }).payout_amount ?? 0
+        );
+
   console.log(
-    `[case-battle-v2] claim battle=${battleId} slot=${slot} amount=${payout.amount} newBalance=${newBalance}`
+    `[case-battle-v2] claim battle=${battleId} slot=${slot} amount=${amount} newBalance=${newBalance}`
   );
 
   return jsonResponse({
     balance: newBalance,
-    amount: payout.amount,
+    amount,
     slot,
     battleId,
   });
@@ -1140,7 +1179,7 @@ Deno.serve(async (req) => {
       return await handleCheckEos(admin, body);
     }
     if (action === "claim") {
-      return await handleClaim(admin, user, body);
+      return await handleClaim(admin, supabaseUser, user, body);
     }
     return jsonResponse({ error: "Unknown action." }, 400, req);
   } catch (err) {

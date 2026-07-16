@@ -61,6 +61,7 @@ create table public.case_battle_players (
   avatar_seed text,                               -- for bot avatar generation
   joined_at   timestamptz not null default now(),
   claimed_at  timestamptz,                        -- idempotency guard for cb_claim_payout
+  payout_amount numeric(12, 2) not null default 0, -- edge-computed credit; claim uses this only
   unique(battle_id, slot)
 );
 
@@ -334,14 +335,14 @@ $$;
 revoke all on function public.cb_leave_battle(uuid) from public;
 grant execute on function public.cb_leave_battle(uuid) to authenticated;
 
--- cb_claim_payout: credits the winner's balance.
--- SECURITY: recomputes the payout server-side from case_battle_drops (ignores
--- client-supplied p_amount) and enforces idempotency via claimed_at on the
--- player row. Previously accepted any client amount with no double-claim guard.
+-- cb_claim_payout: full implementation lives in migrations/002_case_battles_audit_fixes.sql
+-- (group/crazy/tie-break, idempotency, bypass_profile_balance_guard).
+-- Fresh installs that only run this file get a simplified standard-mode claim
+-- that still refuses client-supplied amounts and enforces claimed_at.
+-- Prefer applying migration 002 for group/crazy support.
 create or replace function public.cb_claim_payout(
   p_battle_id uuid,
-  p_slot int  -- payout amount is now recomputed server-side from stored drops
-              -- (audit #002 dropped the legacy `p_amount numeric` param)
+  p_slot int
 )
 returns numeric
 language plpgsql
@@ -358,6 +359,8 @@ declare
   v_payout numeric;
   v_keep_mult numeric;
 begin
+  if v_uid is null then raise exception 'Not authenticated'; end if;
+
   select * into v_battle from public.case_battles where id = p_battle_id for update;
   if not found then raise exception 'Battle not found'; end if;
   if v_battle.status != 'completed' then raise exception 'Battle not completed'; end if;
@@ -367,35 +370,47 @@ begin
   if v_player.user_id is null or v_player.user_id != v_uid then
     raise exception 'You can only claim your own payout';
   end if;
-  -- IDEMPOTENCY: if already claimed, return the current balance (no double-credit).
   if v_player.claimed_at is not null then
-    select balance into v_balance from public.profiles where id = v_uid;
+    if v_battle.coin_type = 'sweeps_coins' then
+      select sweeps_coins into v_balance from public.profiles where id = v_uid;
+    else
+      select balance into v_balance from public.profiles where id = v_uid;
+    end if;
     return coalesce(v_balance, 0);
   end if;
 
-  -- Recompute the winner server-side: highest total. audit #002 added a
-  -- SHA-256-based cryptographic tie-break that mirrors the TS-side
-  -- `coinflipWinningSlot` helper so ties aren't biased by lowest slot index.
-  select slot into v_winner_slot from (
-    select d.slot, sum(d.item_value) as total
-    from public.case_battle_drops d
-    where d.battle_id = p_battle_id
-    group by d.slot
-    order by total desc,
-      encode(sha256(convert_to(v_battle.battle_seed || ':tie:' || d.slot::text, 'UTF8')), 'hex') asc
-    limit 1
-  ) t;
+  if v_battle.crazy then
+    select slot into v_winner_slot from (
+      select d.slot, sum(d.item_value) as total
+      from public.case_battle_drops d
+      where d.battle_id = p_battle_id
+      group by d.slot
+      order by total asc,
+        encode(sha256(convert_to(v_battle.battle_seed || ':tie:' || d.slot::text, 'UTF8')), 'hex') asc
+      limit 1
+    ) t;
+  else
+    select slot into v_winner_slot from (
+      select d.slot, sum(d.item_value) as total
+      from public.case_battle_drops d
+      where d.battle_id = p_battle_id
+      group by d.slot
+      order by total desc,
+        encode(sha256(convert_to(v_battle.battle_seed || ':tie:' || d.slot::text, 'UTF8')), 'hex') asc
+      limit 1
+    ) t;
+  end if;
   if v_winner_slot is null then raise exception 'No drops found for this battle'; end if;
   if v_winner_slot != p_slot then
     raise exception 'You did not win this battle';
   end if;
 
-  -- Winner takes all item values, adjusted for borrow (keep (100-borrow)%).
   select coalesce(sum(item_value), 0) into v_total from public.case_battle_drops where battle_id = p_battle_id;
   v_keep_mult := (100 - v_battle.borrow_percent) / 100.0;
   v_payout := round(v_total * v_keep_mult, 2);
 
-  -- Credit the winner.
+  perform public.bypass_profile_balance_guard();
+
   if v_battle.coin_type = 'sweeps_coins' then
     select sweeps_coins into v_balance from public.profiles where id = v_uid for update;
     v_balance := coalesce(v_balance, 0) + v_payout;
@@ -406,7 +421,6 @@ begin
     update public.profiles set balance = v_balance, total_wins = total_wins + v_payout, updated_at = now() where id = v_uid;
   end if;
 
-  -- Mark claimed for idempotency.
   update public.case_battle_players set claimed_at = now() where battle_id = p_battle_id and slot = p_slot;
 
   insert into public.transactions (user_id, type, amount, balance_after, description, created_at)

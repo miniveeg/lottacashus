@@ -83,9 +83,13 @@ Deno.serve(async (req) => {
     const balance = Number(row?.out_balance ?? 0);
     const alreadySettled = Boolean(row?.already_settled);
 
+    const cashedAt = Number(row?.cashed_at ?? cashedAtMultiplier);
     return jsonResponse({
       betId,
-      cashedAtMultiplier: Number(row?.cashed_at ?? cashedAtMultiplier),
+      // Client reads `cashedAt` (see src/lib/crash.ts). Keep
+      // `cashedAtMultiplier` as a backwards-compatible alias.
+      cashedAt,
+      cashedAtMultiplier: cashedAt,
       payout,
       balance,
       won: success,

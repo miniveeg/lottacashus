@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
         gemsRevealed: Number(row.gems_revealed ?? 0),
         multiplier: Number(row.multiplier ?? 1),
         status: String(row.status),
+        coinType: String(row.coin_type ?? "balance"),
       });
     }
 

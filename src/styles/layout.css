@@ -97,6 +97,13 @@
   .app-shell--sidebar-open .app-shell__backdrop {
     opacity: 1;
     pointer-events: auto;
+    touch-action: none;
+  }
+
+  /* Lock the actual scroll container (not body — body is already overflow:hidden). */
+  .app-shell--sidebar-open .app-shell__main {
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 }
 

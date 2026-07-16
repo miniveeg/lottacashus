@@ -8,7 +8,7 @@
  * - Mode dropdown + Crazy toggle + Borrow toggle + game type buttons.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
@@ -33,6 +33,7 @@ export function CaseBattlesCreateV2() {
   const [caseIds, setCaseIds] = useState<string[]>([]);
   const [borrowPercent, setBorrowPercent] = useState(0);
   const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [showCaseModal, setShowCaseModal] = useState(false);
 
@@ -87,6 +88,8 @@ export function CaseBattlesCreateV2() {
   }
 
   async function handleCreate() {
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     setError(null);
     const { data, error: err } = await createCaseBattle({
@@ -98,6 +101,7 @@ export function CaseBattlesCreateV2() {
       coinType,
       borrowPercent,
     });
+    busyRef.current = false;
     setBusy(false);
     if (err) {
       setError(err);

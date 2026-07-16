@@ -235,8 +235,15 @@
 
 .cb-arena__columns {
   display: grid;
-  grid-template-columns: repeat(var(--col-count, 2), 1fr);
+  grid-template-columns: repeat(var(--col-count, 2), minmax(140px, 1fr));
   gap: 0.75rem;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.cb-arena__columns > * {
+  min-width: 0;
 }
 
 /* ─── Player Column ──────────────────────────────────────────────────────── */
@@ -598,7 +605,7 @@
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .cb-arena__columns { grid-template-columns: 1fr; }
+  .cb-arena__columns { grid-template-columns: 1fr; overflow-x: visible; }
   .cb-hub__row { grid-template-columns: 1fr; gap: 0.5rem; }
   .cb-hub__modes { grid-template-columns: 1fr 1fr; }
   .cb-col__history { max-height: 4rem; }

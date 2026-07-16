@@ -164,9 +164,8 @@ Deno.serve(async (req) => {
       scanErrors: scanErrors.length ? scanErrors : undefined,
     });
   } catch (err) {
+    // Never return stack traces to the caller — log server-side only.
     console.error(err);
-    const message = err instanceof Error ? err.message : String(err);
-    const stack = err instanceof Error ? err.stack : undefined;
-    return jsonResponse({ error: "Poll failed", detail: message, stack }, 500, req);
+    return jsonResponse({ error: "Poll failed" }, 500, req);
   }
 });

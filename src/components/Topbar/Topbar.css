@@ -118,6 +118,7 @@
 
 
 .topbar__balance-group {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.2rem;

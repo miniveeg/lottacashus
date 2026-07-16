@@ -42,6 +42,19 @@ npm run build
 npm run preview
 ```
 
+## Production deploy (GitHub + Vercel + Supabase)
+
+**Full guide:** see **[DEPLOY.md](./DEPLOY.md)** — complete schema, Edge secrets,
+function deploy scripts, Vercel env, cron, and checklist.
+
+Short path:
+
+1. Run `supabase/lottacash-complete-setup.sql` in the Supabase SQL Editor  
+2. Set Edge Function secrets (`ALLOWED_ORIGINS`, `CRON_SECRET`, SMTP, wallets, …)  
+3. `pwsh scripts/deploy-edge-functions.ps1` (or the `.sh` script)  
+4. Connect the GitHub repo to Vercel; set `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY`  
+5. Push `main` — Vercel auto-deploys `dist/`
+
 ## Project structure
 
 ```

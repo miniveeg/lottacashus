@@ -19,6 +19,10 @@ export type BattlePlayer = {
   isBot: boolean;
   username: string;
   avatarSeed: string | null;
+  /** Edge-computed credit for this slot after resolution (0 if none). */
+  payoutAmount: number;
+  /** ISO timestamp when the player claimed, if any. */
+  claimedAt: string | null;
 };
 
 export type BattleDrop = {

@@ -169,16 +169,11 @@ export async function invokeEdgeFunction<T>(
     });
 
     if (error) {
-      // When Supabase IS configured but the call fails (network error, 404,
-      // relay error), fall back to local-play so the UI stays functional.
-      // The local wallet is separate from the Supabase wallet — this is
-      // acceptable because a failed network call means the server-side
-      // wager never executed (FunctionsFetchError = request never reached
-      // the server, or response was lost).
-      if (error instanceof FunctionsFetchError || error instanceof FunctionsRelayError) {
-        const local = localPlay(name, body);
-        if (local.data) return { data: local.data as T, error: null };
-      }
+      // NEVER fall back to local-play when Supabase is configured. Local
+      // wallets live in localStorage and are unrelated to the real profile
+      // balance — a silent fallback made users think they were playing for
+      // real GC/SC while only mutating demo coins. Surface the real error
+      // so the user can retry against the live backend.
       const message = await parseFunctionError(name, error);
       if (isTransientFetchError(error) && attempt < maxAttempts - 1) {
         continue;

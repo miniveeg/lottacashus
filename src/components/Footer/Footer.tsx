@@ -47,7 +47,7 @@ export function Footer() {
 
         <div className="site-footer__nav">
           <div className="site-footer__col">
-            <h4 className="site-footer__heading">Games</h4>
+            <p className="site-footer__heading">Games</p>
             <ul className="site-footer__list">
               {GAME_LINKS.map((link) => (
                 <li key={link.href}>
@@ -60,7 +60,7 @@ export function Footer() {
           </div>
 
           <div className="site-footer__col">
-            <h4 className="site-footer__heading">Pages</h4>
+            <p className="site-footer__heading">Pages</p>
             <ul className="site-footer__list">
               {PAGE_LINKS.map((link) => (
                 <li key={link.href}>
@@ -73,7 +73,7 @@ export function Footer() {
           </div>
 
           <div className="site-footer__col">
-            <h4 className="site-footer__heading">Legal</h4>
+            <p className="site-footer__heading">Legal</p>
             <ul className="site-footer__list">
               {LEGAL_LINKS.map((link) => (
                 <li key={link.href}>

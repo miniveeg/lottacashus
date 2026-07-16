@@ -568,6 +568,8 @@ export function Blackjack() {
               type="button"
               className="bj__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
+            
+              aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair
             </button>

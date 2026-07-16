@@ -30,7 +30,7 @@
 
 .game-guest-banner__btn {
   padding: 0.5rem 0.9rem;
-  min-height: 36px;
+  min-height: 44px;
   border-radius: var(--lc-radius-sm);
   font-size: 0.85rem;
   font-weight: 600;
@@ -40,7 +40,7 @@
 
 .game-guest-banner__btn--primary {
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
-  color: var(--lc-bg-base);
+  color: var(--lc-text-on-primary, #ffffff);
 }
 
 .game-guest-banner__btn--primary:hover {

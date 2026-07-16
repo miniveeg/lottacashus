@@ -105,7 +105,7 @@ export function Crash() {
 
   const historyRef = useRef<{ x: number; y: number }[]>([{ x: 0, y: 1 }]);
 
-  type CrashPhaseLocal = "idle" | "running" | "crashed" | "cashed_out";
+  type CrashPhaseLocal = "idle" | "placing" | "running" | "crashed" | "cashed_out";
 
   // Keep display-phase/multiplier refs in sync with state on every render so
   // stable callbacks (resizeCanvas) read current values without being
@@ -517,9 +517,11 @@ export function Crash() {
     setError(null);
     setLastResult(null);
     setBetId(null);
-    setPhase("running");
-    phaseRef.current = "running";
-    displayPhaseRef.current = "running";
+    // Intermediate "placing" phase: Bet is disabled, Cash Out is hidden
+    // until we have a server-issued betId.
+    setPhase("placing");
+    phaseRef.current = "placing";
+    displayPhaseRef.current = "placing";
     setMultiplier(1);
     multiplierRef.current = 1;
 
@@ -538,6 +540,9 @@ export function Crash() {
 
     setBetId(data.betId);
     setPfNonce(data.nonce + 1);
+    setPhase("running");
+    phaseRef.current = "running";
+    displayPhaseRef.current = "running";
     busyRef.current = false;
     // CRITICAL FIX: do NOT pass data.crashPoint — the server deliberately
     // withholds it (provably-fair guarantee). The animation runs without an
@@ -735,13 +740,13 @@ export function Crash() {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
                   applyWager(Number.isFinite(parsed) ? parsed : 1);
                 }}
-                disabled={phase === "running"}
+                disabled={phase === "running" || phase === "placing"}
               />
               <button
                 type="button"
                 className="game-controls__wager-adj"
                 onClick={() => applyWager(wager / 2)}
-                disabled={phase === "running"}
+                disabled={phase === "running" || phase === "placing"}
                 aria-label="Half bet"
               >
                 &frac12;
@@ -753,7 +758,7 @@ export function Crash() {
                   const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
                   applyWager(Math.min(wager * 2, activeBalance));
                 }}
-                disabled={phase === "running"}
+                disabled={phase === "running" || phase === "placing"}
                 aria-label="Double bet"
               >
                 2&times;
@@ -769,7 +774,7 @@ export function Crash() {
                   // that don't match the server's worst-case cap math.
                   applyWager(Math.min(CRASH_MAX_WAGER, activeBalance));
                 }}
-                disabled={phase === "running"}
+                disabled={phase === "running" || phase === "placing"}
                 aria-label="Max bet"
               >
                 MAX
@@ -794,6 +799,8 @@ export function Crash() {
           ) : (
             <BetButton
               onClick={handleBet}
+              busy={phase === "placing"}
+              busyLabel="Placing bet…"
               exceedsCap={exceedsMaxPayout}
               exceedsCapLabel="Payout exceeds cap"
               label={
@@ -818,6 +825,8 @@ export function Crash() {
               type="button"
               className="crash__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
+            
+              aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair
             </button>

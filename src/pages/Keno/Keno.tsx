@@ -521,6 +521,8 @@ export function Keno() {
               type="button"
               className="keno__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
+            
+              aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair
             </button>
@@ -557,7 +559,7 @@ export function Keno() {
                   Draws use HMAC-SHA256 with Fisher-Yates selection (Stake Keno).
                 </p>
                 <p className="keno__fairness-note keno__fairness-note--disclosure">
-                  RTP disclosure: base draw odds target ~99% RTP; a deterministic; a deterministic
+                  RTP disclosure: base draw odds target ~99% RTP; a deterministic
                   bias roll (HMAC-SHA256, same seeds) downgrades ~2.5% of would-be
                   wins to losses to enforce the displayed 96.5% RTP. The bias is
                   verifiable post-rotation using the revealed server seed.

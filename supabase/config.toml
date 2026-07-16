@@ -64,3 +64,7 @@ verify_jwt = true
 
 [functions.blackjack-game]
 verify_jwt = true
+
+# Cron-callable (auth via CRON_SECRET header inside the function body).
+[functions.crash-settle-expired]
+verify_jwt = false

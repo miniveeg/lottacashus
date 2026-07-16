@@ -39,7 +39,10 @@
 
 .lc-page--auth {
   max-width: none;
-  min-height: calc(100dvh - var(--lc-topbar-height));
+  /* Grow to fill the page-transition column so the sticky footer stays at
+     the bottom without forcing an extra scroll on short viewports. */
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,7 +360,9 @@
 .mines__controls, .keno__controls, .limbo__controls,
 .roulette__controls, .crash__controls, .slots__controls, .bj__controls {
   position: sticky;
-  top: calc(var(--lc-topbar-height) + 1rem);
+  /* Sticky is relative to .app-shell__main (already below the topbar), so
+     do NOT add --lc-topbar-height here — that left a large empty gap. */
+  top: 1rem;
   align-self: stretch;
 }
 

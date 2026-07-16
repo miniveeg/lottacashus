@@ -428,6 +428,8 @@ export function Limbo() {
               type="button"
               className="limbo__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
+            
+              aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair
             </button>
@@ -459,7 +461,7 @@ export function Limbo() {
                   HMAC-SHA256 → 4-byte float → 2²⁴/(n+1)×0.99 — 96.5% RTP via win odds.
                 </p>
                 <p className="limbo__fairness-note limbo__fairness-note--disclosure">
-                  RTP disclosure: the raw roll targets ~99% RTP; a deterministic; a deterministic
+                  RTP disclosure: the raw roll targets ~99% RTP; a deterministic
                   bias roll (same seeds) downgrades ~2.5% of would-be wins to
                   enforce the displayed 96.5% RTP. Verifiable after seed rotation.
                 </p>

@@ -25,6 +25,37 @@ const legalNav: NavItem[] = [
   { icon: "document", label: "Sweepstakes Rules", href: "/sweepstakes" },
 ];
 
+/**
+ * Hover-prefetch map. When the user hovers (or focuses via keyboard) a
+ * sidebar link, kick off the dynamic import for that page's chunk so the
+ * navigation feels instant on click. Statically-unreachable links fall
+ * through silently.
+ *
+ * The IIFE is built lazily once because some prefetchers reference page
+ * modules whose own providers import the SidebarProvider (loop). By
+ * deferring the `import()` expression to the call site (not the map
+ * declaration), we sidestep the circular-init problem.
+ */
+const prefetchRoute = (() => {
+  const map: Record<string, () => Promise<unknown>> = {
+    "/": () => import("../../pages/Home/Home"),
+    [ORIGINALS_PATH]: () => import("../../pages/Originals/Originals"),
+    "/promotions": () => import("../../pages/Promotions/Promotions"),
+    "/leaderboard": () => import("../../pages/Leaderboard/Leaderboard"),
+    "/settings": () => import("../../pages/Settings/Settings"),
+    "/deposit": () => import("../../pages/Deposit/Deposit"),
+    "/withdraw": () => import("../../pages/Withdraw/Withdraw"),
+    "/help": () => import("../../pages/Help/Help"),
+    "/sweepstakes": () => import("../../pages/SweepstakesRules/SweepstakesRules"),
+    "/admin": () => import("../../pages/Admin/Admin"),
+    "/profile": () => import("../../pages/Profile/Profile"),
+  };
+  return (href: string) => {
+    const f = map[href];
+    if (f) void f();
+  };
+})();
+
 function navIsActive(href: string, pathname: string): boolean {
   if (href === ORIGINALS_PATH) return ORIGINALS_ROUTES.has(pathname);
   return pathname === href;
@@ -41,6 +72,8 @@ function NavLink({ item }: { item: NavItem }) {
         to={item.href}
         className={`sidebar__link${active ? " sidebar__link--active" : ""}`}
         onClick={closeMobile}
+        onMouseEnter={() => prefetchRoute(item.href)}
+        onFocus={() => prefetchRoute(item.href)}
         title={collapsed ? item.label : undefined}
         aria-current={active ? "page" : undefined}
       >

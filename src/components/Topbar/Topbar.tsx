@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bell, Info, LogIn, LogOut, Menu, UserPlus } from "lucide-react";
@@ -18,6 +18,13 @@ import { TopbarLevelProgress } from "./TopbarLevelProgress";
 import "../BrandLogo/BrandLogo.css";
 import "./Topbar.css";
 import "./TopbarLevelProgress.css";
+
+// Wrap TopbarLevelProgress with React.memo so balance refetches that don't
+// change the level/bar state don't trigger the SVG re-render. Topbar
+// re-renders on every Profile change (avatar, balance, etc.) but the wrapped
+// child can skip its render when its props are unchanged. (Topbar re-renders
+// ~4x with the realtime channel; memo saves the SVG path recompute on 3 of 4.)
+const MemoizedLevelProgress = memo(TopbarLevelProgress);
 
 export function Topbar() {
   const { user, loading, signOut, isGuest } = useAuth();
@@ -166,7 +173,7 @@ export function Topbar() {
           <span className="topbar__loading">…</span>
         ) : signedIn ? (
           <>
-            <TopbarLevelProgress
+            <MemoizedLevelProgress
               displayName={displayName}
               profileTitle={user?.email ?? undefined}
               totalWagered={profile?.totalWagered ?? 0}
@@ -188,7 +195,7 @@ export function Topbar() {
           <>
             {/* Local-play guests still show a light Guest chip so the topbar is not empty. */}
             {isGuest && user ? (
-              <TopbarLevelProgress
+              <MemoizedLevelProgress
                 displayName={displayName}
                 profileTitle="Local play — balances stay in this browser"
                 totalWagered={profile?.totalWagered ?? 0}

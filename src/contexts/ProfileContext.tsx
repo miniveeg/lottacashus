@@ -109,6 +109,44 @@ const AUDIT_PROFILE: UserProfile | null = AUDIT_BYPASS
     }
   : null;
 
+// Throttle realtime apply to ~5Hz (200ms) so rapid-fire betting doesn't
+// re-render the Topbar + Balance rail 5+ times per second. Trailing-edge
+// keeps the most recent balance — no value is lost, only the rate is capped.
+// Returns a `flushNow` for the cleanup path to commit the last pending row.
+function makeThrottledApply(applyFn: (row: Record<string, unknown>, isAdmin: boolean | undefined) => void) {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  let lastAppliedAt = 0;
+  let pendingRow: Record<string, unknown> | null = null;
+  let pendingAdmin: boolean | undefined = undefined;
+  const flush = () => {
+    timer = null;
+    if (!pendingRow) return;
+    lastAppliedAt = Date.now();
+    applyFn(pendingRow, pendingAdmin);
+    pendingRow = null;
+  };
+  return {
+    schedule(row: Record<string, unknown>, isAdmin: boolean | undefined) {
+      pendingRow = row;
+      pendingAdmin = isAdmin;
+      const since = Date.now() - lastAppliedAt;
+      if (since >= 200) {
+        flush();
+        return;
+      }
+      if (timer !== null) return;
+      timer = setTimeout(flush, 200 - since);
+    },
+    cancel() {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      pendingRow = null;
+    },
+  };
+}
+
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user, session } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(AUDIT_PROFILE);
@@ -283,6 +321,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const accessToken = session.access_token;
     let cancelled = false;
     let channel: RealtimeChannel | null = null;
+    const throttle = makeThrottledApply((row, isAdmin) => applyProfile(row, isAdmin));
 
     // Synchronously mark loading as soon as we know we have a user — this
     // closes the gap between the auth state flipping to "logged in" and the
@@ -304,12 +343,13 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           { event: "*", schema: "public", table: "profiles", filter: `id=eq.${userId}` },
           (payload) => {
             if (payload.eventType === "DELETE") {
+              throttle.cancel();
               setProfile(null);
               return;
             }
             if (payload.new) {
               const row = payload.new as Record<string, unknown>;
-              applyProfile(row, Boolean(row.is_admin));
+              throttle.schedule(row, Boolean(row.is_admin));
             }
           }
         )
@@ -322,7 +362,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       // visibilitychange + focus listeners below refresh on tab return. The
       // poll doubled RPC load and caused the Topbar (a useProfile consumer)
       // to re-render every 1.5s for no benefit. Realtime + visibility is
-      // sufficient and far cheaper.
+      // sufficient and far cheaper. + throttle above caps the realtime
+      // render rate at ~5Hz to prevent UI lockup during auto-betting.
     }
 
     start();
@@ -337,6 +378,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true;
+      throttle.cancel();
       if (channel) supabase.removeChannel(channel);
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);

@@ -192,6 +192,18 @@ select option {
   min-height: 100%;
   display: flex;
   flex-direction: column;
+  /* GPU-layer hint: combined with the existing 240ms op/transform animation,
+     this promotes the transitioning node to its own composited layer so route
+     changes paint smoothly instead of triggering layout. Cheap VRAM cost — the
+     page is already painted at large size; promoting it once is a wash. */
+  /* NOTE: `will-change` was removed here after the perf audit. The
+     wrapper is a static flex container; the actual route animation runs on
+     its child (framer-motion exit/enter), which already promotes the
+     animating node to its own composited layer. Promoting the static
+     wrapper would eat VRAM for every route visit (each route re-allocates
+     a new wrapper node) with no visible offset. Leave this comment so the
+     next perf pass doesn't try to re-add it. */
+  will-change: auto;
 }
 
 /* ── Global keyboard focus indicator ──

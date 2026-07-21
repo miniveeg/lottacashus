@@ -102,13 +102,24 @@ export async function placeCrashBet(params: {
   wager: number;
   coinType?: string;
 }): Promise<{ data: CrashBetResult | null; error: string | null }> {
+  // Idempotency: reuse the same UUID across retries of the SAME bet so a
+  // network blip after the SQL commit doesn't double-debit. Clear on
+  // success so the next round gets a fresh key.
+  const {
+    getOrCreateRequestId,
+    clearRequestId,
+    IDEM_KEY_CRASH_BET,
+  } = await import("./idempotency");
+  const clientRequestId = getOrCreateRequestId(IDEM_KEY_CRASH_BET);
   const { data, error } = await invokeEdgeFunction<CrashBetResult>("place-crash-bet", {
     wager: params.wager,
     coinType: params.coinType ?? "balance",
+    clientRequestId,
   });
 
   if (error) return { data: null as CrashBetResult | null, error };
   if (!data) return { data: null, error: "No response from server." };
+  clearRequestId(IDEM_KEY_CRASH_BET);
   return { data, error: null };
 }
 

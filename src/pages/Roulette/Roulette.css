@@ -76,6 +76,10 @@
   /* Staggered entrance — newest chip slides in from the left.
      Audit issue P2 extra (Agent 2 Roulette improvement). */
   animation: roulette-chip-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Tabular nums + aligned right so 2-digit pockets (10–36) line up with
+     the 1-digit ones. */
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 @keyframes roulette-chip-enter {
@@ -197,6 +201,42 @@
   transform: scale(0.94);
 }
 
+/* Phase polish: subtle scale pulse + gold-dim border/box on the
+   selected bet cell. The 320ms one-shot pop gives the player tactile
+   feedback on selection; the static border-color/background/box-shadow
+   persist for as long as the bet is selected. */
+.roulette__bet-cell--selected {
+  border-color: var(--lc-gold-dim);
+  background: rgba(245, 185, 66, 0.12);
+  box-shadow: 0 0 0 1px var(--lc-gold-dim);
+  animation: roulette-cell-selected-pop 0.32s cubic-bezier(0.34, 1.45, 0.64, 1) 1;
+}
+
+@keyframes roulette-cell-selected-pop {
+  0%   { transform: scale(0.96); }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+/* Phase polish: emerald glow pulse on the bet cell that won the most
+   recent round. 3 iterations then settles (matches Keno paytable-pulse
+   and Slots reels-win patterns — no infinite loops). */
+.roulette__bet-cell--win {
+  animation: roulette-bet-cell-win 1.2s ease-in-out 3;
+  border-color: var(--lc-emerald);
+}
+
+@keyframes roulette-bet-cell-win {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(34, 197, 94, 0.6),
+      0 0 14px 4px rgba(34, 197, 94, 0.5);
+  }
+}
+
 .roulette__bet-cell:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -212,12 +252,6 @@
 
 .roulette__bet-cell--green .roulette__bet-cell-label {
   color: var(--lc-emerald);
-}
-
-.roulette__bet-cell--selected {
-  border-color: var(--lc-gold-dim);
-  background: rgba(245, 185, 66, 0.12);
-  box-shadow: 0 0 0 1px var(--lc-gold-dim);
 }
 
 .roulette__bet-cell--selected .roulette__bet-cell-label {
@@ -281,6 +315,9 @@
 .roulette__result-payout {
   margin: 0.25rem 0 0;
   font-weight: 600;
+  /* Tabular nums so the payout value doesn't reflow horizontally when the
+     digits change between rounds. */
+  font-variant-numeric: tabular-nums;
 }
 
 .roulette__result--win .roulette__result-payout {
@@ -603,6 +640,36 @@
   color: var(--lc-emerald);
 }
 
+/* Phase polish: brief radial glow on the center hub numbers when a
+   round settles. Pairs red/green/black border-color with a soft matching
+   glow that fades to a static state. Mirrors the slots__reel--win and
+   limbo-display win patterns. */
+.roulette-wheel__hub--red {
+  animation: roulette-hub-glow-red 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) 1;
+}
+.roulette-wheel__hub--black {
+  animation: roulette-hub-glow-black 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) 1;
+}
+.roulette-wheel__hub--green {
+  animation: roulette-hub-glow-emerald 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) 1;
+}
+
+@keyframes roulette-hub-glow-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  50% { box-shadow: 0 0 22px 6px rgba(239, 68, 68, 0.5); }
+  100% { box-shadow: 0 0 12px rgba(239, 68, 68, 0.35); }
+}
+@keyframes roulette-hub-glow-black {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.35); }
+  50% { box-shadow: 0 0 22px 6px rgba(255, 255, 255, 0.18); }
+  100% { box-shadow: 0 0 8px rgba(255, 255, 255, 0.08); }
+}
+@keyframes roulette-hub-glow-emerald {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  50% { box-shadow: 0 0 22px 6px rgba(34, 197, 94, 0.55); }
+  100% { box-shadow: 0 0 12px rgba(34, 197, 94, 0.35); }
+}
+
 .roulette-wheel__hub-number {
   font-family: var(--lc-font-display);
   font-size: clamp(1.5rem, 5vw, 2.25rem);
@@ -660,6 +727,32 @@
   }
 }
 
+/* Phase polish: hotkey hint footer displayed just under the Bet button
+   so desktop users discover the keyboard shortcuts. Subtle muted text
+   with each token wrapped in a kbd chip. */
+.roulette__hotkey-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--lc-text-muted);
+  letter-spacing: 0.02em;
+  text-align: center;
+  padding: var(--lc-spacing-1) var(--lc-spacing-2);
+}
+
+.roulette__hotkey-hint kbd {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  margin: 0 0.1rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+  box-shadow: 0 1px 0 var(--lc-bg-hover);
+}
+
 /* Reduced-motion: disable decorative animations (disc spin, ball bounce,
    hub dots, spinner, result-in pop). The wheel disc still renders at its
    target rotation (no transition), the hub number/color is still shown,
@@ -667,15 +760,52 @@
 @media (prefers-reduced-motion: reduce) {
   .roulette-wheel__disc-wrap--spinning .roulette-wheel__disc,
   .roulette-wheel__disc-wrap--settling .roulette-wheel__disc,
+  .roulette-wheel__disc-wrap--spinning ~ .roulette-wheel__ball-marker,
   .roulette-wheel__disc-wrap--spinning ~ .roulette-wheel__ball-marker .roulette-wheel__ball,
   .roulette-wheel__hub-dots span,
+  .roulette-wheel__hub--red,
+  .roulette-wheel__hub--black,
+  .roulette-wheel__hub--green,
   .roulette__spinner,
-  .roulette__result {
+  .roulette__result,
+  .roulette__bet-cell--selected,
+  .roulette__bet-cell--win,
+  .roulette__history-chip {
     animation: none !important;
     transition: none !important;
   }
 
   .roulette-wheel__disc-wrap--spinning .roulette-wheel__disc {
     transform: rotate(var(--spin-from, 0deg));
+  }
+  .roulette__bet-cell:active:not(:disabled) {
+    transform: none !important;
+  }
+}
+
+/* Phase polish: mobile (≤ 480px) sticky controls. Mirrors the established
+   Crash/Mines/Keno/Slots/Limbo pattern. */
+@media (max-width: 480px) {
+  .roulette__controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--lc-bg) 35%,
+      var(--lc-bg) 100%
+    );
+    padding-top: var(--lc-spacing-3);
+    padding-bottom: max(var(--lc-spacing-3), env(safe-area-inset-bottom));
+  }
+  .roulette__history {
+    gap: 0.25rem;
+  }
+  .roulette__history-chip {
+    min-height: 2.25rem;
+    min-width: 1.6rem;
+    font-size: 0.62rem;
+    padding: 0 var(--lc-spacing-1);
   }
 }

@@ -145,6 +145,21 @@
   40%, 60% { transform: translateX(3px); }
 }
 
+/* Live-pulse for the Cash Out button while a round is running. The
+   period is set inline by Crash.tsx (cashoutPulseStyle) so it scales
+   with the multiplier magnitude — breathe faster as the round gets
+   tense. Suppressed under prefers-reduced-motion below. */
+@keyframes crash-cashout-pulse {
+  0%, 100% {
+    box-shadow: 0 2px 20px var(--lc-emerald-glow);
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    box-shadow: 0 4px 32px var(--lc-emerald-glow-strong);
+    transform: translateY(-1px) scale(1.006);
+  }
+}
+
 .crash__canvas {
   display: block;
   width: 100%;
@@ -272,14 +287,24 @@
   transform: translateY(-1px);
 }
 
-/* Press feedback — satisfying "click" feel on the cashout button. */
+/* Press feedback — satisfying "click" feel on the cashout button. The
+   pulse animation's 50% step sets transform: translateY(-1px) scale(1.006)
+   which would fight the press-indent, so we pause the animation while
+   :active and !important the press transform. Animation resumes on release. */
 .crash__cashout-btn:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(0) scale(0.98) !important;
+  animation-play-state: paused;
 }
 
 .crash__cashout-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  /* The inline cashoutPulseStyle animation is left in place when the
+     button becomes disabled, but the keyframes on :disabled don't
+     appear. We strip it explicitly so the disabled state is calm
+     (the previous behavior would have kept pulsing while "Cashing
+     out..." overflowed for a slow network). */
+  animation: none !important;
 }
 
 .crash__bet-btn {
@@ -464,8 +489,9 @@
   border: 0;
 }
 
-/* Reduced-motion: disable decorative CSS animations (shake/flash/bounce).
-   The rAF multiplier curve is core gameplay and is preserved. */
+/* Reduced-motion: disable decorative CSS animations (shake/flash/bounce
+   /cashout-pulse). The rAF multiplier curve is core gameplay and is
+   preserved. */
 @media (prefers-reduced-motion: reduce) {
   .crash__canvas-wrap,
   .crash__canvas-wrap--crashed,
@@ -475,8 +501,31 @@
   .crash__mult-value--crashed,
   .crash__mult-value--win,
   .crash__mult-value--confirming,
-  .crash__mult-label--confirming {
+  .crash__mult-label--confirming,
+  .crash__cashout-btn {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* ─── Mobile (<480px) ──────────────────────────────────────────────────
+   On phones the controls panel sits below the chart and stays pinned to
+   the bottom of the viewport (after the chart scrolls up and out), so
+   the wager + Cash Out stay reachable without scrolling. The chart
+   fixes its height so it doesn't blow up in column-flex layouts. */
+@media (max-width: 480px) {
+  .crash__layout { gap: var(--lc-spacing-3); }
+  .crash__stage-panel { min-height: 240px; }
+  .crash__canvas { aspect-ratio: unset; height: 200px; }
+  .crash__controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: linear-gradient(180deg, transparent, var(--lc-bg-base) 35%);
+    border-top: 1px solid var(--lc-border);
+    padding: var(--lc-spacing-3) 0 var(--lc-spacing-4);
+    margin-top: var(--lc-spacing-3);
+  }
+  .crash__mult-value { font-size: clamp(2rem, 11vw, 2.75rem); }
+  .crash__cashout-btn { min-height: 3.25rem; font-size: 1rem; }
 }

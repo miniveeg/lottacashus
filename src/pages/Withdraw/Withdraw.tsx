@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Banknote } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -72,6 +72,30 @@ export function Withdraw() {
   }
 
   const scBalance = profile?.sweepsCoins ?? 0;
+
+  // ⌨️ Cmd/Ctrl+Enter submits the withdrawal form. The hotkey is
+  // registered once with `[]` deps — all the gated state (submitting,
+  // configured) is read via refs every keystroke so the listener doesn't
+  // re-register on every render. Mirrors the gamemode hotkey pattern.
+  const submittingRef = useRef(false);
+  submittingRef.current = submitting;
+  const configuredRef = useRef(configured);
+  configuredRef.current = configured;
+  const formRef = useRef<HTMLFormElement | null>(null);
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key !== "Enter") return;
+      if (e.altKey || e.shiftKey) return;
+      if (submittingRef.current || !configuredRef.current) return;
+      const f = formRef.current;
+      if (!f) return;
+      e.preventDefault();
+      f.requestSubmit();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -179,7 +203,7 @@ export function Withdraw() {
         {error && <FormAlert id="withdraw-error">{error}</FormAlert>}
         {success && <FormAlert kind="success" id="withdraw-success">{success}</FormAlert>}
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form onSubmit={handleSubmit} noValidate ref={formRef}>
           <div className="wallet__chain-picker" role="group" aria-label="Select withdrawal chain">
             {CRYPTO_CHAINS.map((c) => (
               <button
@@ -252,6 +276,14 @@ export function Withdraw() {
             {submitting ? "Submitting…" : "Request withdrawal"}
           </button>
         </form>
+
+        <p className="lc-hotkey-hint" role="note">
+          <span className="lc-hotkey-hint__combo">
+            <kbd>{typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"}</kbd>
+            <kbd>↵</kbd>
+          </span>
+          <span>submit withdrawal</span>
+        </p>
 
         <p className="wallet__hint wallet__hint--note">
           Redemptions are reviewed and processed from treasury wallets within 3–5 business days.

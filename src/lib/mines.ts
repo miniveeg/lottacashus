@@ -135,12 +135,21 @@ export async function startMinesGame(params: {
   mineCount: number;
   coinType?: string;
 }): Promise<{ data: MinesStartResult | null; error: string | null }> {
-  return invokeEdgeFunction<MinesStartResult>("mines-game", {
+  const {
+    getOrCreateRequestId,
+    clearRequestId,
+    IDEM_KEY_MINES_START,
+  } = await import("./idempotency");
+  const clientRequestId = getOrCreateRequestId(IDEM_KEY_MINES_START);
+  const { data, error } = await invokeEdgeFunction<MinesStartResult>("mines-game", {
     action: "start",
     wager: params.wager,
     mineCount: params.mineCount,
     coinType: params.coinType ?? "balance",
+    clientRequestId,
   });
+  if (data) clearRequestId(IDEM_KEY_MINES_START);
+  return { data, error };
 }
 
 export async function revealMinesTile(params: {

@@ -79,14 +79,22 @@ export async function placeKenoBet(params: {
   risk: KenoRisk;
   coinType?: string;
 }): Promise<{ data: KenoBetResult | null; error: string | null }> {
+  const {
+    getOrCreateRequestId,
+    clearRequestId,
+    IDEM_KEY_KENO_BET,
+  } = await import("./idempotency");
+  const clientRequestId = getOrCreateRequestId(IDEM_KEY_KENO_BET);
   const { data, error } = await invokeEdgeFunction<KenoBetResult>("place-keno-bet", {
     wager: params.wager,
     picks: params.picks,
     risk: params.risk,
     coinType: params.coinType ?? "balance",
+    clientRequestId,
   });
 
   if (error) return { data: null, error };
   if (!data) return { data: null, error: "No response from server." };
+  clearRequestId(IDEM_KEY_KENO_BET);
   return { data, error: null };
 }

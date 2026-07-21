@@ -6,6 +6,7 @@ import {
   validateRouletteBet,
   type RouletteBetType,
 } from "../_shared/roulette.ts";
+import { extractClientRequestId } from "../_shared/hardened.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -24,6 +25,7 @@ Deno.serve(async (req) => {
     const wager = Number(body?.wager);
     const betType = String(body?.betType ?? body?.bet ?? "").toLowerCase();
     const coinType = String(body?.coinType ?? "balance");
+    const clientRequestId = extractClientRequestId(body ?? null);
 
     const validationError = validateRouletteBet(wager, betType);
     if (validationError) {
@@ -48,26 +50,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: excluded } = await supabaseAdmin.rpc("check_user_self_exclusion", {
-      p_user_id: user.id,
-    });
-    if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
-    }
-
-    const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
-
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select(coinColumn)
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
-    if (balance < wager) {
-      return jsonResponse({ error: "Insufficient balance" }, 400, req);
-    }
-
+    // Self-exclusion + balance check + atomic debit now live inside
+    // place_roulette_bet. Edge-side call removed.
     const { data: seedData, error: seedError } = await supabaseAdmin.rpc(
       "consume_keno_nonce",
       { p_user_id: user.id, p_advance: 1 }
@@ -99,8 +83,8 @@ Deno.serve(async (req) => {
     const multiplier = roulettePayoutMultiplier(typedBet, won);
     const payout = won ? Math.round(wager * multiplier * 100) / 100 : 0;
 
-    const { data: settled, error: settleError } = await supabaseAdmin.rpc(
-      "settle_roulette_bet",
+    const { data: placed, error: placeError } = await supabaseAdmin.rpc(
+      "place_roulette_bet",
       {
         p_user_id: user.id,
         p_wager: wager,
@@ -111,22 +95,23 @@ Deno.serve(async (req) => {
         p_payout: payout,
         p_nonce: nonce,
         p_coin_type: coinType,
+        p_client_request_id: clientRequestId,
       }
     );
 
-    if (settleError) {
-      console.error("settle_roulette_bet:", settleError);
-      return jsonResponse({ error: settleError.message }, 400, req);
+    if (placeError) {
+      console.error("place_roulette_bet:", placeError);
+      return jsonResponse({ error: placeError.message }, 400, req);
     }
 
-    const row = (Array.isArray(settled) ? settled[0] : settled) as
+    const row = (Array.isArray(placed) ? placed[0] : placed) as
       | Record<string, unknown>
       | undefined;
     const outBalance = row?.out_balance ?? row?.balance;
 
     return jsonResponse({
       betId: row?.bet_id,
-      balance: Number(outBalance ?? balance),
+      balance: Number(outBalance ?? 0),
       coinType,
       betType: typedBet,
       resultPocket,

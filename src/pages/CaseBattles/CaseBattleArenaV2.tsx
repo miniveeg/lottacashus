@@ -113,22 +113,24 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
   }, []);
 
   // ── Per-slot "Add bot to this slot" handler ──────────────────────────
+  // Phase polish: replaced the legacy alert() with an inline error slot
+  // so the message persists next to the failing button — the user can
+  // read + dismiss + retry without it auto-disappearing on the next
+  // render (alert() also blocks the JS thread and isn't styleable).
   const [botBusySlot, setBotBusySlot] = useState<number | null>(null);
+  const [botError, setBotError] = useState<string | null>(null);
   async function handleAddBotToSlot(slotIndex: number) {
     if (botBusySlot != null) return;
+    setBotError(null);
     setBotBusySlot(slotIndex);
     const { error } = await addBotToBattle(battle.battleId, slotIndex);
     setBotBusySlot(null);
-    if (error) {
-      // Surface the error inline (action-level error lives in the room
-      // page; we keep this scoped to the slot so the user can retry).
-      // eslint-disable-next-line no-alert
-      alert(error);
-    }
+    if (error) setBotError(`Slot ${slotIndex + 1}: ${error}`);
   }
 
   // ── Waiting state ───────────────────────────────────────────────────
-  if (battle.status === "waiting") {
+  const isWaitingArena = battle.status === "waiting";
+  if (isWaitingArena) {
     return (
       <div className="cb-arena cb-arena--waiting">
         <div className="cb-arena__waiting-info">
@@ -177,6 +179,19 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
             );
           })}
         </div>
+        {botError && (
+          <div className="cb-arena__bot-error" role="alert">
+            <p>{botError}</p>
+            <button
+              type="button"
+              className="cb-arena__bot-error-dismiss"
+              onClick={() => setBotError(null)}
+              aria-label="Dismiss error"
+            >
+              ✕
+            </button>
+          </div>
+        )}
       </div>
     );
   }

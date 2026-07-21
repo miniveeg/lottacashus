@@ -84,19 +84,34 @@ import "./Crash.css";  // Animation uses a smooth curve that starts VERY slow ne
     }
     return v < 10 ? v.toFixed(1) + "×" : v.toFixed(0) + "×";
   }
-  // Compact multiplier text (the big "1.43x" number overlay). The previous
-  // version used `multiplier.toFixed(2)x`, which becomes unreadable at high
-  // values ("157823.42x" wraps and breaks layout). For values >=1000 we
-  // switch to compact notation.
+  // Compact multiplier text (the big "1.43x" number overlay). Density of
+  // digits scales with magnitude so the curve looks right at every tier:
+  //   1.00–9.99   → 2 decimals   ("1.43x")       densest when the curve is slow
+  //   10.0–99.9   → 1 decimal    ("12.7x")       each pixel of motion > a digit
+  //   100–999     → 0 decimals   ("137x")        the integer is the action
+  //   1.00K–9.99K → 2 decimals   ("1.43Kx")
+  //   10.0K–99.9K → 1 decimal    ("42.7Kx")
+  //   100K–999K   → 0 decimals   ("157Kx")       bypass 2-deci noise at extreme values
+  //   1M+         → 0–2 decimals ("1.5Mx", "12Mx")
   function formatMultiplier(v: number): string {
     if (v >= 1_000_000) {
       const n = v / 1_000_000;
       return (n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2)) + "M";
     }
-    if (v >= 1000) {
-      const n = v / 1000;
-      return (n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2)) + "K";
+    if (v >= 100_000) {
+      // Catches the v ≈ 999,950..999,999 range where Math.round(v/1000)
+      // would render "1000K" — wrong. Bump these to the M branch instead.
+      const roundK = Math.round(v / 1000);
+      if (roundK >= 1000) {
+        const n = v / 1_000_000;
+        return (n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2)) + "M";
+      }
+      return roundK + "K";
     }
+    if (v >= 10_000) return (v / 1000).toFixed(1) + "K";
+    if (v >= 1000) return (v / 1000).toFixed(2) + "K";
+    if (v >= 100) return v.toFixed(0);
+    if (v >= 10) return v.toFixed(1);
     return v.toFixed(2);
   }
 // Polling interval for detecting server-side bet settlement (when the user
@@ -150,6 +165,21 @@ export function Crash() {
   const multiplierRef = useRef(1);
   const displayPhaseRef = useRef<CrashPhaseLocal>("idle");
   const cancelledRef = useRef(false);
+  // wagerRef lets the global keyboard hotkey handler (added below) read
+  // the latest wager value without re-registering the listener on every
+  // wager change. Same pattern as multiplierRef / cancelledRef.
+  const wagerRef = useRef(1);
+  // profileRef is used by the hotkey handler so it can read wallet
+  // balance via ref (instead of capturing `profile` in the closure).
+  // The handler registers exactly once with empty `[]` deps, so it
+  // doesn't churn addEventListener on every refreshProfile() call.
+  const profileRef = useRef(profile);
+  // coinTypeRef mirrors `profileRef`: the hotkey handler reads the
+  // currently-active GC/SC via ref, not via closure. Without this the
+  // handler's `coinType === "sweeps_coins"` check would freeze on the
+  // first render's coin symbol and the `]` hotkey would double the wager
+  // against the WRONG balance after the user toggled GC↔SC.
+  const coinTypeRef = useRef(coinType);
 
   const [wager, setWager] = useState(1);
   const [wagerInput, setWagerInput] = useState("1.00");
@@ -193,6 +223,9 @@ export function Crash() {
   // reconnect churn at 60fps).
   multiplierRef.current = multiplier;
   displayPhaseRef.current = phase;
+  wagerRef.current = wager;
+  profileRef.current = profile;
+  coinTypeRef.current = coinType;
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchCrashPfState();
@@ -232,6 +265,59 @@ export function Crash() {
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
+  // Keyboard hotkeys — empty deps + reads from refs so the listener
+  // registers exactly once. Bails if focus is on a text input or
+  // contentEditable element (otherwise typing "c" in the wager box
+  // would cash out, which would be terrible). Bails on Cmd/Ctrl/Alt
+  // so we don't shadow browser shortcuts like Cmd+R.
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target) {
+        const tag = target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) return;
+      }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const k = e.key.toLowerCase();
+      if (k === "c") {
+        if (phaseRef.current === "running") {
+          e.preventDefault();
+          void handleCashOut();
+        }
+        return;
+      }
+      // Half / double wager only when we're between rounds.
+      if (k === "[") {
+        if (phaseRef.current === "running" || phaseRef.current === "placing") return;
+        e.preventDefault();
+        applyWager(wagerRef.current / 2);
+        return;
+      }
+      if (k === "]") {
+        if (phaseRef.current === "running" || phaseRef.current === "placing") return;
+        e.preventDefault();
+        const bal = coinTypeRef.current === "sweeps_coins"
+          ? (profileRef.current?.sweepsCoins ?? 0)
+          : (profileRef.current?.balance ?? 0);
+        applyWager(Math.min(wagerRef.current * 2, bal));
+        return;
+      }
+      // Enter or Space: idle → place bet, running → cash out.
+      // Space's default behavior is to scroll the page so always
+      // preventDefault when we handle it.
+      if (k === "enter" || k === " ") {
+        e.preventDefault();
+        if (phaseRef.current === "running") {
+          void handleCashOut();
+        } else if (phaseRef.current === "idle") {
+          void handleBet();
+        }
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   const applyWager = (value: number) => {
     const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
     const v = Math.max(CRASH_MIN_WAGER, Math.min(maxBet, value));
@@ -243,6 +329,19 @@ export function Crash() {
     () => Math.round(wager * multiplier * 100) / 100,
     [wager, multiplier]
   );
+
+  // Pulse-rate on the Cash Out button scales inversely with the multiplier
+  // so the button "breathes faster" as the round gets tense. ~2.4s period
+  // at 1.01x → ~0.9s at 100x+ (capped so it doesn't strobe). Suppressed
+  // while a cashout is already in flight so the disabled state is calm.
+  const cashoutPulseStyle: React.CSSProperties | undefined =
+    phase === "running" && !cashingOut
+      ? {
+          animation: `crash-cashout-pulse ${(
+            Math.max(0.9, 2.4 - Math.log10(Math.max(multiplier, 1.01)) * 0.5)
+          ).toFixed(2)}s ease-in-out infinite`,
+        }
+      : undefined;
 
   /** Resolve theme color for the chart line so it stays consistent with the site palette. */
   function resolveChartColor(): { line: string; fill: string; crashed: string } {
@@ -361,20 +460,29 @@ export function Crash() {
     }
     ctx.stroke();
 
-    // Glowing dot at the tip of the line (only while running)
+    // Glowing dot at the tip of the line (only while running). The glow
+    // alpha + radius pulse via performance.now() so the dot feels alive
+    // independent of the display refresh rate — a sine breath with
+    // ~1.4s period keeps the dot from looking static during the long
+    // slow start of the curve. The same wall-clock trick we used for
+    // the rAF game loop.
     if (!crashed && pts.length > 1) {
       const last = pts[pts.length - 1];
       const tipX = mapX(last.x);
       const tipY = mapY(last.y);
-      const glowGrad = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, 12);
-      glowGrad.addColorStop(0, "rgba(34, 197, 94, 0.55)");
+      const breath = Math.sin(performance.now() / 220);
+      const glowRadius = 12 + 2 * breath;
+      const glowAlpha = 0.55 + 0.15 * breath;
+      const coreRadius = 4 + 0.6 * breath;
+      const glowGrad = ctx.createRadialGradient(tipX, tipY, 0, tipX, tipY, glowRadius);
+      glowGrad.addColorStop(0, `rgba(34, 197, 94, ${glowAlpha})`);
       glowGrad.addColorStop(1, "rgba(34, 197, 94, 0)");
       ctx.beginPath();
-      ctx.arc(tipX, tipY, 12, 0, Math.PI * 2);
+      ctx.arc(tipX, tipY, glowRadius, 0, Math.PI * 2);
       ctx.fillStyle = glowGrad;
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(tipX, tipY, 4, 0, Math.PI * 2);
+      ctx.arc(tipX, tipY, coreRadius, 0, Math.PI * 2);
       ctx.fillStyle = colors.line;
       ctx.fill();
     }
@@ -965,6 +1073,7 @@ export function Crash() {
             <button
               type="button"
               className="crash__cashout-btn"
+              style={cashoutPulseStyle}
               onClick={handleCashOut}
               disabled={cashingOut}
               aria-busy={cashingOut}

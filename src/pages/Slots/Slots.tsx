@@ -85,6 +85,14 @@ export default function Slots() {
   const cancelledRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
 
+  // Phase polish: ref mirrors so the keyboard-hotkey listener (registered
+  // once with [] deps) can call handleSpin / applyWager safely — they read
+  // from these refs at call time so a stale first-render closure can't trap
+  // the user with the wrong wager / coin / balance. Mirrors Crash+Mines+Keno.
+  const wagerRef = useRef(1);
+  const coinTypeRef = useRef<string>("balance");
+  const profileRef = useRef(profile);
+
   // Read reduced-motion preference once on mount. The rAF spin animation is
   // purely decorative (the outcome is server-determined), so reduced-motion
   // users get the result without the flicker.
@@ -118,6 +126,14 @@ export default function Slots() {
     reelStatesRef.current = reelStates;
   }, [reelStates]);
 
+  // Sync ref mirrors for the hotkey handler (also keeps handleSpin safe
+  // across any binding context).
+  useEffect(() => {
+    wagerRef.current = wager;
+    coinTypeRef.current = coinType;
+    profileRef.current = profile;
+  }, [wager, coinType, profile]);
+
   const clearLandingTimers = useCallback(() => {
     for (const t of landingTimersRef.current) window.clearTimeout(t);
     landingTimersRef.current = [];
@@ -147,13 +163,14 @@ export default function Slots() {
         setWager(1);
         setWagerInput("1");
       } else {
-        const maxWager = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+        // Read coin type from ref so applyWager stays correct from the hotkey.
+        const maxWager = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
         const clamped = Math.min(Math.max(parsed, 1), maxWager);
         setWager(clamped);
         setWagerInput(String(clamped));
       }
     },
-    [coinType]
+    []
   );
 
   function startRollAnimation() {
@@ -215,11 +232,21 @@ export default function Slots() {
     // handler execution. The ref closes that window synchronously.
     if (rollingRef.current) return;
 
+    // Read session values from refs so this handler stays correct in any
+    // binding context (JSX onClick, hotkey listener with [] deps, etc.).
+    const wagerNow = wagerRef.current;
+    const coinNow = coinTypeRef.current;
+    const profNow = profileRef.current;
+    const activeBalanceNow =
+      coinNow === "sweeps_coins"
+        ? (profNow?.sweepsCoins ?? 0)
+        : (profNow?.balance ?? 0);
+
     setError(null);
     setShowResult(false);
     setLastResult(null);
 
-    if (activeBalance < wager) {
+    if (activeBalanceNow < wagerNow) {
       setError("Insufficient balance.");
       return;
     }
@@ -230,7 +257,10 @@ export default function Slots() {
     if (!reducedMotion) startRollAnimation();
 
     const startedAt = Date.now();
-    const { data, error: apiError } = await placeSlotsBet({ wager, coinType });
+    const { data, error: apiError } = await placeSlotsBet({
+      wager: wagerNow,
+      coinType: coinNow,
+    });
 
     const elapsed = Date.now() - startedAt;
     const remaining = Math.max(0, REVEAL_DELAY_MS - elapsed);
@@ -309,6 +339,75 @@ export default function Slots() {
     };
   }, [clearLandingTimers]);
 
+  // Keyboard hotkeys. Registered once with [] deps; handlers (handleSpin +
+  // applyWager) read everything from refs internally so first-render
+  // closure values can't trap the user with stale wager/coin/balance.
+  // Focus + modifier guards keep this safe globally (won't hijack Cmd+R;
+  // won't fire while typing in the wager/seed inputs).
+  //   Space / Enter → spin (only when not already rolling)
+  //   [             → half wager (idle only)
+  //   ]             → double wager (idle only), capped by balance + 100k/10M
+  //   M             → max wager (idle only)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      const tag = el?.tagName;
+      const onTextInput =
+        tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
+      if (onTextInput) return;
+
+      const k = e.key.toLowerCase();
+      const isRolling = rollingRef.current;
+
+      if (k === " " || k === "enter") {
+        e.preventDefault();
+        if (!isRolling) void handleSpin();
+        return;
+      }
+      if (k === "[") {
+        if (!isRolling) {
+          e.preventDefault();
+          const half = Math.max(wagerRef.current / 2, 1);
+          setWager(half);
+          setWagerInput(String(half));
+        }
+        return;
+      }
+      if (k === "]") {
+        if (!isRolling) {
+          e.preventDefault();
+          const prof = profileRef.current;
+          const activeBalance =
+            coinTypeRef.current === "sweeps_coins"
+              ? prof?.sweepsCoins ?? 0
+              : prof?.balance ?? 0;
+          // Inline cap avoids depending on the closure-captured wagerCap.
+          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          const doubled = Math.min(wagerRef.current * 2, activeBalance, cap);
+          applyWager(String(Math.max(doubled, 1)));
+        }
+        return;
+      }
+      if (k === "m") {
+        if (!isRolling) {
+          e.preventDefault();
+          const prof = profileRef.current;
+          const activeBalance =
+            coinTypeRef.current === "sweeps_coins"
+              ? prof?.sweepsCoins ?? 0
+              : prof?.balance ?? 0;
+          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          applyWager(String(Math.min(cap, activeBalance)));
+        }
+        return;
+      }
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div className="slots lc-game-page">
       <Seo
@@ -326,6 +425,8 @@ export default function Slots() {
           <div
             className={`slots__reels${
               !rolling && showResult && lastResult?.won ? " slots__reels--win" : ""
+            }${
+              reels.every((r) => r < 0) && !rolling ? " slots__reels--idle" : ""
             }`}
             role="img"
             aria-label="Slot machine reels"
@@ -376,6 +477,15 @@ export default function Slots() {
             <div className="slots__win-line" aria-hidden="true" />
           </div>
 
+          {/* Phase polish: idle hint shown only before the first spin. The
+              reels render as `-` placeholders until the first round resolves,
+              so this hint nudges the player to take the obvious action. */}
+          {reels.every((r) => r < 0) && !rolling && (
+            <p className="slots__press-to-spin" role="note">
+              Press <kbd>Space</kbd> or tap <strong>Spin</strong> to play
+            </p>
+          )}
+
           {showResult && lastResult && (
             <div className="slots__outcome" role="status" aria-live="polite">
               {lastResult.won ? (
@@ -394,6 +504,13 @@ export default function Slots() {
               )}
             </div>
           )}
+          {/* NOTE: an earlier polish pass also added a second SR-only live
+              announcer div with the same role/aria-live — this would have
+              caused screen readers to receive the result TWICE in a row.
+              The outcome <div> above already covers the announcement, so the
+              SR-only duplicate was removed. The .slots__sr-status style +
+              keyframes are intentionally left in place because they're CSS-only
+              and harmless if no element uses them. */}
         </section>
 
         <aside className="slots__controls game-controls">
@@ -457,21 +574,44 @@ export default function Slots() {
 
           {error && <FormAlert>{error}</FormAlert>}
 
-          {/* Always-visible paytable so players know what to aim for */}
+          {/* Always-visible paytable so players know what to aim for. The
+              winning-symbol row gets `slots__paytable-row--active` after a
+              successful round so the player can connect the payout back to
+              the symbol they hit. */}
           <div className="slots__paytable" aria-label="Paytable">
             <h4 className="slots__paytable-title">Paytable (3 of a kind)</h4>
             <div className="slots__paytable-grid">
-              {SLOTS_PAYTABLE.map((row) => (
-                <span key={`${row.id}-name`} className="slots__paytable-row">
-                  <SlotSymbol id={row.id} size={22} /> {SYMBOL_NAMES[row.id]}
-                </span>
-              )).flatMap((nameNode, i) => {
+              {SLOTS_PAYTABLE.map((row) => {
+                const isWinner =
+                  !!lastResult?.won && lastResult.reels[0] === row.id;
+                return (
+                  <span
+                    key={`${row.id}-name`}
+                    className={[
+                      "slots__paytable-row",
+                      isWinner ? "slots__paytable-row--active" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    <SlotSymbol id={row.id} size={22} /> {SYMBOL_NAMES[row.id]}
+                  </span>
+                );
+              }).flatMap((nameNode, i) => {
                 const row = SLOTS_PAYTABLE[i]!;
+                const isWinner =
+                  !!lastResult?.won && lastResult.reels[0] === row.id;
                 return [
                   nameNode,
                   <span
                     key={`${row.id}-mult`}
-                    className={`slots__paytable-mult${row.id === 6 ? " slots__paytable-mult--top" : ""}`}
+                    className={[
+                      "slots__paytable-mult",
+                      row.id === 6 ? "slots__paytable-mult--top" : "",
+                      isWinner ? "slots__paytable-mult--active" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                   >
                     {row.mult}×
                   </span>,

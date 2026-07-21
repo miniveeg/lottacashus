@@ -66,12 +66,20 @@ export async function placeSlotsBet(params: {
   wager: number;
   coinType?: string;
 }): Promise<{ data: SlotsBetResult | null; error: string | null }> {
+  const {
+    getOrCreateRequestId,
+    clearRequestId,
+    IDEM_KEY_SLOTS_BET,
+  } = await import("./idempotency");
+  const clientRequestId = getOrCreateRequestId(IDEM_KEY_SLOTS_BET);
   const { data, error } = await invokeEdgeFunction<SlotsBetResult>("place-slots-bet", {
     wager: params.wager,
     coinType: params.coinType ?? "balance",
+    clientRequestId,
   });
 
   if (error) return { data: null, error };
   if (!data) return { data: null, error: "No response from server." };
+  clearRequestId(IDEM_KEY_SLOTS_BET);
   return { data, error: null };
 }

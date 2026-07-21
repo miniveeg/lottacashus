@@ -36,6 +36,17 @@ const DEFAULT_SPIN_SPEED = 8; // px per frame — used only when parent omits sp
 const LAND_DURATION = 2400;   // ms — deceleration duration (FIXED across all reels)
 const FILLER_COUNT = 40;      // number of tiles in the strip (enough for the scroll)
 
+// Phase polish: live-read the OS-level prefers-reduced-motion setting so
+// the reel goes straight to its "landed" tile without the spinning loop
+// for users who opt out of motion. The CSS @media block ALSO kills the
+// keyframe animations; this JS path is required because the rAF tick() in
+// the spinner writes `transform` directly on the DOM element, which the
+// CSS query can't catch.
+function readPrefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 const RARITY_ICONS: Record<CaseRarity, string> = {
   common: "●",
   uncommon: "▲",
@@ -117,8 +128,31 @@ export function BattleReel({
   const landingFromRef = useRef<number>(0);
   const landingToRef = useRef<number>(0);
 
-  // Build initial filler strip on every new spin.
+  // Build initial filler strip on every new spin. If the user has
+  // prefers-reduced-motion: reduce set, skip the filler entirely and go
+  // straight to the "landed" phase so the rAF loop never scrolls. The
+  // target will be placed in the strip and the CSS class will be flipped
+  // in the [targetItem, syncedLandingStartTime] effect below.
   useEffect(() => {
+    if (readPrefersReducedMotion()) {
+      setStrip([]);
+      offsetRef.current = 0;
+      if (targetItem) {
+        // Place the target at LAND_INDEX so the resolved strip's
+        // landLookup below returns it instantly.
+        const LAND_INDEX = 35;
+        const reducedStrip: CaseItem[] = [];
+        for (let i = 0; i < LAND_INDEX + 5; i++) {
+          reducedStrip.push(i === LAND_INDEX ? targetItem : pickFillerItem(lootCase));
+        }
+        setStrip(reducedStrip);
+        setPhase("landed");
+        onLandedRef.current?.();
+      } else {
+        setPhase("idle");
+      }
+      return;
+    }
     const items: CaseItem[] = [];
     for (let i = 0; i < FILLER_COUNT; i++) {
       items.push(pickFillerItem(lootCase));

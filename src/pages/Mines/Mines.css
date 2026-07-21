@@ -75,6 +75,39 @@
   cursor: not-allowed;
 }
 
+/* Random tile — dice icon paired with a CSS roll animation that fires
+   each time the button is remounted via `key={randomSpinKey}` in
+   Mines.tsx. Inline-flex keeps the dice + label on a single line. */
+.mines__tool-btn--random {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--lc-spacing-2);
+}
+
+.mines__tool-btn--random > span[aria-hidden="true"] {
+  display: inline-block;
+  animation: mines-dice-roll 0.45s ease-out;
+  transform-origin: center;
+}
+
+@keyframes mines-dice-roll {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(140deg) scale(1.18);
+  }
+  50% {
+    transform: rotate(260deg) scale(0.9);
+  }
+  75% {
+    transform: rotate(330deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
 .mines__grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -91,6 +124,59 @@
   .mines__grid {
     gap: 0.4rem;
   }
+}
+
+/* Mine-count slider — Mines-specific risk gradient.
+   Mines.tsx sets --mines-risk = mineCount / MINES_MAX_COUNT inline so
+   the thumb tints from emerald (few mines) to crimson (all mines).
+   Track itself shows a fixed emerald→amber→crimson ramp. Scoped under
+   .mines__controls so this doesn't bleed into Keno's slider. */
+.mines__controls .game-controls__mines-slider {
+  --mines-risk: 0;
+}
+
+.mines__controls .game-controls__mines-slider::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--lc-emerald) 0%,
+    var(--lc-amber-dim) 50%,
+    var(--lc-crimson-soft) 100%
+  );
+  height: 6px;
+  border-radius: var(--lc-radius-pill);
+}
+
+.mines__controls .game-controls__mines-slider::-moz-range-track {
+  background: linear-gradient(
+    to right,
+    var(--lc-emerald) 0%,
+    var(--lc-amber-dim) 50%,
+    var(--lc-crimson-soft) 100%
+  );
+  height: 6px;
+  border-radius: var(--lc-radius-pill);
+}
+
+.mines__controls .game-controls__mines-slider::-webkit-slider-thumb {
+  background: color-mix(
+    in srgb,
+    var(--lc-emerald),
+    var(--lc-crimson-soft) calc(var(--mines-risk, 0) * 100%)
+  );
+  border: 2px solid var(--lc-bg);
+  box-shadow: 0 0 0 1px var(--lc-border-strong);
+  transition: background-color 0.2s ease;
+}
+
+.mines__controls .game-controls__mines-slider::-moz-range-thumb {
+  background: color-mix(
+    in srgb,
+    var(--lc-emerald),
+    var(--lc-crimson-soft) calc(var(--mines-risk, 0) * 100%)
+  );
+  border: 2px solid var(--lc-bg);
+  box-shadow: 0 0 0 1px var(--lc-border-strong);
+  transition: background-color 0.2s ease;
 }
 
 .mines__tile {
@@ -241,6 +327,10 @@
   justify-content: center;
   font-size: 0.9rem;
   color: var(--lc-text-secondary);
+  /* Tabular nums prevent <strong> digits jittering (1.23× → 1.24×)
+     during live updates; without this the multiplier value can shift
+     by a pixel or two on every tick. */
+  font-variant-numeric: tabular-nums;
 }
 
 .mines__live-stats strong {
@@ -453,4 +543,51 @@
   margin-top: var(--lc-spacing-2);
   color: var(--lc-text-muted);
   font-size: 0.75rem;
+}
+
+/* ── Reduced motion — disable every keyframe Mines uses for the
+   tile reveal, mine explode, peek, dice roll, msg-in, cashout pulse,
+   busy spinner. Honors the OS-level accessibility setting so users who
+   have vestibular sensitivity (or just hate motion) get a static UI. */
+@media (prefers-reduced-motion: reduce) {
+  .mines__tile--gem,
+  .mines__tile--mine:not(.mines__tile--peek),
+  .mines__tile--peek,
+  .mines__tile-icon,
+  .mines__tool-btn--random > span[aria-hidden="true"],
+  .mines__message,
+  .mines__cashout-btn,
+  .mines__spinner {
+    animation: none !important;
+  }
+  .mines__layout {
+    min-height: 0;
+  }
+}
+
+/* ── Mobile (≤ 480px) — pin the controls panel to the bottom of the
+   viewport so wager / bet / cashout stay reachable with the thumb
+   while the board grid stays scrollable above. */
+@media (max-width: 480px) {
+  .mines__controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--lc-bg) 35%,
+      var(--lc-bg) 100%
+    );
+    padding-top: var(--lc-spacing-3);
+    /* Pad against iOS safe-area + page bottom-pad. */
+    padding-bottom: max(var(--lc-spacing-3), env(safe-area-inset-bottom));
+  }
+  .mines__grid {
+    max-width: min(360px, 100%);
+  }
+  .mines__live-stats {
+    gap: 0.75rem 1rem;
+    font-size: 0.85rem;
+  }
 }

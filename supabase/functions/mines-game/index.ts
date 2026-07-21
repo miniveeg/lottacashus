@@ -7,6 +7,7 @@ import {
   validateMinesStart,
   validateMinesTile,
 } from "../_shared/mines.ts";
+import { extractClientRequestId } from "../_shared/hardened.ts";
 
 type MinesAction = "start" | "reveal" | "cashout" | "active";
 
@@ -26,6 +27,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = String(body?.action ?? "") as MinesAction;
     const coinType = String(body?.coinType ?? "balance");
+    const clientRequestId = extractClientRequestId(body ?? null);
 
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -45,14 +47,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: excluded } = await supabaseAdmin.rpc("check_user_self_exclusion", {
-      p_user_id: user.id,
-    });
-    if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
-    }
-
-    const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
+    // Self-exclusion check is now enforced inside every placer SQL function
+    // via reject_if_self_excluded (defense-in-depth). The redundant edge-side
+    // exclusion check was removed; balance is no longer read here either —
+    // SQL debits atomically with SELECT FOR UPDATE.
 
     if (action === "active") {
       const { data, error } = await supabaseAdmin.rpc("get_active_mines_game", {
@@ -83,17 +81,8 @@ Deno.serve(async (req) => {
       const validationError = validateMinesStart(mineCount, wager);
       if (validationError) return jsonResponse({ error: validationError }, 400, req);
 
-      const { data: profile } = await supabaseAdmin
-        .from("profiles")
-        .select(coinColumn)
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
-      if (balance < wager) {
-        return jsonResponse({ error: "Insufficient balance" }, 400, req);
-      }
-
+      // Edge-side balance read removed — place_mines_bet does the atomic
+      // check + debit (with stale-game auto-cancel + ON CONFLICT idempotency).
       const { data: seedData, error: seedError } = await supabaseAdmin.rpc(
         "consume_keno_nonce",
         { p_user_id: user.id, p_advance: 1 }
@@ -122,8 +111,8 @@ Deno.serve(async (req) => {
         mineCount,
       });
 
-      const { data: started, error: startError } = await supabaseAdmin.rpc(
-        "start_mines_game",
+      const { data: placed, error: placeError } = await supabaseAdmin.rpc(
+        "place_mines_bet",
         {
           p_user_id: user.id,
           p_wager: wager,
@@ -131,21 +120,22 @@ Deno.serve(async (req) => {
           p_mine_tiles: mineTiles,
           p_nonce: nonce,
           p_coin_type: coinType,
+          p_client_request_id: clientRequestId,
         }
       );
 
-      if (startError) {
-        console.error("start_mines_game:", startError);
-        return jsonResponse({ error: startError.message }, 400, req);
+      if (placeError) {
+        console.error("place_mines_bet:", placeError);
+        return jsonResponse({ error: placeError.message }, 400, req);
       }
 
-      const result = (Array.isArray(started) ? started[0] : started) as
+      const result = (Array.isArray(placed) ? placed[0] : placed) as
         | Record<string, unknown>
         | undefined;
 
       return jsonResponse({
-        gameId: result?.game_id,
-        balance: Number(result?.out_balance ?? balance - wager),
+        gameId: result?.game_id ?? result?.bet_id,
+        balance: Number(result?.out_balance ?? 0),
         coinType,
         mineCount,
         wager,

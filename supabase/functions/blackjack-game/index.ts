@@ -14,6 +14,7 @@ import {
   validateWager,
 } from "../_shared/blackjack.ts";
 import { rtpBiasFloat } from "../_shared/rtpBias.ts";
+import { extractClientRequestId } from "../_shared/hardened.ts";
 
 type HandRow = {
   id: string;
@@ -150,6 +151,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = String(body?.action ?? "");
     const coinType = String(body?.coinType ?? "balance");
+    const clientRequestId = extractClientRequestId(body ?? null);
 
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -169,14 +171,12 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: excluded } = await admin.rpc("check_user_self_exclusion", {
-      p_user_id: user.id,
-    });
-    if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
-    }
+    // Self-exclusion check moved into every placer SQL function via
+    // reject_if_self_excluded (defense-in-depth). The redundant edge-side
+    // exclusion check was removed; balance is no longer read here either —
+    // SQL debits atomically with SELECT FOR UPDATE.
 
-    const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
+    if (action === "active") {
 
     if (action === "active") {
       const { data: row, error } = await admin
@@ -225,17 +225,9 @@ Deno.serve(async (req) => {
       const err = validateWager(wager);
       if (err) return jsonResponse({ error: err }, 400, req);
 
-      const { data: profile } = await admin
-        .from("profiles")
-        .select("balance, sweeps_coins")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      const bal = coinType === "sweeps_coins" ? Number(profile?.sweeps_coins ?? 0) : Number(profile?.balance ?? 0);
-      if (bal < wager) {
-        return jsonResponse({ error: "Insufficient balance" }, 400, req);
-      }
-
+      // Edge-side balance read removed — place_blackjack_bet does the
+      // atomic check + debit + stale-hand auto-cancel + ON CONFLICT
+      // idempotency.
       const { data: seedData, error: seedError } = await admin.rpc("consume_keno_nonce", {
         p_user_id: user.id,
         p_advance: 1,
@@ -258,7 +250,7 @@ Deno.serve(async (req) => {
       const s = dealt.state;
       const status = dealt.instantSettle ? "settled" : "player_turn";
 
-      const { data: started, error: startError } = await admin.rpc("start_blackjack_hand", {
+      const { data: placed, error: placeError } = await admin.rpc("place_blackjack_bet", {
         p_user_id: user.id,
         p_wager: wager,
         p_total_wager: s.totalWager,
@@ -280,11 +272,12 @@ Deno.serve(async (req) => {
         p_player_hands: handsToJson(s.playerHands),
         p_active_hand_index: s.activeHandIndex,
         p_coin_type: coinType,
+        p_client_request_id: clientRequestId,
       });
 
-      if (startError) return jsonResponse({ error: startError.message }, 400, req);
+      if (placeError) return jsonResponse({ error: placeError.message }, 400, req);
 
-      const row = (Array.isArray(started) ? started[0] : started) as
+      const row = (Array.isArray(placed) ? placed[0] : placed) as
         | Record<string, unknown>
         | undefined;
 

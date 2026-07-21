@@ -133,6 +133,16 @@ export function Blackjack() {
   // Mirrors the KENO_MINES / LIMBO_CRASH agents' busyRef/cancelledRef pattern.
   const busyRef = useRef(false);
   const cancelledRef = useRef(false);
+  // Phase polish: ref mirrors for race-safe hotkey handler / async paths.
+  // Mirrors the established Crash+Mines+Keno+Slots+Limbo+Roulette pattern.
+  const wagerRef = useRef(1);
+  const coinTypeRef = useRef<string>("balance");
+  const profileRef = useRef(profile);
+  const handRef = useRef<BlackjackActionResult | null>(null);
+  // inputsRef points to the wager <input> so the hotkey handler can blur()
+  // after a [/] or M wager adjust, freeing the player to immediately press
+  // Space to deal without manually clicking out of the input.
+  const inputsRef = useRef<HTMLInputElement | null>(null);
 
   const insuranceOffer = hand?.status === "insurance_offer";
   const playing = hand?.status === "player_turn" || insuranceOffer;
@@ -183,8 +193,179 @@ export function Blackjack() {
     };
   }, []);
 
+  // Sync ref mirrors for the hotkey handler and refactored async paths.
+  useEffect(() => {
+    wagerRef.current = wager;
+    coinTypeRef.current = coinType;
+    profileRef.current = profile;
+    handRef.current = hand;
+  }, [wager, coinType, profile, hand]);
+
+  // Keyboard hotkeys. Registered once with [] deps; readSession() pulls the
+  // latest values from refs so stale first-render closures can't trap the
+  // user. Focus + modifier guards keep this safe globally. Action hotkeys
+  // (H/S/D/P/I/N) are gated behind `!busyRef.current` AND hand.status so
+  // mashing keys during settle animations can't queue a bad action on the
+  // next hand. Per the polish thinker: invalid keys are SILENT no-ops (no
+  // toast spam); Space/Enter is contextual ("primary action of current
+  // state", defaulting to "No thanks" during insurance_offer since
+  // declining is the safer default for accidental spacebar taps).
+  //   Space / Enter → Deal (no hand) | Hit (player_turn) | no-thanks (ins)
+  //   H             → Hit (player_turn only — silent if already settled)
+  //   S             → Stand (player_turn only)
+  //   D             → Double (player_turn + canDouble + funds — silent else)
+  //   P             → Split (player_turn + canSplit + funds — silent else)
+  //   I             → Take insurance (insurance_offer only)
+  //   N             → Decline insurance (insurance_offer only)
+  //   [             → Half wager (idle only — also blurs input)
+  //   ]             → Double wager (idle only — also blurs input)
+  //   M             → Max wager (idle only — also blurs input)
+  useEffect(() => {
+    function readSession() {
+      const wagerNow = wagerRef.current;
+      const coinNow = coinTypeRef.current;
+      const profNow = profileRef.current;
+      const handNow = handRef.current;
+      const activeBalance =
+        coinNow === "sweeps_coins"
+          ? (profNow?.sweepsCoins ?? 0)
+          : (profNow?.balance ?? 0);
+      return { wagerNow, coinNow, profNow, handNow, activeBalance };
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      const tag = el?.tagName;
+      const onTextInput =
+        tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
+      if (onTextInput) return;
+
+      const k = e.key.toLowerCase();
+      const { wagerNow, coinNow, handNow, activeBalance } = readSession();
+      const isBusy = busyRef.current;
+      const status = handNow?.status;
+
+      // === WAGER ADJUSTMENTS (idle only) ===
+      if (k === "[") {
+        if (isBusy || status === "player_turn" || status === "insurance_offer") return;
+        e.preventDefault();
+        const half = Math.max(wagerNow / 2, 1);
+        setWager(half);
+        setWagerInput(half.toFixed(2));
+        inputsRef.current?.blur();
+        return;
+      }
+      if (k === "]") {
+        if (isBusy || status === "player_turn" || status === "insurance_offer") return;
+        e.preventDefault();
+        const cap = coinNow === "sweeps_coins" ? 100_000 : 10_000_000;
+        const doubled = Math.min(wagerNow * 2, activeBalance, cap);
+        if (doubled >= 1) {
+          setWager(doubled);
+          setWagerInput(doubled.toFixed(2));
+          inputsRef.current?.blur();
+        }
+        return;
+      }
+      if (k === "m") {
+        if (isBusy || status === "player_turn" || status === "insurance_offer") return;
+        e.preventDefault();
+        const cap = coinNow === "sweeps_coins" ? 100_000 : 10_000_000;
+        const max = Math.min(cap, activeBalance);
+        if (max >= 1) {
+          setWager(max);
+          setWagerInput(max.toFixed(2));
+          inputsRef.current?.blur();
+        }
+        return;
+      }
+
+      // === PRIMARY ACTION (contextual Space/Enter) ===
+      // No hand → Deal; player_turn → Hit; insurance_offer → decline (safer
+      // default for accidental mashing); settled → deal a new hand.
+      if (k === " " || k === "enter") {
+        if (isBusy) return;
+        e.preventDefault();
+        if (!status) {
+          void handleStart();
+        } else if (status === "player_turn") {
+          void runAction("hit");
+        } else if (status === "insurance_offer") {
+          void runAction("insurance", false);
+        } else if (status === "settled") {
+          void handleStart();
+        }
+        return;
+      }
+
+      // All action hotkeys below require !isBusy AND a matching status.
+      if (isBusy) return;
+
+      // === INSURANCE OFFER ===
+      if (status === "insurance_offer") {
+        if (k === "i") {
+          e.preventDefault();
+          if (activeBalance >= (handNow?.insuranceAmount ?? 0)) {
+            void runAction("insurance", true);
+          }
+          return;
+        }
+        if (k === "n") {
+          e.preventDefault();
+          void runAction("insurance", false);
+          return;
+        }
+        return; // Don't fall through to H/S/D/P during insurance.
+      }
+
+      // === PLAYER TURN ===
+      if (status !== "player_turn") return;
+      // In split mode, skip action keys if the currently-active hand is
+      // already finished. Without this guard, pressing H/S on the wrong
+      // hand (after the other hand auto-resolved) would send a hit/stand
+      // to the server for a non-active hand and surface an error to the
+      // player. Better to silently no-op (per polish thinker guideline).
+      const splitActiveFinished =
+        handNow?.isSplit &&
+        handNow.playerHands[handNow.activeHandIndex]?.finished === true;
+      if (k === "h") {
+        if (!splitActiveFinished) {
+          e.preventDefault();
+          void runAction("hit");
+        }
+        return;
+      }
+      if (k === "s") {
+        if (!splitActiveFinished) {
+          e.preventDefault();
+          void runAction("stand");
+        }
+        return;
+      }
+      if (k === "d") {
+        // Silent no-op if canDouble/funds unavailable (per polish thinker).
+        if (handNow?.canDouble && activeBalance >= wagerNow) {
+          e.preventDefault();
+          void runAction("double");
+        }
+        return;
+      }
+      if (k === "p") {
+        if (handNow?.canSplit && activeBalance >= wagerNow) {
+          e.preventDefault();
+          void runAction("split");
+        }
+        return;
+      }
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const applyWager = (value: number) => {
-    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    // Read coin type from ref so this is safe from the hotkey's [] deps.
+    const maxBet = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
     const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
@@ -211,13 +392,25 @@ export function Blackjack() {
     );
   };
 
+  // Phase polish: capture the wager <input> so the hotkey wager-adjust
+  // handler can blur() it after [/] / M, freeing the player to press
+  // Space immediately to deal (without manually clicking out of the field).
+  // Apply via a ref-callback attribute on the wager input below.
   const handleStart = async () => {
     // Synchronous re-entrancy guard — the Deal button's `disabled={busy}`
     // prop relies on a re-render cycle that leaves a sub-ms race window
     // between the first click's setBusy(true) commit and a second click.
     if (busyRef.current) return;
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-    if (activeBalance < wager) {
+    // Read all session values from refs so this handler is safe from any
+    // binding context (JSX onClick, hotkey listener, etc.).
+    const wagerNow = wagerRef.current;
+    const coinNow = coinTypeRef.current;
+    const profNow = profileRef.current;
+    const activeBalanceNow =
+      coinNow === "sweeps_coins"
+        ? (profNow?.sweepsCoins ?? 0)
+        : (profNow?.balance ?? 0);
+    if (activeBalanceNow < wagerNow) {
       setError("Insufficient balance.");
       return;
     }
@@ -225,9 +418,9 @@ export function Blackjack() {
     setError(null);
     setLastMessage(null);
     setHand(null);
-    setHandCoinType(coinType);
+    setHandCoinType(coinNow);
     setBusy(true);
-    const { data, error: err } = await startBlackjack(wager, coinType);
+    const { data, error: err } = await startBlackjack(wagerNow, coinNow);
     if (cancelledRef.current) {
       busyRef.current = false;
       return;
@@ -397,7 +590,9 @@ export function Blackjack() {
                 </div>
               </div>
             ) : (
-              <p className="bj__hint-center">Place a bet to receive your cards.</p>
+              <p className="bj__press-to-deal" role="note">
+                Press <kbd>Space</kbd> or tap <strong>Deal</strong> to begin
+              </p>
             )}
           </div>
         </section>
@@ -410,6 +605,7 @@ export function Blackjack() {
             <div className="game-controls__wager-row">
               <input
                 id="bj-wager"
+                ref={inputsRef}
                 type="text"
                 inputMode="decimal"
                 className="game-controls__wager-input"
@@ -557,6 +753,29 @@ export function Blackjack() {
           )}
 
           <NeedFundsHint />
+
+          {/* Phase polish: state-aware hotkey hint footer. Tells desktop
+              users the primary bindings for the current game phase. The
+              hint NEVER appears during busy/playing settle so it doesn't
+              shift while the player focuses on cards. Mirrors the Slots /
+              Limbo / Roulette footer pattern. */}
+          {!playing && !busy && (
+            <p className="bj__hotkey-hint" role="note">
+              <kbd>Space</kbd> deal · <kbd>[</kbd>/<kbd>]</kbd> wager · <kbd>M</kbd> max
+            </p>
+          )}
+          {hand?.status === "player_turn" && !busy && (
+            <p className="bj__hotkey-hint bj__hotkey-hint--actions" role="note">
+              <kbd>H</kbd> hit · <kbd>S</kbd> stand
+              {hand?.canDouble ? <> · <kbd>D</kbd> double</> : null}
+              {hand?.canSplit ? <> · <kbd>P</kbd> split</> : null}
+            </p>
+          )}
+          {hand?.status === "insurance_offer" && !busy && (
+            <p className="bj__hotkey-hint bj__hotkey-hint--actions" role="note">
+              <kbd>I</kbd> insurance · <kbd>N</kbd> decline
+            </p>
+          )}
 
           <div className="bj__fairness">
             <button

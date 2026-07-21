@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { loginUrlFromSearchParams, safeRedirectPath } from "../../lib/authRedirect";
 import {
@@ -48,6 +48,18 @@ export function Signup() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // ⌨️ Cmd/Ctrl+Enter submits the current step's form. Mirrors the
+  // gamemode hotkey pattern: silent no-op when a request is already
+  // in flight or the form is unconfigured. The formRef is reassigned
+  // when the step changes via the useEffect below — both forms share
+  // this ref by alternating. We avoid two separate refs because each
+  // form is mounted/unmounted on step transitions.
+  const submittingRef = useRef(false);
+  submittingRef.current = submitting;
+  const configuredRef = useRef(configured);
+  configuredRef.current = configured;
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   if (loading) {
     return (
@@ -224,7 +236,7 @@ export function Signup() {
         </div>
 
         {step === "details" ? (
-          <form className="auth-form" onSubmit={handleSendCode} noValidate>
+          <form className="auth-form" onSubmit={handleSendCode} noValidate ref={formRef}>
             {error && <FormAlert id="signup-error">{error}</FormAlert>}
 
             <div className="auth-field">
@@ -357,7 +369,7 @@ export function Signup() {
             </button>
           </form>
         ) : (
-          <form className="auth-form" onSubmit={handleVerify} noValidate>
+          <form className="auth-form" onSubmit={handleVerify} noValidate ref={formRef}>
             {error && <FormAlert id="signup-verify-error">{error}</FormAlert>}
 
             <p className="auth-hint">Code expires in 10 minutes.</p>
@@ -426,6 +438,14 @@ export function Signup() {
             </div>
           </form>
         )}
+
+        <p className="lc-hotkey-hint" role="note">
+          <span className="lc-hotkey-hint__combo">
+            <kbd>{typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"}</kbd>
+            <kbd>↵</kbd>
+          </span>
+          <span>{step === "details" ? "send verification code" : "verify"}</span>
+        </p>
 
         <p className="auth-footer">
           Already have an account? <Link to={loginUrlFromSearchParams(searchParams)}>Log in</Link>

@@ -931,3 +931,44 @@
   color: var(--lc-emerald);
   word-break: break-all;
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   POLISH — edge-case pages pass.
+   Tabular-nums + extended focus-visible + reduced-motion coverage.
+   All additive — merges via CSS cascade.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Tabular-nums on every numeric readout so digit width doesn't reflow
+   when balances / levels shift. Includes the section header row, the
+   stats grid, the deposit/withdraw tally, and the deposit limit usage
+   bar labels (which include a "/ USD max" suffix that wants stable
+   column widths). */
+.settings__balance-inline,
+.settings__stat-value,
+.settings__tally-value,
+.settings__limit-usage-list strong,
+.settings__dirty-flag {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus-visible rings on the limit-bar progressbar — it is a focusable
+   element (role="progressbar") so a keyboard user tabbing into it
+   needs a visible focus indicator. */
+.settings__limit-bar:focus-visible {
+  outline: 2px solid var(--lc-crimson-soft);
+  outline-offset: 2px;
+}
+
+/* Reduced-motion coverage — the limit-bar fill width transition and the
+   live-dot pulse should both freeze when motion is reduced. The page
+   doesn't otherwise animate numerics (all transitions are CSS-driven
+   state changes), so this is a small but consistent a11y improvement. */
+@media (prefers-reduced-motion: reduce) {
+  .settings__limit-bar-fill,
+  .settings__live-dot,
+  .settings__btn-spinner,
+  .settings__btn__spinner {
+    transition: none !important;
+    animation: none !important;
+  }
+}

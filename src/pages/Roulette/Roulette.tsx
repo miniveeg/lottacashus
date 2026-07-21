@@ -75,6 +75,15 @@ export function Roulette() {
   const spinningRef = useRef(false);
   const cancelledRef = useRef(false);
 
+  // Phase polish: ref mirrors so the keyboard-hotkey listener (registered
+  // once with [] deps) and the refactored async handleBet always read the
+  // most recent values. Mirrors the established Crash+Mines+Keno+Slots+Limbo
+  // pattern.
+  const wagerRef = useRef(1);
+  const betTypeRef = useRef<RouletteBetType>("red");
+  const coinTypeRef = useRef<string>("balance");
+  const profileRef = useRef(profile);
+
   const winChance = useMemo(() => rouletteWinChance(betType), [betType]);
   const potentialWin = useMemo(() => roulettePotentialWin(wager, betType), [wager, betType]);
   const loadPf = useCallback(async () => {
@@ -101,8 +110,118 @@ export function Roulette() {
     };
   }, []);
 
+  // Sync ref mirrors for the hotkey handler and refactored async paths.
+  useEffect(() => {
+    wagerRef.current = wager;
+    betTypeRef.current = betType;
+    coinTypeRef.current = coinType;
+    profileRef.current = profile;
+  }, [wager, betType, coinType, profile]);
+
+  // Keyboard hotkeys. Registered once with [] deps; handleBet reads from
+  // refs so stale first-render closures can't trap the user. Focus +
+  // modifier guards keep this safe globally. Quick bet selectors below
+  // require that the element the user types in IS NOT a text input —
+  // otherwise typing "1" in the wager field would accidentally swap the bet.
+  //   Space / Enter → spin (only if !spinning && activeBalance ≥ wager)
+  //   [             → half wager (idle only)
+  //   ]             → double wager (idle only)
+  //   M             → max wager (idle only)
+  //   1 / 2 / 3     → Red / Black / Green selector (idle only, not in input)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      const tag = el?.tagName;
+      const onTextInput =
+        tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
+      if (onTextInput) return;
+
+      const k = e.key.toLowerCase();
+      const isSpinning = spinningRef.current;
+
+      // === SPIN / WAGER CONTROLS ===
+      if (k === " " || k === "enter") {
+        e.preventDefault();
+        if (!isSpinning) void handleBet();
+        return;
+      }
+      if (k === "[") {
+        if (!isSpinning) {
+          e.preventDefault();
+          const half = Math.max(wagerRef.current / 2, 1);
+          setWager(half);
+          setWagerInput(half.toFixed(2));
+        }
+        return;
+      }
+      if (k === "]") {
+        if (!isSpinning) {
+          e.preventDefault();
+          const prof = profileRef.current;
+          const activeBalance =
+            coinTypeRef.current === "sweeps_coins"
+              ? (prof?.sweepsCoins ?? 0)
+              : (prof?.balance ?? 0);
+          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          const doubled = Math.min(wagerRef.current * 2, activeBalance, cap);
+          if (doubled >= 1) {
+            setWager(doubled);
+            setWagerInput(doubled.toFixed(2));
+          }
+        }
+        return;
+      }
+      if (k === "m") {
+        if (!isSpinning) {
+          e.preventDefault();
+          const prof = profileRef.current;
+          const activeBalance =
+            coinTypeRef.current === "sweeps_coins"
+              ? (prof?.sweepsCoins ?? 0)
+              : (prof?.balance ?? 0);
+          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          const max = Math.min(cap, activeBalance);
+          if (max >= 1) {
+            setWager(max);
+            setWagerInput(max.toFixed(2));
+          }
+        }
+        return;
+      }
+      // === QUICK-BET SELECTORS ===
+      // Only fire if not in input field (already checked). Note: pressing
+      // "2" in the wager input is harmless because we bail above.
+      if (k === "1") {
+        if (!isSpinning) {
+          e.preventDefault();
+          setBetType("red");
+        }
+        return;
+      }
+      if (k === "2") {
+        if (!isSpinning) {
+          e.preventDefault();
+          setBetType("black");
+        }
+        return;
+      }
+      if (k === "3") {
+        if (!isSpinning) {
+          e.preventDefault();
+          setBetType("green");
+        }
+        return;
+      }
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const applyWager = (value: number) => {
-    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    // Read coin type from ref so this is safe from the hotkey's [] deps.
+    const maxBet = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
     const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
@@ -115,8 +234,18 @@ export function Roulette() {
     // prop relies on a re-render cycle that leaves a sub-ms race window
     // between the first click's setSpinning(true) commit and a second click.
     if (spinningRef.current) return;
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-    if (activeBalance < wager) {
+
+    // Read all session values from refs so this handler is safe from any
+    // binding context (JSX onClick, hotkey listener, etc.).
+    const wagerNow = wagerRef.current;
+    const betTypeNow = betTypeRef.current;
+    const coinNow = coinTypeRef.current;
+    const profNow = profileRef.current;
+    const activeBalanceNow =
+      coinNow === "sweeps_coins"
+        ? (profNow?.sweepsCoins ?? 0)
+        : (profNow?.balance ?? 0);
+    if (activeBalanceNow < wagerNow) {
       setError("Insufficient balance.");
       return;
     }
@@ -129,7 +258,11 @@ export function Roulette() {
     setDisplayColor(null);
 
     const startedAt = Date.now();
-    const { data, error: betErr } = await placeRouletteBet({ wager, betType, coinType });
+    const { data, error: betErr } = await placeRouletteBet({
+      wager: wagerNow,
+      betType: betTypeNow,
+      coinType: coinNow,
+    });
     if (betErr || !data) {
       if (cancelledRef.current) return;
       spinningRef.current = false;
@@ -262,27 +395,38 @@ export function Roulette() {
                 role="group"
                 aria-labelledby="roulette-bet-label"
               >
-                {BET_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.type}
-                    type="button"
-                    className={[
-                      "roulette__bet-cell",
-                      `roulette__bet-cell--${opt.type}`,
-                      betType === opt.type && "roulette__bet-cell--selected",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    onClick={() => setBetType(opt.type)}
-                    disabled={spinning}
-                    aria-pressed={betType === opt.type}
-                  >
-                    <span className="roulette__bet-cell-label">{opt.label}</span>
-                    <span className="roulette__bet-cell-meta">
-                      {opt.payout} · {opt.odds}
-                    </span>
-                  </button>
-                ))}
+                {BET_OPTIONS.map((opt) => {
+                  const isSelected = betType === opt.type;
+                  // Winning cell: bet grid highlight when last result matches
+                  // the selected bet type and the round was a win. The
+                  // pulse runs once and fades into static after the round
+                  // resolves (matches Slots reels--win + Keno paytable-row
+                  // patterns — no infinite loops).
+                  const isWinner =
+                    !!lastResult?.won && lastResult.betType === opt.type;
+                  return (
+                    <button
+                      key={opt.type}
+                      type="button"
+                      className={[
+                        "roulette__bet-cell",
+                        `roulette__bet-cell--${opt.type}`,
+                        isSelected && "roulette__bet-cell--selected",
+                        isWinner && "roulette__bet-cell--win",
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
+                      onClick={() => setBetType(opt.type)}
+                      disabled={spinning}
+                      aria-pressed={isSelected}
+                    >
+                      <span className="roulette__bet-cell-label">{opt.label}</span>
+                      <span className="roulette__bet-cell-meta">
+                        {opt.payout} · {opt.odds}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
               <p className="game-controls__option-hint">
                 Win chance {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
@@ -371,6 +515,16 @@ export function Roulette() {
             busyLabel="Spinning…"
             label="Bet"
           />
+
+          {/* Phase polish: hotkey hint footer. Tells desktop users that
+              Space/Enter spins, [/] adjusts wager, 1/2/3 selects bet type.
+              Sits between the Bet button and the NeedFundsHint so it's
+              contextually adjacent to the controls it describes. */}
+          {!spinning && (
+            <p className="roulette__hotkey-hint" role="note">
+              <kbd>Space</kbd> spin · <kbd>[</kbd>/<kbd>]</kbd> wager · <kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> bet
+            </p>
+          )}
 
           <NeedFundsHint />
 

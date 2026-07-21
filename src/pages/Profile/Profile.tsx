@@ -190,6 +190,28 @@ export function ProfilePage() {
     }
   }, [referralInfo]);
 
+  // ⌨️ Keyboard shortcut: Cmd/Ctrl+C copies the referral code when focus is
+  // NOT inside an input/textarea (so we don't hijack the user's normal
+  // copy-paste workflow while copying their own text). Mirrors the
+  // pattern used in the 8 gamemode rounds.
+  useEffect(() => {
+    if (!isOwnProfile) return;
+    if (!referralInfo?.referralCode) return;
+    function onKeyDown(e: KeyboardEvent) {
+      // Don't fire inside form controls — Cmd/Ctrl+C there means
+      // "copy the selected text in this field", not "copy my code".
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key !== "c" && e.key !== "C") return;
+      if (e.altKey || e.shiftKey) return;
+      e.preventDefault();
+      handleCopy();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOwnProfile, referralInfo?.referralCode, handleCopy]);
+
   if (!routeUsername && !authLoading && (!user || isGuest)) {
     return <Navigate to={loginUrl("/profile")} replace />;
   }
@@ -409,6 +431,15 @@ export function ProfilePage() {
               </p>
             )}
           </div>
+          {isOwnProfile && referralInfo?.referralCode && (
+            <p className="lc-hotkey-hint" role="note">
+              <span className="lc-hotkey-hint__combo">
+                <kbd>{navigator.platform?.includes("Mac") ? "⌘" : "Ctrl"}</kbd>
+                <kbd>C</kbd>
+              </span>
+              <span>copy referral code</span>
+            </p>
+          )}
         </section>
       )}
     </div>

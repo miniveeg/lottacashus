@@ -1,5 +1,10 @@
 import { invokeEdgeFunction } from "./edgeFunctions";
 import { supabase, isSupabaseConfigured } from "./supabase";
+import {
+  getOrCreateRequestId,
+  clearRequestId,
+  IDEM_KEY_BLACKJACK_START,
+} from "./idempotency";
 
 export type BlackjackPfState = {
   serverSeedHash: string;
@@ -146,14 +151,28 @@ export async function blackjackAction(
   return { data: mapHand(data), error: null };
 }
 
-export function startBlackjack(
+export async function startBlackjack(
   wager: number,
   coinType?: string
 ): Promise<
   | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
   | { data: null; error: string; active?: boolean }
 > {
-  return blackjackAction({ action: "start", wager, coinType: coinType ?? "balance" });
+  // Idempotency: same UUID across retries of the SAME deal so a network
+  // blip after the SQL commit doesn't double-debit. Clear on success so
+  // the next deal gets a fresh key. Parallel to placeCrashBet / placeKenoBet /
+  // placeLimboBet / placeRouletteBet / placeSlotsBet / startMinesGame.
+  const clientRequestId = getOrCreateRequestId(IDEM_KEY_BLACKJACK_START);
+  const res = await blackjackAction({
+    action: "start",
+    wager,
+    coinType: coinType ?? "balance",
+    clientRequestId,
+  });
+  if (res && "data" in res && res.data) {
+    clearRequestId(IDEM_KEY_BLACKJACK_START);
+  }
+  return res;
 }
 
 export function hitBlackjack(

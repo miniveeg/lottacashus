@@ -113,6 +113,57 @@ export function CaseBattlesRoomV2() {
     });
   }, [battle?.status, battle?.players.length, battle?.maxPlayers, battle?.creatorId, battle?.battleId, user?.id]);
 
+  // Phase polish: contextual hotkey handler for the room. Registered
+  // once with [] deps; reads battle/user from the already-rendering
+  // closure (these are stable for the lifetime of the room page).
+  //   Space / Enter → primary action of current state:
+  //     !myPlayer in waiting → join
+  //     creator + all slots filled → start
+  //     completed + myPayout > 0 + !claimed → claim
+  //   Focus + modifier guards prevent stealing input from text fields or
+  //   hijacking browser shortcuts.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      const tag = el?.tagName;
+      const onTextInput =
+        tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
+      if (onTextInput) return;
+      if (busyRef.current) return;
+
+      const k = e.key.toLowerCase();
+      if (k !== " " && k !== "enter") return;
+
+      if (!battle) return;
+      const myPlayer = battle.players.find((p) => p.userId === user?.id);
+      const isCreator = battle.creatorId === user?.id;
+      const myPayout = myPlayer ? calculatePayoutForSlot(battle, myPlayer.slot) : 0;
+      const alreadyClaimed = claimed || Boolean(myPlayer?.claimedAt);
+
+      e.preventDefault();
+      if (battle.status === "waiting") {
+        if (!myPlayer) void handleJoin();
+        else if (
+          isCreator &&
+          battle.players.length >= battle.maxPlayers
+        ) {
+          void handleStart();
+        }
+        return;
+      }
+      if (
+        battle.status === "completed" &&
+        myPayout > 0 &&
+        !alreadyClaimed
+      ) {
+        void handleClaim();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [battle, user?.id, claimed]);
+
   if (!battleId) return <Navigate to="/case-battles" replace />;
   if (loading) {
     return (
@@ -241,9 +292,19 @@ export function CaseBattlesRoomV2() {
         </div>
       )}
       {alreadyClaimed && isCompleted && myPayout > 0 && (
-        <div className="cb-room__claimed">
+        <div className="cb-room__claimed" role="status">
           <p>Payout claimed! Your balance has been updated.</p>
         </div>
+      )}
+
+      {/* Phase polish: hotkey hint footer mirrors the slot-machine controls.
+          Renders only when the user has a primary action available AND
+          nothing else is busy. The hint changes wording depending on the
+          dominant action type. */}
+      {!busy && (canJoin || canStart || canClaim) && (
+        <p className="cb-room__hotkey-hint" role="note">
+          <kbd>Space</kbd> {canClaim ? "claim" : canStart ? "start" : "join"}
+        </p>
       )}
 
       {/* Arena — pass isCreator so the waiting branch renders per-slot

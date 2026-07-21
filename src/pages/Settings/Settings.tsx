@@ -112,6 +112,81 @@ export function Settings() {
     return () => window.removeEventListener("beforeunload", handler);
   }, []);
 
+  // ⌨️ Cmd/Ctrl+S saves the username form. Mirrors the gamemode hotkey
+  // pattern: silent no-op when the form is invalid, when the user is
+  // inside the deposit-limit inputs (which have their own save button),
+  // or when a save is already in flight. The handler is mirrored by a
+  // ref so the listener itself is registered once with `[]` deps — the
+  // numeric snapshot of dirty/saving/loading is read via the ref.
+  const saveUsernameRef = useRef<() => void>(() => {});
+  const usernameDirtySavingLoadingRef = useRef({
+    usernameDirty,
+    saving,
+    profileLoading,
+  });
+  usernameDirtySavingLoadingRef.current = {
+    usernameDirty,
+    saving,
+    profileLoading,
+  };
+  useEffect(() => {
+    saveUsernameRef.current = () => {
+      // Synthesise a FormEvent with only preventDefault wired through —
+      // handleSaveUsername reads `e.preventDefault()` then proceeds to
+      // validation, the Supabase call, and the success/error branches.
+      saveUsernameRef.current = () => {};
+      // Build a minimal FormEvent-like object that handleSaveUsername
+      // can call .preventDefault() on. We do NOT use
+      // `formRef.current?.requestSubmit()` — handleSaveUsername is the
+      // single source of truth for the validation flow, and re-implementing
+      // it here would risk drift.
+      void handleSaveUsernameInline();
+    };
+  });
+  const handleSaveUsernameInline = () => {
+    // Direct invocation — the sync validation guard mirrors the form's
+    // first half (validateUsername + configured check) so a hotkey call
+    // surfaces the same error messages as a button click.
+    setError(null);
+    setSuccess(null);
+    const validationError = validateUsername(username);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    if (!isSupabaseConfigured) {
+      setError("Supabase is not configured. Add your project URL and anon key to the .env file.");
+      return;
+    }
+    setSaving(true);
+    updateUsername(username).then(({ error: saveError }) => {
+      setSaving(false);
+      if (saveError) setError(saveError);
+      else {
+        setInitialUsername(username);
+        setSuccess("Username updated.");
+      }
+    });
+  };
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key !== "s" && e.key !== "S") return;
+      if (e.altKey || e.shiftKey) return;
+      const t = e.target as HTMLElement | null;
+      // Don't save the username when focus is inside the deposit-limit
+      // inputs — those have their own button and a blind Cmd+S would
+      // be disorienting.
+      if (t && (t.id === "dl-daily" || t.id === "dl-weekly")) return;
+      const snap = usernameDirtySavingLoadingRef.current;
+      if (!snap.usernameDirty || snap.saving || snap.profileLoading) return;
+      e.preventDefault();
+      handleSaveUsernameInline();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   if (!authLoading && (!user || isGuest)) {
     // Hardcode the redirect path (don't use `pathname` from useLocation).
     // When Settings returns <Navigate>, React Router updates the location, but
@@ -269,6 +344,7 @@ export function Settings() {
         </div>
 
         <form onSubmit={handleSaveUsername} className="settings__username-form" noValidate>
+          <input type="submit" hidden tabIndex={-1} aria-hidden="true" />
           <div className="settings__field">
             <label htmlFor="settings-username">Change username</label>
             <input
@@ -298,6 +374,13 @@ export function Settings() {
             {saving ? "Saving…" : "Save username"}
           </button>
         </form>
+        <p className="lc-hotkey-hint" role="note">
+          <span className="lc-hotkey-hint__combo">
+            <kbd>{typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"}</kbd>
+            <kbd>S</kbd>
+          </span>
+          <span>save username</span>
+        </p>
       </section>
 
       {/* 2. Discord (extracted to its own component) */}

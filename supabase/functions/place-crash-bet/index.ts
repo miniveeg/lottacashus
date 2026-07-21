@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
+import { extractClientRequestId } from "../_shared/hardened.ts";
 
 function bytesToFloat(bytes: Uint8Array, offset = 0): number {
   let value = 0;
@@ -52,6 +53,10 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const wager = Number(body?.wager);
     const coinType = String(body?.coinType ?? "balance");
+    // Idempotency key — client supplies for retries, server generates fresh
+    // for new requests. SQL UNIQUE (user_id, client_request_id) collapses
+    // duplicate retries into one row.
+    const clientRequestId = extractClientRequestId(body ?? null);
 
     if (!Number.isFinite(wager) || wager < 1) {
       return jsonResponse({ error: "Minimum bet is 1 SC or GC." }, 400, req);
@@ -75,26 +80,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: excluded } = await supabaseAdmin.rpc("check_user_self_exclusion", {
-      p_user_id: user.id,
-    });
-    if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
-    }
-
-    const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
-
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select(coinColumn)
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
-    if (balance < wager) {
-      return jsonResponse({ error: "Insufficient balance" }, 400, req);
-    }
-
+    // Self-exclusion check is now enforced inside place_crash_bet via
+    // reject_if_self_excluded (defense-in-depth). The redundant edge-side
+    // check was removed and balance is no longer read here — the SQL
+    // placer handles balance check + debit atomically with SELECT FOR UPDATE.
     const { data: seedData, error: seedError } = await supabaseAdmin.rpc(
       "consume_keno_nonce",
       { p_user_id: user.id, p_advance: 1 }
@@ -126,6 +115,7 @@ Deno.serve(async (req) => {
         p_crash_point: crashPoint,
         p_nonce: nonce,
         p_coin_type: coinType,
+        p_client_request_id: clientRequestId,
       }
     );
 
@@ -150,7 +140,7 @@ Deno.serve(async (req) => {
       payout: 0,
       cashedAt: null,
       nonce,
-      balance: Number(row?.out_balance ?? balance - wager),
+      balance: Number(row?.out_balance ?? 0),
       coinType,
     });
   } catch (err) {

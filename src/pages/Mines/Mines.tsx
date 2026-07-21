@@ -6,13 +6,8 @@ import { Seo } from "../../components/Seo/Seo";
 import { FormAlert } from "../../components/FormAlert/FormAlert";
 import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
 import { BetButton } from "../../components/BetButton/BetButton";
-import {
-  getMaxGems,
-  getMinesMultiplier,
-  getNextMultiplier,
-  MINES_MAX_COUNT,
-  MINES_MIN_COUNT,
-} from "../../lib/games/mines";
+import { getMaxGems, getMinesMultiplier, getNextMultiplier, MINES_MAX_COUNT, MINES_MIN_COUNT } from "../../lib/games/mines";
+import type { CSSProperties } from "react";
 import { formatCoins } from "../../lib/format";
 import {
   cashoutMinesGame,
@@ -59,10 +54,31 @@ export function Mines() {
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
 
+  // Bumped whenever the user requests a random tile so the dice icon's
+  // CSS roll animation restarts on each click (paired with `key=` so
+  // React remounts the button and forces the @keyframes to replay).
+  const [randomSpinKey, setRandomSpinKey] = useState(0);
+
   // Ref mirror of `busy` so async handlers can guard against re-entrant
   // clicks without waiting for a state-commit + re-render cycle (which
   // would let a second click slip through in the same tick).
   const busyRef = useRef(false);
+  // Ref mirrors of session state. Two reasons:
+  //   1. The keyboard-hotkey useEffect registers once with `[]` deps;
+  //      reading via refs avoids stale-closure traps.
+  //   2. handleStart/handleCashout/handleReveal/pickRandom are recreated
+  //      each render but bind to refs internally so the *current* values
+  //      are always used — even if JSX onClick captures an old handler.
+  // Matches the pattern established in Crash.tsx.
+  const playingRef = useRef(false);
+  const gameIdRef = useRef<string | null>(null);
+  const gameCoinTypeRef = useRef<string | null>(null);
+  const revealedRef = useRef<Set<number>>(new Set());
+  const wagerRef = useRef(1);
+  const mineCountRef = useRef(3);
+  const gemsRevealedRef = useRef(0);
+  const coinTypeRef = useRef<string>("balance");
+  const profileRef = useRef(profile);
 
   const playing = gameId !== null;
   const maxGems = getMaxGems(mineCount);
@@ -71,6 +87,10 @@ export function Mines() {
     () => Math.round(wager * multiplier * 100) / 100,
     [wager, multiplier]
   );
+
+  // Inline custom-property style helper — keeps the slider attribute
+  // block readable above instead of nesting the cast in JSX.
+  const sliderStyle = { "--mines-risk": mineCount / MINES_MAX_COUNT } as CSSProperties;
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchMinesPfState();
@@ -103,6 +123,87 @@ export function Mines() {
     }
   }, [user, loadPf, resumeGame]);
 
+  // Sync ref mirrors of session state for the hotkey handler below
+  // AND for the handler bodies (handleStart/handleCashout/handleReveal).
+  useEffect(() => {
+    playingRef.current = gameId !== null;
+    gameIdRef.current = gameId;
+    gameCoinTypeRef.current = gameCoinType;
+    revealedRef.current = revealed;
+    wagerRef.current = wager;
+    mineCountRef.current = mineCount;
+    gemsRevealedRef.current = gemsRevealed;
+    coinTypeRef.current = coinType;
+    profileRef.current = profile;
+  }, [gameId, gameCoinType, revealed, wager, mineCount, gemsRevealed, coinType, profile]);
+
+  // Keyboard hotkeys. Registered once with `[]` deps; routes through
+  // the ref-aware handlers (handleStart / handleCashout / pickRandom)
+  // so every binding always uses the most recent values, even if the
+  // captured closure is from the first render. Focus + modifier guards
+  // keep this safe globally (won't hijack Cmd+R; won't fire while
+  // typing in the wager/seed inputs).
+  //   Space / Enter → start if idle, cash out if playing with ≥1 gem
+  //   C             → cash out (only when playing with ≥1 gem)
+  //   R             → pick random unrevealed tile (retriggers dice spin)
+  //   [ / ]         → half / double wager (idle only)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      const tag = el?.tagName;
+      const onTextInput =
+        tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
+      if (onTextInput) return;
+
+      const k = e.key.toLowerCase();
+      const isPlaying = playingRef.current;
+      const isBusy = busyRef.current;
+      const gems = gemsRevealedRef.current;
+
+      if (k === " " || k === "enter") {
+        e.preventDefault();
+        if (isPlaying && gems >= 1 && !isBusy) void handleCashout(false);
+        else if (!isPlaying && !isBusy) void handleStart();
+        return;
+      }
+      if (k === "c") {
+        if (isPlaying && gems >= 1 && !isBusy) {
+          e.preventDefault();
+          void handleCashout(false);
+        }
+        return;
+      }
+      if (k === "r") {
+        if (isPlaying && !isBusy) {
+          e.preventDefault();
+          pickRandom();
+        }
+        return;
+      }
+      if (k === "[") {
+        if (!isPlaying && !isBusy) {
+          e.preventDefault();
+          applyWager(wagerRef.current / 2);
+        }
+        return;
+      }
+      if (k === "]") {
+        if (!isPlaying && !isBusy) {
+          e.preventDefault();
+          const activeBalance =
+            coinTypeRef.current === "sweeps_coins"
+              ? profileRef.current?.sweepsCoins ?? 0
+              : profileRef.current?.balance ?? 0;
+          applyWager(Math.min(wagerRef.current * 2, activeBalance));
+        }
+        return;
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const resetRound = () => {
     setGameId(null);
     setGameCoinType(null);
@@ -123,8 +224,15 @@ export function Mines() {
 
   const handleStart = async () => {
     if (busyRef.current) return;
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-    if (wager > activeBalance) {
+    // Read everything from refs — safe to call from any binding context
+    // (JSX onClick, hotkey, etc.).
+    const wagerNow = wagerRef.current;
+    const minesNow = mineCountRef.current;
+    const coinNow = coinTypeRef.current;
+    const profNow = profileRef.current;
+    const activeBalance =
+      coinNow === "sweeps_coins" ? (profNow?.sweepsCoins ?? 0) : (profNow?.balance ?? 0);
+    if (wagerNow > activeBalance) {
       setError("Insufficient balance.");
       return;
     }
@@ -136,7 +244,11 @@ export function Mines() {
     setBusy(true);
     resetRound();
 
-    const { data, error: startErr } = await startMinesGame({ wager, mineCount, coinType });
+    const { data, error: startErr } = await startMinesGame({
+      wager: wagerNow,
+      mineCount: minesNow,
+      coinType: coinNow,
+    });
 
     if (startErr || !data) {
       busyRef.current = false;
@@ -148,7 +260,7 @@ export function Mines() {
     }
 
     setGameId(data.gameId);
-    setGameCoinType(data.coinType ?? coinType);
+    setGameCoinType(data.coinType ?? coinNow);
     setPfNonce(data.nonce + 1);
     busyRef.current = false;
     setBusy(false);
@@ -159,17 +271,18 @@ export function Mines() {
   };
 
   const handleReveal = async (tile: number) => {
-    if (!gameId || busyRef.current || revealed.has(tile)) return;
+    const gameIdNow = gameIdRef.current;
+    if (!gameIdNow || busyRef.current || revealedRef.current.has(tile)) return;
 
     busyRef.current = true;
     setBusy(true);
     setError(null);
 
     const { data, error: revealErr } = await revealMinesTile({
-      gameId,
+      gameId: gameIdNow,
       tile,
-      mineCount,
-      coinType,
+      mineCount: mineCountRef.current,
+      coinType: coinTypeRef.current,
     });
 
     if (revealErr || !data) {
@@ -216,10 +329,14 @@ export function Mines() {
     // from handleReveal where busy is already true, so we bypass the guard.
     if (!auto && busyRef.current) return;
 
-    // Use the explicitly-passed gem count when available (auto-cashout path);
-    // otherwise fall back to the committed state value (manual cashout path).
-    const currentGems = knownGems ?? gemsRevealed;
-    if (!gameId || currentGems < 1) {
+    // Read everything from refs — safe from any binding context.
+    // `knownGems` still wins when the auto-cashout caller passes it
+    // (gemsRevealed state is queued-not-committed at that point).
+    const gameIdNow = gameIdRef.current;
+    const gameCoinNow = gameCoinTypeRef.current;
+    const coinNow = coinTypeRef.current;
+    const currentGems = knownGems ?? gemsRevealedRef.current;
+    if (!gameIdNow || currentGems < 1) {
       if (auto) {
         // Defensive: auto-cashout should never hit this branch (caller
         // already verified gemsRevealed >= maxGems >= 1), but if it does,
@@ -237,8 +354,8 @@ export function Mines() {
 
     // Always cash out in the coin type locked at start — never the live topbar.
     const { data, error: cashErr } = await cashoutMinesGame({
-      gameId,
-      coinType: gameCoinType ?? coinType,
+      gameId: gameIdNow,
+      coinType: gameCoinNow ?? coinNow,
     });
     busyRef.current = false;
     setBusy(false);
@@ -249,7 +366,8 @@ export function Mines() {
       return;
     }
 
-    const cashCoin = (gameCoinType === "sweeps_coins" ? "sweeps_coins" : coinType) as "balance" | "sweeps_coins";
+    const cashCoin =
+      (gameCoinNow === "sweeps_coins" ? "sweeps_coins" : coinNow) as "balance" | "sweeps_coins";
     setLastMessage(
       auto
         ? `All gems found! Won ${formatCoins(data.payout, cashCoin)}`
@@ -262,8 +380,14 @@ export function Mines() {
   };
 
   const pickRandom = () => {
-    const tile = randomUnrevealedTile(revealed);
-    if (tile !== null) void handleReveal(tile);
+    // Use the ref so this stays correct from any binding context (also
+    // dedup-safe because handleReveal internally checks revealedRef.current.has(tile)).
+    const tile = randomUnrevealedTile(revealedRef.current);
+    if (tile !== null) {
+      // Bump key so the dice <span> remounts → CSS @keyframes restarts.
+      setRandomSpinKey((n) => n + 1);
+      void handleReveal(tile);
+    }
   };
 
   const saveClientSeed = async () => {
@@ -311,11 +435,15 @@ export function Mines() {
             <div className="mines__board-toolbar">
               <button
                 type="button"
-                className="mines__tool-btn"
+                // key= forces remount → CSS @keyframes "mines-dice-roll"
+                // replays every time the user requests another random tile.
+                key={randomSpinKey}
+                className="mines__tool-btn mines__tool-btn--random"
                 onClick={pickRandom}
                 disabled={busy}
+                aria-label="Pick a random unrevealed tile (shortcut: R)"
               >
-                Random tile
+                <span aria-hidden="true">🎲</span> Random tile
               </button>
             </div>
           )}
@@ -378,6 +506,9 @@ export function Mines() {
                   min={MINES_MIN_COUNT}
                   max={MINES_MAX_COUNT}
                   value={mineCount}
+                  // --mines-risk drives the slider thumb color in
+                  // Mines.css (emerald → crimson as mines increase).
+                  style={sliderStyle}
                   onChange={(e) => setMineCount(Number(e.target.value))}
                   disabled={playing || busy}
                   aria-label="Number of mines"

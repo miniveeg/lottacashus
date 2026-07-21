@@ -74,6 +74,15 @@ export function Limbo() {
   const cancelledRef = useRef(false);
   const popInTimeoutRef = useRef<number | null>(null);
 
+  // Phase polish: ref mirrors so the keyboard-hotkey handler (registered
+  // once with [] deps) and the refactored async paths always read the
+  // most recent values. Mirrors the established Crash+Mines+Keno+Slots
+  // pattern.
+  const wagerRef = useRef(1);
+  const targetRef = useRef(2);
+  const coinTypeRef = useRef<string>("balance");
+  const profileRef = useRef(profile);
+
   const winChance = useMemo(() => limboWinChance(target), [target]);
   const potentialWin = useMemo(
     () => Math.round(wager * target * 100) / 100,
@@ -107,8 +116,102 @@ export function Limbo() {
     };
   }, []);
 
+  // Sync ref mirrors for the hotkey handler and refactored async paths.
+  useEffect(() => {
+    wagerRef.current = wager;
+    targetRef.current = target;
+    coinTypeRef.current = coinType;
+    profileRef.current = profile;
+  }, [wager, target, coinType, profile]);
+
+  // Target slider mapping — logarithmic so 1.01× to 10000× covers the
+  // practical drag range smoothly. Users can still type higher values
+  // in the text input; the slider just gives a fast grammar for the
+  // common case.
+  const SLIDER_MIN = LIMBO_MIN_TARGET;
+  const SLIDER_MAX = 10_000;
+  const targetToPct = (t: number) =>
+    Math.log(t / SLIDER_MIN) / Math.log(SLIDER_MAX / SLIDER_MIN);
+  const pctToTarget = (pct: number) =>
+    Math.min(LIMBO_MAX_TARGET, Math.max(SLIDER_MIN, SLIDER_MIN * Math.pow(SLIDER_MAX / SLIDER_MIN, pct)));
+  const sliderPct = Math.min(1, Math.max(0, targetToPct(target)));
+
+  // Keyboard hotkeys. Registered once with [] deps; handleBet + applyWager
+  // read everything from refs internally so a stale first-render closure
+  // can't trap the user. Focus + modifier guards keep this safe globally.
+  //   Space / Enter → bet (only if !rolling)
+  //   [             → half wager (idle only)
+  //   ]             → double wager (idle only), capped by balance + cap
+  //   M             → max wager (idle only)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      const tag = el?.tagName;
+      const onTextInput =
+        tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
+      if (onTextInput) return;
+
+      const k = e.key.toLowerCase();
+      const isRolling = rollingRef.current;
+
+      if (k === " " || k === "enter") {
+        e.preventDefault();
+        if (!isRolling) void handleBet();
+        return;
+      }
+      if (k === "[") {
+        if (!isRolling) {
+          e.preventDefault();
+          const half = Math.max(wagerRef.current / 2, 1);
+          setWager(half);
+          setWagerInput(half.toFixed(2));
+        }
+        return;
+      }
+      if (k === "]") {
+        if (!isRolling) {
+          e.preventDefault();
+          const prof = profileRef.current;
+          const activeBalance =
+            coinTypeRef.current === "sweeps_coins"
+              ? (prof?.sweepsCoins ?? 0)
+              : (prof?.balance ?? 0);
+          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          const doubled = Math.min(wagerRef.current * 2, activeBalance, cap);
+          if (doubled >= 1) {
+            setWager(doubled);
+            setWagerInput(doubled.toFixed(2));
+          }
+        }
+        return;
+      }
+      if (k === "m") {
+        if (!isRolling) {
+          e.preventDefault();
+          const prof = profileRef.current;
+          const activeBalance =
+            coinTypeRef.current === "sweeps_coins"
+              ? (prof?.sweepsCoins ?? 0)
+              : (prof?.balance ?? 0);
+          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          const max = Math.min(cap, activeBalance);
+          if (max >= 1) {
+            setWager(max);
+            setWagerInput(max.toFixed(2));
+          }
+        }
+        return;
+      }
+    }
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   const applyWager = (value: number) => {
-    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    // Read coin type from ref so this is safe from the hotkey's [] deps.
+    const maxBet = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
     const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
@@ -127,8 +230,18 @@ export function Limbo() {
     // prop relies on a re-render cycle that leaves a sub-ms race window
     // between the first click's setRolling(true) commit and a second click.
     if (rollingRef.current) return;
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-    if (activeBalance < wager) {
+
+    // Read session values from refs so this handler is safe from any
+    // binding context (JSX onClick, hotkey listener, etc.).
+    const wagerNow = wagerRef.current;
+    const targetNow = targetRef.current;
+    const coinNow = coinTypeRef.current;
+    const profNow = profileRef.current;
+    const activeBalanceNow =
+      coinNow === "sweeps_coins"
+        ? (profNow?.sweepsCoins ?? 0)
+        : (profNow?.balance ?? 0);
+    if (activeBalanceNow < wagerNow) {
       setError("Insufficient balance.");
       return;
     }
@@ -145,7 +258,11 @@ export function Limbo() {
     }
 
     const startedAt = Date.now();
-    const { data, error: betErr } = await placeLimboBet({ wager, target, coinType });
+    const { data, error: betErr } = await placeLimboBet({
+      wager: wagerNow,
+      target: targetNow,
+      coinType: coinNow,
+    });
     if (betErr || !data) {
       if (cancelledRef.current) return;
       rollingRef.current = false;
@@ -223,8 +340,29 @@ export function Limbo() {
 
       <div className="limbo__layout">
         <section className="limbo__stage-panel">
-          {/* Limbo — clean animated rocket/multiplier visual */}
-          <div className={`limbo__rocket-stage${rolling ? " limbo__rocket-stage--rolling" : ""}${lastResult?.won ? " limbo__rocket-stage--win" : lastResult && !lastResult.won ? " limbo__rocket-stage--loss" : ""}`} aria-hidden="true">
+          {/* Phase polish: pre-bet idle hint. Shows until the first round
+              resolves so the player gets a clear "what next?" affordance. */}
+          {!lastResult && !rolling && (
+            <p className="limbo__press-to-spin" role="note">
+              Press <kbd>Space</kbd> or tap <strong>Bet</strong> to play
+            </p>
+          )}
+
+          {/* Limbo — clean animated rocket/multiplier visual */}          <div
+            className={`limbo__rocket-stage${rolling ? " limbo__rocket-stage--rolling" : ""}${lastResult?.won ? " limbo__rocket-stage--win" : lastResult && !lastResult.won ? " limbo__rocket-stage--loss" : ""}${!lastResult && !rolling ? " limbo__rocket-stage--idle" : ""}`}
+            aria-hidden="true"
+          >
+            {/* Phase polish: resolution ripple overlay. Renders between the
+                SVG and the rest of the stage so it lights up BEHIND the
+                rocket. Wins = emerald ring; losses = ruby ring expanding
+                outward. The animation runs ONCE on settlement, then is
+                removed by React's conditional rendering. */}
+            {lastResult && !rolling && (
+              <span
+                className={`limbo__ripple${lastResult.won ? " limbo__ripple--win" : " limbo__ripple--loss"}`}
+                aria-hidden="true"
+              />
+            )}
             <svg className="limbo__rocket-svg" viewBox="0 0 320 160" xmlns="http://www.w3.org/2000/svg">
               {/* Animated grid lines */}
               <line x1="0" y1="140" x2="320" y2="140" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
@@ -326,6 +464,25 @@ export function Limbo() {
                 }}
                 disabled={rolling}
               />
+              {/* Phase polish: logarithmic range slider. Syncs both ways
+                  with the text input. Dragging covers the practical 1.01×
+                  → 10000× case; the text input is still the escape hatch
+                  for typed higher values (e.g. 1000000×). */}
+              <input
+                type="range"
+                className="game-controls__mines-slider limbo__target-slider"
+                min={0}
+                max={1}
+                step={0.001}
+                value={sliderPct}
+                onChange={(e) => applyTarget(pctToTarget(Number(e.target.value)))}
+                disabled={rolling}
+                aria-label="Target multiplier slider"
+                aria-valuemin={SLIDER_MIN}
+                aria-valuemax={SLIDER_MAX}
+                aria-valuenow={target}
+                aria-valuetext={`${target.toFixed(2)}×`}
+              />
               <div className="game-controls__presets limbo__target-presets">
                 {TARGET_PRESETS.map((t) => (
                   <button
@@ -339,9 +496,24 @@ export function Limbo() {
                   </button>
                 ))}
               </div>
-              <p className="game-controls__option-hint">
-                Win chance ≈ {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
-              </p>
+              {/* Phase polish: paytable pill rendered as a single bold
+                  callout with the win chance + potential payout separated
+                  by a divider. More prominent than the previous one-liner. */}
+              <div className="limbo__paytable-pill" aria-label="Win chance and potential payout">
+                <span className="limbo__paytable-pill-cell">
+                  <span className="limbo__paytable-pill-k">Win chance</span>
+                  <strong className="limbo__paytable-pill-v">
+                    {(winChance * 100).toFixed(2)}%
+                  </strong>
+                </span>
+                <span className="limbo__paytable-pill-divider" aria-hidden="true" />
+                <span className="limbo__paytable-pill-cell">
+                  <span className="limbo__paytable-pill-k">Payout</span>
+                  <strong className="limbo__paytable-pill-v">
+                    {formatCoins(potentialWin, coinType)}
+                  </strong>
+                </span>
+              </div>
             </div>
           </div>
 

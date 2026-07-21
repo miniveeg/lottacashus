@@ -210,6 +210,73 @@ a:focus:not(:focus-visible),
   outline: none;
 }
 
+/* ── Hotkey hint footer (kbd-chip pattern, reused across pages) ──
+   The 8 gamemode rounds and now the 8 edge-case pages share this exact
+   pattern: a low-emphasis line at the bottom of an interactive surface
+   that teaches the player the available keyboard shortcuts. Using
+   `<kbd>` for each key retains the semantic "this is a keystroke"
+   meaning for screen readers while still rendering with the chip styling.
+   Pages compose their own hints inside `.lc-hotkey-hint` and put each
+   key+label pair inside `<span class="lc-hotkey-hint__combo">` so the
+   kbd chip and the label sit on the same baseline. The chip color is
+   amber (gold/coin) — matches the existing keyboard-shortcut kbd chips
+   used in the gamemodes for visual continuity. */
+.lc-hotkey-hint {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--lc-spacing-2) var(--lc-spacing-4);
+  margin: var(--lc-spacing-3) 0 0;
+  padding-top: var(--lc-spacing-3);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--lc-text-muted);
+  letter-spacing: 0.01em;
+  border-top: 1px dashed var(--lc-border);
+  text-align: center;
+}
+
+.lc-hotkey-hint > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.lc-hotkey-hint__combo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.lc-hotkey-hint kbd {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  font-family: var(--lc-font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--lc-amber);
+  background: rgba(245, 185, 66, 0.08);
+  border: 1px solid rgba(245, 185, 66, 0.3);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  /* On phones the keyboard is gone — hide the hint entirely rather than
+     showing kbd chips the user can't act on. */
+  .lc-hotkey-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Hotkey hints aren't animated, but the dashed border-top hover pulse
+     that some pages add won't fire — so keep an explicit rule here so
+     it's clear the hint pattern is motion-safe. */
+  .lc-hotkey-hint { transition: none; }
+}
+
 /* ── Reduced motion (global safety net) ──
    Disables all CSS animations and most decorative transitions for users
    who prefer reduced motion. Functional transitions (color/opacity on

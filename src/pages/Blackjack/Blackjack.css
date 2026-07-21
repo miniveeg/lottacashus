@@ -320,14 +320,6 @@
   border: 1px dashed rgba(245, 185, 66, 0.25);
 }
 
-.bj__hint-center {
-  text-align: center;
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 0.95rem;
-  margin: 0;
-  letter-spacing: 0.02em;
-}
-
 .bj__controls {
   /* unified via lc-pages.css */
 }
@@ -639,17 +631,193 @@
   }
 }
 
-/* Reduced-motion: disable decorative animations (card-deal slide-in,
-   result-banner slide-in, card hover lift). Cards still render at their
-   final position with no entrance animation; the result text and totals
-   are still shown — only the motion is suppressed. */
+/* ============================================================================
+   PHASE POLISH \u2014 visual + UX + a11y + reduced-motion coverage.
+   All new rules merge with existing rules via CSS cascade (additive
+   properties); no existing selectors were modified.
+   ============================================================================ */
+
+/* Idle hint shown on the felt table when no hand is in progress. Replaces
+   the muted .bj__hint-center with a kbd-styled "Press Space or tap Deal"
+   callout, mirroring the Keno/Slots/Limbo idiom. */
+.bj__press-to-deal {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.95rem;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.bj__press-to-deal kbd {
+  display: inline-block;
+  padding: 0.12rem 0.5rem;
+  margin: 0 0.15rem;
+  background: rgba(10, 10, 11, 0.55);
+  border: 1px solid rgba(245, 185, 66, 0.35);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lc-gold);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.3);
+  text-transform: none;
+}
+
+.bj__press-to-deal strong {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Tabular-nums: chip payouts in .bj__history-chip + bj__result-text
+   shouldn't reflow horizontally as digit counts change between rounds. */
+.bj__history-chip {
+  font-variant-numeric: tabular-nums;
+}
+
+.bj__result-text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus-visible rings for keyboard-only navigation. */
+.bj__action-btn:focus-visible {
+  outline: 2px solid var(--lc-emerald);
+  outline-offset: 2px;
+}
+
+.bj__tool-btn:focus-visible {
+  outline: 2px solid var(--lc-emerald);
+  outline-offset: 2px;
+}
+
+.bj__deal-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Outcome celebration pulses \u2014 single-shot 1.5s, color-keyed per outcome.
+   Each outcome modifier keeps its static border-color treatment AND gets
+   a one-shot ring expansion that fades back to static. No infinite loops. */
+.bj__table-panel--win,
+.bj__table-panel--blackjack {
+  animation: bj-table-celebrate-emerald 1.5s cubic-bezier(0.22, 0.61, 0.36, 1) 1;
+}
+@keyframes bj-table-celebrate-emerald {
+  0%   { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(34, 197, 94, 0.75), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  40%  { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 4px rgba(34, 197, 94, 0.65), 0 0 32px 8px rgba(34, 197, 94, 0.45), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  100% { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(34, 197, 94, 0.35), 0 8px 32px rgba(0, 0, 0, 0.25); }
+}
+
+.bj__table-panel--lose,
+.bj__table-panel--bust {
+  animation: bj-table-celebrate-ruby 1.5s cubic-bezier(0.22, 0.61, 0.36, 1) 1;
+}
+@keyframes bj-table-celebrate-ruby {
+  0%   { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(239, 68, 68, 0.65), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  40%  { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 4px rgba(239, 68, 68, 0.55), 0 0 28px 6px rgba(239, 68, 68, 0.35), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  100% { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(239, 68, 68, 0.25), 0 8px 32px rgba(0, 0, 0, 0.25); }
+}
+
+.bj__table-panel--push {
+  animation: bj-table-celebrate-amber 1.5s cubic-bezier(0.22, 0.61, 0.36, 1) 1;
+}
+@keyframes bj-table-celebrate-amber {
+  0%   { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(245, 185, 66, 0.65), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  40%  { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 4px rgba(245, 185, 66, 0.55), 0 0 26px 6px rgba(245, 185, 66, 0.35), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  100% { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(245, 185, 66, 0.3), 0 8px 32px rgba(0, 0, 0, 0.25); }
+}
+
+/* Active-hand breathing pulse. The only looping animation in the game \u2014
+   it reinforces the static outline during split mode so the player can
+   see at a glance which hand awaits their decision. */
+.bj__hand--active {
+  animation: bj-hand-active-breath 2.4s ease-in-out infinite;
+}
+@keyframes bj-hand-active-breath {
+  0%, 100% { outline-color: rgba(245, 185, 66, 0.45); }
+  50%      { outline-color: rgba(245, 185, 66, 0.9); }
+}
+
+/* Hotkey hint footer. Subtle muted text with each token wrapped in a kbd
+   chip. Two variants: default (wager + deal) and --actions (in-hand). */
+.bj__hotkey-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--lc-text-muted);
+  letter-spacing: 0.02em;
+  text-align: center;
+  padding: var(--lc-spacing-1) var(--lc-spacing-2);
+}
+
+.bj__hotkey-hint--actions {
+  margin-top: var(--lc-spacing-2);
+}
+
+.bj__hotkey-hint kbd {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  margin: 0 0.1rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+  box-shadow: 0 1px 0 var(--lc-bg-hover);
+}
+
+/* Mobile sticky controls (Crash/Mines/Keno/Slots/Limbo/Roulette parity). */
+@media (max-width: 480px) {
+  .bj__controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--lc-bg) 35%,
+      var(--lc-bg) 100%
+    );
+    padding-top: var(--lc-spacing-3);
+    padding-bottom: max(var(--lc-spacing-3), env(safe-area-inset-bottom));
+  }
+  .bj__history {
+    gap: 0.25rem;
+  }
+  .bj__history-chip {
+    min-width: 2.75rem;
+    font-size: 0.65rem;
+    padding: 0.2rem 0.45rem;
+  }
+  .bj__hotkey-hint {
+    display: none;
+  }
+}
+
+/* Reduced-motion: disable decorative animations. Cards still render at
+   their final position; outcome colored borders still apply; active hand
+   outline still applies. Only motion is suppressed. */
 @media (prefers-reduced-motion: reduce) {
   .bj__card,
   .bj__result-banner,
   .bj__card:hover,
-  .bj__history-chip {
+  .bj__history-chip,
+  .bj__hand--active,
+  .bj__table-panel--win,
+  .bj__table-panel--blackjack,
+  .bj__table-panel--lose,
+  .bj__table-panel--bust,
+  .bj__table-panel--push {
     animation: none !important;
     transition: none !important;
     transform: none !important;
+  }
+  .bj__action-btn:active:not(:disabled),
+  .bj__deal-btn:active:not(:disabled) {
+    transform: none !important;
+  }
+  .bj__hand--active {
+    outline-color: rgba(245, 185, 66, 0.7);
   }
 }

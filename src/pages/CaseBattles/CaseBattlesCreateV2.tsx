@@ -18,7 +18,7 @@
  * server (5× Phoenix → ["phoenix","phoenix",…,"phoenix"] of length 5). The
  * `rounds` count comes from this array's length.
  */
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
@@ -185,6 +185,62 @@ export function CaseBattlesCreateV2() {
     }
   }
 
+  // Read-from-refs variants so the hotkey handler (registered once with
+  // [] deps) doesn't capture stale first-render state when the user adjusts
+  // groups/types/wager/etc. via the controls before pressing the shortcut.
+  const gamemodeRef = useRef<BattleGamemode>("standard");
+  gamemodeRef.current = gamemode;
+  const playerModeRef = useRef<string>("1v1");
+  playerModeRef.current = playerMode;
+  const busyRefRead = busyRef;
+
+  // Keyboard hotkeys:
+  //   E       → open the case picker modal (idle only)
+  //   Esc     → close the case picker modal (when modal is open)
+  //   Ctrl/⌘+Enter → submit (only valid when canCreate)
+  // Focus + modifier guards prevent stealing input from text fields or
+  // conflicts with browser shortcuts (Ctrl+Enter is a browser submit in
+  // form contexts — we explicitly check e.preventDefault on the keyboard
+  // path to avoid duplicate submits).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.altKey) return;
+      const el = document.activeElement as HTMLElement | null;
+      const tag = el?.tagName;
+      const onTextInput =
+        tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
+      // Note: SELECT bail not enforced — the case picker sort dropdown
+      // is a <select> and Esc-to-close on it could conflict. We keep
+      // Esc-to-close scoped to the modal (handled inside the modal below).
+      const k = e.key.toLowerCase();
+      if (k === "escape" && showCaseModal) {
+        e.preventDefault();
+        setShowCaseModal(false);
+        return;
+      }
+      if (onTextInput) return;
+      if (k === "e" && !showCaseModal && !busyRefRead.current) {
+        e.preventDefault();
+        setShowCaseModal(true);
+        return;
+      }
+      // Ctrl/Cmd+Enter → submit. ctrlKey catches BOTH Ctrl (Windows/Linux)
+      // and Cmd (mac) since browsers fire `metaKey` for Cmd — we check
+      // either to support cross-platform. Without ctrl/meta the Enter
+      // keystroke is intentionally NOT bound to create (Enter inside a
+      // <select> or any other focusable would cause submits).
+      if ((e.ctrlKey || e.metaKey) && k === "enter") {
+        e.preventDefault();
+        if (!busyRefRead.current && canCreate) {
+          void handleCreate();
+        }
+        return;
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showCaseModal, canCreate]);
+
   return (
     <div className="cb-create lc-page">
       <Seo title="Create Case Battle" path="/case-battles/create" noindex />
@@ -206,6 +262,15 @@ export function CaseBattlesCreateV2() {
         <Info size={14} aria-hidden />
         Creating in <strong>{coinLabel}</strong>. Switch in the topbar to use the other balance.
       </p>
+
+      {/* Phase polish: contextual idle hint shown when no cases are picked
+          yet and the player hasn't typed in any control. Stays out of the
+          way once the user has focus on the type/toggle. */}
+      {orderedGroups.length === 0 && (
+        <p className="cb-create__press-to-add" role="note">
+          Tap <strong>Add Cases</strong> or press <kbd>E</kbd> to begin
+        </p>
+      )}
 
       {/* ── Settings bar (mode / type / crazy / borrow) ────────────── */}
       <div className="cb-create__settings">
@@ -412,14 +477,31 @@ export function CaseBattlesCreateV2() {
         >
           {busy ? "Creating…" : `Create Battle (${formatCoins(actualEntry, coinType)})`}
         </button>
+        {/* Phase polish: keyboard hint footer. Inside the bottom panel
+            so it sits visually next to the submit button it describes. */}
+        {!busy && (
+          <p className="cb-create__hotkey-hint" role="note">
+            <kbd>E</kbd> add cases · <kbd>⌘</kbd>/<kbd>Ctrl</kbd>+<kbd>Enter</kbd> create
+          </p>
+        )}
       </div>
 
       {/* ── Case picker modal ────────────────────────────────────── */}
       {showCaseModal && (
-        <div className="cb-modal-overlay" onClick={() => setShowCaseModal(false)}>
-          <div className="cb-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="cb-modal-overlay"
+          onClick={() => setShowCaseModal(false)}
+          role="presentation"
+        >
+          <div
+            className="cb-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cb-picker-title"
+          >
             <div className="cb-modal__header">
-              <h2>Add Cases</h2>
+              <h2 id="cb-picker-title">Add Cases</h2>
               <button type="button" className="cb-modal__close" onClick={() => setShowCaseModal(false)} aria-label="Close case picker">
                 <X size={20} />
               </button>

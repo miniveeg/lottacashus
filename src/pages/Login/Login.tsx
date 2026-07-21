@@ -1,4 +1,4 @@
-import { useState, useRef, type FormEvent } from "react";
+import { useEffect, useState, useRef, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { safeRedirectPath } from "../../lib/authRedirect";
 import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
@@ -34,6 +34,30 @@ export function Login() {
   const [submitting, setSubmitting] = useState(false);
   // Track recent attempts in a ref (no re-render needed) — array of timestamps.
   const attemptsRef = useRef<AttemptEntry[]>([]);
+
+  // ⌨️ Cmd/Ctrl+Enter submits the login form. Mirrors the gamemode
+  // hotkey pattern: silent no-op when a request is already in flight or
+  // the form is unconfigured. Listener registered once; gate state read
+  // through refs so it doesn't re-register on every render.
+  const submittingRef = useRef(false);
+  submittingRef.current = submitting;
+  const configuredRef = useRef(configured);
+  configuredRef.current = configured;
+  const formRef = useRef<HTMLFormElement | null>(null);
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.key !== "Enter") return;
+      if (e.altKey || e.shiftKey) return;
+      if (submittingRef.current || !configuredRef.current) return;
+      const f = formRef.current;
+      if (!f) return;
+      e.preventDefault();
+      f.requestSubmit();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   if (loading) {
     return (
@@ -117,7 +141,7 @@ export function Login() {
           </FormAlert>
         )}
 
-        <form className="auth-form" onSubmit={handleSubmit} noValidate>
+        <form className="auth-form" onSubmit={handleSubmit} noValidate ref={formRef}>
           {error && <FormAlert id="login-error">{error}</FormAlert>}
 
           <div className="auth-field">
@@ -170,6 +194,14 @@ export function Login() {
             {submitting ? "Logging in…" : "Log in"}
           </button>
         </form>
+
+        <p className="lc-hotkey-hint" role="note">
+          <span className="lc-hotkey-hint__combo">
+            <kbd>{typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"}</kbd>
+            <kbd>↵</kbd>
+          </span>
+          <span>log in</span>
+        </p>
 
         <p className="auth-footer">
           Don&apos;t have an account? <Link to="/signup">Sign up</Link>

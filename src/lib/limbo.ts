@@ -70,13 +70,21 @@ export async function placeLimboBet(params: {
   target: number;
   coinType?: string;
 }): Promise<{ data: LimboBetResult | null; error: string | null }> {
+  const {
+    getOrCreateRequestId,
+    clearRequestId,
+    IDEM_KEY_LIMBO_BET,
+  } = await import("./idempotency");
+  const clientRequestId = getOrCreateRequestId(IDEM_KEY_LIMBO_BET);
   const { data, error } = await invokeEdgeFunction<LimboBetResult>("place-limbo-bet", {
     wager: params.wager,
     target: params.target,
     coinType: params.coinType ?? "balance",
+    clientRequestId,
   });
 
   if (error) return { data: null as LimboBetResult | null, error };
   if (!data) return { data: null, error: "No response from server." };
+  clearRequestId(IDEM_KEY_LIMBO_BET);
   return { data, error: null };
 }

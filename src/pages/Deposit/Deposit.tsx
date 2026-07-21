@@ -335,6 +335,20 @@ export function Deposit() {
           ))
         )}
       </section>
+
+      {/* Hotkey hint footer — teaches the user that selecting the address
+          text + native Cmd/Ctrl+C is the canonical copy gesture. The Copy
+          button's aria-label already mentions clipboard, but the kbd hint
+          removes the discovery friction for keyboard-only users. */}
+      {address && (
+        <p className="lc-hotkey-hint" role="note">
+          <span className="lc-hotkey-hint__combo">
+            <kbd>{typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"}</kbd>
+            <kbd>C</kbd>
+          </span>
+          <span>copy address</span>
+        </p>
+      )}
     </div>
   );
 }

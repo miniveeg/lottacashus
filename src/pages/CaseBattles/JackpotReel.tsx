@@ -51,6 +51,14 @@ const TILE_W = 140;          // px — width of each contestant tile
 const SPIN_DURATION = 3400;  // ms — total scroll duration
 const FULL_PASSES = 4;       // number of visual full passes before landing
 
+// Phase polish: live-read the OS-level prefers-reduced-motion setting so
+// the wheel lands immediately for users who opt out of motion. Pairs with
+// the CSS @media block to suppress any residual marquee animations.
+function readJackpotPrefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
 export function JackpotWheel({ battle, winningSlots, userId }: JackpotWheelProps) {
   // Resolve contestant list (one reel tile per slot). Bots and humans are
   // both rendered so the wheel feels complete.
@@ -118,6 +126,16 @@ export function JackpotWheel({ battle, winningSlots, userId }: JackpotWheelProps
     const fromOffset = 0;
     const toOffset = viewportW / 2 - TILE_W / 2 - targetDomPx;
     startRef.current = performance.now();
+
+    // Phase polish: prefers-reduced-motion → snap directly to the win
+    // position with no scroll animation. setLanded(true) still fires so
+    // the winner-glow CSS class is applied immediately.
+    if (readJackpotPrefersReducedMotion()) {
+      const track = trackRef.current;
+      if (track) track.style.transform = `translateX(${toOffset}px)`;
+      setLanded(true);
+      return;
+    }
 
     function tick(now: number) {
       if (cancelled) return;

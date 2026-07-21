@@ -101,25 +101,61 @@
   100% { transform: translateY(0); }
 }
 
+/* Phase polish: win now fires a single celebration burst instead of an
+   infinite glow loop (Keno reviewer flagged the same pattern on the
+   paytable pulse). The reel scales up, an emerald ring expands outward,
+   then it settles into a static emerald glow. */
 .slots__reel--win {
   border-color: var(--lc-emerald);
-  box-shadow: 0 0 24px var(--lc-emerald-glow);
   transform: scale(1.06);
-  animation: slots-win-pulse 1.2s ease-in-out infinite;
+  animation: slots-win-celebration 1.4s cubic-bezier(0.34, 1.45, 0.64, 1) 1;
+  box-shadow: 0 0 18px 2px var(--lc-emerald-glow);
 }
 
-@keyframes slots-win-pulse {
-  0%, 100% {
-    box-shadow: 0 0 18px var(--lc-emerald-glow);
+@keyframes slots-win-celebration {
+  0% {
+    transform: scale(0.92);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.85);
   }
-  50% {
-    box-shadow: 0 0 32px var(--lc-emerald-glow);
+  35% {
+    transform: scale(1.18);
+    /* Emerald ring expands + bright halo at peak. */
+    box-shadow:
+      0 0 0 18px rgba(34, 197, 94, 0),
+      0 0 36px 8px rgba(34, 197, 94, 0.65);
+  }
+  100% {
+    transform: scale(1.06);
+    box-shadow: 0 0 18px 2px var(--lc-emerald-glow);
   }
 }
 
 .slots__reel--loss {
   border-color: var(--lc-ruby);
   box-shadow: 0 0 12px var(--lc-ruby-glow);
+  /* Single ruby fade so the player registers the miss; then static. */
+  animation: slots-loss-fade 0.9s ease-out 1;
+}
+
+@keyframes slots-loss-fade {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 12px var(--lc-ruby-glow);
+  }
+}
+
+/* Phase polish: idle reel frame. Only applies before the first spin so
+   it doesn't distract after the player has been playing. */
+.slots__reels--idle .slots__reel {
+  border-color: var(--lc-border);
+  animation: slots-idle-breath 4s ease-in-out infinite;
+}
+
+@keyframes slots-idle-breath {
+  0%, 100% { border-color: var(--lc-border); }
+  50%      { border-color: var(--lc-amber-dim); }
 }
 
 /* Center win-line indicator — only visible during active spinning and win
@@ -199,6 +235,8 @@
   font-weight: 500;
   color: var(--lc-emerald);
   margin-top: var(--lc-spacing-2);
+  /* Tabular nums so the payout doesn't jitter when the value updates. */
+  font-variant-numeric: tabular-nums;
 }
 
 .slots__outcome-loss {
@@ -352,10 +390,43 @@
   font-weight: 700;
   color: var(--lc-amber);
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .slots__paytable-mult--top {
   color: var(--lc-crimson-soft);
+}
+
+/* Phase polish: highlight the winning row + multiplier after a winning
+   round. 3-iteration pulse (matches Keno paytable-pulse pattern). */
+.slots__paytable-row--active {
+  animation: slots-paytable-row-pulse 1.5s ease-in-out 3;
+  border-radius: var(--lc-radius-sm);
+  background: rgba(34, 197, 94, 0.1);
+  padding: 2px var(--lc-spacing-2);
+}
+
+@keyframes slots-paytable-row-pulse {
+  0%, 100% {
+    background: rgba(34, 197, 94, 0.06);
+  }
+  50% {
+    background: rgba(34, 197, 94, 0.18);
+  }
+}
+
+.slots__paytable-mult--active {
+  color: var(--lc-emerald);
+  animation: slots-paytable-mult-pulse 1.2s ease-in-out 3;
+}
+
+@keyframes slots-paytable-mult-pulse {
+  0%, 100% {
+    text-shadow: 0 0 0 transparent;
+  }
+  50% {
+    text-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+  }
 }
 
 .slots__paytable-rtp {
@@ -387,4 +458,92 @@
 .slots__hint a {
   color: var(--lc-crimson);
   font-weight: 600;
+}
+
+/* Phase polish: pre-spin call-to-action under the reels. Visible only
+   while all 3 reels show the placeholder dash — i.e. before the first
+   spin. Styled to match the page's tone (sub-amber kbd). */
+.slots__press-to-spin {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--lc-text-muted);
+  text-align: center;
+  letter-spacing: 0.02em;
+  animation: slots-hint-pulse 3s ease-in-out infinite;
+}
+
+.slots__press-to-spin kbd {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  margin: 0 0.15rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+  box-shadow: 0 1px 0 var(--lc-bg-hover);
+}
+
+.slots__press-to-spin strong {
+  color: var(--lc-gold);
+  font-weight: 700;
+}
+
+@keyframes slots-hint-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+/* The .slots__sr-status utility was added during the initial polish pass
+   to support a duplicate SR-only live announcer (now removed). No JSX
+   element renders this selector anymore, so the rule itself is dead code
+   and has been deleted per the codebase's no-orphan-CSS rule. The
+   outcome <div className="slots__outcome"> remains the sole live region
+   for round results. */
+
+/* ── Reduced motion (prefers-reduced-motion: reduce) ──
+   Suppresses every animation + transform added during polish (burst,
+   loss-fade, paytable row pulse, idle breath, hint pulse, win pulse
+   already suppressed in the existing block above). */
+@media (prefers-reduced-motion: reduce) {
+  .slots__reel--win,
+  .slots__reel--loss,
+  .slots__reels--idle .slots__reel,
+  .slots__paytable-row--active,
+  .slots__paytable-mult--active,
+  .slots__press-to-spin {
+    animation: none !important;
+  }
+  .slots__reel--win,
+  .slots__reel--loss {
+    transform: none !important;
+  }
+}
+
+/* ── Mobile (≤ 480px): pin controls + paytable at bottom so the reels
+   remain visible at the top while wager stays thumb-reachable. ── */
+@media (max-width: 480px) {
+  .slots__controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--lc-bg) 35%,
+      var(--lc-bg) 100%
+    );
+    padding-top: var(--lc-spacing-3);
+    padding-bottom: max(var(--lc-spacing-3), env(safe-area-inset-bottom));
+  }
+  .slots__reel {
+    /* Keep the reels readable on a 360px viewport. */
+    width: calc(var(--slot-reel-size) - 12px);
+    height: calc(var(--slot-reel-size) - 12px);
+  }
+  .slots__paytable-grid {
+    gap: var(--lc-spacing-1) var(--lc-spacing-2);
+  }
 }

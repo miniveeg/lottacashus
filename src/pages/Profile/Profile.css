@@ -398,3 +398,53 @@
     font-size: 0.95rem;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   POLISH — edge-case pages pass (mirrors the 8-gamemode rounds).
+   Tabular-nums + focus-visible + extended reduced-motion.
+   All additive — merges via CSS cascade without disturbing existing rules.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Tabular-nums on every numeric readout so digit width doesn't shift when
+   balances increase by a digit (e.g. 999 → 1,000 → 10,000). The XP ratio
+   uses `tabular-nums` of its own since it sits inside the same row as the
+   progress bar — keeps both columns aligned across re-renders. */
+.profile-stat__value,
+.profile-referral__stat-value,
+.profile-referral__value,
+.profile-hero__level-text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus-visible rings on every interactive control — pairs with the
+   global `:focus-visible` outline for buttons and inputs that don't have
+   a bespoke focus rule. Net avoids the "no visible focus on Tab" a11y
+   gap for the badges group + the referral claim path. */
+.profile-badge:focus-visible {
+  outline: 2px solid var(--lc-emerald);
+  outline-offset: 2px;
+}
+
+/* Internal nav anchor on level-bar — already has aria but we want the
+   visible focus ring so keyboard users navigating the hero can see where
+   they are. */
+.profile-hero__level-bar:focus-visible {
+  outline: 2px solid var(--lc-crimson-soft);
+  outline-offset: 2px;
+}
+
+/* Reduced-motion coverage — the badge hover uses a small lift + border
+   color change that's motion-safe, but the level-bar width transition
+   (driven by `style={{ width }}`) should snap when motion is reduced. */
+@media (prefers-reduced-motion: reduce) {
+  .profile-stat,
+  .profile-badge,
+  .profile-referral__copy,
+  .profile-referral__claim,
+  .profile-hero__level-fill {
+    transition: none !important;
+  }
+  .profile-badge--earned:hover {
+    transform: none;
+  }
+}

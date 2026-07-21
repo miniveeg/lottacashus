@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
+import { extractClientRequestId } from "../_shared/hardened.ts";
 
 const SYMBOLS = ["Cherry", "Bell", "Seven", "Bar", "Watermelon", "Star", "Crown"];
 
@@ -70,6 +71,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const wager = Number(body?.wager);
     const coinType = String(body?.coinType ?? "balance");
+    const clientRequestId = extractClientRequestId(body ?? null);
 
     if (!Number.isFinite(wager) || wager < 1) {
       return jsonResponse({ error: "Minimum bet is 1 SC or GC." }, 400, req);
@@ -93,26 +95,8 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: excluded } = await supabaseAdmin.rpc("check_user_self_exclusion", {
-      p_user_id: user.id,
-    });
-    if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
-    }
-
-    const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
-
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select(coinColumn)
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
-    if (balance < wager) {
-      return jsonResponse({ error: "Insufficient balance" }, 400, req);
-    }
-
+    // Self-exclusion + balance + atomic debit now live inside
+    // place_slots_bet. Edge-side checks removed.
     const { data: seedData, error: seedError } = await supabaseAdmin.rpc(
       "consume_keno_nonce",
       { p_user_id: user.id, p_advance: 1 }
@@ -146,8 +130,8 @@ Deno.serve(async (req) => {
     const { won, multiplier } = determineMultiplier(reels);
     const payout = won ? Math.round(wager * multiplier * 100) / 100 : 0;
 
-    const { data: settled, error: settleError } = await supabaseAdmin.rpc(
-      "settle_slots_bet",
+    const { data: placed, error: placeError } = await supabaseAdmin.rpc(
+      "place_slots_bet",
       {
         p_user_id: user.id,
         p_wager: wager,
@@ -157,15 +141,16 @@ Deno.serve(async (req) => {
         p_payout: payout,
         p_nonce: nonce,
         p_coin_type: coinType,
+        p_client_request_id: clientRequestId,
       }
     );
 
-    if (settleError) {
-      console.error("settle_slots_bet:", settleError);
-      return jsonResponse({ error: settleError.message }, 400, req);
+    if (placeError) {
+      console.error("place_slots_bet:", placeError);
+      return jsonResponse({ error: placeError.message }, 400, req);
     }
 
-    const settleRow = (Array.isArray(settled) ? settled[0] : settled) as
+    const placeRow = (Array.isArray(placed) ? placed[0] : placed) as
       | Record<string, unknown>
       | undefined;
 
@@ -175,8 +160,8 @@ Deno.serve(async (req) => {
       won,
       multiplier,
       payout,
-      outBalance: Number(settleRow?.out_balance ?? balance - wager + payout),
-      gameId: settleRow?.game_id,
+      outBalance: Number(placeRow?.out_balance ?? 0),
+      gameId: placeRow?.game_id,
       nonce,
       coinType,
     });

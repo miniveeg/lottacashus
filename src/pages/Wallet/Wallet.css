@@ -502,3 +502,45 @@
     max-width: 100%;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   POLISH — edge-case pages pass (Deposit + Withdraw share this file).
+   Tabular-nums + extended focus-visible + reduced-motion coverage.
+   All additive — merges via CSS cascade.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Tabular-nums on every numeric readout so digit width doesn't shift when
+   the user's balance ticks up by one digit or when the SC → USD preview
+   updates per keystroke. */
+.wallet__balance-value,
+.wallet__balance-usd,
+.wallet__chain-btn,
+.wallet__deposit-row strong,
+.wallet__hint--meta,
+.wallet__deposit-item .wallet__hint--meta {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Focus-visible on the segmented tabs (Deposit / Withdraw) — they are
+   `<Link>` elements and the global outline already covers them, but a
+   cement of brand color here matches the pattern used inside the games. */
+.wallet__tab:focus-visible {
+  outline: 2px solid var(--lc-emerald);
+  outline-offset: 2px;
+}
+
+/* Reduced-motion coverage — the spinner should freeze, and the dance that
+   the .wallet__btn hover-lift does on click. */
+@media (prefers-reduced-motion: reduce) {
+  .wallet__btn__spinner,
+  .wallet__btn,
+  .wallet__chain-btn,
+  .wallet__address,
+  .wallet__deposit-item {
+    transition: none !important;
+    animation: none !important;
+  }
+  .wallet__btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

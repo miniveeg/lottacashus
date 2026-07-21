@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { playKenoRound, validateKenoBet, type KenoRisk } from "../_shared/keno.ts";
+import { extractClientRequestId } from "../_shared/hardened.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,6 +23,7 @@ Deno.serve(async (req) => {
       ? body.picks.map((n: unknown) => Number(n)).filter((n: number) => Number.isFinite(n))
       : [];
     const coinType = String(body?.coinType ?? "balance");
+    const clientRequestId = extractClientRequestId(body ?? null);
 
     const validationError = validateKenoBet(picks, wager, risk);
     if (validationError) {
@@ -46,26 +48,10 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { data: excluded } = await supabaseAdmin.rpc("check_user_self_exclusion", {
-      p_user_id: user.id,
-    });
-    if (excluded) {
-      return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
-    }
-
-    const coinColumn = coinType === "sweeps_coins" ? "sweeps_coins" : "balance";
-
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select(coinColumn)
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const balance = Number(profile?.[coinColumn as keyof typeof profile] ?? 0);
-    if (balance < wager) {
-      return jsonResponse({ error: "Insufficient balance" }, 400, req);
-    }
-
+    // Self-exclusion enforcement moved into place_keno_bet via
+    // reject_if_self_excluded (defense-in-depth). The edge-side profile
+    // balance read was removed — the SQL placer atomically checks + debits
+    // + inserts with SELECT FOR UPDATE + ON CONFLICT idempotency.
     const { data: seedData, error: seedError } = await supabaseAdmin.rpc(
       "consume_keno_nonce",
       { p_user_id: user.id, p_advance: 1 }
@@ -125,8 +111,8 @@ Deno.serve(async (req) => {
 
     const payout = Math.round(wager * multiplier * 100) / 100;
 
-    const { data: settled, error: settleError } = await supabaseAdmin.rpc(
-      "settle_keno_bet",
+    const { data: placed, error: placeError } = await supabaseAdmin.rpc(
+      "place_keno_bet",
       {
         p_user_id: user.id,
         p_wager: wager,
@@ -138,20 +124,23 @@ Deno.serve(async (req) => {
         p_payout: payout,
         p_nonce: Number(seedRow.nonce),
         p_coin_type: coinType,
+        p_client_request_id: clientRequestId,
       }
     );
 
-    if (settleError) {
-      console.error("settle_keno_bet:", settleError);
-      return jsonResponse({ error: settleError.message }, 400, req);
+    if (placeError) {
+      console.error("place_keno_bet:", placeError);
+      return jsonResponse({ error: placeError.message }, 400, req);
     }
 
-    const result = settled?.[0] as Record<string, unknown> | undefined;
+    const result = (Array.isArray(placed) ? placed[0] : placed) as
+      | Record<string, unknown>
+      | undefined;
     const outBalance = result?.out_balance ?? result?.balance;
 
     return jsonResponse({
       betId: result?.bet_id as string | undefined,
-      balance: Number(outBalance ?? balance),
+      balance: Number(outBalance ?? 0),
       coinType,
       drawn,
       hits,

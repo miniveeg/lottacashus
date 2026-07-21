@@ -81,6 +81,15 @@
   100% { transform: translateY(-70px) translateX(80px) rotate(-30deg); opacity: 0; }
 }
 
+/* Phase polish: win now also lights up the surrounding stage to match
+   the explosion. Stage retains the static emerald border from the win
+   rule; this just adds a brief expand-and-fade ring that punctuates the
+   moment. */
+.limbo__rocket-stage--win {
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 32px rgba(34, 197, 94, 0.45);
+}
+
 /* Loss: rocket drops */
 .limbo__rocket--loss {
   animation: limbo-rocket-loss 0.7s ease-in forwards;
@@ -90,6 +99,59 @@
   0%   { transform: translateY(0) rotate(0deg); }
   30%  { transform: translateY(5px) rotate(10deg); }
   100% { transform: translateY(40px) rotate(45deg); opacity: 0.2; }
+}
+
+/* Phase polish: loss gets a red stage border + ruby ring during the
+   drop animation then settles static. Same pattern as Slots ruby-fade.
+*/
+.limbo__rocket-stage--loss {
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.4);
+}
+
+/* Idle (pre-first-bet) — subtle border breath to invite attention to the
+   rocket stage. Mirrors Slots reels--idle pattern. */
+.limbo__rocket-stage--idle {
+  animation: limbo-stage-idle-breath 5s ease-in-out infinite;
+}
+
+@keyframes limbo-stage-idle-breath {
+  0%, 100% { border-color: var(--lc-border); }
+  50%      { border-color: var(--lc-amber-dim); }
+}
+
+/* Phase polish: ripple overlay expanding outward from the center of the
+   rocket stage on settlement. Win = emerald ring; loss = ruby ring.
+   Runs ONCE then removed via React conditional rendering. */
+.limbo__ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--lc-radius-lg);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0;
+  animation: limbo-ripple-expand 0.85s cubic-bezier(0.22, 0.61, 0.36, 1) 1 forwards;
+}
+
+.limbo__ripple--win {
+  background: radial-gradient(circle at center, rgba(34, 197, 94, 0.55) 0%, rgba(34, 197, 94, 0) 65%);
+  box-shadow: inset 0 0 0 2px rgba(34, 197, 94, 0.7);
+}
+
+.limbo__ripple--loss {
+  background: radial-gradient(circle at center, rgba(239, 68, 68, 0.5) 0%, rgba(239, 68, 68, 0) 65%);
+  box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.7);
+}
+
+@keyframes limbo-ripple-expand {
+  0% {
+    opacity: 1;
+    transform: scale(0.55);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.15);
+  }
 }
 
 /* Flame flicker */
@@ -112,6 +174,23 @@
 /* Target bar pulse when rolling */
 .limbo__rocket-stage--rolling .limbo__target-bar {
   animation: limbo-bar-pulse 1s ease-in-out infinite;
+}
+
+/* The ripple overlay sits ABOVE the target bar so the ring is visible
+   during stretching. Position the SVG relative so the absolute ripple
+   can cover it. */
+.limbo__rocket-stage {
+  position: relative;
+}
+
+.limbo__ripple {
+  /* Render above the SVG so the emerald/ruby ring lights up over the
+     rocket silhouette during the win burst. */
+  z-index: 1;
+}
+
+.limbo__display {
+  position: relative;
 }
 
 @keyframes limbo-bar-pulse {
@@ -212,6 +291,11 @@
   line-height: 1;
   color: var(--lc-text-primary);
   transform-origin: center center;
+  /* Phase polish: tabular nums so the multiplier doesn't jitter width
+     between round resolves (e.g. "12.34×" → "100×") — important for
+     high-target outcomes where the number changes from a 5-char
+     display to a 4-char display rapidly. */
+  font-variant-numeric: tabular-nums;
 }
 
 .limbo__display-value--waiting {
@@ -311,6 +395,10 @@
   /* Entrance animation — matches Roulette's chip-enter for cross-game
      consistency. The newest chip (first in the array) pops in. */
   animation: limbo-chip-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Phase polish: tabular nums + min-width so chips don't reflow width
+     when the rounded multiplier changes (e.g. "1.10×" vs "10.0×"). */
+  font-variant-numeric: tabular-nums;
+  min-width: 3.5rem;
 }
 
 @keyframes limbo-chip-enter {
@@ -349,7 +437,116 @@
 }
 
 .limbo__target-presets {
-  margin-top: 0.45rem;
+  margin-top: var(--lc-spacing-3);
+}
+
+/* Phase polish: dedicated slider override for Limbo's target slider.
+   Uses emerald gradient that warms toward amber as the target
+   increases (mirror of the win-color gain). Log scale so the thumb
+   position maps logarithmically to target.
+
+   Note: an earlier draft referenced a custom `--limbo-thumb` /
+   `--limbo-target-risk` color-mix variable for dynamic thumb tint,
+   but the uniform emerald accent reads more consistently across
+   target ranges (matches Mines' slider). The dead CSS was removed in
+   this polish revision; the accent-color below is the sole source of
+   thumb color. */
+.limbo__target-slider {
+  width: 100%;
+  margin-top: var(--lc-spacing-3);
+  accent-color: var(--lc-emerald);
+}
+
+.limbo__target-slider::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, var(--lc-emerald) 0%, var(--lc-amber-dim) 100%);
+  height: 6px;
+  border-radius: var(--lc-radius-pill);
+}
+
+.limbo__target-slider::-moz-range-track {
+  background: linear-gradient(to right, var(--lc-emerald) 0%, var(--lc-amber-dim) 100%);
+  height: 6px;
+  border-radius: var(--lc-radius-pill);
+}
+
+/* Paytable pill — win chance + potential payout as a single split cell.
+   Replaces the previous drop-shadow-y text under the option. */
+.limbo__paytable-pill {
+  margin-top: var(--lc-spacing-3);
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-md);
+  display: flex;
+  align-items: center;
+  gap: var(--lc-spacing-3);
+  justify-content: space-between;
+}
+
+.limbo__paytable-pill-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.limbo__paytable-pill-k {
+  font-family: var(--lc-font-display);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--lc-text-muted);
+}
+
+.limbo__paytable-pill-v {
+  font-family: var(--lc-font-mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--lc-gold);
+  font-variant-numeric: tabular-nums;
+  min-width: 0;
+}
+
+.limbo__paytable-pill-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--lc-border);
+}
+
+/* Phase polish: pre-bet idle hint under the rocket stage. */
+.limbo__press-to-spin {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--lc-text-muted);
+  text-align: center;
+  letter-spacing: 0.02em;
+  animation: limbo-hint-pulse 3s ease-in-out infinite;
+}
+
+.limbo__press-to-spin kbd {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  margin: 0 0.15rem;
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+  box-shadow: 0 1px 0 var(--lc-bg-hover);
+}
+
+.limbo__press-to-spin strong {
+  color: var(--lc-gold);
+  font-weight: 700;
+}
+
+@keyframes limbo-hint-pulse {
+  0%, 100% { opacity: 0.7; }
+  50%      { opacity: 1; }
 }
 
 .limbo__error {
@@ -505,11 +702,47 @@
   .limbo__display-value--waiting,
   .limbo__display-value--pop,
   .limbo__outcome,
-  .limbo__spinner {
+  .limbo__spinner,
+  .limbo__ripple,
+  .limbo__rocket-stage--idle,
+  .limbo__rocket-stage--rolling .limbo__target-bar,
+  .limbo__rocket--flying,
+  .limbo__press-to-spin,
+  .limbo__flame,
+  .limbo__flame-inner {
     animation: none !important;
   }
-
+  .limbo__rocket--win,
+  .limbo__rocket--loss {
+    transform: none !important;
+  }
   .limbo__display-value--waiting {
     opacity: 0.6;
+  }
+}
+
+/* Phase polish: mobile sticky controls (≤ 480px) — same pattern as
+   Crash / Mines / Keno / Slots. */
+@media (max-width: 480px) {
+  .limbo__controls {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      var(--lc-bg) 35%,
+      var(--lc-bg) 100%
+    );
+    padding-top: var(--lc-spacing-3);
+    padding-bottom: max(var(--lc-spacing-3), env(safe-area-inset-bottom));
+  }
+  .limbo__history {
+    gap: 0.25rem;
+  }
+  .limbo__history-chip {
+    min-height: 2.25rem;
+    font-size: 0.68rem;
+    min-width: 3rem;
   }
 }

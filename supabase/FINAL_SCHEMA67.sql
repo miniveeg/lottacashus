@@ -1629,7 +1629,12 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
+-- ^ Supabase installs `pgcrypto` into the `extensions` schema by default.
+-- `gen_random_bytes` and `digest` come from pgcrypto and are only
+-- resolvable if `extensions` is in the function's search_path. Without
+-- this, runtime calls from edge functions fail with
+--   42883 function gen_random_bytes(integer) does not exist
 as $$
 declare
   v_uid uuid := coalesce(p_user_id, auth.uid());
@@ -1723,7 +1728,9 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
+-- ^ Required so pgcrypto's gen_random_bytes() and digest() resolve from
+-- the `extensions` schema (Supabase's standard install location).
 as $$
 declare
   v_uid uuid := p_user_id;
@@ -1928,7 +1935,9 @@ create or replace function public.get_deposit_address(p_chain text)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
+-- ^ Required so pgcrypto's gen_random_bytes() resolves from the
+-- `extensions` schema (Supabase's standard install location).
 as $$
 declare
   v_uid uuid := auth.uid();
@@ -2102,7 +2111,11 @@ returns table (
 )
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
+-- ^ Required so pgcrypto's gen_random_bytes() and digest() resolve from
+-- the `extensions` schema (Supabase's standard install location). Otherwise
+-- runtime calls fail with 42883 "function gen_random_bytes(integer) does
+-- not exist".
 as $$
 declare
   v_id uuid;

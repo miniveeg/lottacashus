@@ -95,6 +95,34 @@
   box-shadow: 0 0 32px rgba(34, 197, 94, 0.18);
 }
 
+/* Confirming state — the client animation self-capped at 1Mx before the
+   server's Realtime UPDATE / settlement poll revealed the real crash
+   point. Amber border + pulsing indicator so the user knows the round
+   ended but the server is catching up. Without this, the user previously
+   saw the chart climb indefinitely (the bug they reported). */
+.crash__canvas-wrap--confirming {
+  border-color: var(--lc-amber);
+  box-shadow: 0 0 24px rgba(245, 185, 66, 0.14) inset;
+}
+
+.crash__mult-label--confirming {
+  color: var(--lc-amber);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  animation: crash-confirming-pulse 1.4s ease-in-out infinite;
+}
+
+.crash__mult-value--confirming {
+  color: var(--lc-amber);
+  text-shadow: 0 0 40px var(--lc-amber-glow-strong);
+  animation: crash-confirming-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes crash-confirming-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
 /* Brief red flash overlay when the multiplier crashes. */
 .crash__canvas-wrap--crashed::after {
   content: "";
@@ -442,9 +470,12 @@
   .crash__canvas-wrap,
   .crash__canvas-wrap--crashed,
   .crash__canvas-wrap--crashed::after,
+  .crash__canvas-wrap--confirming,
   .crash__mult-value,
   .crash__mult-value--crashed,
-  .crash__mult-value--win {
+  .crash__mult-value--win,
+  .crash__mult-value--confirming,
+  .crash__mult-label--confirming {
     animation: none !important;
     transition: none !important;
   }

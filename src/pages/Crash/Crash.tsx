@@ -12,6 +12,7 @@ import {
   placeCrashBet,
   cashOutCrash,
   setCrashClientSeed,
+  fetchCrashFinalState,
 } from "../../lib/crash";
 import {
   CRASH_MIN_WAGER,
@@ -19,20 +20,85 @@ import {
 } from "../../lib/games/crash";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import "../../styles/game-controls.css";
-import "./Crash.css";
+import "./Crash.css";  // Animation uses a smooth curve that starts VERY slow near 1.00x and
+  // gradually accelerates — exactly like a real crash game.
+  // e^(k * t^1.6): at t=5s → ~1.11x, t=10s → ~1.37x, t=20s → ~2.6x, t=35s → ~10x
+  const CRASH_SPEED_K = 0.008;
+  const CRASH_SPEED_EXP = 1.6;
+  const CANVAS_BASE_WIDTH = 600;
+  const CANVAS_BASE_HEIGHT = 320;
+  // Maximum multiplier the client animation will render. We hard-stop the
+  // animation here so the user doesn't see the chart climbing forever. We
+  // DO NOT fabricate a "Crashed at CLIENT_MAX_MULTIPLIERx" outcome — we
+  // freeze the chart and show a "Confirming server settlement…" overlay
+  // until showCrashed() fires from realtime or the poll. The actual crash
+  // point (often 1.5x–20x) is what the user should see.
+  const CLIENT_MAX_MULTIPLIER = 1_000_000;
 
-// Animation uses a smooth curve that starts VERY slow near 1.00x and
-// gradually accelerates — exactly like a real crash game.
-// e^(k * t^1.6): at t=5s → ~1.11x, t=10s → ~1.37x, t=20s → ~2.6x, t=35s → ~10x
-const CRASH_SPEED_K = 0.008;
-const CRASH_SPEED_EXP = 1.6;
-const CANVAS_BASE_WIDTH = 600;
-const CANVAS_BASE_HEIGHT = 320;
-// Maximum multiplier the client animation will render. The server caps actual
-// payouts at 100,000x but the curve can climb higher mathematically; we hard-
-// stop the animation here so an uncashed-out user sees a crash rather than an
-// infinitely climbing chart. The server's auto-settle cron closes the bet.
-const CLIENT_MAX_MULTIPLIER = 1_000_000;
+  // ─── Smooth y-axis scaling ────────────────────────────────────────────
+  // The previous version used `Math.ceil(currentMult)` for maxY, which
+  // caused integer-threshold jumps (1.99x→2.0x shrank the line by 50%, 4.9x
+  // → 5.0x by 25%, etc.). At high values it also looped `maxY - 1` times per
+  // redraw, which is 50,000 iterations at 50,000x — a performance disaster.
+  //
+  // The new picker uses a log-spaced "nice number" sequence so the axis only
+  // re-scales at decade boundaries (10x→100x→1,000x). Within a band, the
+  // line just keeps climbing against a stable ceiling — visually smoother.
+  const NICE_CEILINGS = [
+    1, 1.5, 2, 3, 5, 10, 15, 20, 30, 50, 100, 150, 200, 300, 500,
+    1000, 1500, 2000, 3000, 5000, 10000, 15000, 20000, 30000, 50000,
+    100000, 150000, 200000, 300000, 500000, 1000000,
+  ] as const;
+  function niceCeil(v: number): number {
+    if (!Number.isFinite(v) || v <= 1) return 2;
+    for (const n of NICE_CEILINGS) {
+      if (n >= v) return n;
+    }
+    // Beyond 1M (e.g. during the brief CLIENT_MAX_MULTIPLIER stall) round
+    // up to the next power of ten. The chart rarely sits here since the
+    // server reveals the real crash point within seconds.
+    return Math.pow(10, Math.ceil(Math.log10(v)));
+  }
+  function niceTicksUpTo(maxY: number, count = 5): number[] {
+    if (maxY <= 1) return [1];
+    const exp = Math.log10(maxY);
+    const ticks: number[] = [];
+    for (let i = 0; i < count; i++) {
+      const v = (i / (count - 1)) * exp;
+      ticks.push(niceCeil(Math.pow(10, v)));
+    }
+    return Array.from(new Set(ticks)).sort((a, b) => a - b);
+  }
+  // Compact y-axis label: "1×" "10×" "100×" "1K×" "10K×" "1M×". For
+  // sub-10 multipliers show one decimal (1.5×) so the tick at 1.5 is
+  // distinguishable from 1.0. Stays readable at extreme values where the
+  // raw multiplier would be 157823.42.
+  function formatTick(v: number): string {
+    if (v >= 1_000_000) {
+      const n = v / 1_000_000;
+      return (n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2)) + "M×";
+    }
+    if (v >= 1000) {
+      const n = v / 1000;
+      return (n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2)) + "K×";
+    }
+    return v < 10 ? v.toFixed(1) + "×" : v.toFixed(0) + "×";
+  }
+  // Compact multiplier text (the big "1.43x" number overlay). The previous
+  // version used `multiplier.toFixed(2)x`, which becomes unreadable at high
+  // values ("157823.42x" wraps and breaks layout). For values >=1000 we
+  // switch to compact notation.
+  function formatMultiplier(v: number): string {
+    if (v >= 1_000_000) {
+      const n = v / 1_000_000;
+      return (n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2)) + "M";
+    }
+    if (v >= 1000) {
+      const n = v / 1000;
+      return (n >= 100 ? n.toFixed(0) : n >= 10 ? n.toFixed(1) : n.toFixed(2)) + "K";
+    }
+    return v.toFixed(2);
+  }
 // Polling interval for detecting server-side bet settlement (when the user
 // never cashes out). The server's crash_settle_expired_bets cron runs every
 // 60s; we poll every 2s for a responsive UX.
@@ -62,6 +128,15 @@ export function Crash() {
   // crashPointRef holds the crash point ONLY AFTER the round is over.
   const crashPointRef = useRef<number | null>(null);
   const settlementPollRef = useRef<number | null>(null);
+  // Realtime subscription on `crash_bets` filtered by betId. When the server
+  // marks the bet completed_at (via cashOutCrash OR the cron), the realtime
+  // UPDATE fires and we can call showCrashed() within < 1s of the actual
+  // crash — fixing the "chart keeps climbing forever" bug (the user used to
+  // see the multiplier go up indefinitely because the cron only ran every
+  // 60s and only settled bets older than 2 min). The realtime payload leaks
+  // crash_point, but we discard it and re-read the safe view to keep the
+  // provably-fair flow honest.
+  const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   // busyRef guards handleBet against double-clicks (Bet button disappears
   // immediately on phase=running, but a sub-ms race window exists between the
   // click and the re-render). cashingOutRef + cashingOut state guard
@@ -99,6 +174,14 @@ export function Crash() {
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
   const [betId, setBetId] = useState<string | null>(null);
+  // True when the client animation self-capped at CLIENT_MAX_MULTIPLIER
+  // (1,000,000x) before the server confirmed the actual crash point. We
+  // freeze the chart and show a "Confirming server settlement…" overlay
+  // instead of fabricating "Crashed at 1,000,000x" — that value is almost
+  // never the real crash and was confusing players. showCrashed() fires
+  // from realtime or the poll, which is the only path that should reveal
+  // the actual crash point.
+  const [confirming, setConfirming] = useState(false);
 
   const historyRef = useRef<{ x: number; y: number }[]>([{ x: 0, y: 1 }]);
 
@@ -191,7 +274,16 @@ export function Crash() {
     const graphW = w - pad * 2;
     const graphH = h - pad * 2;
 
-    const maxY = Math.max(2, Math.ceil(Math.max(currentMult, ...pts.map((p) => p.y))));
+    // maxY uses niceCeil so the y-axis only re-scales at decade boundaries
+    // (10x→100x→1,000x), eliminating the "snap shrink" the user saw every
+    // integer crossover (1.99→2.0 used to drop the line by 50%). The 12%
+    // headroom keeps the visible curve's tip away from the chart top.
+    // The previous version's `Math.ceil(currentMult)` also iterated
+    // `maxY - 1` times per redraw below — at 50Kx that's a 50K-op stall.
+    const maxY = niceCeil(Math.max(2, currentMult * 1.12, ...pts.map((p) => p.y)));
+    // 5 log-spaced ticks from 1 to maxY. Snapped to nearest nice number so
+    // labels read as 1×, 5×, 10×, 50×, 100× (not 5.62×).
+    const yTicks = niceTicksUpTo(maxY);
     const maxX = pts.length > 1 ? pts[pts.length - 1].x : 1;
 
     function mapX(x: number) { return pad + (x / Math.max(maxX, 0.001)) * graphW; }
@@ -206,12 +298,14 @@ export function Crash() {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, w, h);
 
-    // Horizontal grid lines + labels
+    // Horizontal grid lines — log-spaced at nice ticks so the count stays
+    // small (≤5 lines) regardless of maxY. Replaces the previous per-integer
+    // loop that ran `maxY - 1` times per frame.
     ctx.beginPath();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
     ctx.lineWidth = 1;
-    for (let i = 1; i < maxY; i++) {
-      const y = mapY(i);
+    for (const t of yTicks) {
+      const y = mapY(t);
       ctx.moveTo(pad, y);
       ctx.lineTo(w - pad, y);
     }
@@ -285,13 +379,15 @@ export function Crash() {
       ctx.fill();
     }
 
-    // Y-axis labels
+    // Y-axis labels — compact format (1×, 10×, 1K×, 1M×) so they stay
+    // readable at extreme values where the raw multiplier would be a
+    // 6-digit number (e.g. 157823).
     ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
     ctx.font = "bold 11px system-ui, sans-serif";
     ctx.textBaseline = "middle";
-    for (let i = 1; i < maxY; i++) {
-      const y = mapY(i);
-      ctx.fillText(`${i}×`, 4, y);
+    for (const t of yTicks) {
+      const y = mapY(t);
+      ctx.fillText(formatTick(t), 4, y);
     }
   }
 
@@ -337,23 +433,18 @@ export function Crash() {
         return;
       }
 
-      // Hard-stop at CLIENT_MAX_MULTIPLIER to prevent the chart from climbing
-      // forever if the user never cashes out and the settlement poll hasn't
-      // fired yet. The server's auto-settle cron will close the bet shortly.
+      // Hard-stop at CLIENT_MAX_MULTIPLIER — we DO NOT fabricate a crash
+      // point here. Freezing the chart at 1M and labelling it as "Crashed
+      // at 1,000,000x" was misleading (the real crash is usually 1.5–20x).
+      // Now we just freeze the chart, light up the confirming overlay, and
+      // rely on the realtime subscription / settlement poll to call
+      // showCrashed() with the actual server crash_point.
       if (truncated >= CLIENT_MAX_MULTIPLIER) {
         pts.push({ x: elapsed, y: CLIENT_MAX_MULTIPLIER });
         drawGraph(ctx, w, h, pts, CLIENT_MAX_MULTIPLIER, true);
         multiplierRef.current = CLIENT_MAX_MULTIPLIER;
         setMultiplier(CLIENT_MAX_MULTIPLIER);
-        phaseRef.current = "idle";
-        displayPhaseRef.current = "crashed";
-        setPhase("crashed");
-        setLastResult((prev) => ({
-          crashedAt: CLIENT_MAX_MULTIPLIER,
-          won: false,
-          payout: 0,
-          cashedAt: prev?.cashedAt ?? null,
-        }));
+        setConfirming(true);
         return;
       }
 
@@ -371,7 +462,7 @@ export function Crash() {
     animRef.current = requestAnimationFrame(tick);
   }
 
-  /** Stop the settlement poll (if running) and the animation. */
+  /** Stop the settlement poll, animation, AND realtime subscription. */
   function stopAnimation() {
     if (animRef.current) {
       cancelAnimationFrame(animRef.current);
@@ -382,10 +473,97 @@ export function Crash() {
       clearInterval(settlementPollRef.current);
       settlementPollRef.current = null;
     }
+    if (realtimeChannelRef.current) {
+      // removeChannel returns a Promise; safe to fire-and-forget since
+      // the channel will be unsubscribed once the round resumes.
+      void supabase.removeChannel(realtimeChannelRef.current);
+      realtimeChannelRef.current = null;
+    }
+  }
+
+  /**
+   * Subscribe to `crash_bets` UPDATE events filtered to the current betId.
+   * When `completed_at` becomes non-null, the server has settled the bet
+   * (cashout OR auto-cron) and we trigger a re-read via `revealCrashFromServer`.
+   *
+   * SECURITY (provably fair) — DO NOT REFACTOR WITHOUT THINKING:
+   * Supabase Realtime delivers the FULL row on UPDATE, including
+   * `crash_point`. We MUST NOT read `crash_point` from `payload.new`
+   * under any circumstance. Doing so would let a client see the bust
+   * point before resolving the round and defeat the game. The row is
+   * used ONLY as a "round is over" sentinel via `completed_at`. The
+   * authoritative `crash_point` value is read explicitly from
+   * `crash_bets_safe`, which only exposes `crash_point` once
+   * `completed_at` is set server-side.
+   *
+   * The `.subscribe()` status callback is mandatory: silent Realtime
+   * failures push detection entirely onto the 2s poll, but for bets
+   * <2 min old the safe view's `crash_point` is only exposed after
+   * the 60s cron has run — meaning a silent failure means the user is
+   * stuck on "Confirming server settlement…" for up to 2 minutes. We
+   * surface WS failures loudly so a misconfig is caught in QA / prod.
+   */
+  function subscribeCrashRealtime(betId: string) {
+    if (!isSupabaseConfigured) return;
+    if (realtimeChannelRef.current) {
+      void supabase.removeChannel(realtimeChannelRef.current);
+      realtimeChannelRef.current = null;
+    }
+    const channel = supabase
+      .channel(`crash-bet-${betId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "crash_bets",
+          filter: `id=eq.${betId}`,
+        } as { event: "UPDATE"; schema: string; table: string; filter: string },
+        (payload: { new: Record<string, unknown> | null }) => {
+          if (cancelledRef.current) return;
+          if (phaseRef.current !== "running") return;
+          // SECURITY: never read `crash_point` here — use only completed_at
+          // as the round-over sentinel; read the safe view explicitly.
+          const row = payload.new;
+          if (!row || !row.completed_at) return;
+          void revealCrashFromServer(betId);
+        }
+      )
+      .subscribe((status, err) => {
+        if (err) {
+          console.warn(
+            "[Crash] Realtime subscription failed; falling back to poll only.",
+            err
+          );
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          console.warn("[Crash] Realtime channel status:", status);
+        }
+      });
+    realtimeChannelRef.current = channel;
+  }
+
+  /** Query `crash_bets_safe` once the server has marked the bet completed
+   *  (post-cashout OR post-cron). Returns the canonical crash_point value
+   *  the safe view exposes. Used by both the realtime path and the poll
+   *  fallback so the user sees the correct crash animation < 1s after
+   *  the server actually crashes the round. */
+  async function revealCrashFromServer(betId: string) {
+    try {
+      const result = await fetchCrashFinalState(betId);
+      if (!result) return;
+      if (cancelledRef.current) return;
+      if (phaseRef.current !== "running") return;
+      showCrashed(result.crashPoint);
+      void refreshProfile();
+    } catch {
+      // Swallow — the poll fallback will keep trying every 2s.
+    }
   }
 
   /** Mark the round as crashed at `crashPoint` and update the UI. Used by both
-   *  the cashout-failed path and the settlement-poll path. */
+   *  the cashout-failed path and the settlement-poll path. Resets `confirming`
+   *  so the boolean isn't stale until the next handleBet (single source of
+   *  truth — review finding). */
   function showCrashed(crashPoint: number) {
     stopAnimation();
     crashPointRef.current = crashPoint;
@@ -394,6 +572,7 @@ export function Crash() {
     setPhase("crashed");
     multiplierRef.current = crashPoint;
     setMultiplier(crashPoint);
+    setConfirming(false);
     setLastResult((prev) => ({
       crashedAt: crashPoint,
       won: false,
@@ -499,6 +678,7 @@ export function Crash() {
     setError(null);
     setLastResult(null);
     setBetId(null);
+    setConfirming(false);
     // Intermediate "placing" phase: Bet is disabled, Cash Out is hidden
     // until we have a server-issued betId.
     setPhase("placing");
@@ -532,6 +712,11 @@ export function Crash() {
     // reveals crash_point), or the settlement poll detects server-side close.
     startAnimation();
     startSettlementPoll(data.betId);
+    // Realtime subscription is the primary detection path. The poll is a
+    // fallback for environments where Realtime isn't configured. Without
+    // this, the chart kept climbing indefinitely until the 60s cron fired
+    // (the user's main bug report).
+    subscribeCrashRealtime(data.betId);
     void refreshProfile();
   };
 
@@ -611,7 +796,10 @@ export function Crash() {
         cashedAt: prev?.cashedAt ?? null,
         cashoutFailed: true,
       }));
-      setError("Cash out failed — the multiplier had already crashed.");
+      // M13: the amber `crash__outcome--cashout-failed` banner already
+      // explains what happened. The generic FormAlert duplicates the
+      // message and was the "error" the user kept seeing — suppress here
+      // so only the dedicated outcome banner renders.
     }
     void refreshProfile();
   };
@@ -642,7 +830,7 @@ export function Crash() {
 
       <div className="crash__layout">
         <section className="crash__stage-panel">
-          <div className={`crash__canvas-wrap${phase === "running" ? " crash__canvas-wrap--running" : ""}${phase === "crashed" ? " crash__canvas-wrap--crashed" : ""}${phase === "cashed_out" ? " crash__canvas-wrap--win" : ""}${phase === "idle" ? " crash__canvas-wrap--idle" : ""}`}>
+          <div className={`crash__canvas-wrap${phase === "running" ? " crash__canvas-wrap--running" : ""}${phase === "crashed" ? " crash__canvas-wrap--crashed" : ""}${phase === "cashed_out" ? " crash__canvas-wrap--win" : ""}${phase === "idle" ? " crash__canvas-wrap--idle" : ""}${confirming && phase === "running" ? " crash__canvas-wrap--confirming" : ""}`}>
             <canvas
               ref={canvasRef}
               className="crash__canvas"
@@ -653,10 +841,10 @@ export function Crash() {
             />
             <div className="crash__multiplier-overlay">
               <span
-                className={`crash__mult-value${phase === "crashed" ? " crash__mult-value--crashed" : ""}${phase === "cashed_out" ? " crash__mult-value--win" : ""}`}
+                className={`crash__mult-value${phase === "crashed" ? " crash__mult-value--crashed" : ""}${phase === "cashed_out" ? " crash__mult-value--win" : ""}${confirming && phase === "running" ? " crash__mult-value--confirming" : ""}`}
                 data-tier={phase === "running" ? (multiplier >= 10 ? "crimson" : multiplier >= 5 ? "amber" : undefined) : undefined}
               >
-                {multiplier.toFixed(2)}x
+                {formatMultiplier(multiplier)}x
               </span>
               {phase === "idle" && (
                 <span className="crash__mult-label">Place a bet to start</span>
@@ -667,6 +855,17 @@ export function Crash() {
               {phase === "cashed_out" && (
                 <span className="crash__mult-label crash__mult-label--win">
                   Cashed out — won {formatCoins(lastResult?.payout ?? 0, coinType)}
+                </span>
+              )}
+              {/* Show only when the client animation self-capped at
+                  CLIENT_MAX_MULTIPLIER BEFORE the server confirmed the real
+                  crash point. Previously we fabricated "Crashed at 1Mx"
+                  which never matched the true crash point. Now we own the
+                  wait state and let realtime / the poll reveal the real
+                  point. */}
+              {confirming && phase === "running" && (
+                <span className="crash__mult-label crash__mult-label--confirming">
+                  Confirming server settlement…
                 </span>
               )}
             </div>

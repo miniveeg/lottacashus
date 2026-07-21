@@ -58,6 +58,35 @@ export async function fetchCrashPfState(): Promise<{
   return { data: parsed, error: null };
 }
 
+/**
+ * Reveal the server-side crash point for a settled bet. The `crash_bets_safe`
+ * view only exposes `crash_point` after `completed_at` is set, so this is the
+ * authoritative read used by both:
+ *   - The realtime UPDATE handler (whose payload leaks `crash_point` even
+ *     though we don't trust it; we'd rather query the safe view explicitly).
+ *   - The poll fallback, in case realtime isn't configured.
+ *   - The client-side self-cap path: when the client can't keep climbing
+ *     anymore, we don't fabricate a crash point — we wait for this response.
+ *
+ * Returns `null` if the bet is not yet settled server-side, or the
+ * `crashPoint` if it is.
+ */
+export async function fetchCrashFinalState(
+  betId: string
+): Promise<{ crashPoint: number; completedAt: string } | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase
+    .from("crash_bets_safe")
+    .select("crash_point, completed_at")
+    .eq("id", betId)
+    .maybeSingle();
+  if (error || !data) return null;
+  if (!data.completed_at || data.crash_point == null) return null;
+  const crashPoint = Number(data.crash_point);
+  if (!Number.isFinite(crashPoint) || crashPoint < 1) return null;
+  return { crashPoint, completedAt: String(data.completed_at) };
+}
+
 export async function setCrashClientSeed(clientSeed: string): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured) {
     return { error: "Supabase is not configured." };

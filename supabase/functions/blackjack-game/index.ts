@@ -177,8 +177,6 @@ Deno.serve(async (req) => {
     // SQL debits atomically with SELECT FOR UPDATE.
 
     if (action === "active") {
-
-    if (action === "active") {
       const { data: row, error } = await admin
         .from("blackjack_hands")
         .select(

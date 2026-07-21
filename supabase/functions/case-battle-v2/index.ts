@@ -37,7 +37,9 @@ import {
   generateBattleSeed,
   getCaseById,
   hashSeed,
+  isTeamMode,
   payoutKeepMultiplier,
+  teamIndexForMode,
   type CaseItem,
   type LootCase,
 } from "../_shared/caseBattles.ts";
@@ -323,6 +325,17 @@ function readCaseIds(raw: unknown): string[] {
  *   - jackpot (no crazy):   one weighted-random roll — odds ∝ each player's total value
  *   - jackpot + crazy:      odds REVERSED — lowest total has the HIGHEST chance
  *
+ * Tie semantics (per the product spec):
+ *   - Solo (1v1 / 1v1v1 / 1v1v1v1): tied slots split the pot evenly — each
+ *     tied slot receives floor(pot / tiedCount), with the rounding remainder
+ *     falling to the highest slot index. Bots absorb their share back into
+ *     the pot via the per-claim user JWT credit pass (no duplicate credits).
+ *   - Team (2v2 / 2v2v2 / 3v3): tied teams each receive an equal share of the
+ *     pot; each team's human members split that share equally within the team.
+ *   - Group: no tie case — pot is split equally among all humans regardless
+ *     of totals.
+ *   - Jackpot: no tie case — single weighted-random draw picks one winner.
+ *
  * `borrow_percent` is applied to every payout via `payoutKeepMultiplier`; the
  * borrowed portion is not returned (the house keeps it).
  */
@@ -330,6 +343,7 @@ async function computePayouts(
   params: {
     gamemode: Gamemode;
     crazy: boolean;
+    playerMode: string;
     potTotal: number;
     borrowPercent: number;
     battleSeed: string;
@@ -346,7 +360,7 @@ async function computePayouts(
   const applyKeep = (amount: number): number =>
     Math.round(amount * keepMult * 100) / 100;
 
-  // ── Group: split the pot equally among all human players ─────────────────
+  // ── Group: split the pot equally among all HUMAN players ─────────────────
   if (params.gamemode === "group") {
     const humans = rolls
       .filter((r) => !r.isBot && r.userId)
@@ -372,14 +386,12 @@ async function computePayouts(
     };
   }
 
-  // ── Pick a single winner for non-group modes ─────────────────────────────
-  let winnerSlot: number;
-
+  // ── Jackpot: single weighted-random winner ───────────────────────────────
+  // The matrix of weights is computed the same way for non-crazy (∝ total
+  // value) and crazy (∝ 1/total — i.e. LOWEST value gets the most weight).
+  // Ties are not a concern here because the draw produces a deterministic
+  // single index.
   if (params.gamemode === "jackpot") {
-    // Weighted random — odds ∝ each player's total value (min tiny weight
-    // so all-zero battles still resolve deterministically).
-    // Crazy jackpot: REVERSED — lowest total gets the HIGHEST weight.
-    // We invert by using 1/totalValue as the weight instead of totalValue.
     const weights = rolls.map((r) => {
       const v = Math.max(0.0001, r.totalValue);
       return params.crazy ? 1 / v : v;
@@ -387,38 +399,129 @@ async function computePayouts(
     const idx = await pickWeightedIndex(
       weights,
       params.battleSeed,
-      "case-battle-v2-jackpot-winner"
+      "case-battle-v2-jackpot-winner",
     );
-    winnerSlot = rolls[idx]!.slot;
-  } else {
-    const scoreOf =
-      params.gamemode === "terminal"
-        ? (r: PlayerRoll) => r.lastRoundValue
-        : (r: PlayerRoll) => r.totalValue;
-    // Crazy = pick min; normal = pick max
-    const pickMax = !params.crazy;
-
-    // Find best score then SHA-256-based tie-break (audit #002).
-    const scores = rolls.map((r) => scoreOf(r));
-    let winningScore = scores[0]!;
-    for (let i = 1; i < scores.length; i++) {
-      const a = scores[i]!;
-      const better = pickMax ? a > winningScore : a < winningScore;
-      if (better) winningScore = a;
-    }
-    const tiedSlots = rolls
-      .filter((_, i) => scores[i] === winningScore)
-      .map((r) => r.slot)
-      .sort((a, b) => a - b);
-    winnerSlot = await coinflipWinningSlot(tiedSlots, params.battleSeed, 'tie');
+    const winner = rolls[idx]!;
+    const payouts: PayoutEntry[] =
+      !winner.isBot && winner.userId
+        ? [{ slot: winner.slot, userId: winner.userId, amount: applyKeep(pot) }]
+        : [];
+    return { winnerSlots: [winner.slot], payouts };
   }
 
-  const winner = rolls.find((r) => r.slot === winnerSlot)!;
-  const payouts: PayoutEntry[] =
-    !winner.isBot && winner.userId
-      ? [{ slot: winnerSlot, userId: winner.userId, amount: applyKeep(pot) }]
-      : [];
-  return { winnerSlots: [winnerSlot], payouts };
+  // ── Standard / Terminal — solo (per-slot scores) ─────────────────────────
+  // ── OR team (aggregate by team index) ───────────────────────────────────
+  // Helper: pick a score for each roll based on the gamemode.
+  const scoreOf =
+    params.gamemode === "terminal"
+      ? (r: PlayerRoll): number => r.lastRoundValue
+      : (r: PlayerRoll): number => r.totalValue;
+  // Crazy inverts comparator — lowest wins instead of highest.
+  const pickMax = !params.crazy;
+  const betterThan = (a: number, b: number) =>
+    pickMax ? a > b : a < b;
+
+  if (isTeamMode(params.playerMode)) {
+    // Aggregate scores by team index (2v2 → 0,1; 2v2v2 → 0,1,2; 3v3 → 0,1).
+    const teamTotals = new Map<number, number>();
+    for (const r of rolls) {
+      const t = teamIndexForMode(params.playerMode, r.slot);
+      teamTotals.set(t, (teamTotals.get(t) ?? 0) + scoreOf(r));
+    }
+    // Find the best team score.
+    let bestTeamScore = Array.from(teamTotals.values())[0]!;
+    for (const s of teamTotals.values()) {
+      if (betterThan(s, bestTeamScore)) bestTeamScore = s;
+    }
+    // Collect every team tied at the best score.
+    const tiedTeams = Array.from(teamTotals.entries())
+      .filter(([, s]) => s === bestTeamScore)
+      .map(([t]) => t)
+      .sort((a, b) => a - b);
+    // Filter to teams with at least one human — bot-only teams forfeit
+    // their share (house keeps it). The pot is then split evenly among
+    // these eligible teams; each team's human members divide that share
+    // equally within the team.
+    const hasHuman = (team: number): boolean =>
+      rolls.some(
+        (r) => teamIndexForMode(params.playerMode, r.slot) === team && !r.isBot && r.userId,
+      );
+    const eligibleTeamOrder: number[] = tiedTeams.filter(hasHuman);
+    if (eligibleTeamOrder.length === 0) {
+      return { winnerSlots: [], payouts: [] };
+    }
+    const teamShare = Math.round((pot / eligibleTeamOrder.length) * 100) / 100;
+    const payouts: PayoutEntry[] = [];
+    const winnerSlots: number[] = [];
+    let potRemaining = pot;
+    for (let i = 0; i < eligibleTeamOrder.length; i++) {
+      const team = eligibleTeamOrder[i]!;
+      const teamAmt =
+        i === eligibleTeamOrder.length - 1
+          ? Math.round(potRemaining * 100) / 100
+          : teamShare;
+      potRemaining = Math.round((potRemaining - teamAmt) * 100) / 100;
+      const humans = rolls
+        .filter(
+          (r) => teamIndexForMode(params.playerMode, r.slot) === team && !r.isBot && r.userId,
+        )
+        .sort((a, b) => a.slot - b.slot);
+      const eachMember = Math.round((teamAmt / humans.length) * 100) / 100;
+      let memberRemaining = teamAmt;
+      for (let j = 0; j < humans.length; j++) {
+        const m = humans[j]!;
+        const amt =
+          j === humans.length - 1
+            ? Math.round(memberRemaining * 100) / 100
+            : eachMember;
+        memberRemaining = Math.round((memberRemaining - amt) * 100) / 100;
+        payouts.push({ slot: m.slot, userId: m.userId, amount: applyKeep(amt) });
+        winnerSlots.push(m.slot);
+      }
+    }
+    return {
+      winnerSlots: winnerSlots.sort((a, b) => a - b),
+      payouts,
+    };
+  }
+
+  // Solo (1v1 / 1v1v1 / 1v1v1v1): every slot with the best score is a winner;
+  // they share the pot evenly among ELIGIBLE (human) tied slots. Bots
+  // involved in a tie forfeit their share (it lands in the next tied human's
+  // amt via the potRemaining remainder split below).
+  const scores = rolls.map(scoreOf);
+  let bestScore = scores[0]!;
+  for (const s of scores) {
+    if (betterThan(s, bestScore)) bestScore = s;
+  }
+  const tiedSlotsAll = rolls
+    .filter((_, i) => scores[i] === bestScore)
+    .map((r) => r.slot)
+    .sort((a, b) => a - b);
+  const eligibleSlots = tiedSlotsAll.filter((slot) => {
+    const p = rolls.find((r) => r.slot === slot);
+    return Boolean(p && !p.isBot && p.userId);
+  });
+  if (eligibleSlots.length === 0) {
+    return { winnerSlots: [], payouts: [] };
+  }
+  const share = Math.round((pot / eligibleSlots.length) * 100) / 100;
+  const payouts: PayoutEntry[] = [];
+  let remaining = pot;
+  let creditedSlots = 0;
+  for (const slot of tiedSlotsAll) {
+    const player = rolls.find((r) => r.slot === slot);
+    if (!player || player.isBot || !player.userId) continue;
+    const isLast = creditedSlots === eligibleSlots.length - 1;
+    const amt = isLast ? Math.round(remaining * 100) / 100 : share;
+    remaining = Math.round((remaining - amt) * 100) / 100;
+    creditedSlots++;
+    payouts.push({ slot, userId: player.userId, amount: applyKeep(amt) });
+  }
+  return {
+    winnerSlots: eligibleSlots,
+    payouts,
+  };
 }
 
 // ─── Resolution ─────────────────────────────────────────────────────────────
@@ -455,6 +558,54 @@ async function resolveBattle(
   // Verify every case exists in the catalog before we touch any nonces.
   for (const id of caseIds) {
     if (!getCaseById(id)) throw new Error(`Unknown case: ${id}`);
+  }
+
+  // If drops already exist (retry after a partial resolve), reconstruct from
+  // DB instead of re-consuming nonces and re-rolling (would desync payouts).
+  const existingDrops = await loadDrops(admin, battle.id);
+  if (existingDrops.length > 0) {
+    const rolls = reconstructRolls(players, existingDrops);
+    const payouts = await computePayouts(
+      {
+        gamemode: battle.gamemode,
+        crazy: Boolean(battle.crazy),
+        playerMode: battle.player_mode,
+        potTotal: Number(battle.pot_total),
+        borrowPercent: Number(battle.borrow_percent),
+        battleSeed,
+      },
+      rolls,
+    );
+    await admin
+      .from("case_battle_players")
+      .update({ payout_amount: 0 })
+      .eq("battle_id", battle.id);
+    for (const entry of payouts.payouts) {
+      if (!entry.userId || entry.amount <= 0) continue;
+      await admin
+        .from("case_battle_players")
+        .update({ payout_amount: entry.amount })
+        .eq("battle_id", battle.id)
+        .eq("slot", entry.slot)
+        .eq("user_id", entry.userId);
+    }
+    const { data: completed, error: updErr } = await admin
+      .from("case_battles")
+      .update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        battle_seed: battleSeed,
+        eos_block_id: eosBlockId,
+      })
+      .eq("id", battle.id)
+      .eq("status", "running")
+      .select("id")
+      .maybeSingle();
+    if (updErr) throw new Error(`Mark completed: ${updErr.message}`);
+    if (!completed) {
+      throw new Error("Could not mark battle completed — status changed mid-resolution.");
+    }
+    return { rolls, payouts, battleSeed, eosBlockId };
   }
 
   // Consume `rounds` nonces for each human player. Bots skip this.
@@ -549,11 +700,12 @@ async function resolveBattle(
     {
       gamemode: battle.gamemode,
       crazy: Boolean(battle.crazy),
+      playerMode: battle.player_mode,
       potTotal: Number(battle.pot_total),
       borrowPercent: Number(battle.borrow_percent),
       battleSeed,
     },
-    rolls
+    rolls,
   );
 
   // Persist edge-computed payouts onto player rows BEFORE marking completed
@@ -1056,11 +1208,12 @@ async function handleClaim(
       {
         gamemode: battle.gamemode,
         crazy: Boolean(battle.crazy),
+        playerMode: battle.player_mode,
         potTotal: Number(battle.pot_total),
         borrowPercent: Number(battle.borrow_percent),
         battleSeed: battle.battle_seed,
       },
-      rolls
+      rolls,
     );
     const recomputed = payouts.payouts.find((p) => p.slot === slot);
     if (!recomputed || recomputed.amount <= 0) {
@@ -1169,6 +1322,14 @@ Deno.serve(async (req) => {
   } = await supabaseUser.auth.getUser();
   if (userError || !user) {
     return jsonResponse({ error: "Invalid session." }, 401, req);
+  }
+
+  // Responsible gaming: block self-excluded users from case battles.
+  const { data: excluded } = await admin.rpc("check_user_self_exclusion", {
+    p_user_id: user.id,
+  });
+  if (excluded) {
+    return jsonResponse({ error: "Your account is self-excluded." }, 403, req);
   }
 
   try {

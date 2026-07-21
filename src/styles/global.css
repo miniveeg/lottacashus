@@ -223,7 +223,7 @@ code {
 }
 
 /* ── Print styles ──
-   Legal pages (Privacy, SweepstakesRules, FreeEntry) and any other
+   Legal pages (Privacy, SweepstakesRules) and any other
    long-form document should print cleanly on paper. The default app
    shell uses `html, body, #root { overflow: hidden }` + a scrollable
    inner `<main>` (see layout.css) so the browser can't print the full

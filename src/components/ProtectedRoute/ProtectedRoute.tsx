@@ -22,7 +22,7 @@ import { loginUrl } from "../../lib/authRedirect";
  *   open-redirect patterns like `//evil.com`.
  */
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, isGuest } = useAuth();
   const { pathname } = useLocation();
   const pathnameRef = useRef<string>(pathname);
   // Update the ref whenever we're rendering at a non-/login route (i.e. the
@@ -43,7 +43,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!user || isGuest) {
     return <Navigate to={loginUrl(pathnameRef.current)} replace />;
   }
 

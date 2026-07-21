@@ -1194,3 +1194,338 @@
   .cb-create__summary-bar { flex-wrap: wrap; gap: 1rem; }
   .cb-modal__grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ─── Order bar + drag/drop chip styles ───────────────────────────────── */
+
+.cb-create__order-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--lc-bg-active);
+  border-radius: var(--lc-radius-sm);
+  border: 1px solid var(--lc-border);
+}
+.cb-create__order-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--lc-text-muted);
+}
+.cb-create__order-btn {
+  padding: 0.3rem 0.65rem;
+  background: var(--lc-bg-base);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-sm);
+  color: var(--lc-text-secondary);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.cb-create__order-btn:hover { border-color: var(--lc-crimson-soft); color: var(--lc-text-primary); }
+.cb-create__order-btn--active {
+  background: var(--lc-crimson-dim);
+  border-color: var(--lc-crimson-soft);
+  color: #fff;
+}
+.cb-create__order-hint {
+  font-size: 0.7rem;
+  color: var(--lc-text-muted);
+  margin-left: 0.25rem;
+}
+
+.cb-create__case-grid--sortable { gap: 0.55rem; }
+.cb-create__case-thumb-card--dragging {
+  opacity: 0.5;
+  outline: 2px dashed var(--lc-crimson-soft);
+  outline-offset: 4px;
+}
+.cb-create__case-thumb-card--drop-target {
+  outline: 2px solid var(--lc-emerald);
+  outline-offset: 4px;
+}
+.cb-create__case-thumb-drag {
+  position: absolute;
+  top: 0.3rem;
+  left: 0.3rem;
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 4px;
+  color: var(--lc-text-muted);
+  cursor: grab;
+}
+.cb-create__case-thumb-drag:active { cursor: grabbing; }
+
+.cb-create__case-thumb-counter {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--lc-border);
+  width: 100%;
+  justify-content: center;
+}
+.cb-create__counter-btn {
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--lc-bg-active);
+  border: 1px solid var(--lc-border-strong);
+  color: var(--lc-text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.cb-create__counter-btn:hover:not(:disabled) {
+  background: var(--lc-crimson-dim);
+  border-color: var(--lc-crimson-soft);
+  color: #fff;
+}
+.cb-create__counter-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.cb-create__counter-value {
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--lc-amber);
+}
+
+/* ─── Modal +/- controls ──────────────────────────────────────────────── */
+
+.cb-modal__case-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+.cb-modal__case-step-btn {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  background: var(--lc-bg-base);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: 50%;
+  color: var(--lc-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.cb-modal__case-step-btn:hover:not(:disabled) {
+  border-color: var(--lc-crimson-soft);
+  color: var(--lc-text-primary);
+}
+.cb-modal__case-step-btn--add:hover:not(:disabled) {
+  background: var(--lc-crimson-dim);
+  border-color: var(--lc-crimson-soft);
+  color: #fff;
+}
+.cb-modal__case-step-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ─── Per-slot "Add bot" button (waiting arena) ────────────────────────── */
+
+.cb-slot--empty { background: rgba(232, 37, 76, 0.04); }
+.cb-slot__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.cb-slot__empty-label {
+  font-size: 0.75rem;
+  color: var(--lc-text-muted);
+}
+.cb-slot__empty-hint {
+  font-size: 0.65rem;
+  color: var(--lc-text-muted);
+  font-style: italic;
+}
+.cb-slot__add-bot {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  padding: 0.6rem 0.5rem;
+  background: transparent;
+  border: 1.5px dashed var(--lc-border-strong);
+  border-radius: var(--lc-radius-sm);
+  color: var(--lc-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.cb-slot__add-bot:hover:not(:disabled) {
+  border-color: var(--lc-crimson-soft);
+  color: var(--lc-crimson-soft);
+  background: rgba(232, 37, 76, 0.04);
+}
+.cb-slot__add-bot:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Jackpot horizontal slot reel (completed-jackpot UI) ──────────────── */
+
+.cb-arena--jackpot { gap: 1.5rem; }
+.cb-jackpot {
+  padding: 1.25rem 1rem 1.5rem;
+  background: linear-gradient(180deg, rgba(56, 189, 248, 0.06), rgba(232, 37, 76, 0.04));
+  border: 1px solid var(--lc-cyan);
+  border-radius: var(--lc-radius-md);
+  position: relative;
+  overflow: hidden;
+}
+.cb-jackpot__header {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--lc-font-display);
+}
+.cb-jackpot__crown {
+  font-size: 1.25rem;
+  color: var(--lc-amber);
+}
+.cb-jackpot__label {
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--lc-cyan);
+  text-transform: uppercase;
+}
+
+.cb-jackpot__viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--lc-radius-sm);
+  background: var(--lc-bg-base);
+  padding: 0.85rem 0;
+  border: 1px solid var(--lc-border-strong);
+}
+.cb-jackpot__pointer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--lc-amber);
+  z-index: 3;
+  box-shadow: 0 0 14px var(--lc-amber-glow-strong);
+}
+.cb-jackpot__pointer::after {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 8px solid var(--lc-amber);
+}
+.cb-jackpot__track {
+  display: flex;
+  gap: 0;
+  will-change: transform;
+}
+.cb-jackpot__tile {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.4rem 0.5rem;
+  text-align: center;
+  border-right: 1px solid var(--lc-border);
+  transition: opacity 0.4s, filter 0.4s, transform 0.4s;
+}
+.cb-jackpot__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.cb-jackpot__name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lc-text-primary);
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-content: center;
+}
+.cb-jackpot__bot {
+  font-size: 0.55rem;
+  color: var(--lc-text-muted);
+  font-weight: 700;
+}
+.cb-jackpot__pct {
+  font-family: var(--lc-font-mono);
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: var(--lc-amber);
+}
+.cb-jackpot__tile--winner {
+  background: rgba(245, 185, 66, 0.12);
+  border-right: 1px solid var(--lc-amber);
+  border-left: 1px solid var(--lc-amber);
+}
+.cb-jackpot__tile--dimmed {
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+.cb-jackpot__pct-label {
+  font-size: 0.65rem;
+  color: var(--lc-text-muted);
+  font-style: italic;
+}
+.cb-jackpot__fade {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  pointer-events: none;
+  z-index: 2;
+}
+.cb-jackpot__fade--left {
+  left: 0;
+  background: linear-gradient(90deg, var(--lc-bg-base), transparent);
+}
+.cb-jackpot__fade--right {
+  right: 0;
+  background: linear-gradient(-90deg, var(--lc-bg-base), transparent);
+}
+.cb-jackpot--landed {
+  animation: cb-jackpot-shine 1.4s ease-out;
+}
+@keyframes cb-jackpot-shine {
+  0%   { box-shadow: 0 0 0 rgba(245, 185, 66, 0); }
+  60%  { box-shadow: 0 0 36px rgba(245, 185, 66, 0.5); }
+  100% { box-shadow: 0 0 16px rgba(245, 185, 66, 0.18); }
+}
+.cb-jackpot__result {
+  margin-top: 0.75rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--lc-text-secondary);
+}
+.cb-jackpot__result strong {
+  font-family: var(--lc-font-mono);
+  font-weight: 700;
+  color: var(--lc-amber);
+}

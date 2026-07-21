@@ -11,7 +11,7 @@ import "../Auth/Auth.css";
 type Step = "email" | "code" | "password" | "done";
 
 export function ForgotPassword() {
-  const { signIn, user, loading: authLoading, configured } = useAuth();
+  const { signIn, user, loading: authLoading, configured, isGuest } = useAuth();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>("email");
@@ -35,7 +35,7 @@ export function ForgotPassword() {
     );
   }
 
-  if (user) {
+  if (user && !isGuest) {
     return <Navigate to="/" replace />;
   }
 

@@ -25,21 +25,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: validationError }, 400, req);
     }
 
-    // SECURITY (audit R3): enforce a max-payout cap server-side. The client
-    // also disables the bet button when wager × target exceeds the cap, but
-    // never trust the client — a forged request could skip the check.
-    // Without this, a player could wager their entire balance at the
-    // 1,000,000× max target for an unbounded payout.
-    const LIMBO_MAX_PAYOUT = 100_000;
-    const potentialPayout = Math.round(wager * target * 100) / 100;
-    if (potentialPayout > LIMBO_MAX_PAYOUT) {
-      return jsonResponse(
-        { error: `Payout exceeds the maximum allowed (${LIMBO_MAX_PAYOUT.toLocaleString()}). Lower your wager or target.` },
-        400,
-        req,
-      );
-    }
-
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,

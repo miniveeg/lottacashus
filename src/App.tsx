@@ -1,6 +1,6 @@
 
 import { lazy, Suspense, type ReactNode } from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "./contexts/AuthContext";
 import { NotificationsProvider } from "./contexts/NotificationsContext";
@@ -47,7 +47,6 @@ const Privacy = lazy(() => import("./pages/Privacy/Privacy").then((m) => ({ defa
 const SweepstakesRules = lazy(() =>
   import("./pages/SweepstakesRules/SweepstakesRules").then((m) => ({ default: m.SweepstakesRules }))
 );
-const FreeEntry = lazy(() => import("./pages/FreeEntry/FreeEntry").then((m) => ({ default: m.FreeEntry })));
 const Redeem = lazy(() => import("./pages/Redeem/Redeem"));
 const ResponsibleGaming = lazy(() =>
   import("./pages/ResponsibleGaming/ResponsibleGaming").then((m) => ({ default: m.ResponsibleGaming }))
@@ -172,16 +171,17 @@ export default function App() {
                     element={<Shell><LazyPage><SweepstakesRules /></LazyPage></Shell>}
                   />
                   <Route
-                    path="/free-entry"
-                    element={<Shell><LazyPage><FreeEntry /></LazyPage></Shell>}
-                  />
-                  <Route
                     path="/responsible-gaming"
                     element={<Shell><LazyPage><ResponsibleGaming /></LazyPage></Shell>}
                   />
                   <Route
                     path="/redeem"
                     element={<Shell><LazyPage><Redeem /></LazyPage></Shell>}
+                  />
+                  {/* Legacy AMOE marketing URL → official rules */}
+                  <Route
+                    path="/free-entry"
+                    element={<Shell><Navigate to="/sweepstakes" replace /></Shell>}
                   />
                   <Route
                     path="*"

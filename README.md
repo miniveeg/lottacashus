@@ -102,7 +102,7 @@ Short path:
 | `/` | Home (3D obsidian-shard hero) |
 | `/login`, `/signup`, `/forgot-password` | Auth |
 | `/settings`, `/profile`, `/profile/:username` | Account |
-| `/deposit`, `/withdraw`, `/free-entry` | Wallet (`/redeem` redirects to `/withdraw`) |
+| `/deposit`, `/withdraw` | Wallet (`/redeem` redirects to `/withdraw`) |
 | `/keno`, `/mines`, `/limbo`, `/roulette`, `/blackjack`, `/crash`, `/slots` | Games |
 | `/case-battles`, `/case-battles/create`, `/case-battles/:battleId` | Case Battles |
 | `/originals`, `/promotions`, `/leaderboard` | Content |

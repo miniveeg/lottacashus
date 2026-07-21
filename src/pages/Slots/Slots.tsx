@@ -13,7 +13,6 @@ import { Seo } from "../../components/Seo/Seo";
 import { FormAlert } from "../../components/FormAlert/FormAlert";
 import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
 import { BetButton } from "../../components/BetButton/BetButton";
-import { formatCoins } from "../../lib/format";
 import "../../styles/game-controls.css";
 import "./Slots.css";
 
@@ -129,12 +128,6 @@ export default function Slots() {
     return coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
   }, [coinType, profile]);
 
-  // Max-payout cap: Crown pays 190× (see place-slots-bet PAYTABLE).
-  // Cap potential payout at 100,000 — matches the edge function.
-  const SLOTS_MAX_PAYOUT = 100_000;
-  const SLOTS_MAX_MULT = 190;
-  const slotsMaxWin = wager * SLOTS_MAX_MULT;
-  const exceedsMaxPayout = slotsMaxWin > SLOTS_MAX_PAYOUT;
   const wagerCap = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
 
   useEffect(() => {
@@ -490,17 +483,9 @@ export default function Slots() {
           <BetButton
             onClick={handleSpin}
             busy={rolling}
-            exceedsCap={exceedsMaxPayout}
             busyLabel="Spinning…"
-            exceedsCapLabel="Payout exceeds cap"
             label="Spin"
           />
-
-          {exceedsMaxPayout && (
-            <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {formatCoins(SLOTS_MAX_PAYOUT, coinType)}. Lower your wager — Crown (190×) would exceed the cap.
-            </p>
-          )}
 
           <NeedFundsHint />
 

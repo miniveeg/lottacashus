@@ -1,52 +1,47 @@
 /**
  * Case Battles v2 — Arena
- * The main battle view: player columns + round indicator + results.
  *
- * Architecture (revised audit v4):
- * - The arena NEVER cycles `currentRound` blindly on a 2s timer. Instead it
- *   gates the transition on TWO conditions: (a) every active player's reel
- *   has called `onReelLanded` for the current round, AND (b) the next
- *   round's drops have arrived from realtime (i.e. a drop with that round
- *   index exists in `battle.drops`). This eliminates the original race
- *   where reels spun forever if the next round's data lagged.
- * - Drop data is masked with `visibleDrops` — never reveal rounds the user
- *   hasn't spun through. The per-round `roundDrops` passed to the PlayerColumn
- *   is filtered to `d.round === currentRound` so each reel only knows its
- *   own target.
- * - On `status === "completed"` we drop the round indicator entirely and
- *   render every drop as a static ledger (PlayerColumn hides its active
- *   reel). This is a strong satisfaction signal — players get a readable
- *   summary, not a movie.
+ * Key changes from the previous version:
+ *   - Waiting branch renders a per-slot "+ Add bot here" button on every
+ *     empty slot. Clicking a slot calls `addBotToBattle(battleId, slotIndex)`
+ *     so the creator can flexibly bot-fill any specific seat instead of
+ *     relying on a single global "Add bot" button. Per-slot still respects
+ *     the SQL `cb_add_bot` (battle_id, slot_index) RPC and the
+ *     `nextOpenSlot` fallback in `localAddBot`.
+ *   - Running branch passes a per-slot randomized spinSpeed (derived from
+ *     battleId + slot, see `slotSpinSpeed`) so each reel scrolls at its own
+ *     natural rate, and a `syncedLandingStartTime` (captured ONCE per round
+ *     when every player's drops are visible) so all reels begin their
+ *     landing animation in the same instant. The landing window is fixed
+ *     (LAND_DURATION = 2400ms), so the synchronized start means the reveal
+ *     feels like a single coordinated "stop" for every contestant.
  */
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import type { CaseBattleView } from "./types";
-import { calculatePayoutForSlot, playerTotalValue } from "./caseBattlesApi";
+import { calculatePayoutForSlot, playerTotalValue, addBotToBattle } from "./caseBattlesApi";
 import { PlayerColumn } from "./PlayerColumn";
+import { JackpotWheel } from "./JackpotReel";
 import { formatCoins } from "../../lib/format";
 import "./CaseBattlesV2.css";
 
 type ArenaProps = {
   battle: CaseBattleView;
   userId: string | undefined;
+  isCreator?: boolean;
 };
 
-export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
+export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaProps) {
   const [currentRound, setCurrentRound] = useState(0);
   const [landedSlots, setLandedSlots] = useState<Set<number>>(new Set());
-  /**
-   * Set to true when the visual pause after all reels land has elapsed.
-   * The actual `currentRound++` only happens when this is true AND the
-   * next round's data has arrived — see the gate effect below.
-   */
   const [animationReady, setAnimationReady] = useState(false);
   const pauseTimerRef = useRef<number>(0);
 
-  // Reset round state ONLY when crossing the committing → running boundary
-  // (the canonical "battle just started" transition) or when the user
-  // remounts the page. A realtime refetch that keeps `status === "running"`
-  // must NOT wipe currentRound — otherwise a player who navigates away
-  // mid-battle and returns would be snapped back to round 0.
+  // Coordinated landing time — once the next-round drops have all arrived
+  // from realtime, we send a single timestamp down to every PlayerColumn
+  // so all reels transition spinning → landing in lockstep.
+  const [syncedLandingStartTime, setSyncedLandingStartTime] = useState<number | null>(null);
+
   const wasCommittedRef = useRef(false);
   useEffect(() => {
     if (battle.status === "committing") {
@@ -55,31 +50,23 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
       setCurrentRound(0);
       setLandedSlots(new Set());
       setAnimationReady(false);
+      setSyncedLandingStartTime(null);
       wasCommittedRef.current = false;
     } else if (battle.status === "completed") {
-      // Collapse the visual round — the PlayerColumn ledger view will
-      // ignore `currentRound` entirely (see PlayerColumn `isCompleted`).
       setAnimationReady(false);
+      setSyncedLandingStartTime(null);
     }
-    // On battleId change (mount a different battle) reset unconditionally.
-    // (This effect's dep is `[status, battleId]` so we don't need an extra
-    // check here — the cleanup/re-run cycle covers it.)
   }, [battle.status, battle.battleId]);
 
   const activePlayerCount = battle.players.length;
-  const allLanded =
-    activePlayerCount > 0 && landedSlots.size >= activePlayerCount;
+  const allLanded = activePlayerCount > 0 && landedSlots.size >= activePlayerCount;
 
-  // Visual pause after reels land (1.5s) — gives the eye a beat to read
-  // the result before the next round's items appear.
+  // Visual pause after reels land (1.5s) before advancing.
   useEffect(() => {
     if (!allLanded || battle.status !== "running") {
       setAnimationReady(false);
       return;
     }
-    // Skip the pause if we're already on the last round — there's nothing
-    // to advance to, so flipping animationReady is harmless and dropping
-    // it just means the "next round" gating is the only barrier.
     pauseTimerRef.current = window.setTimeout(
       () => setAnimationReady(true),
       1500,
@@ -87,10 +74,7 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
     return () => window.clearTimeout(pauseTimerRef.current);
   }, [allLanded, battle.status]);
 
-  // Gate the round advance: visual pause done AND next round's data
-  // present in `battle.drops`. Computing the gate here (not in the parent)
-  // means there's no visible "phantom round 1" before realtime delivers
-  // round 1 drops — reels just sit at round N until both signals fire.
+  // Gate the round advance: visual pause done AND next round's data present.
   const lastRoundIndex = battle.rounds - 1;
   const nextRoundReady =
     currentRound < lastRoundIndex &&
@@ -101,7 +85,23 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
     setCurrentRound((r) => r + 1);
     setLandedSlots(new Set());
     setAnimationReady(false);
+    setSyncedLandingStartTime(null); // reset sync for the next round
   }, [animationReady, nextRoundReady]);
+
+  // ── Capture the synced landing timestamp ONCE per round ─────────────
+  // When every player in the battle has a drop for the current round, we
+  // freeze performance.now() and pass it down to every PlayerColumn. Every
+  // reel uses this single timestamp as its landingStart, guaranteeing a
+  // simultaneous stop.
+  useEffect(() => {
+    if (battle.status !== "running") return;
+    if (syncedLandingStartTime != null) return;
+    const expected = activePlayerCount;
+    const real = battle.drops.filter((d) => d.round === currentRound).length;
+    if (expected > 0 && real >= expected) {
+      setSyncedLandingStartTime(performance.now());
+    }
+  }, [battle.status, battle.drops, currentRound, activePlayerCount, syncedLandingStartTime]);
 
   const handleReelLanded = useCallback((slot: number) => {
     setLandedSlots((prev) => {
@@ -112,7 +112,22 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
     });
   }, []);
 
-  // ─── Waiting state ──────────────────────────────────────────
+  // ── Per-slot "Add bot to this slot" handler ──────────────────────────
+  const [botBusySlot, setBotBusySlot] = useState<number | null>(null);
+  async function handleAddBotToSlot(slotIndex: number) {
+    if (botBusySlot != null) return;
+    setBotBusySlot(slotIndex);
+    const { error } = await addBotToBattle(battle.battleId, slotIndex);
+    setBotBusySlot(null);
+    if (error) {
+      // Surface the error inline (action-level error lives in the room
+      // page; we keep this scoped to the slot so the user can retry).
+      // eslint-disable-next-line no-alert
+      alert(error);
+    }
+  }
+
+  // ── Waiting state ───────────────────────────────────────────────────
   if (battle.status === "waiting") {
     return (
       <div className="cb-arena cb-arena--waiting">
@@ -124,11 +139,14 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
             {battle.players.length} / {battle.maxPlayers} players joined
           </p>
         </div>
-        <div className="cb-arena__slots">
+        <div
+          className="cb-arena__slots"
+          style={{ ["--col-count" as string]: battle.maxPlayers }}
+        >
           {Array.from({ length: battle.maxPlayers }, (_, slot) => {
             const player = battle.players.find((p) => p.slot === slot);
             return (
-              <div key={slot} className={"cb-slot" + (player ? " cb-slot--filled" : "")}>
+              <div key={slot} className={"cb-slot" + (player ? " cb-slot--filled" : " cb-slot--empty")}>
                 {player ? (
                   <>
                     <div className="cb-slot__avatar">
@@ -138,7 +156,22 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
                     {player.isBot && <span className="cb-slot__bot">BOT</span>}
                   </>
                 ) : (
-                  <span className="cb-slot__empty">Empty slot</span>
+                  isCreator ? (
+                    <button
+                      type="button"
+                      className="cb-slot__add-bot"
+                      onClick={() => handleAddBotToSlot(slot)}
+                      disabled={botBusySlot != null}
+                      aria-label={`Add a bot to slot ${slot + 1}`}
+                    >
+                      {botBusySlot === slot ? "Adding…" : "+ Add bot"}
+                    </button>
+                  ) : (
+                    <span className="cb-slot__empty">
+                      <span className="cb-slot__empty-label">Empty slot</span>
+                      <span className="cb-slot__empty-hint">pending user</span>
+                    </span>
+                  )
                 )}
               </div>
             );
@@ -148,7 +181,7 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
     );
   }
 
-  // ─── Committing (EOS wait) state ──────────────────────────────
+  // ── Committing (EOS wait) state ─────────────────────────────────────
   if (battle.status === "committing") {
     return (
       <div className="cb-arena cb-arena--committing">
@@ -171,18 +204,13 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
     );
   }
 
-  // ─── Running state — the live arena ───────────────────────────
+  // ── Running state — the live arena ──────────────────────────────────
   if (battle.status === "running") {
-    // Round drops masking for PlayerColumn — never let a reel see its own
-    // future-round target item before that round starts.
     const roundDrops = battle.drops.filter((d) => d.round === currentRound);
-    // Items already revealed in past rounds (used by PlayerColumn's history
-    // stack to show "what you already got" above the active reel).
     const visibleAllDrops = battle.drops.filter((d) => d.round <= currentRound);
 
     return (
       <div className="cb-arena">
-        {/* Round indicator */}
         <div className="cb-arena__rounds">
           {Array.from({ length: battle.rounds }, (_, i) => (
             <div
@@ -192,14 +220,19 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
                 (i < currentRound ? " cb-round-dot--done" : "") +
                 (i === currentRound ? " cb-round-dot--active" : "")
               }
-              aria-label={i < currentRound ? `Round ${i + 1} complete` : i === currentRound ? `Round ${i + 1} in progress` : `Round ${i + 1} upcoming`}
+              aria-label={
+                i < currentRound
+                  ? `Round ${i + 1} complete`
+                  : i === currentRound
+                  ? `Round ${i + 1} in progress`
+                  : `Round ${i + 1} upcoming`
+              }
             >
               {i + 1}
             </div>
           ))}
         </div>
 
-        {/* Player columns */}
         <div
           className="cb-arena__columns"
           style={{ ["--col-count" as string]: battle.players.length }}
@@ -214,6 +247,8 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
               visibleDrops={visibleAllDrops}
               isCompleted={false}
               isCurrentUser={player.userId === userId}
+              spinSpeedPx={slotSpinSpeed(battle.battleId, player.slot)}
+              syncedLandingStartTime={syncedLandingStartTime}
               onReelLanded={handleReelLanded}
             />
           ))}
@@ -222,33 +257,26 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
     );
   }
 
-  // ─── Completed state — static ledger view ────────────────────
-  // No round indicator (we're showing all rounds at once). All PlayerColumns
-  // render as item-history lists with totals. The arena footer summarizes
-  // the winner + the current user's payout.
-  const winnerPayout = battle.players.reduce((max, p) => {
-    const amount = calculatePayoutForSlot(battle, p.slot);
-    return amount > max ? amount : max;
-  }, 0);
-  let winnerSlot = -1;
-  for (const player of battle.players) {
-    if (calculatePayoutForSlot(battle, player.slot) > 0) {
-      winnerSlot = player.slot;
-      break;
-    }
-  }
-  // Look up the current user's slot ONCE and reuse for both payout and
-  // total calculations (avoids re-scanning `battle.players` per call).
-  const myPlayerSlot = userId
-    ? battle.players.find((p) => p.userId === userId)?.slot
-    : undefined;
-  const myPayout = myPlayerSlot !== undefined
-    ? calculatePayoutForSlot(battle, myPlayerSlot)
-    : 0;
-  const myTotalValue = myPlayerSlot !== undefined ? playerTotalValue(battle.drops, myPlayerSlot) : 0;
+  // ── Completed state — static ledger view (+ jackpot wheel) ──────────
+  // Tie-aware winners: every slot with a positive payout_amount counts.
+  const winningSlots = (battle.winningSlots && battle.winningSlots.length > 0)
+    ? battle.winningSlots
+    : battle.players
+        .filter((p) => p.payoutAmount > 0 && !p.isBot)
+        .map((p) => p.slot)
+        .sort((a, c) => a - c);
+
+  const isJackpot = battle.gamemode === "jackpot";
 
   return (
-    <div className="cb-arena cb-arena--completed">
+    <div className={"cb-arena cb-arena--completed" + (isJackpot ? " cb-arena--jackpot" : "")}>
+      {isJackpot && (
+        <JackpotWheel
+          battle={battle}
+          winningSlots={winningSlots}
+          userId={userId}
+        />
+      )}
       <div
         className="cb-arena__columns"
         style={{ ["--col-count" as string]: battle.players.length }}
@@ -262,7 +290,7 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
             roundDrops={[]}
             visibleDrops={battle.drops}
             isCompleted={true}
-            isWinner={winnerSlot === player.slot && winnerPayout > 0}
+            isWinner={winningSlots.includes(player.slot)}
             isCurrentUser={player.userId === userId}
           />
         ))}
@@ -270,23 +298,75 @@ export function CaseBattleArenaV2({ battle, userId }: ArenaProps) {
 
       <div className="cb-arena__results">
         <h2 className="cb-arena__results-title">
-          {winnerSlot >= 0 && winnerPayout > 0
-            ? `${battle.players.find((p) => p.slot === winnerSlot)?.username} wins!`
-            : "Battle complete"}
+          {winningSlots.length > 0 ? (
+            (() => {
+              // Tie → highlight joint winner(s).
+              // Bot-only winners render as a neutral "Battle complete" line.
+              const winners = battle.players.filter((p) => winningSlots.includes(p.slot));
+              const humanWinners = winners.filter((p) => !p.isBot);
+              if (humanWinners.length === 0) return "Battle complete";
+              if (humanWinners.length === 1) {
+                const w = humanWinners[0]!;
+                if (w.userId === userId || w.username === "You") return "You win!";
+                return `${w.username} wins!`;
+              }
+              // Multiple human winners → tie message.
+              const names = humanWinners.map((p) => p.username).join(" & ");
+              const isMe = humanWinners.some((p) => p.userId === userId || p.username === "You");
+              return isMe ? `You tie! ${names} split the pot 50/50` : `${names} tie and split the pot`;
+            })()
+          ) : (
+            "Battle complete"
+          )}
         </h2>
-        {myPayout > 0 && myTotalValue > 0 && (
-          <p className="cb-arena__payout">
-            You won <strong>{formatCoins(myPayout, battle.coinType)}</strong>
-            {" \u00b7 Total: "}
-            <strong>{formatCoins(myTotalValue, battle.coinType)}</strong>
-          </p>
-        )}
-        {myPayout > 0 && myTotalValue === 0 && (
-          <p className="cb-arena__payout">
-            You won <strong>{formatCoins(myPayout, battle.coinType)}</strong>
-          </p>
-        )}
+        {(() => {
+          const myPlayerSlot = userId
+            ? battle.players.find((p) => p.userId === userId)?.slot
+            : undefined;
+          const myPayout = myPlayerSlot !== undefined
+            ? calculatePayoutForSlot(battle, myPlayerSlot)
+            : 0;
+          const myTotalValue = myPlayerSlot !== undefined
+            ? playerTotalValue(battle.drops, myPlayerSlot)
+            : 0;
+          if (myPayout > 0 && myTotalValue > 0) {
+            return (
+              <p className="cb-arena__payout">
+                You won <strong>{formatCoins(myPayout, battle.coinType)}</strong>
+                {" · Total: "}
+                <strong>{formatCoins(myTotalValue, battle.coinType)}</strong>
+              </p>
+            );
+          }
+          if (myPayout > 0) {
+            return (
+              <p className="cb-arena__payout">
+                You won <strong>{formatCoins(myPayout, battle.coinType)}</strong>
+              </p>
+            );
+          }
+          return null;
+        })()}
       </div>
     </div>
   );
+}
+
+/**
+ * Stable per-slot randomization of the reel's spin speed.
+ *
+ * Each slot gets a fixed pixel-per-frame scroll velocity in [4, 12] derived
+ * from the (battleId, slot) tuple via a lightweight hash. Different slots
+ * GET DIFFERENT speeds (so they appear to spin at different rates), but the
+ * speed for any given slot is DETERMINISTIC across remounts — the user sees
+ * the same reel feeling on subsequent visits to the same battle.
+ */
+function slotSpinSpeed(battleId: string, slot: number): number {
+  let h = 0;
+  const key = `${battleId}:${slot}`;
+  for (let i = 0; i < key.length; i++) {
+    h = (h * 31 + key.charCodeAt(i)) | 0;
+  }
+  // Map to [4, 12] px/frame.
+  return 4 + (Math.abs(h) % 9);
 }

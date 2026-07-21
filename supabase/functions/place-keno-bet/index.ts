@@ -28,22 +28,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: validationError }, 400, req);
     }
 
-    // SECURITY (audit R5): max-payout cap. The Keno paytable's top multiplier
-    // is 1000× (low/medium/high risk, 9 or 10 picks, all hits). The prior
-    // value of 11000× did not match any paytable entry and made the
-    // $100,000 cap reject any wager above $9 — unplayable at mid stakes.
-    // Cap potential payout at 100,000 in the player's coin currency.
-    const KENO_MAX_PAYOUT = 100_000;
-    const kenoWorstCaseMultiplier = 1000;
-    const kenoPotentialPayout = Math.round(wager * kenoWorstCaseMultiplier * 100) / 100;
-    if (kenoPotentialPayout > KENO_MAX_PAYOUT) {
-      return jsonResponse(
-        { error: `Potential payout exceeds the maximum allowed (${KENO_MAX_PAYOUT.toLocaleString()}). Lower your wager.` },
-        400,
-        req,
-      );
-    }
-
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,

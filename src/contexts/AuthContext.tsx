@@ -122,16 +122,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // When Supabase IS configured, unauthenticated users must be `null`
+    // (not a synthetic guest). Guest users are only for offline/local-play
+    // when keys are missing — otherwise Login/Signup redirect forever.
     supabase.auth.getSession().then(({ data: { session: current } }) => {
       setSession(current);
-      setUser(current?.user ?? makeGuestUser());
+      setUser(current?.user ?? null);
       if (current?.access_token) {
         supabase.realtime.setAuth(current.access_token);
       }
       setLoading(false);
     }).catch(() => {
-      // Supabase unreachable — fall back to guest mode so games are playable.
-      setUser(makeGuestUser());
+      // Configured but unreachable — leave user null so auth pages work;
+      // games will show network errors until Supabase is back.
+      setUser(null);
+      setSession(null);
       setLoading(false);
     });
 
@@ -139,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
-      setUser(nextSession?.user ?? makeGuestUser());
+      setUser(nextSession?.user ?? null);
       if (nextSession?.access_token) {
         supabase.realtime.setAuth(nextSession.access_token);
       }

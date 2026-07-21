@@ -29,7 +29,7 @@ import { Seo } from "../../components/Seo/Seo";
 import "../Wallet/Wallet.css";
 
 export function Deposit() {
-  const { user, loading: authLoading, configured } = useAuth();
+  const { user, loading: authLoading, configured, isGuest } = useAuth();
   const { profile } = useProfile();
   const toast = useToast();
   const [chain, setChain] = useState<CryptoChain>("sol");
@@ -125,7 +125,7 @@ export function Deposit() {
   // hardcode the redirect path instead of reading `useLocation().pathname`,
   // which re-evaluates to `/login` on the post-Navigate re-render and
   // clobbers `?redirect=%2Fdeposit` → `?redirect=%2Flogin`.
-  if (!authLoading && !user) {
+  if (!authLoading && (!user || isGuest)) {
     return <Navigate to={loginUrl("/deposit")} replace />;
   }
 

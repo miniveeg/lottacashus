@@ -68,10 +68,11 @@ export async function fetchMyWithdrawals(userId?: string): Promise<{
 }> {
   if (!isSupabaseConfigured) return { data: null, error: NOT_CONFIGURED_ERROR };
 
-  // SECURITY (M5): explicit user_id filter (defense-in-depth).
+  // Live cashout path is `redemptions` (SC via request_sc_redemption).
+  // Legacy crypto_withdrawals was dropped for the SC redemption flow.
   let query = supabase
-    .from("crypto_withdrawals")
-    .select("id, chain, destination_address, usd_amount, status, created_at, completed_at")
+    .from("redemptions")
+    .select("id, chain, destination_address, sc_amount, usd_amount, status, created_at, completed_at")
     .order("created_at", { ascending: false })
     .limit(20);
   if (userId) query = query.eq("user_id", userId);
@@ -79,7 +80,19 @@ export async function fetchMyWithdrawals(userId?: string): Promise<{
   const { data, error } = await query;
 
   if (error) return { data: null, error: error.message };
-  return { data: (data ?? []) as CryptoWithdrawalRow[], error: null };
+  const rows = (data ?? []).map((raw) => {
+    const r = raw as Record<string, unknown>;
+    return {
+      id: String(r.id),
+      chain: String(r.chain ?? ""),
+      destination_address: String(r.destination_address ?? ""),
+      usd_amount: Number(r.usd_amount ?? 0),
+      status: String(r.status ?? "pending"),
+      created_at: String(r.created_at ?? ""),
+      completed_at: (r.completed_at as string) ?? null,
+    } satisfies CryptoWithdrawalRow;
+  });
+  return { data: rows, error: null };
 }
 
 export function validateCryptoAddress(chain: CryptoChain, address: string): boolean {

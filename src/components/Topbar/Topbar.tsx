@@ -20,7 +20,7 @@ import "./Topbar.css";
 import "./TopbarLevelProgress.css";
 
 export function Topbar() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, isGuest } = useAuth();
   const { profile, profileLoading } = useProfile();
   const { coinType, setCoinType, label: coinLabel } = usePlayMode();
   const { pathname } = useLocation();
@@ -30,6 +30,9 @@ export function Topbar() {
   const navigate = useNavigate();
   const [notifOpen, setNotifOpen] = useState(false);
   const [coinInfoOpen, setCoinInfoOpen] = useState(false);
+
+  // Guest (local-play) has a synthetic user so games unlock; treat as signed-out for chrome.
+  const signedIn = Boolean(user) && !isGuest;
 
   const displayName =
     profile?.username ??
@@ -52,6 +55,10 @@ export function Topbar() {
   const balanceUsd = coinsToUsd(activeBalance, coinType);
 
   async function handleSignOut() {
+    if (isGuest) {
+      navigate("/login");
+      return;
+    }
     await signOut();
     analytics.logout();
     analytics.reset();
@@ -157,11 +164,11 @@ export function Topbar() {
 
         {loading ? (
           <span className="topbar__loading">…</span>
-        ) : user ? (
+        ) : signedIn ? (
           <>
             <TopbarLevelProgress
               displayName={displayName}
-              profileTitle={user.email ?? undefined}
+              profileTitle={user?.email ?? undefined}
               totalWagered={profile?.totalWagered ?? 0}
               loading={profileLoading}
             />
@@ -171,13 +178,23 @@ export function Topbar() {
               onClick={handleSignOut}
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.97 }}
+              aria-label="Log out"
             >
               <LogOut size={14} aria-hidden />
-              Log out
+              <span className="topbar__btn-label">Log out</span>
             </motion.button>
           </>
         ) : (
           <>
+            {/* Local-play guests still show a light Guest chip so the topbar is not empty. */}
+            {isGuest && user ? (
+              <TopbarLevelProgress
+                displayName={displayName}
+                profileTitle="Local play — balances stay in this browser"
+                totalWagered={profile?.totalWagered ?? 0}
+                loading={profileLoading}
+              />
+            ) : null}
             <Link to={loginUrl(pathname)} className="topbar__btn topbar__btn--ghost topbar__btn--login" aria-label="Log in">
               <LogIn size={14} aria-hidden />
               <span className="topbar__btn-label">Log in</span>

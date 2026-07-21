@@ -508,7 +508,7 @@
 }
 
 /* Helper text. Pairs with a sibling input for the standard label / input /
-   helper-stacked layout (used by Quote dialogs, free-entry copy, etc). */
+   helper-stacked layout (used by Quote dialogs, short legal copy, etc). */
 .lc-input-helper {
   margin-top: 0.3rem;
   font-size: 0.78rem;

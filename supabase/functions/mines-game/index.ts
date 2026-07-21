@@ -83,20 +83,6 @@ Deno.serve(async (req) => {
       const validationError = validateMinesStart(mineCount, wager);
       if (validationError) return jsonResponse({ error: validationError }, 400, req);
 
-      // SECURITY (audit R5): max-payout cap. Mines max multiplier (24 mines,
-      // reveal 1 gem) is ~24,475×; cap potential payout to bound treasury
-      // risk. Same pattern as Limbo/Roulette/Keno.
-      const MINES_MAX_PAYOUT = 100_000;
-      const minesWorstCaseMultiplier = 24475;
-      const minesPotentialPayout = Math.round(wager * minesWorstCaseMultiplier * 100) / 100;
-      if (minesPotentialPayout > MINES_MAX_PAYOUT) {
-        return jsonResponse(
-          { error: `Potential payout exceeds the maximum allowed (${MINES_MAX_PAYOUT.toLocaleString()}). Lower your wager.` },
-          400,
-          req,
-        );
-      }
-
       const { data: profile } = await supabaseAdmin
         .from("profiles")
         .select(coinColumn)

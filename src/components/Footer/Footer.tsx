@@ -26,9 +26,7 @@ const LEGAL_LINKS = [
   { label: "Terms", href: "/help" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Sweepstakes Rules", href: "/sweepstakes" },
-  { label: "Free Entry", href: "/free-entry" },
   { label: "Responsible Gaming", href: "/responsible-gaming" },
-  { label: "Redeem", href: "/redeem" },
 ];
 
 export function Footer() {

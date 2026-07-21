@@ -22,7 +22,7 @@ const WINDOW_MS = 60_000;
 type AttemptEntry = { at: number };
 
 export function Login() {
-  const { signIn, user, loading, configured } = useAuth();
+  const { signIn, user, loading, configured, isGuest } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -46,7 +46,8 @@ export function Login() {
     );
   }
 
-  if (user) {
+  // Only real sessions skip the form (offline guests stay on the form).
+  if (user && !isGuest) {
     return <Navigate to={redirectTo} replace />;
   }
 

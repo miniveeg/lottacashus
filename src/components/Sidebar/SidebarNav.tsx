@@ -18,13 +18,11 @@ const accountNav: NavItem[] = [
   { icon: "settings", label: "Settings", href: "/settings" },
   { icon: "deposit", label: "Deposit", href: "/deposit" },
   { icon: "withdraw", label: "Withdraw", href: "/withdraw" },
-  { icon: "redeem", label: "Redeem", href: "/redeem" },
   { icon: "help", label: "Help", href: "/help" },
 ];
 
 const legalNav: NavItem[] = [
   { icon: "document", label: "Sweepstakes Rules", href: "/sweepstakes" },
-  { icon: "gift", label: "Free Entry", href: "/free-entry" },
 ];
 
 function navIsActive(href: string, pathname: string): boolean {

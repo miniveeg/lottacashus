@@ -151,19 +151,6 @@ export function Promotions() {
           )}
         </article>
 
-        <article className="promos__card promos__card--daily">
-          <div className="promos__card-badge promos__card-badge--daily">Daily</div>
-          <h3 className="promos__card-title">Free SC mail-in entry</h3>
-          <p className="promos__card-amount">100 SC / month</p>
-          <p className="promos__card-desc">
-            No purchase necessary. Mail a handwritten request to receive free Sweeps Coins. One per
-            household per month.
-          </p>
-          <Link to="/free-entry" className="promos__card-btn promos__card-btn--ghost">
-            How to enter
-          </Link>
-        </article>
-
         <article className="promos__card promos__card--level">
           <div className="promos__card-badge promos__card-badge--perm">Permanent</div>
           <h3 className="promos__card-title">Wager-based levels</h3>

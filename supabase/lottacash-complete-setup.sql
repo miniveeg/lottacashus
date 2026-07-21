@@ -485,6 +485,8 @@ create table if not exists public.mines_games (
   status           text not null default 'active'
                      check (status in ('active', 'cashed_out', 'busted')),
   nonce            bigint not null,
+  coin_type        text not null default 'balance'
+                     check (coin_type in ('balance', 'sweeps_coins')),
   created_at       timestamptz not null default now(),
   completed_at     timestamptz
 );
@@ -3434,14 +3436,17 @@ begin
     update public.profiles set balance = new_balance, updated_at = now() where id = p_user_id;
   end if;
 
-  insert into public.mines_games (user_id, wager, mine_count, mine_tiles, revealed_tiles, gems_revealed, multiplier, status, nonce)
-  values (p_user_id, p_wager, p_mine_count, p_mine_tiles, '{}', 0, 1, 'active', p_nonce)
+  insert into public.mines_games (user_id, wager, mine_count, mine_tiles, revealed_tiles, gems_revealed, multiplier, status, nonce, coin_type)
+  values (p_user_id, p_wager, p_mine_count, p_mine_tiles, '{}', 0, 1, 'active', p_nonce,
+    case when p_coin_type = 'sweeps_coins' then 'sweeps_coins' else 'balance' end)
   returning id into gid;
 
   insert into public.transactions (user_id, type, amount, balance_after, description, created_at)
   values (p_user_id, 'wager', -p_wager, new_balance, upper(p_coin_type) || ' Mines bet (' || p_mine_count || ' mines)', wager_at);
 
-  update public.game_pf_seeds set next_nonce = p_nonce + 1, updated_at = now() where user_id = p_user_id;
+  update public.game_pf_seeds
+  set next_nonce = greatest(next_nonce, p_nonce + 1), updated_at = now()
+  where user_id = p_user_id;
 
   return query select new_balance, gid;
 end;

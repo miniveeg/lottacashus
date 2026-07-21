@@ -75,14 +75,6 @@ const PAGE_ITEMS: SiteSearchItem[] = [
     keywords: ["sweepstakes", "rules", "sc", "sweeps", "legal"],
   },
   {
-    id: "free-entry",
-    label: "Free Entry",
-    description: "Get free Sweeps Coins by mail",
-    href: "/free-entry",
-    category: "page",
-    keywords: ["free", "entry", "mail", "sweeps", "sc", "no purchase"],
-  },
-  {
     id: "redeem",
     label: "Redeem",
     description: "Cash out Sweeps Coins for real money",

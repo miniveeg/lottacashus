@@ -225,20 +225,6 @@ Deno.serve(async (req) => {
       const err = validateWager(wager);
       if (err) return jsonResponse({ error: err }, 400, req);
 
-      // SECURITY (audit R5): max-payout cap. Blackjack max payout is
-      // blackjack 3:2 + potential double down (2× wager × 2.5 = 5× wager)
-      // + insurance side bet. Cap potential payout to bound treasury risk.
-      const BLACKJACK_MAX_PAYOUT = 100_000;
-      const bjWorstCaseMultiplier = 5; // 3:2 on a doubled hand
-      const bjPotentialPayout = Math.round(wager * bjWorstCaseMultiplier * 100) / 100;
-      if (bjPotentialPayout > BLACKJACK_MAX_PAYOUT) {
-        return jsonResponse(
-          { error: `Potential payout exceeds the maximum allowed (${BLACKJACK_MAX_PAYOUT.toLocaleString()}). Lower your wager.` },
-          400,
-          req,
-        );
-      }
-
       const { data: profile } = await admin
         .from("profiles")
         .select("balance, sweeps_coins")

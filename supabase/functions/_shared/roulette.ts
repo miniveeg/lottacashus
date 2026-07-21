@@ -108,9 +108,6 @@ export function validateRouletteBet(
   if (!Number.isFinite(wager) || wager < 1) {
     return "Minimum bet is 1 SC or GC.";
   }
-  if (wager > 100_000) {
-    return "Maximum bet is $100,000.";
-  }
   if (betType !== "red" && betType !== "black" && betType !== "green") {
     return "Bet on red, black, or green.";
   }

@@ -9,7 +9,6 @@ import { BetButton } from "../../components/BetButton/BetButton";
 import {
   LIMBO_MAX_TARGET,
   LIMBO_MIN_TARGET,
-  LIMBO_MAX_PAYOUT,
   limboWinChance,
 } from "../../lib/games/limbo";
 import { formatCoins } from "../../lib/format";
@@ -80,11 +79,6 @@ export function Limbo() {
     () => Math.round(wager * target * 100) / 100,
     [wager, target]
   );
-  /** True when wager × target would exceed the max-payout cap. The bet
-   *  button is disabled and a notice is shown so the player understands
-   *  why. The server enforces the same cap — this is just UX. */
-  const exceedsMaxPayout = potentialWin > LIMBO_MAX_PAYOUT;
-
   const loadPf = useCallback(async () => {
     const { data } = await fetchLimboPfState();
     if (data) {
@@ -348,11 +342,6 @@ export function Limbo() {
               <p className="game-controls__option-hint">
                 Win chance ≈ {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
               </p>
-              {exceedsMaxPayout && (
-                <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-                  Max payout is {formatCoins(LIMBO_MAX_PAYOUT, coinType)}. Lower your wager or target.
-                </p>
-              )}
             </div>
           </div>
 
@@ -415,9 +404,7 @@ export function Limbo() {
           <BetButton
             onClick={handleBet}
             busy={rolling}
-            exceedsCap={exceedsMaxPayout}
             busyLabel="Rolling…"
-            exceedsCapLabel="Payout exceeds cap"
             label="Bet"
           />
 
@@ -428,7 +415,6 @@ export function Limbo() {
               type="button"
               className="limbo__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
-            
               aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair

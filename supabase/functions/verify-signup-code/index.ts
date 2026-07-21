@@ -28,7 +28,12 @@ Deno.serve(async (req) => {
     const referralCode = referralRaw
       ? referralRaw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 32)
       : "";
-    const birthDateRaw = typeof body?.birthDate === "string" ? body.birthDate.trim() : "";
+    const birthDateRaw =
+      typeof body?.birthDate === "string"
+        ? body.birthDate.trim()
+        : typeof body?.birth_date === "string"
+          ? body.birth_date.trim()
+          : "";
 
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return jsonResponse({ error: "Enter a valid email address." }, 400, req);

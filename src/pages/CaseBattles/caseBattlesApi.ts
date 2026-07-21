@@ -15,8 +15,14 @@ import {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Convert a local in-memory battle to the CaseBattleView shape. */
+/**
+ * Convert a local in-memory battle to the CaseBattleView shape.
+ * Tie-aware: every winning slot (per `winningSlots`) gets its share
+ * of the borrow-adjusted pot; bots never receive payout.
+ */
 function localToView(b: LocalBattle): CaseBattleView {
+  const clamped = Math.max(0, Math.min(80, b.borrowPercent));
+  const keepMult = (100 - clamped) / 100;
   return {
     battleId: b.id,
     creatorId: b.creatorId,
@@ -38,14 +44,23 @@ function localToView(b: LocalBattle): CaseBattleView {
     createdAt: b.createdAt,
     startedAt: b.startedAt,
     completedAt: b.completedAt,
-    players: b.players.map((p) => ({
-      slot: p.slot, userId: p.userId, isBot: p.isBot,
-      username: p.username, avatarSeed: p.avatarSeed,
-      payoutAmount: b.winnerSlot === p.slot
-        ? Math.round(b.potTotal * (100 - Math.max(0, Math.min(80, b.borrowPercent))) / 100 * 100) / 100
-        : 0,
-      claimedAt: b.claimed.has(p.slot) ? new Date().toISOString() : null,
-    })),
+    winningSlots: [...b.winningSlots].sort((a, c) => a - c),
+    players: b.players.map((p) => {
+      const gross = b.payoutBySlot.get(p.slot) ?? 0;
+      const payoutAmount =
+        b.winningSlots.includes(p.slot) && !p.isBot
+          ? Math.round(gross * keepMult * 100) / 100
+          : 0;
+      return {
+        slot: p.slot,
+        userId: p.userId,
+        isBot: p.isBot,
+        username: p.username,
+        avatarSeed: p.avatarSeed,
+        payoutAmount,
+        claimedAt: b.claimed.has(p.slot) ? new Date().toISOString() : null,
+      };
+    }),
     drops: b.drops.map((d) => ({
       slot: d.slot, round: d.round, caseId: d.caseId, itemId: d.itemId,
       itemName: d.itemName, itemValue: d.itemValue, itemRarity: d.itemRarity,
@@ -211,6 +226,10 @@ export async function listOpenBattles(options?: {
   for (const b of battles) {
     b.playerCount = counts.get(b.battleId) ?? 0;
   }
+  // The lobby query doesn't load payouts (`select` is explicit and minimal),
+  // so winningSlots is unknown here. The room query fills it in once the
+  // user opens the battle. We deliberately leave it undefined in the
+  // lobby so the UI falls back to a generic "battle in progress" pill.
   return { data: battles, error: null };
 }
 
@@ -257,6 +276,15 @@ export async function viewCaseBattle(battleId: string): Promise<{
   // The room view includes full players, so the player count is just
   // the array length — no separate count query needed here.
   battle.playerCount = battle.players.length;
+  // Derive `winningSlots` from the stored `payout_amount` on each player.
+  // Tied players all carry a non-zero share under the new tie semantics,
+  // so any positive payout amount = winner. Bots never carry a credit.
+  if (battle.status === "completed") {
+    battle.winningSlots = battle.players
+      .filter((p) => p.payoutAmount > 0 && !p.isBot)
+      .map((p) => p.slot)
+      .sort((a, c) => a - c);
+  }
   return { data: battle, error: null };
 }
 
@@ -298,11 +326,17 @@ export async function joinCaseBattle(battleId: string): Promise<{ error: string 
   return { error: error?.message ?? null };
 }
 
-export async function addBotToBattle(battleId: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured) return localAddBot(battleId);
+export async function addBotToBattle(
+  battleId: string,
+  slotIndex?: number,
+): Promise<{ error: string | null }> {
+  if (!isSupabaseConfigured) return localAddBot(battleId, slotIndex);
   // Prefer local only when this battle is already an in-memory demo battle.
-  if (localViewCaseBattle(battleId)) return localAddBot(battleId);
-  const { error } = await supabase.rpc("cb_add_bot", { p_battle_id: battleId });
+  if (localViewCaseBattle(battleId)) return localAddBot(battleId, slotIndex);
+  const { error } = await supabase.rpc("cb_add_bot", {
+    p_battle_id: battleId,
+    p_slot_index: slotIndex ?? null,
+  });
   return { error: error?.message ?? null };
 }
 
@@ -374,6 +408,15 @@ export function isPlayerSlot(battle: CaseBattleView, slot: number, userId?: stri
 /**
  * Prefer server-stored `payoutAmount` (written at resolve). Fall back to a
  * client estimate only when the column is missing (pre-migration battles).
+ *
+ * Tie semantics match `computePayouts` in the edge function and
+ * `resolveBattle` in local-case-battles.ts:
+ *   - Solo: tied slots split pot evenly (last slot absorbs rounding remainder).
+ *   - Team (2v2 / 3v3 / 2v2v2): tied teams share the pot; each team's
+ *     human members divide their team's slice evenly.
+ *   - Group: split among humans equally.
+ *   - Jackpot / Crazy jackpot: weighted single-win (approximation only —
+ *     real weighting requires the battle seed).
  */
 export function calculatePayoutForSlot(
   battle: CaseBattleView,
@@ -386,42 +429,83 @@ export function calculatePayoutForSlot(
     return player.payoutAmount;
   }
 
-  // Fallback for battles resolved before payout_amount was persisted.
   const keepMult = (100 - Math.max(0, Math.min(80, battle.borrowPercent))) / 100;
-  const pot = battle.potTotal * keepMult;
+  const pot = Math.round(battle.potTotal * keepMult * 100) / 100;
 
   if (battle.gamemode === "group") {
     if (player?.isBot) return 0;
     const humans = battle.players.filter((p) => !p.isBot);
     if (humans.length === 0) return 0;
-    return Math.round((pot / humans.length) * 100) / 100;
+    return Math.round((pot / Math.max(1, humans.length)) * 100) / 100;
   }
 
-  const totals = battle.players.map((p) => ({
-    slot: p.slot,
-    total: playerTotalValue(battle.drops, p.slot),
-  }));
-  if (totals.length === 0) return 0;
+  const isTeam = battle.playerMode === "2v2" || battle.playerMode === "2v2v2" || battle.playerMode === "3v3";
+  const scoreOf = (s: number) =>
+    battle.gamemode === "terminal"
+      ? (battle.drops.find((d) => d.slot === s && d.round === battle.rounds - 1)?.itemValue ?? 0)
+      : playerTotalValue(battle.drops, s);
+  const better = (a: number, b: number) => (battle.crazy ? a < b : a > b);
 
-  let winnerSlot: number;
-  if (battle.gamemode === "terminal") {
-    const lastRound = battle.rounds - 1;
-    const lastDrops = battle.drops.filter((d) => d.round === lastRound);
-    if (lastDrops.length === 0) return 0;
-    winnerSlot = lastDrops.reduce((best, d) => {
-      const better = battle.crazy ? d.itemValue < best.itemValue : d.itemValue > best.itemValue;
-      return better ? d : best;
-    }).slot;
-  } else {
-    // standard / jackpot fallback: extreme total (jackpot is seed-weighted —
-    // without payout_amount this is approximate only).
-    winnerSlot = totals.reduce((best, t) => {
-      const better = battle.crazy ? t.total < best.total : t.total > best.total;
-      return better ? t : best;
-    }).slot;
+  if (isTeam) {
+    const teamTotalsBySlot = (s: number): number => {
+      const teamOfSlot =
+        battle.playerMode === "2v2" ? (s < 2 ? 0 : 1)
+          : battle.playerMode === "2v2v2" ? Math.floor(s / 2)
+          : (s < 3 ? 0 : 1);
+      let total = 0;
+      for (const p of battle.players) {
+        const t =
+          battle.playerMode === "2v2" ? (p.slot < 2 ? 0 : 1)
+            : battle.playerMode === "2v2v2" ? Math.floor(p.slot / 2)
+            : (p.slot < 3 ? 0 : 1);
+        if (t === teamOfSlot) total += scoreOf(p.slot);
+      }
+      return total;
+    };
+    const teamOfThisSlot =
+      battle.playerMode === "2v2" ? (slot < 2 ? 0 : 1)
+        : battle.playerMode === "2v2v2" ? Math.floor(slot / 2)
+        : (slot < 3 ? 0 : 1);
+    const winningTeams = new Set<number>();
+    let bestTeamScore = teamTotalsBySlot(0);
+    for (let t = 0; t < battle.maxPlayers; t++) {
+      const s = teamTotalsBySlot(t);
+      if (better(s, bestTeamScore)) bestTeamScore = s;
+    }
+    for (let t = 0; t < battle.maxPlayers; t++) {
+      if (teamTotalsBySlot(t) === bestTeamScore) winningTeams.add(t);
+    }
+    if (!winningTeams.has(teamOfThisSlot)) return 0;
+    const teamSlice = Math.round((pot / winningTeams.size) * 100) / 100;
+    const humansOnTeam = battle.players.filter((p) => {
+      const t =
+        battle.playerMode === "2v2" ? (p.slot < 2 ? 0 : 1)
+          : battle.playerMode === "2v2v2" ? Math.floor(p.slot / 2)
+          : (p.slot < 3 ? 0 : 1);
+      return t === teamOfThisSlot && !p.isBot;
+    });
+    if (humansOnTeam.length === 0) return 0;
+    return Math.round((teamSlice / humansOnTeam.length) * 100) / 100;
   }
 
-  return winnerSlot === slot ? Math.round(pot * 100) / 100 : 0;
+  // Solo tie-aware (1v1 / 1v1v1 / 1v1v1v1).
+  const scores = battle.players.map((p) => scoreOf(p.slot));
+  let bestScore = scores[0] ?? 0;
+  for (const s of scores) {
+    if (better(s, bestScore)) bestScore = s;
+  }
+  const tiedSlots = battle.players
+    .filter((_, i) => scores[i] === bestScore)
+    .map((p) => p.slot)
+    .sort((a, c) => a - c);
+  if (!tiedSlots.includes(slot)) return 0;
+  const share = Math.round((pot / tiedSlots.length) * 100) / 100;
+  // Last tied slot absorbs the rounding remainder so the total stays equal to pot.
+  const lastIdx = tiedSlots.length - 1;
+  if (slot === tiedSlots[lastIdx]) {
+    return Math.round(pot - share * lastIdx * 100) / 100;
+  }
+  return share;
 }
 
 /** @deprecated Prefer calculatePayoutForSlot — kept for call sites that need a single winner. */

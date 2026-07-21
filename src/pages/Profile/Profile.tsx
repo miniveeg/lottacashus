@@ -27,7 +27,7 @@ type Badge = {
 };
 
 const BADGES: Badge[] = [
-  { id: "first-bet", name: "First Bet", icon: Sparkles, description: "Placed your first game", check: () => true },
+  { id: "first-bet", name: "First Bet", icon: Sparkles, description: "Placed your first game", check: (p) => p.totalWagered > 0 },
   { id: "high-roller", name: "High Roller", icon: Gem, description: "$1,000+ total wagered", check: (p) => p.totalWagered >= 1000 },
   { id: "roller", name: "Roller", icon: Gem, description: "$10,000+ total wagered", check: (p) => p.totalWagered >= 10000 },
   { id: "whale", name: "Whale", icon: Crown, description: "$100,000+ total wagered", check: (p) => p.totalWagered >= 100000 },
@@ -53,7 +53,7 @@ function calcLevel(totalWagered: number): { level: number; xp: number; xpMax: nu
 
 export function ProfilePage() {
   const { username: routeUsername } = useParams<{ username?: string }>();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isGuest } = useAuth();
   const { profile: authProfile, profileLoading } = useProfile();
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [referralInfo, setReferralInfo] = useState<ReferralInfo | null>(null);
@@ -190,7 +190,7 @@ export function ProfilePage() {
     }
   }, [referralInfo]);
 
-  if (!routeUsername && !authLoading && !user) {
+  if (!routeUsername && !authLoading && (!user || isGuest)) {
     return <Navigate to={loginUrl("/profile")} replace />;
   }
 

@@ -59,6 +59,14 @@ export type CaseBattleView = {
   players: BattlePlayer[];
   drops: BattleDrop[];
   /**
+   * All slots that share the payout. For solo modes, tied slots for the
+   * best score all appear here (50/50 or 33/33/33 split). For team modes
+   * every human slot on a tied winning team. For Group every human. For
+   * Jackpot typically a single slot. Optional because not all battles
+   * backfill winningSlots (older rows in the DB may not have it).
+   */
+  winningSlots?: number[];
+  /**
    * Number of players currently in the battle. Populated by the lobby
    * query (a separate batch count against `case_battle_players` — the
    * `BATTLE_COLUMNS` SELECT for the lobby intentionally omits the

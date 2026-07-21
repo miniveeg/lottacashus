@@ -30,7 +30,7 @@ import { ConfirmDialog } from "../../components/ConfirmDialog/ConfirmDialog";
 import "./Settings.css";
 
 export function Settings() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isGuest } = useAuth();
   const { profile, profileLoading, updateUsername } = useProfile();
   const location = useLocation();
 
@@ -112,7 +112,7 @@ export function Settings() {
     return () => window.removeEventListener("beforeunload", handler);
   }, []);
 
-  if (!authLoading && !user) {
+  if (!authLoading && (!user || isGuest)) {
     // Hardcode the redirect path (don't use `pathname` from useLocation).
     // When Settings returns <Navigate>, React Router updates the location, but
     // Settings stays mounted for one more render before Login takes over — so

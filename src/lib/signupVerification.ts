@@ -22,6 +22,8 @@ export async function verifySignupCode(
     password,
     username,
     referralCode: referralCode?.trim() || undefined,
+    // Send both keys — edge function historically read camelCase only.
+    birthDate: birthDate,
     birth_date: birthDate,
   });
 }

@@ -77,12 +77,6 @@ export function Roulette() {
 
   const winChance = useMemo(() => rouletteWinChance(betType), [betType]);
   const potentialWin = useMemo(() => roulettePotentialWin(wager, betType), [wager, betType]);
-  /** Max-payout cap (matches the server-side cap in place-roulette-bet). Green
-   *  pays 36×, red/black pay 2×. When the potential win exceeds 100,000 the
-   *  bet button is disabled and a warning is shown — same UX as Limbo. */
-  const ROULETTE_MAX_PAYOUT = 100_000;
-  const exceedsMaxPayout = potentialWin > ROULETTE_MAX_PAYOUT;
-
   const loadPf = useCallback(async () => {
     const { data } = await fetchRoulettePfState();
     if (data) {
@@ -293,11 +287,6 @@ export function Roulette() {
               <p className="game-controls__option-hint">
                 Win chance {(winChance * 100).toFixed(2)}% · Payout {formatCoins(potentialWin, coinType)}
               </p>
-              {exceedsMaxPayout && (
-                <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-                  Max payout is {formatCoins(ROULETTE_MAX_PAYOUT, coinType)}. Lower your wager.
-                </p>
-              )}
             </div>
           </div>
 
@@ -379,9 +368,7 @@ export function Roulette() {
           <BetButton
             onClick={handleBet}
             busy={spinning}
-            exceedsCap={exceedsMaxPayout}
             busyLabel="Spinning…"
-            exceedsCapLabel="Payout exceeds cap"
             label="Bet"
           />
 
@@ -392,7 +379,6 @@ export function Roulette() {
               type="button"
               className="roulette__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
-            
               aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair

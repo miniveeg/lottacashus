@@ -33,7 +33,7 @@ import "../Wallet/Wallet.css";
 const MIN_WITHDRAW_SC = 100;
 
 export function Withdraw() {
-  const { user, loading: authLoading, configured } = useAuth();
+  const { user, loading: authLoading, configured, isGuest } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const toast = useToast();
   const [chain, setChain] = useState<CryptoChain>("sol");
@@ -56,7 +56,7 @@ export function Withdraw() {
 
   // 🔴 Same redirect-to-self bug as Settings.tsx (ACCOUNT agent's finding #9):
   // hardcode the redirect path instead of reading `useLocation().pathname`.
-  if (!authLoading && !user) {
+  if (!authLoading && (!user || isGuest)) {
     return <Navigate to={loginUrl("/withdraw")} replace />;
   }
 

@@ -704,6 +704,5 @@ export function clientHandPayload(state: BlackjackHandState) {
 
 export function validateWager(wager: number): string | null {
   if (!Number.isFinite(wager) || wager < 1) return "Minimum bet is 1 SC or GC.";
-  if (wager > 100_000) return "Maximum bet is $100,000.";
   return null;
 }

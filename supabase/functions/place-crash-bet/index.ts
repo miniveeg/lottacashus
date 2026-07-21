@@ -57,21 +57,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Minimum bet is 1 SC or GC." }, 400, req);
     }
 
-    // Max-payout cap: the crash formula can produce up to ~1,000,000× but we
-    // cap the potential payout at 100,000. With a worst-case multiplier of
-    // 1,000× (the 99.99th percentile), the max allowed wager is 100. This
-    // keeps the game playable (min wager 1, max ~100) while capping exposure.
-    const CRASH_MAX_PAYOUT = 100_000;
-    const crashWorstCaseMultiplier = 1_000;
-    const crashPotentialPayout = Math.round(wager * crashWorstCaseMultiplier * 100) / 100;
-    if (crashPotentialPayout > CRASH_MAX_PAYOUT) {
-      return jsonResponse(
-        { error: `Potential payout exceeds the maximum allowed (${CRASH_MAX_PAYOUT.toLocaleString()}). Lower your wager.` },
-        400,
-        req,
-      );
-    }
-
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,

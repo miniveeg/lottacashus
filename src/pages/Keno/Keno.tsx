@@ -85,13 +85,6 @@ export function Keno() {
     [pickCount, risk]
   );
 
-  // Max-payout cap (audit R6): the max Keno multiplier across all risk/pick
-  // modes is 1000× (high risk). Wager × 1000 > 100,000 when wager > 100.
-  // The server enforces the cap; this is the UX.
-  const KENO_MAX_PAYOUT = 100_000;
-  const kenoMaxWin = wager * 1000;
-  const exceedsMaxPayout = kenoMaxWin > KENO_MAX_PAYOUT;
-
   const loadPf = useCallback(async () => {
     const { data, error: pfErr } = await fetchKenoPfState();
     if (pfErr) return;
@@ -500,19 +493,11 @@ export function Keno() {
           <BetButton
             onClick={handleBet}
             busy={drawing}
-            exceedsCap={exceedsMaxPayout && pickCount >= 1}
             busyLabel={revealComplete ? "Done…" : "Drawing…"}
-            exceedsCapLabel="Payout exceeds cap"
             label="Bet"
             disabled={pickCount < 1}
           />
 
-          {exceedsMaxPayout && (
-            <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {formatCoins(KENO_MAX_PAYOUT, coinType)}. Lower your wager — a max-hit round
-              would exceed the cap.
-            </p>
-          )}
 
           <NeedFundsHint />
 
@@ -521,7 +506,6 @@ export function Keno() {
               type="button"
               className="keno__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
-            
               aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair

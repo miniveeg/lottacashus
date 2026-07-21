@@ -72,19 +72,6 @@ export function Mines() {
     [wager, multiplier]
   );
 
-  // Max-payout cap (audit R7): the worst-case Mines multiplier (revealing ALL
-  // safe gems) varies by mine count — peaks at ~5.15M× for 12-13 mines.
-  // We compute the max multiplier for the current mine count and cap the
-  // potential payout at 100,000 (matching the server cap). The server cap
-  // uses a conservative 24,475× flat worst case; this client check is more
-  // precise per-mine-count but still bounds to the same 100k cap.
-  const MINES_MAX_PAYOUT = 100_000;
-  const minesMaxWin = useMemo(
-    () => wager * getMinesMultiplier(mineCount, maxGems),
-    [wager, mineCount, maxGems],
-  );
-  const exceedsMaxPayout = !playing && minesMaxWin > MINES_MAX_PAYOUT;
-
   const loadPf = useCallback(async () => {
     const { data } = await fetchMinesPfState();
     if (data) {
@@ -262,10 +249,11 @@ export function Mines() {
       return;
     }
 
+    const cashCoin = (gameCoinType === "sweeps_coins" ? "sweeps_coins" : coinType) as "balance" | "sweeps_coins";
     setLastMessage(
       auto
-        ? `All gems found! Won ${formatCoins(data.payout, coinType)}`
-        : `Cashed out ${formatCoins(data.payout, coinType)} at ${data.multiplier}×`
+        ? `All gems found! Won ${formatCoins(data.payout, cashCoin)}`
+        : `Cashed out ${formatCoins(data.payout, cashCoin)} at ${data.multiplier}×`
     );
     setLastOutcome("win");
     resetRound();
@@ -480,9 +468,7 @@ export function Mines() {
             <BetButton
               onClick={handleStart}
               busy={busy}
-              exceedsCap={exceedsMaxPayout}
               busyLabel="Starting…"
-              exceedsCapLabel="Payout exceeds cap"
               label="Bet"
             />
           ) : (
@@ -496,13 +482,6 @@ export function Mines() {
             />
           )}
 
-          {exceedsMaxPayout && (
-            <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {formatCoins(MINES_MAX_PAYOUT, coinType)}. Lower your wager or mine count — a
-              full-clear cashout would exceed the cap.
-            </p>
-          )}
-
           <NeedFundsHint />
 
           <div className="mines__fairness">
@@ -510,7 +489,6 @@ export function Mines() {
               type="button"
               className="mines__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
-            
               aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair

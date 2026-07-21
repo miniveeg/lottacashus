@@ -239,20 +239,33 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id, session?.access_token]);
 
-  // Refresh the local profile whenever the tab regains focus (covers
-  // balance changes from local-play bets in another tab).
+  // Guest / local-play: keep topbar balances in sync with localStorage.
+  // Realtime only works with Supabase; local-play writes never emit events,
+  // so we poll cheaply while guest mode is active (and refresh on focus).
   useEffect(() => {
-    if (!isSupabaseConfigured || user?.id !== "guest") return;
+    if (isSupabaseConfigured && user?.id !== "guest") return;
+    if (user?.id !== "guest" && isSupabaseConfigured) return;
+
+    const syncLocal = () => {
+      setProfile((prev) => {
+        if (!prev) return prev;
+        const balance = localBalance("balance");
+        const sweepsCoins = localBalance("sweeps_coins");
+        if (prev.balance === balance && prev.sweepsCoins === sweepsCoins) return prev;
+        return { ...prev, balance, sweepsCoins };
+      });
+    };
+
     const onVisible = () => {
-      if (document.visibilityState === "visible") {
-        setProfile((prev) => prev ? { ...prev, balance: localBalance("balance"), sweepsCoins: localBalance("sweeps_coins") } : prev);
-      }
+      if (document.visibilityState === "visible") syncLocal();
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
+    const id = window.setInterval(syncLocal, 400);
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
+      window.clearInterval(id);
     };
   }, [user?.id]);
 

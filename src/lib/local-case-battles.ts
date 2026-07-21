@@ -6,6 +6,7 @@
 import { GENERATED_CASE_CATALOG } from "./games/case-battles/caseCatalog.generated";
 import type { LootCase, CaseItem } from "./games/case-battles/caseTypes";
 import { CASE_BATTLES_RTP, biasCaseRollFloat } from "./games/rtp";
+import { isTeamMode, teamIndexForMode } from "./games/case-battles/config";
 
 // ── Wallet (shared with local-play.ts) ─────────────────────────────────────
 const BAL_KEY = "lottacash:local:balance";
@@ -49,7 +50,11 @@ export type LocalBattle = {
   seedHash: string; eosBlockTarget: number | null; eosBlockId: string | null;
   battleSeed: string | null; createdAt: string; startedAt: string | null;
   completedAt: string | null; players: LocalPlayer[]; drops: LocalDrop[];
-  winnerSlot: number | null; claimed: Set<number>;
+  /** All slots that share the payout (tie-aware). */
+  winningSlots: number[];
+  /** Per-slot gross share (before borrow multiplier). */
+  payoutBySlot: Map<number, number>;
+  claimed: Set<number>;
 };
 
 export type LocalPlayer = {
@@ -106,21 +111,33 @@ export function localCreateBattle(params: {
     status: "waiting", seedHash: uid().slice(0, 16), eosBlockTarget: null, eosBlockId: null,
     battleSeed: null, createdAt: new Date().toISOString(), startedAt: null, completedAt: null,
     players: [{ slot: 0, userId: "guest", isBot: false, username: "You", avatarSeed: "you" }],
-    drops: [], winnerSlot: null, claimed: new Set(),
+    drops: [], winningSlots: [], payoutBySlot: new Map(), claimed: new Set(),
   };
   battles.set(id, battle);
   return { battleId: id, error: null };
 }
 
-export function localAddBot(battleId: string): { error: string | null } {
+export function localAddBot(battleId: string, slotIndex?: number): { error: string | null } {
   const b = battles.get(battleId);
   if (!b) return { error: "Battle not found." };
+  if (b.status !== "waiting") return { error: "Battle already started." };
   if (b.players.length >= b.maxPlayers) return { error: "Battle is full." };
-  const slot = b.players.length;
+  let slot = -1;
+  if (slotIndex != null && slotIndex >= 0 && slotIndex < b.maxPlayers) {
+    if (!b.players.some((p) => p.slot === slotIndex)) slot = slotIndex;
+  }
+  if (slot < 0) {
+    for (let i = 0; i < b.maxPlayers; i++) {
+      if (!b.players.some((p) => p.slot === i)) { slot = i; break; }
+    }
+  }
+  if (slot < 0) return { error: "No empty slots." };
   const name = BOT_NAMES[slot % BOT_NAMES.length] ?? `Bot${slot}`;
   b.players.push({ slot, userId: null, isBot: true, username: name, avatarSeed: name });
-  // Bots contribute full entry_cost to pot (house-sponsored seats) — matches SQL.
+  // Bots contribute full entry_cost to pot (house-sponsored seats) — matches SQL
+  // trigger in 006_case_battles_per_slot_bot.sql.
   b.potTotal = Math.round((b.potTotal + b.entryCost) * 100) / 100;
+  b.players.sort((a, c) => a.slot - c.slot);
   return { error: null };
 }
 
@@ -169,7 +186,7 @@ function resolveBattle(b: LocalBattle) {
       });
     }
   }
-  // Gamemode-aware winner (mirrors edge computePayouts pot-based payouts).
+  // ── Gamemode-aware winner — mirrors edge `computePayouts` ────────────────
   const slotTotals = new Map<number, number>();
   const lastRound = b.rounds - 1;
   const lastRoundTotals = new Map<number, number>();
@@ -179,28 +196,125 @@ function resolveBattle(b: LocalBattle) {
     const last = drops.find((d) => d.round === lastRound);
     lastRoundTotals.set(p.slot, last?.itemValue ?? 0);
   }
-
-  const scoreOf = (slot: number) =>
+  const scoreOf = (slot: number): number =>
     b.gamemode === "terminal"
       ? (lastRoundTotals.get(slot) ?? 0)
       : (slotTotals.get(slot) ?? 0);
+  const pickMax = !b.crazy;
+  const better = (a: number, ref: number) => (pickMax ? a > ref : a < ref);
+  b.winningSlots = [];
+  b.payoutBySlot = new Map();
 
-  let bestSlot = b.players[0]?.slot ?? 0;
   if (b.gamemode === "group") {
-    // Every human is a "winner" for claim purposes; winnerSlot is first human.
-    const human = b.players.find((p) => !p.isBot);
-    bestSlot = human?.slot ?? bestSlot;
-  } else {
-    let bestScore = b.crazy ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+    // Group: share pot equally among every human; bots are NOT credited.
+    const humans = b.players
+      .filter((p) => !p.isBot)
+      .sort((a, c) => a.slot - c.slot);
+    const pot = Math.round(b.potTotal * 100) / 100;
+    const each = Math.round((pot / Math.max(1, humans.length)) * 100) / 100;
+    let remaining = pot;
+    for (let i = 0; i < humans.length; i++) {
+      const share =
+        i === humans.length - 1
+          ? Math.round(remaining * 100) / 100
+          : each;
+      remaining = Math.round((remaining - share) * 100) / 100;
+      b.payoutBySlot.set(humans[i]!.slot, share);
+    }
+    b.winningSlots = humans.map((p) => p.slot);
+  } else if (isTeamMode(b.playerMode)) {
+    // Team: aggregate by team index. Tied eligible teams split pot evenly;
+    // team members divide their team's slice. Bot-only tied teams forfeit
+    // their share (house keeps it).
+    const teamTotals = new Map<number, number>();
     for (const p of b.players) {
-      const score = scoreOf(p.slot);
-      if (b.crazy ? score < bestScore : score > bestScore) {
-        bestScore = score;
-        bestSlot = p.slot;
+      const t = teamIndexForMode(b.playerMode, p.slot);
+      teamTotals.set(t, (teamTotals.get(t) ?? 0) + scoreOf(p.slot));
+    }
+    const teamScores = Array.from(teamTotals.values());
+    let bestTeamScore = teamScores[0]!;
+    for (const s of teamScores) {
+      if (better(s, bestTeamScore)) bestTeamScore = s;
+    }
+    const tiedTeams = Array.from(teamTotals.entries())
+      .filter(([, s]) => s === bestTeamScore)
+      .map(([t]) => t)
+      .sort((a, c) => a - c);
+    const hasHuman = (team: number) =>
+      b.players.some(
+        (p) => teamIndexForMode(b.playerMode, p.slot) === team && !p.isBot,
+      );
+    const eligibleTeamOrder = tiedTeams.filter(hasHuman);
+    if (eligibleTeamOrder.length === 0) {
+      b.winningSlots = [];
+      b.payoutBySlot = new Map();
+    } else {
+      const pot = Math.round(b.potTotal * 100) / 100;
+      const teamShare = Math.round((pot / eligibleTeamOrder.length) * 100) / 100;
+      let teamRemaining = pot;
+      for (let i = 0; i < eligibleTeamOrder.length; i++) {
+        const team = eligibleTeamOrder[i]!;
+        const amt =
+          i === eligibleTeamOrder.length - 1
+            ? Math.round(teamRemaining * 100) / 100
+            : teamShare;
+        teamRemaining = Math.round((teamRemaining - amt) * 100) / 100;
+        const humans = b.players
+          .filter(
+            (p) => teamIndexForMode(b.playerMode, p.slot) === team && !p.isBot,
+          )
+          .sort((a, c) => a.slot - c.slot);
+        const eachMember = Math.round((amt / humans.length) * 100) / 100;
+        let memRemaining = amt;
+        for (let j = 0; j < humans.length; j++) {
+          const share =
+            j === humans.length - 1
+              ? Math.round(memRemaining * 100) / 100
+              : eachMember;
+          memRemaining = Math.round((memRemaining - share) * 100) / 100;
+          b.payoutBySlot.set(humans[j]!.slot, share);
+          b.winningSlots.push(humans[j]!.slot);
+        }
       }
     }
+  } else {
+    // Solo: tied slots for the best score split the pot among ELIGIBLE
+    // (human) tied slots. Bots involved in a tie forfeit their share —
+    // the next iteration's "last slot" absorbs the rounding remainder.
+    const pot = Math.round(b.potTotal * 100) / 100;
+    const scores = b.players.map((p) => scoreOf(p.slot));
+    let bestScore = scores[0] ?? 0;
+    for (const s of scores) {
+      if (better(s, bestScore)) bestScore = s;
+    }
+    const tiedSlotsAll = b.players
+      .filter((_, i) => scores[i] === bestScore)
+      .map((p) => p.slot)
+      .sort((a, c) => a - c);
+    const eligibleSlots = tiedSlotsAll.filter((slot) => {
+      const p = b.players.find((q) => q.slot === slot);
+      return Boolean(p && !p.isBot);
+    });
+    if (eligibleSlots.length === 0) {
+      b.winningSlots = [];
+      b.payoutBySlot = new Map();
+    } else {
+      const share = Math.round((pot / eligibleSlots.length) * 100) / 100;
+      let remaining = pot;
+      let credited = 0;
+      for (const slot of tiedSlotsAll) {
+        const p = b.players.find((q) => q.slot === slot);
+        if (!p || p.isBot) continue;
+        const isLast = credited === eligibleSlots.length - 1;
+        const amt = isLast ? Math.round(remaining * 100) / 100 : share;
+        remaining = Math.round((remaining - amt) * 100) / 100;
+        b.payoutBySlot.set(slot, amt);
+        credited++;
+      }
+      b.winningSlots = eligibleSlots;
+    }
   }
-  b.winnerSlot = bestSlot;
+
   b.status = "completed";
   b.completedAt = new Date().toISOString();
 }
@@ -210,23 +324,18 @@ export function localClaimPayout(battleId: string, slot: number): { data: { bala
   if (!b) return { data: null, error: "Battle not found." };
   if (b.status !== "completed") return { data: null, error: "Battle not completed." };
   if (b.claimed.has(slot)) return { data: null, error: "Already claimed." };
+  const player = b.players.find((p) => p.slot === slot);
+  if (!player || player.isBot) return { data: null, error: "You didn't win this battle." };
 
   const clamped = Math.max(0, Math.min(80, b.borrowPercent));
   const keepMult = (100 - clamped) / 100;
-  const pot = Math.round(b.potTotal * keepMult * 100) / 100;
-
-  let payout = 0;
-  if (b.gamemode === "group") {
-    const player = b.players.find((p) => p.slot === slot);
-    if (!player || player.isBot) return { data: null, error: "You didn't win this battle." };
-    const humans = b.players.filter((p) => !p.isBot);
-    payout = Math.round((pot / Math.max(1, humans.length)) * 100) / 100;
-  } else {
-    if (b.winnerSlot !== slot) return { data: null, error: "You didn't win this battle." };
-    payout = pot;
-  }
+  const grossShare = b.payoutBySlot.get(slot) ?? 0;
+  const payout = Math.round(grossShare * keepMult * 100) / 100;
 
   if (payout <= 0) return { data: null, error: "No payout available for this slot." };
+  if (!b.winningSlots.includes(slot)) {
+    return { data: null, error: "You didn't win this battle." };
+  }
   b.claimed.add(slot);
   localCredit(b.coinType, payout);
   return { data: { balance: localBalance(b.coinType) }, error: null };

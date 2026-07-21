@@ -116,6 +116,8 @@ export function Blackjack() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hand, setHand] = useState<BlackjackActionResult | null>(null);
+  /** Coin type locked when the hand started (must match server debit). */
+  const [handCoinType, setHandCoinType] = useState<string | null>(null);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
   const [handHistory, setHandHistory] = useState<BjHistoryEntry[]>([]);
   // Monotonic id source for hand-history entries. Bumped each push so React
@@ -136,12 +138,6 @@ export function Blackjack() {
   const playing = hand?.status === "player_turn" || insuranceOffer;
   const settled = hand?.status === "settled";
   const showTable = Boolean(hand);
-
-  // Max-payout cap (audit R7): blackjack pays 3:2, and a doubled hand can
-  // win 2× the doubled wager at 3:2 = 5× the original wager. Wager × 5 >
-  // 100,000 when wager > 20,000. The server enforces the cap; this is the UX.
-  const BLACKJACK_MAX_PAYOUT = 100_000;
-  const exceedsMaxPayout = !playing && wager * 5 > BLACKJACK_MAX_PAYOUT;
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchBlackjackPfState();
@@ -229,6 +225,7 @@ export function Blackjack() {
     setError(null);
     setLastMessage(null);
     setHand(null);
+    setHandCoinType(coinType);
     setBusy(true);
     const { data, error: err } = await startBlackjack(wager, coinType);
     if (cancelledRef.current) {
@@ -239,12 +236,16 @@ export function Blackjack() {
     busyRef.current = false;
     if (err || !data) {
       setError(err ?? "Could not start hand.");
+      setHandCoinType(null);
       // Server may have debited before failing — refresh to stay accurate.
       void refreshProfile();
       return;
     }
     applyHand(data);
-    if (data.status === "settled") finishSettled(data);
+    if (data.status === "settled") {
+      finishSettled(data);
+      setHandCoinType(null);
+    }
     if (data.nonce != null) setPfNonce(data.nonce + 1);
     // No refreshProfile() here — ProfileContext's realtime subscription on
     // `profiles` pushes the new balance (wager debit) the instant the server
@@ -272,7 +273,9 @@ export function Blackjack() {
             : action === "split"
               ? splitBlackjack
               : (id: string, ct?: string) => insuranceBlackjack(id, Boolean(insuranceTake), ct);
-    const { data, error: err } = await fn(hand.handId, coinType);
+    // Always use the coin type locked when the hand started.
+    const actionCoin = handCoinType ?? coinType;
+    const { data, error: err } = await fn(hand.handId, actionCoin);
     if (cancelledRef.current) {
       busyRef.current = false;
       return;
@@ -287,6 +290,7 @@ export function Blackjack() {
     }
     if (data.status === "settled") {
       finishSettled(data);
+      setHandCoinType(null);
     } else {
       applyHand(data);
     }
@@ -459,9 +463,7 @@ export function Blackjack() {
             <BetButton
               onClick={handleStart}
               busy={busy}
-              exceedsCap={exceedsMaxPayout}
               busyLabel="Dealing…"
-              exceedsCapLabel="Payout exceeds cap"
               label={showTable && settled ? "New hand" : "Deal"}
             />
           ) : insuranceOffer ? (
@@ -531,13 +533,6 @@ export function Blackjack() {
             </div>
           )}
 
-          {exceedsMaxPayout && !playing && (
-            <p className="game-controls__option-hint game-controls__option-hint--warn" role="note">
-              Max payout is {formatCoins(BLACKJACK_MAX_PAYOUT, coinType)}. Lower your wager — a doubled
-              blackjack would exceed the cap.
-            </p>
-          )}
-
           {handHistory.length > 0 && (
             <div className="bj__history" aria-label="Recent hands">
               {handHistory.map((h) => (
@@ -568,7 +563,6 @@ export function Blackjack() {
               type="button"
               className="bj__fairness-toggle"
               onClick={() => setShowFairness((v) => !v)}
-            
               aria-expanded={showFairness}
             >
               {showFairness ? "Hide" : "Show"} provably fair

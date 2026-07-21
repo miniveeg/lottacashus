@@ -23,7 +23,7 @@ import { loginUrl } from "../../lib/authRedirect";
  * on every admin RPC — client checks can be bypassed by anyone who opens DevTools.
  */
 export function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isGuest } = useAuth();
   const { profile, profileLoading } = useProfile();
 
   // Treat "user set but profile not yet arrived" as still-loading so we don't
@@ -40,7 +40,7 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!user || isGuest) {
     return <Navigate to={loginUrl("/admin")} replace />;
   }
 

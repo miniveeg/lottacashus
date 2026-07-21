@@ -20,7 +20,7 @@ import "../Auth/Auth.css";
 type Step = "details" | "verify";
 
 export function Signup() {
-  const { sendSignupCode, completeSignup, user, loading, configured } = useAuth();
+  const { sendSignupCode, completeSignup, user, loading, configured, isGuest } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -60,7 +60,8 @@ export function Signup() {
     );
   }
 
-  if (user) {
+  // Offline guests are still "users" for local play — only real sessions skip signup.
+  if (user && !isGuest) {
     return <Navigate to={redirectTo} replace />;
   }
 

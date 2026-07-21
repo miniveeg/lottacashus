@@ -13,9 +13,8 @@ interface BetButtonProps
    */
   busy?: boolean;
   /**
-   * When true the button shows a "Payout exceeds cap" state. Default: false.
-   * The button is disabled automatically so the player understands the
-   * wager value would be rejected by the server-side max-payout guard.
+   * When true the button shows a blocked state and is disabled. Optional;
+   * games may use this for other soft gates. Default: false.
    */
   exceedsCap?: boolean;
   /**
@@ -25,12 +24,7 @@ interface BetButtonProps
    * picked zero numbers). Default: false.
    */
   disabled?: boolean;
-  /**
-   * Override the "Payout exceeds cap" or "Spinning…" / "Dealing…" labels.
-   * Most games pass the same wording as the default; pass only when the
-   * page wants a distinct label (e.g. the cashout button on Mines uses
-   * "Cash out X" instead of a static label).
-   */
+  /** Override busy / blocked button labels. */
   busyLabel?: string;
   exceedsCapLabel?: string;
   /** Alternative action color set. Default: "primary" (crimson brand). */

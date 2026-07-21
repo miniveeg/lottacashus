@@ -75,19 +75,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Minimum bet is 1 SC or GC." }, 400, req);
     }
 
-    // SECURITY (audit R5): max-payout cap. Slots max multiplier is 190×
-    // (Crown 3-of-a-kind). Cap potential payout to bound treasury risk.
-    const SLOTS_MAX_PAYOUT = 100_000;
-    const slotsWorstCaseMultiplier = 190;
-    const slotsPotentialPayout = Math.round(wager * slotsWorstCaseMultiplier * 100) / 100;
-    if (slotsPotentialPayout > SLOTS_MAX_PAYOUT) {
-      return jsonResponse(
-        { error: `Potential payout exceeds the maximum allowed (${SLOTS_MAX_PAYOUT.toLocaleString()}). Lower your wager.` },
-        400,
-        req,
-      );
-    }
-
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,

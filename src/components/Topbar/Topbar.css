@@ -378,12 +378,19 @@ a.topbar__balance:hover {
 @media (max-width: 480px) {
   .topbar { gap: 0.25rem; padding: 0 0.5rem 0 0.35rem; }
   .topbar__name { display: none; }
-  /* Keep "Log in" visible on mobile (icon-only) so existing users can sign in.
-     Only hide the text label, not the button itself. Log out stays accessible
-     via the sidebar drawer. */
+  /* Keep "Log in" / "Log out" as icon-only on small phones. Logout must stay
+     visible — the sidebar has no sign-out control. */
   .topbar__btn--login { padding: 0.5rem 0.6rem; }
   .topbar__btn--login .topbar__btn-label { display: none; }
-  .topbar__btn--logout { display: none; }
+  .topbar__btn--logout {
+    display: inline-flex;
+    padding: 0.5rem 0.6rem;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+  }
+  .topbar__btn--logout .topbar__btn-label { display: none; }
   .topbar__balance-value { font-size: 0.82rem; }
   .topbar__actions { gap: 0.15rem; }
   /* Hide the GC/SC label text on very small screens — the coin toggle button

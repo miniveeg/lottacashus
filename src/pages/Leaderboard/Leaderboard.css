@@ -5,14 +5,14 @@
 }
 
 .leaderboard-header {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .leaderboard-header__title {
   font-family: var(--lc-font-display);
   font-size: 1.75rem;
   font-weight: 700;
-  margin: 0 0 0.25rem;
+  margin: 0 0 var(--lc-spacing-2);
 }
 
 .leaderboard-header__subtitle {
@@ -39,7 +39,7 @@
 
 .leaderboard-table th {
   text-align: left;
-  padding: 0.75rem 1rem;
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   font-family: var(--lc-font-display);
   font-size: 0.65rem;
   font-weight: 700;
@@ -51,7 +51,7 @@
 }
 
 .leaderboard-table td {
-  padding: 0.75rem 1rem;
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   font-size: 0.9rem;
   color: var(--lc-text-primary);
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
@@ -102,9 +102,9 @@
 }
 
 .leaderboard-table__you {
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.4rem;
-  border-radius: 999px;
+  margin-left: var(--lc-spacing-2);
+  padding: var(--lc-spacing-1) var(--lc-spacing-2);
+  border-radius: var(--lc-radius-pill);
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -118,8 +118,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 2.5rem 1rem;
+  gap: var(--lc-spacing-2);
+  padding: var(--lc-spacing-12) var(--lc-spacing-4);
   text-align: center;
   color: var(--lc-text-muted);
   background: var(--lc-bg-glass);
@@ -211,7 +211,7 @@
 @media (max-width: 640px) {
   .leaderboard-table th,
   .leaderboard-table td {
-    padding: 0.6rem 0.65rem;
+    padding: var(--lc-spacing-2) var(--lc-spacing-2);
     font-size: 0.8rem;
   }
 

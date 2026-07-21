@@ -6,12 +6,12 @@
   font-family: var(--lc-font-display);
   font-weight: 800;
   font-size: 1.75rem;
-  margin-bottom: 0.35rem;
+  margin-bottom: var(--lc-spacing-2);
 }
 
 .wallet__subtitle {
   color: var(--lc-text-secondary);
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .wallet__tabs {
@@ -19,11 +19,16 @@
 }
 
 .wallet__tab {
-  padding: 0.55rem 1.1rem;
+  /* AGENT.md §Accessibility — interactive tabs must hit 44px desktop. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--lc-text-secondary);
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .wallet__tab--active {
@@ -31,28 +36,32 @@
 }
 
 .wallet__section {
-  padding: 1.5rem;
+  padding: var(--lc-spacing-5);
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-xl);
-  margin-bottom: 1rem;
+  margin-bottom: var(--lc-spacing-4);
 }
 
 .wallet__chain-picker {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  gap: var(--lc-spacing-2);
+  margin-bottom: var(--lc-spacing-5);
+  min-width: 0;
 }
 
 .wallet__chain-btn {
   flex: 1;
-  padding: 0.75rem;
+  /* AGENT.md §Accessibility — interactive chain selector must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border);
   background: var(--lc-bg-elevated);
   font-weight: 700;
   color: var(--lc-text-secondary);
   cursor: pointer;
+  min-width: 0;
   transition: border-color var(--lc-transition), color var(--lc-transition), background var(--lc-transition);
 }
 
@@ -76,12 +85,12 @@
 .wallet__address-box {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: var(--lc-spacing-3);
+  padding: var(--lc-spacing-4);
   background: var(--lc-bg-elevated);
   border: 1px dashed var(--lc-border-strong);
   border-radius: var(--lc-radius-md);
-  margin-bottom: 1rem;
+  margin-bottom: var(--lc-spacing-4);
 }
 
 .wallet__address {
@@ -89,16 +98,21 @@
   font-size: 0.85rem;
   word-break: break-all;
   line-height: 1.45;
+  min-width: 0;
 }
 
 .wallet__copy-row {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .wallet__btn {
   position: relative;
-  padding: 0.65rem 1.1rem;
+  /* AGENT.md §Accessibility — interactive wallet button must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   font-weight: 600;
   font-size: 0.875rem;
@@ -109,7 +123,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
+  min-width: 0;
   transition: filter var(--lc-transition), transform var(--lc-transition), opacity var(--lc-transition);
 }
 
@@ -124,9 +139,9 @@
 }
 
 .wallet__btn__spinner {
-  width: 0.95rem;
-  height: 0.95rem;
-  border-radius: 50%;
+  width: var(--lc-spacing-4);
+  height: var(--lc-spacing-4);
+  border-radius: var(--lc-radius-pill);
   border: 2px solid currentColor;
   border-top-color: transparent;
   animation: wallet-btn-spin 0.7s linear infinite;
@@ -154,16 +169,16 @@
 }
 
 .wallet__hint--balance {
-  margin-bottom: 1rem;
+  margin-bottom: var(--lc-spacing-4);
 }
 
 .wallet__hint--bonus {
-  margin-bottom: 1rem;
+  margin-bottom: var(--lc-spacing-4);
   color: var(--lc-emerald);
 }
 
 .wallet__hint--meta {
-  margin-top: 0.35rem;
+  margin-top: var(--lc-spacing-2);
   word-break: break-all;
 }
 
@@ -174,22 +189,22 @@
 /* ── Deposit info panel ─────────────────────────────────────────────── */
 
 .wallet__info-panel {
-  padding: 1.1rem 1.25rem;
-  margin-bottom: 1rem;
+  padding: var(--lc-spacing-4) var(--lc-spacing-5);
+  margin-bottom: var(--lc-spacing-4);
   background: linear-gradient(135deg, rgba(245, 185, 66, 0.1), rgba(245, 185, 66, 0.02));
   border: 1px solid rgba(245, 185, 66, 0.28);
   border-radius: var(--lc-radius-lg);
 }
 
 .wallet__info-text {
-  margin: 0 0 0.65rem;
+  margin: 0 0 var(--lc-spacing-3);
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--lc-text-primary);
 }
 
 .wallet__info-rate {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--lc-spacing-2);
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--lc-gold);
@@ -199,10 +214,11 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
   margin: 0;
   font-size: 0.9rem;
   color: var(--lc-text-secondary);
+  min-width: 0;
 }
 
 .wallet__info-example-input {
@@ -228,9 +244,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.2rem;
-  padding: 1.25rem;
-  margin-bottom: 1rem;
+  gap: var(--lc-spacing-1);
+  padding: var(--lc-spacing-5);
+  margin-bottom: var(--lc-spacing-4);
   text-align: center;
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-gold-dim);
@@ -248,7 +264,7 @@
 }
 
 .wallet__balance-value {
-  margin: 0.15rem 0 0;
+  margin: var(--lc-spacing-1) 0 0;
   font-family: var(--lc-font-display);
   font-size: 1.9rem;
   font-weight: 800;
@@ -263,7 +279,7 @@
 }
 
 .wallet__hint--note {
-  margin-top: 1rem;
+  margin-top: var(--lc-spacing-4);
 }
 
 /* H1 (UI/UX audit): error + retry row for deposit-address load failures.
@@ -272,7 +288,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--lc-spacing-3);
+  min-width: 0;
 }
 .wallet__error-row .wallet__hint {
   margin: 0;
@@ -282,8 +299,8 @@
 .wallet__field {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 1rem;
+  gap: var(--lc-spacing-2);
+  margin-bottom: var(--lc-spacing-4);
 }
 
 .wallet__field label {
@@ -293,11 +310,15 @@
 }
 
 .wallet__field input {
-  padding: 0.7rem 0.9rem;
+  /* AGENT.md §Accessibility — text input must be 44px tall on desktop. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-md);
   color: var(--lc-text-primary);
+  min-width: 0;
+  field-sizing: content;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
@@ -309,8 +330,8 @@
 }
 
 .wallet__error {
-  padding: 0.65rem 0.85rem;
-  margin-bottom: 1rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
+  margin-bottom: var(--lc-spacing-4);
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.35);
   border-radius: var(--lc-radius-md);
@@ -319,8 +340,8 @@
 }
 
 .wallet__success {
-  padding: 0.65rem 0.85rem;
-  margin-bottom: 1rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
+  margin-bottom: var(--lc-spacing-4);
   background: rgba(34, 197, 94, 0.12);
   border: 1px solid rgba(34, 197, 94, 0.35);
   border-radius: var(--lc-radius-md);
@@ -331,34 +352,35 @@
 .wallet__list-title {
   font-weight: 700;
   font-size: 0.95rem;
-  margin: 1.25rem 0 0.75rem;
+  margin: var(--lc-spacing-5) 0 var(--lc-spacing-3);
 }
 
 .wallet__list-title-icon {
   display: inline-flex;
   vertical-align: middle;
-  margin-right: 0.35rem;
+  margin-right: var(--lc-spacing-2);
   color: var(--lc-gold);
 }
 
 .wallet__deposit-item {
-  padding: 0.75rem;
+  padding: var(--lc-spacing-3);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-md);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--lc-spacing-2);
   font-size: 0.85rem;
 }
 
 .wallet__deposit-row {
   display: flex;
   justify-content: space-between;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
+  min-width: 0;
 }
 
 .wallet__status {
   display: inline-block;
-  padding: 0.1rem 0.45rem;
-  border-radius: 999px;
+  padding: var(--lc-spacing-1) var(--lc-spacing-3);
+  border-radius: var(--lc-radius-pill);
   font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -381,7 +403,7 @@
   }
 
   .wallet__section {
-    padding: 1.1rem 1rem;
+    padding: var(--lc-spacing-4) var(--lc-spacing-4);
   }
 
   .wallet__chain-picker {
@@ -401,7 +423,7 @@
   }
 
   .wallet__info-panel {
-    padding: 0.95rem 1rem;
+    padding: var(--lc-spacing-3) var(--lc-spacing-4);
   }
 
   .wallet__info-example {
@@ -409,7 +431,7 @@
   }
 
   .wallet__balance-panel {
-    padding: 1rem;
+    padding: var(--lc-spacing-4);
   }
 
   .wallet__balance-value {
@@ -420,9 +442,10 @@
 /* ── Deposit QR code + address layout (audit R11) ── */
 .wallet__address-qr-row {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--lc-spacing-5);
   align-items: flex-start;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .wallet__address-text {
@@ -435,8 +458,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.75rem;
+  gap: var(--lc-spacing-2);
+  padding: var(--lc-spacing-3);
   background: #fff;
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border);

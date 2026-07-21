@@ -8,17 +8,18 @@
 .profile-hero {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1.5rem;
+  gap: var(--lc-spacing-5);
+  padding: var(--lc-spacing-5);
   background: var(--lc-bg-glass);
   backdrop-filter: blur(var(--lc-glass-blur));
   -webkit-backdrop-filter: blur(var(--lc-glass-blur));
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-xl);
   box-shadow: var(--lc-shadow-sm);
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--lc-spacing-5);
   position: relative;
   overflow: hidden;
+  min-width: 0;
 }
 
 .profile-hero::before {
@@ -66,7 +67,7 @@
 }
 
 .profile-hero__since {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--lc-spacing-2);
   color: var(--lc-text-muted);
   font-size: 0.8rem;
 }
@@ -74,7 +75,8 @@
 .profile-hero__level {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--lc-spacing-3);
+  min-width: 0;
 }
 
 .profile-hero__level-bar {
@@ -103,21 +105,22 @@
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1.25rem;
+  gap: var(--lc-spacing-3);
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .profile-stat {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 1rem 1rem 0.85rem;
+  gap: var(--lc-spacing-2);
+  padding: var(--lc-spacing-4) var(--lc-spacing-4) var(--lc-spacing-3);
   background: var(--lc-bg-glass);
   backdrop-filter: blur(var(--lc-glass-blur));
   -webkit-backdrop-filter: blur(var(--lc-glass-blur));
   border: 1px solid var(--lc-glass-border);
   border-radius: var(--lc-radius-lg);
   box-shadow: var(--lc-shadow-sm);
+  min-width: 0;
   transition: border-color var(--lc-transition);
 }
 
@@ -163,21 +166,22 @@
 
 /* ── Section ── */
 .profile-section {
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--lc-spacing-5);
+  min-width: 0;
 }
 
 .profile-section__title {
   font-family: var(--lc-font-display);
   font-size: 1.1rem;
   font-weight: 700;
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--lc-spacing-3);
 }
 
 /* ── Badges ── */
 .profile-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  gap: var(--lc-spacing-3);
 }
 
 .profile-badge {
@@ -234,7 +238,7 @@
 
 /* ── Referral ── */
 .profile-referral {
-  padding: 1.25rem;
+  padding: var(--lc-spacing-5);
   background: var(--lc-bg-glass);
   backdrop-filter: blur(var(--lc-glass-blur));
   -webkit-backdrop-filter: blur(var(--lc-glass-blur));
@@ -244,13 +248,15 @@
 }
 
 .profile-referral__code-row {
-  margin-bottom: 1rem;
+  margin-bottom: var(--lc-spacing-4);
 }
 
 .profile-referral__code {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--lc-spacing-3);
+  min-width: 0;
+  flex-wrap: wrap;
 }
 
 .profile-referral__label {
@@ -267,14 +273,16 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--lc-crimson-soft);
-  padding: 0.3rem 0.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
   background: rgba(230, 57, 70, 0.08);
   border: 1px solid rgba(230, 57, 70, 0.2);
   border-radius: var(--lc-radius-md);
 }
 
 .profile-referral__copy {
-  padding: 0.4rem 0.85rem;
+  /* AGENT.md §Accessibility — interactive copy button must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   font-size: 0.8rem;
   font-weight: 600;
   border-radius: var(--lc-radius-md);
@@ -282,8 +290,8 @@
   color: var(--lc-text-primary);
   background: rgba(255, 255, 255, 0.04);
   cursor: pointer;
-  transition: background var(--lc-transition), border-color var(--lc-transition), color var(--lc-transition);
   min-width: 4.5rem;
+  transition: background var(--lc-transition), border-color var(--lc-transition), color var(--lc-transition);
 }
 
 .profile-referral__copy:hover {
@@ -300,14 +308,15 @@
 .profile-referral__stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--lc-spacing-4);
+  margin-bottom: var(--lc-spacing-4);
 }
 
 .profile-referral__stat {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--lc-spacing-1);
+  min-width: 0;
 }
 
 .profile-referral__stat-label {
@@ -322,7 +331,9 @@
 }
 
 .profile-referral__claim {
-  padding: 0.7rem 1.5rem;
+  /* AGENT.md §Accessibility — interactive claim button must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-5);
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: var(--lc-radius-md);
@@ -344,7 +355,7 @@
 }
 
 .profile-referral__msg {
-  margin: 0.5rem 0 0;
+  margin: var(--lc-spacing-2) 0 0;
   font-size: 0.85rem;
   color: var(--lc-emerald);
 }

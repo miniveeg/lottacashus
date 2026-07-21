@@ -64,10 +64,10 @@
 .lc-page__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 0.55rem;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
+  gap: var(--lc-spacing-2);
+  margin-bottom: var(--lc-spacing-3);
+  padding: var(--lc-spacing-1) var(--lc-spacing-3);
+  border-radius: var(--lc-radius-pill);
   background: rgba(220, 20, 60, 0.08);
   border: 1px solid rgba(220, 20, 60, 0.2);
   font-family: var(--lc-font-display);
@@ -100,27 +100,29 @@
 
 /* ── Panels ── */
 .lc-panel {
-  padding: 1.4rem 1.5rem;
+  padding: var(--lc-card-padding);
   background: var(--lc-bg-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-xl);
   box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
+  /* Keep panel content from blowing out its grid cell on long content. */
+  min-width: 0;
 }
 
-.lc-panel + .lc-panel { margin-top: 1rem; }
+.lc-panel + .lc-panel { margin-top: var(--lc-section-gap); }
 
 .lc-panel__title {
   font-family: var(--lc-font-display);
   font-weight: 700;
   font-size: 1.05rem;
   letter-spacing: -0.01em;
-  margin: 0 0 0.8rem;
+  margin: 0 0 var(--lc-spacing-4);
 }
 
 .lc-panel__desc {
-  margin: -0.35rem 0 1rem;
+  margin: calc(-1 * var(--lc-spacing-2)) 0 var(--lc-spacing-4);
   font-size: 0.87rem;
   font-weight: 500;
   line-height: 1.55;
@@ -132,15 +134,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.68rem 1.3rem;
+  gap: var(--lc-spacing-2);
+  padding: var(--lc-spacing-3) var(--lc-spacing-5);
   border-radius: var(--lc-radius-md);
   font-family: var(--lc-font-display);
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: var(--lc-text-sm);
   letter-spacing: 0.02em;
   line-height: 1.2;
   border: 1px solid transparent;
+  /* Audit (AGENT.md → Accessibility must-haves): 2.75rem = 44px — keeps
+     desktop CTAs at the WCAG 2.5.5 (AAA) / 2.5.8 (AA) target minimum
+     without the @media mobile bump. `rem` so user font scaling honors
+     the guarantee. */
+  min-height: var(--lc-target-min-desktop);
   transition: transform var(--lc-transition-spring), filter var(--lc-transition), background var(--lc-transition), border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
@@ -188,8 +195,8 @@
   color: var(--lc-text-secondary);
   background: transparent;
   border-color: transparent;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+  padding-left: var(--lc-spacing-3);
+  padding-right: var(--lc-spacing-3);
 }
 
 .lc-btn--ghost:hover:not(:disabled) { color: var(--lc-crimson-soft); }
@@ -200,28 +207,30 @@
 .help__tabs {
   display: inline-flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 0.25rem;
+  gap: var(--lc-row-gap);
+  padding: var(--lc-spacing-1);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
-  margin-bottom: 1.35rem;
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .lc-tab,
 .wallet__tab,
 .help__tab,
 .wallet__chain-btn {
-  padding: 0.5rem 1rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   font-family: var(--lc-font-display);
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: var(--lc-text-sm);
   letter-spacing: 0.02em;
   color: var(--lc-text-secondary);
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
+  /* Touch-target bump (matches .lc-btn). Tab triggers are interactive. */
+  min-height: var(--lc-target-min-desktop);
   transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
 }
 
@@ -243,7 +252,7 @@
 }
 
 .wallet__chain-picker {
-  padding: 0.25rem;
+  padding: var(--lc-spacing-1);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
@@ -251,9 +260,9 @@
 
 /* ── Alerts ── */
 .lc-alert {
-  padding: 0.75rem 1rem;
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
-  font-size: 0.88rem;
+  font-size: var(--lc-text-sm);
   font-weight: 600;
   line-height: 1.5;
 }
@@ -280,7 +289,7 @@
 
 /* ── Stat cards ── */
 .admin__stat {
-  padding: 1.1rem 1.2rem;
+  padding: var(--lc-spacing-4) var(--lc-spacing-4);
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);

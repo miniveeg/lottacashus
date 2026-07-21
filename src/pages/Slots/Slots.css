@@ -33,21 +33,23 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
+  gap: var(--lc-spacing-5);
   min-height: 0;
   height: 100%;
-  padding: 1.5rem 1rem;
+  padding: var(--lc-spacing-5) var(--lc-spacing-4);
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
   flex: 1;
+  min-width: 0;
 }
 
 .slots__reels {
   position: relative;
   display: flex;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
   perspective: 600px;
+  min-width: 0;
 }
 
 .slots__reel {
@@ -124,8 +126,12 @@
    states. Audit issue Agent 3: win-line drew unnecessary attention when idle. */
 .slots__win-line {
   position: absolute;
-  left: 0.65rem;
-  right: 0.65rem;
+  /* AGENT.md §Centering — vertical center via absolute positioning with
+     top:50% + transform:translateY(-50%). Acceptable here because the
+     element only needs to span horizontally, not be nested in a centering
+     layout. */
+  left: var(--lc-spacing-3);
+  right: var(--lc-spacing-3);
   top: 50%;
   height: 2px;
   transform: translateY(-50%);
@@ -192,7 +198,7 @@
   font-size: 1.1rem;
   font-weight: 500;
   color: var(--lc-emerald);
-  margin-top: 0.25rem;
+  margin-top: var(--lc-spacing-2);
 }
 
 .slots__outcome-loss {
@@ -226,16 +232,16 @@
 }
 
 .slots__fairness {
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: var(--lc-spacing-4);
+  padding-top: var(--lc-spacing-4);
   border-top: 1px solid var(--lc-border);
 }
 
 .slots__fairness-body {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+  gap: var(--lc-spacing-2);
+  margin-top: var(--lc-spacing-2);
 }
 
 .slots__fairness-label {
@@ -245,24 +251,30 @@
 
 .slots__fairness-input {
   font-size: 0.72rem;
+  min-width: 0;
+  field-sizing: content;
 }
 
 .slots__fairness-input--hash {
-  margin-top: 0.2rem;
+  margin-top: var(--lc-spacing-1);
 }
 
 .slots__fairness-row {
   display: flex;
-  gap: 0.4rem;
-  margin-top: 0.2rem;
+  gap: var(--lc-spacing-2);
+  margin-top: var(--lc-spacing-1);
+  min-width: 0;
 }
 
 .slots__fairness-save-btn {
-  min-height: 2.2rem;
+  /* AGENT.md §Accessibility — interactive save button must hit 44px desktop. */
+  min-height: 2.75rem;
   font-size: 0.72rem;
   margin: 0;
   width: auto;
-  padding: 0 0.75rem;
+  padding: 0 var(--lc-spacing-3);
+  border-radius: var(--lc-radius-sm);
+  font-weight: 600;
 }
 
 /* Reduced-motion: suppress decorative reel shake / land bounce / win pulse.
@@ -295,15 +307,15 @@
 
 /* ── Paytable display (audit R4) ── */
 .slots__paytable {
-  margin-bottom: 1rem;
-  padding: 0.85rem 1rem;
+  margin-bottom: var(--lc-spacing-4);
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   background: var(--lc-bg-base);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-md);
 }
 
 .slots__paytable-title {
-  margin: 0 0 0.6rem;
+  margin: 0 0 var(--lc-spacing-3);
   font-family: var(--lc-font-display);
   font-size: 0.82rem;
   font-weight: 700;
@@ -315,22 +327,23 @@
 .slots__paytable-grid {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 0.3rem 1rem;
+  gap: var(--lc-spacing-1) var(--lc-spacing-4);
   align-items: center;
 }
 
 .slots__paytable-row {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: var(--lc-spacing-2);
   font-size: 0.82rem;
   color: var(--lc-text-primary);
+  min-width: 0;
 }
 
 .slots__paytable-row--cherry {
   color: var(--lc-text-secondary);
   font-size: 0.78rem;
-  padding-left: 0.2rem;
+  padding-left: var(--lc-spacing-1);
 }
 
 .slots__paytable-mult {
@@ -346,7 +359,7 @@
 }
 
 .slots__paytable-rtp {
-  margin: 0.6rem 0 0;
+  margin: var(--lc-spacing-3) 0 0;
   font-family: var(--lc-font-mono);
   font-size: 0.72rem;
   font-weight: 600;
@@ -356,7 +369,7 @@
 
 /* Fairness notes (shared disclosure style from game-controls.css) */
 .slots__fairness-note {
-  margin-top: 0.5rem;
+  margin-top: var(--lc-spacing-2);
   color: var(--lc-text-muted);
   font-size: 0.78rem;
   line-height: 1.4;

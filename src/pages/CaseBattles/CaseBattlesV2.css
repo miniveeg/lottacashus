@@ -9,8 +9,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.7rem 1.4rem;
+  gap: var(--lc-spacing-2);
+  /* AGENT.md §Accessibility — 44px desktop touch target via rem so
+     browser font-scaling keeps the hit-area valid. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-5);
   font-family: var(--lc-font-display);
   font-size: 0.9rem;
   font-weight: 700;
@@ -60,11 +63,11 @@
 .cb-hub__coin-badge {
   display: inline-grid;
   place-items: center;
-  padding: 0.2rem 0.55rem;
+  padding: var(--lc-spacing-1) var(--lc-spacing-3);
   font-family: var(--lc-font-mono);
   font-size: 0.7rem;
   font-weight: 700;
-  border-radius: 999px;
+  border-radius: var(--lc-radius-pill);
   background: var(--lc-bg-active);
   color: var(--lc-text-secondary);
   border: 1px solid var(--lc-border-strong);
@@ -122,14 +125,16 @@
   display: grid;
   grid-template-columns: 1fr auto auto auto;
   align-items: center;
-  gap: 1rem;
-  padding: 0.85rem 1.1rem;
+  gap: var(--lc-spacing-4);
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   background: var(--lc-bg-glass);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-md);
   text-decoration: none;
   color: inherit;
   transition: border-color 0.15s, transform 0.15s;
+  /* AGENT.md §Single-row discipline — text children shouldn't blow out. */
+  min-width: 0;
 }
 .cb-hub__row:hover { border-color: var(--lc-border-accent); transform: translateY(-1px); }
 .cb-hub__row-info { display: flex; flex-direction: column; gap: 0.15rem; }
@@ -150,7 +155,7 @@
 .cb-hub__pot-value { font-family: var(--lc-font-mono); font-weight: 700; font-size: 0.9rem; color: var(--lc-amber); }
 .cb-status {
   font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-  padding: 0.2rem 0.5rem; border-radius: 999px;
+  padding: var(--lc-spacing-1) var(--lc-spacing-3); border-radius: var(--lc-radius-pill);
 }
 .cb-status--waiting { background: rgba(0,232,122,0.12); color: var(--lc-emerald); border: 1px solid rgba(0,232,122,0.3); }
 .cb-status--committing { background: rgba(245,185,66,0.12); color: var(--lc-amber); border: 1px solid rgba(245,185,66,0.3); }
@@ -181,11 +186,11 @@
 .cb-room__coin-badge {
   display: inline-grid;
   place-items: center;
-  padding: 0.2rem 0.55rem;
+  padding: var(--lc-spacing-1) var(--lc-spacing-3);
   font-family: var(--lc-font-mono);
   font-size: 0.7rem;
   font-weight: 700;
-  border-radius: 999px;
+  border-radius: var(--lc-radius-pill);
   letter-spacing: 0.06em;
   border: 1px solid var(--lc-border-strong);
 }
@@ -211,8 +216,9 @@
 .cb-arena { display: flex; flex-direction: column; gap: 1rem; }
 
 .cb-arena__rounds {
-  display: flex; gap: 0.4rem; justify-content: center;
-  padding: 0.5rem;
+  display: flex; gap: var(--lc-spacing-2); justify-content: center;
+  padding: var(--lc-spacing-2);
+  min-width: 0;
 }
 .cb-round-dot {
   display: grid; place-items: center;
@@ -486,8 +492,8 @@
 
 .cb-arena__results {
   text-align: center;
-  padding: 1.5rem;
-  margin-top: 1rem;
+  padding: var(--lc-spacing-5);
+  margin-top: var(--lc-spacing-4);
   background: var(--lc-bg-glass);
   border: 1px solid var(--lc-amber);
   border-radius: var(--lc-radius-md);
@@ -527,7 +533,9 @@
 
 .cb-create__pmodes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .cb-pmode {
-  padding: 0.45rem 0.85rem;
+  /* AGENT.md §Accessibility — interactive mode toggle must hit 44px desktop. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   background: var(--lc-bg-glass);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-sm);
@@ -570,13 +578,16 @@
 }
 .cb-case-card--selected { border-color: var(--lc-crimson); background: rgba(232,37,76,0.06); }
 .cb-case-card__count {
-  position: absolute; top: 0.3rem; right: 0.3rem;
+  /* AGENT.md §Accessibility must-haves — 44px hit area. Keep shape as a
+     circular badge so the visual still reads as a count overlay on thumbnails. */
+  position: absolute; top: var(--lc-spacing-2); right: var(--lc-spacing-2);
   display: grid; place-items: center;
-  width: 1.2rem; height: 1.2rem;
+  width: 2.75rem; height: 2.75rem;
+  padding: 0;
   background: var(--lc-crimson);
   color: #fff;
   border-radius: 50%;
-  font-size: 0.65rem; font-weight: 700;
+  font-size: 0.72rem; font-weight: 700;
 }
 .cb-case-card__name { font-size: 0.78rem; font-weight: 600; }
 .cb-case-card__price { font-family: var(--lc-font-mono); font-size: 0.72rem; color: var(--lc-amber); }
@@ -693,20 +704,22 @@
 .cb-create__case-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 0.6rem;
+  gap: var(--lc-spacing-3);
 }
 .cb-create__case-thumb-card {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem;
+  gap: var(--lc-spacing-2);
+  padding: var(--lc-spacing-3);
   background: var(--lc-bg-base);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-md);
   text-align: center;
   overflow: hidden;
+  /* AGENT.md §Single-row discipline — prevents thumb from overflowing. */
+  min-width: 0;
 }
 .cb-create__case-thumb-bg {
   display: grid;
@@ -742,29 +755,38 @@
   color: var(--lc-amber);
 }
 .cb-create__case-thumb-count {
+  /* Counter value isn't itself clickable, but to keep parity with
+     .cb-case-card__count (which is the same role in the picker modal),
+     use the same dimensions and shape. */
   position: absolute;
-  top: 0.3rem;
-  right: 0.3rem;
+  top: var(--lc-spacing-2);
+  right: var(--lc-spacing-2);
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
   background: var(--lc-crimson);
   color: #fff;
   font-family: var(--lc-font-mono);
   font-weight: 700;
-  font-size: 0.65rem;
-  padding: 0.1rem 0.35rem;
-  border-radius: 999px;
+  font-size: 0.72rem;
+  border-radius: 50%;
 }
 .cb-create__case-thumb-remove {
   position: absolute;
-  top: 0.3rem;
-  left: 0.3rem;
+  top: var(--lc-spacing-2);
+  left: var(--lc-spacing-2);
   display: grid;
   place-items: center;
-  width: 1.3rem;
-  height: 1.3rem;
+  /* AGENT.md §Accessibility — interactive remove must hit 44px desktop. */
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
   background: rgba(0,0,0,0.6);
   border: none;
   color: var(--lc-text-secondary);
-  border-radius: 4px;
+  border-radius: var(--lc-radius-sm);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
@@ -811,10 +833,12 @@
   margin-bottom: 1.5rem;
 }
 .cb-create__exit {
+  /* AGENT.md §Accessibility — 44px desktop touch target. */
+  min-height: 2.75rem;
   background: none;
   border: 1px solid var(--lc-border-strong);
   color: var(--lc-text-secondary);
-  padding: 0.4rem 0.85rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   border-radius: var(--lc-radius-sm);
   font-size: 0.82rem;
   cursor: pointer;
@@ -867,8 +891,10 @@
 .cb-type-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  padding: 0.45rem 0.75rem;
+  gap: var(--lc-spacing-2);
+  /* AGENT.md §Accessibility — 44px desktop touch target. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   background: var(--lc-bg-base);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-sm);
@@ -888,7 +914,9 @@
 /* Coin toggle */
 .cb-create__coin-toggle { display: flex; gap: 0.3rem; }
 .cb-coin-btn {
-  padding: 0.45rem 0.85rem;
+  /* AGENT.md §Accessibility — 44px desktop touch target. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   background: var(--lc-bg-base);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-sm);
@@ -908,26 +936,37 @@
 /* Toggle switch */
 .cb-toggle {
   position: relative;
-  width: 38px;
-  height: 22px;
+  /* AGENT.md §Accessibility — toggle is a focusable control; hit area
+     must reach 44px even though visual is smaller. We pad the inner
+     label and rely on the clickable box sizing up. */
+  width: 2.375rem;
+  height: 2.75rem;
   background: var(--lc-bg-active);
   border: 1px solid var(--lc-border-strong);
-  border-radius: 999px;
+  border-radius: var(--lc-radius-pill);
   cursor: pointer;
   transition: background 0.2s;
 }
 .cb-toggle--on { background: var(--lc-crimson-dim); border-color: var(--lc-crimson-soft); }
 .cb-toggle__knob {
   position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
+  /* Vertically center inside the 44px-tall toggle so the larger
+     touch-area doesn't shift the knob visually off-balanced. */
+  top: 50%;
+  left: var(--lc-spacing-1);
+  width: 1.25rem;
+  height: 1.25rem;
+  transform: translateY(-50%);
+  border-radius: var(--lc-radius-pill);
   background: var(--lc-text-muted);
   transition: transform 0.2s, background 0.2s;
 }
-.cb-toggle--on .cb-toggle__knob { transform: translateX(16px); background: #fff; }
+.cb-toggle--on .cb-toggle__knob {
+  /* Account for the larger knob 1.25rem (20px) in a 38px-wide box:
+     travel = 38 - 20 - 4 (left inset) - 4 (right gap) = 10px = 0.625rem. */
+  transform: translate(0.625rem, -50%);
+  background: #fff;
+}
 
 .cb-create__borrow-pct {
   font-family: var(--lc-font-mono);
@@ -940,11 +979,11 @@
 
 .cb-create__case-area {
   min-height: 200px;
-  padding: 1.25rem;
+  padding: var(--lc-spacing-5);
   background: var(--lc-bg-glass);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-md);
-  margin-bottom: 1rem;
+  margin-bottom: var(--lc-spacing-4);
 }
 
 .cb-create__add-cases-btn {
@@ -977,7 +1016,9 @@
 }
 .cb-create__case-list-actions { display: flex; gap: 0.5rem; }
 .cb-create__small-btn {
-  padding: 0.3rem 0.6rem;
+  /* AGENT.md §Accessibility — 44px desktop touch target even for "small" buttons. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
   background: var(--lc-bg-hover);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-sm);
@@ -1009,13 +1050,14 @@
 .cb-create__case-remove {
   display: grid;
   place-items: center;
-  width: 1.2rem;
-  height: 1.2rem;
+  /* AGENT.md §Accessibility — interactive remove must hit 44px desktop. */
+  width: 2.75rem;
+  height: 2.75rem;
   background: none;
   border: none;
   color: var(--lc-text-muted);
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: var(--lc-radius-sm);
   transition: background 0.15s, color 0.15s;
 }
 .cb-create__case-remove:hover { background: var(--lc-ruby); color: #fff; }
@@ -1043,6 +1085,8 @@
 
 /* ─── Case picker modal ──────────────────────────────────────────────────── */
 
+/* AGENT.md §Centering — modal overlay uses grid + place-items: center
+   so the modal box auto-centers without translate hacks. */
 .cb-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1051,7 +1095,7 @@
   backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
-  padding: 1rem;
+  padding: var(--lc-spacing-4);
 }
 .cb-modal {
   width: 100%;
@@ -1075,8 +1119,9 @@
 .cb-modal__close {
   display: grid;
   place-items: center;
-  width: 2rem;
-  height: 2rem;
+  /* AGENT.md §Accessibility — modal dismiss must hit 44px desktop. */
+  width: 2.75rem;
+  height: 2.75rem;
   background: none;
   border: none;
   color: var(--lc-text-muted);
@@ -1148,17 +1193,19 @@
 .cb-modal__case-card--selected { border-color: var(--lc-crimson); background: rgba(232,37,76,0.06); }
 .cb-modal__case-card:disabled { opacity: 0.4; cursor: not-allowed; }
 .cb-modal__case-count {
+  /* Keep circular badge — only the dimensions grow for the 44px touch floor. */
   position: absolute;
-  top: 0.3rem;
-  right: 0.3rem;
+  top: var(--lc-spacing-2);
+  right: var(--lc-spacing-2);
   display: grid;
   place-items: center;
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
   background: var(--lc-crimson);
   color: #fff;
   border-radius: 50%;
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 .cb-modal__case-thumb {
@@ -1249,14 +1296,17 @@
 }
 .cb-create__case-thumb-drag {
   position: absolute;
-  top: 0.3rem;
-  left: 0.3rem;
+  top: var(--lc-spacing-2);
+  left: var(--lc-spacing-2);
   display: grid;
   place-items: center;
-  width: 1.3rem;
-  height: 1.3rem;
+  /* Bumped to 44px so the drag-handle is also reachable on touch + desktop
+     (was 1.3rem = 20.8px — below the AGENT.md a11y floor). */
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
   background: rgba(0, 0, 0, 0.45);
-  border-radius: 4px;
+  border-radius: var(--lc-radius-sm);
   color: var(--lc-text-muted);
   cursor: grab;
 }
@@ -1275,14 +1325,15 @@
 .cb-create__counter-btn {
   display: grid;
   place-items: center;
-  width: 1.25rem;
-  height: 1.25rem;
+  /* AGENT.md §Accessibility — interactive +/- counter must hit 44px desktop. */
+  width: 2.75rem;
+  height: 2.75rem;
   border-radius: 50%;
   background: var(--lc-bg-active);
   border: 1px solid var(--lc-border-strong);
   color: var(--lc-text-secondary);
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 1rem;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .cb-create__counter-btn:hover:not(:disabled) {
@@ -1309,8 +1360,9 @@
 .cb-modal__case-step-btn {
   display: grid;
   place-items: center;
-  width: 1.55rem;
-  height: 1.55rem;
+  /* AGENT.md §Accessibility — interactive +/- stepper must hit 44px desktop. */
+  width: 2.75rem;
+  height: 2.75rem;
   background: var(--lc-bg-base);
   border: 1px solid var(--lc-border-strong);
   border-radius: 50%;
@@ -1351,7 +1403,8 @@
   display: grid;
   place-items: center;
   width: 100%;
-  padding: 0.6rem 0.5rem;
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
   background: transparent;
   border: 1.5px dashed var(--lc-border-strong);
   border-radius: var(--lc-radius-sm);
@@ -1419,6 +1472,8 @@
   box-shadow: 0 0 14px var(--lc-amber-glow-strong);
 }
 .cb-jackpot__pointer::after {
+  /* Caret triangle above the jackpot pointer. Numeric literals kept
+     literal because it's a triangle, not a layout value. */
   content: "";
   position: absolute;
   top: -6px;
@@ -1486,7 +1541,7 @@
   border-left: 1px solid var(--lc-amber);
 }
 .cb-jackpot__tile--dimmed {
-  opacity: 0.45;
+  opacity: 0.4;
   filter: grayscale(0.7);
 }
 .cb-jackpot__pct-label {

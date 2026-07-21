@@ -142,6 +142,34 @@ select option {
 
 .lc-field select, .lc-field .lc-select-root { width: 100%; }
 
+/* ── Flex/row/col utilities (audit: AGENT.md → Single-row discipline) ──
+   The single most common "two-rows when it should be one" bug is a
+   flex/grid child without `min-width: 0` — its intrinsic content size
+   locks the column and forces a wrap. Baking `min-width: 0` into every
+   `.lc-row` / `.lc-col` utility makes the discipline implicit: any
+   developer who wraps text in `class="lc-row"` gets the right behavior
+   without needing to remember the rule. Use these for inline rows of
+   labels, badges, tabs, etc. For larger layouts use the existing
+   per-component classes (`.lc-page`, `.lc-panel`, game-control panels). */
+.lc-flex,
+.lc-row,
+.lc-col {
+  display: flex;
+  min-width: 0;
+}
+.lc-row { flex-direction: row; flex-wrap: wrap; gap: var(--lc-row-gap); }
+.lc-col { flex-direction: column; gap: var(--lc-row-gap); }
+.lc-flex-center { align-items: center; justify-content: center; }
+
+/* Outer-wrapper `min-width: 0` (audit: AGENT.md → Single-row discipline).
+   These classes are the inline-flex / grid children of `app-shell__main`.
+   Without `min-width: 0`, a single long word or un-broken URL inside
+   `.lc-page` can blow out the panel width on small viewports and cause
+   horizontal scroll. Cheap insurance against the bug class. */
+.lc-page,
+.lc-page-transition,
+.lc-game-page { min-width: 0; }
+
 .visually-hidden {
   position: absolute;
   width: 1px; height: 1px;

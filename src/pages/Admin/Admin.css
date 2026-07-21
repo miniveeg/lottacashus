@@ -114,6 +114,11 @@
   border-radius: var(--lc-radius-md);
   backdrop-filter: blur(12px);
   transition: border-color var(--lc-transition);
+  /* Audit (AGENT.md §Single-row discipline): cards in the auto-fit grid
+     are flex children; without min-width:0 a long admin username or
+     a wide stat label locks the column to its intrinsic content size
+     and forces a wrap. */
+  min-width: 0;
 }
 
 .admin__stat-card:hover {
@@ -166,12 +171,12 @@
 /* ── Tabs ── */
 .admin__tabs {
   display: flex;
-  gap: 0.3rem;
-  padding: 0.35rem;
+  gap: var(--lc-row-gap);
+  padding: var(--lc-spacing-1);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-md);
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--lc-spacing-4);
   overflow-x: auto;
   scrollbar-width: thin;
 }
@@ -216,7 +221,7 @@
   font-weight: 700;
   color: var(--lc-crimson-soft);
   background: rgba(220, 20, 60, 0.15);
-  border-radius: 999px;
+  border-radius: var(--lc-radius-pill);
 }
 
 .admin__tab--active .admin__tab-badge {
@@ -401,7 +406,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 0.3rem 0.6rem;
-  border-radius: 999px;
+  border-radius: var(--lc-radius-pill);
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -666,6 +671,10 @@
   gap: 1rem;
   padding: 0.85rem 0;
   border-bottom: 1px solid var(--lc-border);
+  /* Audit (AGENT.md §Single-row discipline): the row is a flex container;
+     with no min-width:0, a long email address or Discord handle in the
+     info column locks the column and pushes the action group off-screen. */
+  min-width: 0;
 }
 
 .admin__user-row:last-child {

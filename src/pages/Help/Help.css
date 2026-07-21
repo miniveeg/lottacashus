@@ -3,7 +3,7 @@
 }
 
 .help__header {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .help__title {
@@ -11,7 +11,7 @@
   font-weight: 800;
   font-size: 1.75rem;
   letter-spacing: -0.02em;
-  margin-bottom: 0.35rem;
+  margin-bottom: var(--lc-spacing-2);
 }
 
 .help__subtitle {
@@ -22,18 +22,24 @@
 
 .help__tabs {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.25rem;
+  gap: var(--lc-spacing-2);
+  margin-bottom: var(--lc-spacing-5);
+  min-width: 0;
 }
 
 .help__tab {
-  padding: 0.55rem 1.1rem;
+  /* AGENT.md §Accessibility — interactive tab must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   font-weight: 600;
   font-size: 0.875rem;
   color: var(--lc-text-secondary);
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
   transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition);
 }
 
@@ -49,7 +55,7 @@
 }
 
 .help__panel {
-  padding: 1.25rem;
+  padding: var(--lc-spacing-5);
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-xl);
@@ -61,7 +67,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
 }
 
 .help__faq-item {
@@ -75,13 +81,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--lc-spacing-4);
   width: 100%;
-  padding: 0.85rem 1rem;
+  /* AGENT.md §Accessibility — interactive FAQ question toggle must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   text-align: left;
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--lc-text-primary);
+  background: transparent;
+  border: none;
+  min-width: 0;
   transition: background var(--lc-transition);
 }
 
@@ -99,14 +110,14 @@
 }
 
 .help__faq-answer {
-  padding: 0 1rem 1rem;
+  padding: 0 var(--lc-spacing-4) var(--lc-spacing-4);
   font-size: 0.875rem;
   line-height: 1.55;
   color: var(--lc-text-secondary);
 }
 
 .help__contact {
-  margin: 1.25rem 0 0;
+  margin: var(--lc-spacing-5) 0 0;
   font-size: 0.875rem;
   color: var(--lc-text-muted);
 }
@@ -123,7 +134,7 @@
 .help__tos {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--lc-spacing-4);
 }
 
 .help__tos-meta {
@@ -173,17 +184,17 @@
   .help__tab {
     flex: 1;
     text-align: center;
-    padding: 0.55rem 0.5rem;
+    padding: var(--lc-spacing-2) var(--lc-spacing-2);
     font-size: 0.8rem;
   }
 
   .help__panel {
-    padding: 1rem;
+    padding: var(--lc-spacing-4);
   }
 
   .help__faq-question {
     font-size: 0.85rem;
-    padding: 0.75rem 0.85rem;
+    padding: var(--lc-spacing-3) var(--lc-spacing-3);
   }
 }
 
@@ -205,12 +216,16 @@
 .help__search-input {
   flex: 1;
   width: 100%;
-  padding: 0.65rem 2.5rem 0.65rem 2.4rem;
+  /* AGENT.md §Accessibility — search input must hit 44px desktop. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) 2.5rem var(--lc-spacing-2) 2.4rem;
   font-size: 0.9rem;
   color: var(--lc-text-primary);
   background: var(--lc-bg-base);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-md);
+  min-width: 0;
+  field-sizing: content;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
@@ -234,9 +249,10 @@
   right: 0.5rem;
   display: grid;
   place-items: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
+  /* AGENT.md §Accessibility — interactive clear button must hit 44px. */
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--lc-radius-pill);
   color: var(--lc-text-muted);
   background: transparent;
   border: none;
@@ -252,19 +268,21 @@
 /* Empty search state */
 .help__faq-empty {
   text-align: center;
-  padding: 2.5rem 1.5rem;
+  padding: var(--lc-spacing-12) var(--lc-spacing-5);
   color: var(--lc-text-muted);
 }
 
 .help__faq-empty p {
-  margin: 0 0 1rem;
+  margin: 0 0 var(--lc-spacing-4);
   font-size: 0.95rem;
 }
 
 .help__faq-empty-btn {
   display: inline-flex;
   align-items: center;
-  padding: 0.5rem 1.1rem;
+  /* AGENT.md §Accessibility — interactive \"clear search\" button must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--lc-text-secondary);

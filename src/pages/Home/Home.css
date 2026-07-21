@@ -5,8 +5,8 @@
   display: flex;
   align-items: center;
   min-height: min(420px, 70vh);
-  margin-bottom: 3rem;
-  padding: 3rem clamp(1.5rem, 4vw, 3rem);
+  margin-bottom: var(--lc-spacing-12);
+  padding: var(--lc-spacing-12) clamp(1.5rem, 4vw, 3rem);
   border-radius: var(--lc-radius-2xl);
   overflow: hidden;
 }
@@ -29,10 +29,10 @@
 .home__eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-bottom: 1rem;
-  padding: 0.28rem 0.8rem;
-  border-radius: 999px;
+  gap: var(--lc-spacing-2);
+  margin-bottom: var(--lc-spacing-4);
+  padding: var(--lc-spacing-1) var(--lc-spacing-4);
+  border-radius: var(--lc-radius-pill);
   background: rgba(220, 20, 60, 0.1);
   border: 1px solid rgba(220, 20, 60, 0.25);
   font-family: var(--lc-font-display);
@@ -49,7 +49,7 @@
   font-size: var(--lc-text-2xl);
   letter-spacing: -0.04em;
   line-height: 1.05;
-  margin: 0 0 1rem;
+  margin: 0 0 var(--lc-spacing-4);
 }
 
 .home__headline span {
@@ -61,7 +61,7 @@
 }
 
 .home__lead {
-  margin: 0 0 1.75rem;
+  margin: 0 0 var(--lc-spacing-6);
   font-size: var(--lc-text-sm);
   line-height: 1.65;
   color: var(--lc-text-secondary);
@@ -71,7 +71,8 @@
 .home__cta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  gap: var(--lc-spacing-3);
+  min-width: 0;
 }
 
 /* Sections */
@@ -80,7 +81,7 @@
   font-weight: 800;
   font-size: var(--lc-text-lg);
   letter-spacing: -0.02em;
-  margin: 0 0 0.85rem;
+  margin: 0 0 var(--lc-spacing-3);
 }
 
 .home__section-text {
@@ -92,21 +93,23 @@
 }
 
 .home__intro {
-  margin-bottom: 3rem;
+  margin-bottom: var(--lc-spacing-12);
+  min-width: 0;
 }
 
 .home__pillars {
-  margin-bottom: 3rem;
+  margin-bottom: var(--lc-spacing-12);
+  min-width: 0;
 }
 
 .home__pillar-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
-  gap: 1rem;
+  gap: var(--lc-spacing-4);
 }
 
 .home__pillar {
-  padding: 1.35rem 1.25rem;
+  padding: var(--lc-spacing-4) var(--lc-spacing-4);
   background: var(--lc-bg-glass);
   backdrop-filter: blur(16px);
   border: 1px solid var(--lc-border);
@@ -115,6 +118,7 @@
   /* No hover state: these cards are informational only (no link target).
      The 3D tilt from TiltCard provides the only visual hover feedback,
      which is intentionally decorative rather than an affordance. */
+  min-width: 0;
 }
 
 .home__pillar-icon {
@@ -122,7 +126,7 @@
   place-items: center;
   width: 2.75rem;
   height: 2.75rem;
-  margin-bottom: 0.85rem;
+  margin-bottom: var(--lc-spacing-3);
   border-radius: var(--lc-radius-md);
   background: rgba(220, 20, 60, 0.1);
   border: 1px solid rgba(220, 20, 60, 0.2);
@@ -133,7 +137,7 @@
   font-family: var(--lc-font-display);
   font-weight: 700;
   font-size: 1.05rem;
-  margin: 0 0 0.4rem;
+  margin: 0 0 var(--lc-spacing-2);
 }
 
 .home__pillar-desc {
@@ -148,9 +152,9 @@
   position: relative;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-bottom: 3rem;
-  padding: 2rem;
+  gap: var(--lc-spacing-5);
+  margin-bottom: var(--lc-spacing-12);
+  padding: var(--lc-spacing-8);
   border-radius: var(--lc-radius-xl);
   border: 1px solid var(--lc-border);
   background: var(--lc-bg-panel);
@@ -172,7 +176,7 @@
 .home__roadmap-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--lc-spacing-3);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -181,10 +185,11 @@
 .home__roadmap-list li {
   display: flex;
   align-items: flex-start;
-  gap: 0.65rem;
+  gap: var(--lc-spacing-3);
   font-size: 0.92rem;
   line-height: 1.5;
   color: var(--lc-text-secondary);
+  min-width: 0;
 }
 
 .home__roadmap-list a {
@@ -214,11 +219,12 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.5rem 1.75rem;
+  gap: var(--lc-spacing-4);
+  padding: var(--lc-spacing-5) var(--lc-spacing-6);
   border-radius: var(--lc-radius-xl);
   border: 1px dashed var(--lc-border-strong);
   background: rgba(255, 255, 255, 0.02);
+  min-width: 0;
 }
 
 .home__footer-cta-text {
@@ -230,7 +236,7 @@
 @media (max-width: 768px) {
   .home__hero {
     min-height: auto;
-    padding: 2rem 1.25rem;
+    padding: var(--lc-spacing-6) var(--lc-spacing-4);
   }
 
   .home__pillar-grid {

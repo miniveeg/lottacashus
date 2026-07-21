@@ -28,9 +28,11 @@
 /* One-off fix: the `.lc-alert` system used by <FormAlert> needs a
    slightly tighter margin-top when it sits in a form section. The 12+
    per-page error classes this replaced (`.auth-error`, `.bj__error`,
-   `.mines__error`, ...) all added the same margin-top ~0.5rem inline. */
+   `.mines__error`, ...) all added the same margin-top ~0.5rem inline.
+   Audit (AGENT.md §Proportionality): margin-bottom now resolves through
+   the spacing scale instead of an arbitrary rem value. */
 .auth-card .lc-alert,
 .auth-form .lc-alert {
   margin-top: 0;
-  margin-bottom: 0.85rem;
+  margin-bottom: var(--lc-spacing-3);
 }

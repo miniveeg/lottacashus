@@ -1,12 +1,13 @@
 .responsible-gaming__panel {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .responsible-gaming__panel-head {
   display: flex;
-  gap: 1rem;
+  gap: var(--lc-spacing-4);
   align-items: flex-start;
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--lc-spacing-5);
+  min-width: 0;
 }
 
 .responsible-gaming__panel-head > svg {
@@ -15,7 +16,7 @@
 }
 
 .responsible-gaming__panel-title {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--lc-spacing-2);
   font-family: var(--lc-font-display);
   font-size: 1.15rem;
   font-weight: 700;
@@ -32,30 +33,31 @@
 .responsible-gaming__tools,
 .responsible-gaming__resources {
   list-style: none;
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--lc-spacing-5);
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: var(--lc-spacing-4);
 }
 
 .responsible-gaming__tools li,
 .responsible-gaming__resources li {
   display: flex;
-  gap: 0.85rem;
+  gap: var(--lc-spacing-3);
   align-items: flex-start;
+  min-width: 0;
 }
 
 .responsible-gaming__tools svg,
 .responsible-gaming__resources svg {
   flex-shrink: 0;
   color: var(--lc-crimson-soft);
-  margin-top: 0.1rem;
+  margin-top: var(--lc-spacing-1);
 }
 
 .responsible-gaming__tool-title,
 .responsible-gaming__resource-title {
-  margin: 0 0 0.25rem;
+  margin: 0 0 var(--lc-spacing-1);
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--lc-text-primary);
@@ -75,7 +77,7 @@
 }
 
 .responsible-gaming__cta {
-  margin-top: 0.5rem;
+  margin-top: var(--lc-spacing-2);
 }
 
 .responsible-gaming__panel--crisis {
@@ -93,12 +95,12 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: var(--lc-spacing-3);
 }
 
 .responsible-gaming__commitments li {
   position: relative;
-  padding-left: 1.5rem;
+  padding-left: var(--lc-spacing-5);
   font-size: 0.88rem;
   line-height: 1.55;
   color: var(--lc-text-secondary);

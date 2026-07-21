@@ -1,20 +1,20 @@
 .redeem {
   max-width: min(520px, 94vw);
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: var(--lc-spacing-6) var(--lc-spacing-4);
 }
 
 .redeem__card {
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-lg);
-  padding: 1.5rem;
+  padding: var(--lc-spacing-5);
 }
 
 .redeem__balance {
   text-align: center;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.25rem;
+  padding-bottom: var(--lc-spacing-5);
+  margin-bottom: var(--lc-spacing-5);
   border-bottom: 1px solid var(--lc-border);
 }
 
@@ -31,17 +31,17 @@
   font-size: 2rem;
   font-weight: 700;
   color: var(--lc-emerald);
-  margin-top: 0.25rem;
+  margin-top: var(--lc-spacing-2);
 }
 
 .redeem__rate {
   font-size: 0.82rem;
   color: var(--lc-text-muted);
-  margin-top: 0.25rem;
+  margin-top: var(--lc-spacing-2);
 }
 
 .redeem__field {
-  margin-bottom: 1rem;
+  margin-bottom: var(--lc-spacing-4);
 }
 
 .redeem__label {
@@ -49,13 +49,14 @@
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--lc-text-secondary);
-  margin-bottom: 0.35rem;
+  margin-bottom: var(--lc-spacing-2);
 }
 
 .redeem__input {
   width: 100%;
-  min-height: 2.6rem;
-  padding: 0.5rem 0.75rem;
+  /* AGENT.md §Accessibility — input must hit 44px desktop. Was 2.6rem (41.6px). */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
   font-family: var(--lc-font-mono);
   font-size: 1.05rem;
   font-weight: 500;
@@ -63,6 +64,8 @@
   background: var(--lc-bg);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-md);
+  min-width: 0;
+  field-sizing: content;
   box-sizing: border-box;
 }
 
@@ -75,11 +78,11 @@
 .redeem__info {
   font-size: 0.78rem;
   color: var(--lc-text-muted);
-  margin-top: 0.35rem;
+  margin-top: var(--lc-spacing-2);
 }
 
 .redeem__info--payout {
-  margin-bottom: 1rem;
+  margin-bottom: var(--lc-spacing-4);
   color: var(--lc-emerald);
   word-break: break-all;
   line-height: 1.5;
@@ -87,12 +90,15 @@
 
 .redeem__chain-picker {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
+  min-width: 0;
 }
 
 .redeem__chain-btn {
   flex: 1;
-  padding: 0.75rem 0.5rem;
+  /* AGENT.md §Accessibility — interactive chain selector must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-3) var(--lc-spacing-2);
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border-strong);
   background: var(--lc-bg);
@@ -102,6 +108,7 @@
   letter-spacing: 0.04em;
   color: var(--lc-text-secondary);
   cursor: pointer;
+  min-width: 0;
   transition: border-color var(--lc-transition), color var(--lc-transition), background var(--lc-transition);
 }
 
@@ -129,11 +136,12 @@
 
 .redeem__submit {
   width: 100%;
+  /* AGENT.md §Accessibility — submit button already 3rem = 48px ✓. Was unchanged. */
   min-height: 3rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
   border-radius: var(--lc-radius-lg);
   font-family: var(--lc-font-display);
   font-size: 0.92rem;
@@ -147,9 +155,9 @@
 }
 
 .redeem__submit-spinner {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
+  width: var(--lc-spacing-4);
+  height: var(--lc-spacing-4);
+  border-radius: var(--lc-radius-pill);
   border: 2px solid currentColor;
   border-top-color: transparent;
   animation: redeem-submit-spin 0.7s linear infinite;
@@ -173,11 +181,11 @@
   color: var(--lc-ruby);
   font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--lc-spacing-3);
 }
 
 .redeem__login-hint {
-  margin: 1.5rem 0 0;
+  margin: var(--lc-spacing-5) 0 0;
   font-size: 0.95rem;
   color: var(--lc-text-secondary);
   text-align: center;
@@ -197,7 +205,7 @@
 .redeem__chain-fieldset {
   border: none;
   padding: 0;
-  margin: 0 0 1rem;
+  margin: 0 0 var(--lc-spacing-4);
 }
 
 .redeem__chain-fieldset .redeem__label {
@@ -207,13 +215,13 @@
 
 .redeem__success {
   text-align: center;
-  padding: 2rem 1rem;
+  padding: var(--lc-spacing-6) var(--lc-spacing-4);
 }
 
 .redeem__success-icon {
   display: flex;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--lc-spacing-2);
   color: var(--lc-emerald);
 }
 
@@ -222,7 +230,7 @@
   font-size: 1.2rem;
   font-weight: 800;
   color: var(--lc-emerald);
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--lc-spacing-2);
 }
 
 .redeem__success-desc {
@@ -234,11 +242,11 @@
 
 @media (max-width: 640px) {
   .redeem {
-    padding: 1.25rem 0.75rem;
+    padding: var(--lc-spacing-5) var(--lc-spacing-3);
   }
 
   .redeem__card {
-    padding: 1.1rem;
+    padding: var(--lc-spacing-4);
   }
 
   .redeem__balance-value {

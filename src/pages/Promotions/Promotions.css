@@ -1,16 +1,17 @@
 .promos__header {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .promos__affiliate {
-  margin-bottom: 2.5rem;
+  margin-bottom: var(--lc-spacing-12);
 }
 
 .promos__affiliate-head {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--lc-spacing-5);
   align-items: flex-start;
-  margin-bottom: 1.25rem;
+  margin-bottom: var(--lc-spacing-5);
+  min-width: 0;
 }
 
 .promos__affiliate-icon {
@@ -24,21 +25,22 @@
 
 .promos__rate-list {
   list-style: none;
-  margin: 0 0 1.5rem;
+  margin: 0 0 var(--lc-spacing-5);
   padding: 0;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 0.75rem;
+  gap: var(--lc-spacing-3);
 }
 
 .promos__rate-list li {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.85rem 1rem;
+  gap: var(--lc-spacing-1);
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border);
   background: rgba(0, 0, 0, 0.15);
+  min-width: 0;
 }
 
 .promos__rate-label {
@@ -67,7 +69,7 @@
 }
 
 .promos__affiliate-success {
-  margin: 0 0 1rem;
+  margin: 0 0 var(--lc-spacing-4);
   color: var(--lc-amber);
   font-size: 0.9rem;
   font-weight: 600;
@@ -78,12 +80,13 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-  padding: 1.1rem 1.25rem;
+  gap: var(--lc-spacing-4);
+  margin-bottom: var(--lc-spacing-5);
+  padding: var(--lc-spacing-4) var(--lc-spacing-5);
   border-radius: var(--lc-radius-lg);
   border: 1px solid var(--lc-border-amber);
   background: linear-gradient(145deg, var(--lc-amber-glow), transparent);
+  min-width: 0;
 }
 
 .promos__affiliate-claim-amount {
@@ -95,7 +98,7 @@
 }
 
 .promos__affiliate-claim-hint {
-  margin: 0.25rem 0 0;
+  margin: var(--lc-spacing-2) 0 0;
   font-size: 0.8rem;
   color: var(--lc-text-secondary);
 }
@@ -110,21 +113,22 @@
 }
 
 .promos__affiliate-referral {
-  margin-bottom: 1.25rem;
-  padding: 1rem 1.1rem;
+  margin-bottom: var(--lc-spacing-5);
+  padding: var(--lc-spacing-4) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border);
   background: rgba(0, 0, 0, 0.12);
+  min-width: 0;
 }
 
 .promos__affiliate-referral-title {
-  margin: 0 0 0.35rem;
+  margin: 0 0 var(--lc-spacing-2);
   font-size: 0.95rem;
   font-weight: 600;
 }
 
 .promos__affiliate-referral-text {
-  margin: 0 0 0.85rem;
+  margin: 0 0 var(--lc-spacing-3);
   font-size: 0.875rem;
   color: var(--lc-text-secondary);
   line-height: 1.5;
@@ -133,7 +137,8 @@
 .promos__affiliate-referral-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  gap: var(--lc-spacing-3);
+  min-width: 0;
 }
 
 .promos__affiliate-referral-row .promos__affiliate-link-input {
@@ -141,8 +146,8 @@
 }
 
 .promos__affiliate-referrer-set {
-  margin: 0 0 1.25rem;
-  padding: 0.75rem 1rem;
+  margin: 0 0 var(--lc-spacing-5);
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border);
   background: rgba(120, 200, 140, 0.08);
@@ -156,7 +161,7 @@
 }
 
 .promos__affiliate-label {
-  margin: 0 0 0.35rem;
+  margin: 0 0 var(--lc-spacing-2);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -169,8 +174,8 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap: var(--lc-spacing-4);
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .promos__affiliate-code {
@@ -189,41 +194,46 @@
 }
 
 .promos__affiliate-link-row {
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .promos__affiliate-link-wrap {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  gap: var(--lc-spacing-3);
+  min-width: 0;
 }
 
 .promos__affiliate-link-input {
   flex: 1 1 12rem;
   min-width: 0;
-  padding: 0.55rem 0.75rem;
+  /* AGENT.md §Accessibility — input must hit 44px desktop. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border);
   background: var(--lc-bg-base);
   color: var(--lc-text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
+  field-sizing: content;
 }
 
 .promos__affiliate-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: var(--lc-spacing-3);
+  margin-bottom: var(--lc-spacing-5);
 }
 
 .promos__affiliate-stat {
-  padding: 0.9rem 1rem;
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border);
   background: rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: var(--lc-spacing-1);
+  min-width: 0;
 }
 
 .promos__affiliate-stat-value {
@@ -237,7 +247,7 @@
 }
 
 .promos__affiliate-recent-title {
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--lc-spacing-3);
   font-size: 0.95rem;
   font-weight: 600;
 }
@@ -248,7 +258,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
 }
 
 .promos__affiliate-recent-item {
@@ -256,11 +266,12 @@
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.75rem 0.9rem;
+  gap: var(--lc-spacing-2);
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   border: 1px solid var(--lc-border);
   font-size: 0.875rem;
+  min-width: 0;
 }
 
 .promos__affiliate-recent-meta {
@@ -272,7 +283,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 0.15rem;
+  gap: var(--lc-spacing-1);
 }
 
 .promos__affiliate-recent-amount {
@@ -287,17 +298,18 @@
 
 .promos__hero {
   display: flex;
-  gap: 1.5rem;
+  gap: var(--lc-spacing-5);
   align-items: flex-start;
-  margin-bottom: 2.5rem;
+  margin-bottom: var(--lc-spacing-12);
+  min-width: 0;
 }
 
 .promos__hero-icon {
   font-size: 2.5rem;
   line-height: 1;
   flex-shrink: 0;
-  width: 4rem;
-  height: 4rem;
+  width: var(--lc-spacing-12);
+  height: var(--lc-spacing-12);
   display: grid;
   place-items: center;
   border-radius: var(--lc-radius-lg);
@@ -306,14 +318,14 @@
 }
 
 .promos__hero-title {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--lc-spacing-2);
   font-family: var(--lc-font-display);
   font-size: 1.25rem;
   font-weight: 700;
 }
 
 .promos__hero-text {
-  margin: 0 0 1rem;
+  margin: 0 0 var(--lc-spacing-4);
   color: var(--lc-text-secondary);
   line-height: 1.55;
   max-width: 52ch;
@@ -322,14 +334,20 @@
 .promos__hero-cta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.65rem;
+  gap: var(--lc-spacing-3);
+  min-width: 0;
 }
 
 .promos__btn {
-  padding: 0.55rem 1.1rem;
+  /* AGENT.md §Accessibility — interactive button must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   font-weight: 600;
   font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .promos__btn--gold {
@@ -357,21 +375,22 @@
 .promos__grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
-  gap: 1.1rem;
-  margin-bottom: 2rem;
+  gap: var(--lc-spacing-4);
+  margin-bottom: var(--lc-spacing-6);
 }
 
 .promos__card {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 1.5rem 1.4rem 1.3rem;
+  padding: var(--lc-spacing-5) var(--lc-spacing-4) var(--lc-spacing-4);
   background: var(--lc-bg-glass);
   backdrop-filter: blur(16px);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
   box-shadow: var(--lc-shadow-sm);
   overflow: hidden;
+  min-width: 0;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition), transform var(--lc-transition);
 }
 
@@ -412,9 +431,9 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding: 0.22rem 0.55rem;
-  border-radius: 999px;
-  margin-bottom: 0.8rem;
+  padding: var(--lc-spacing-1) var(--lc-spacing-3);
+  border-radius: var(--lc-radius-pill);
+  margin-bottom: var(--lc-spacing-3);
 }
 
 .promos__card-badge--new {
@@ -439,7 +458,7 @@
   font-family: var(--lc-font-display);
   font-weight: 700;
   font-size: 1.15rem;
-  margin: 0 0 0.3rem;
+  margin: 0 0 var(--lc-spacing-2);
 }
 
 .promos__card-amount {
@@ -447,7 +466,7 @@
   font-weight: 800;
   font-size: 1.35rem;
   color: var(--lc-text-primary);
-  margin: 0 0 0.6rem;
+  margin: 0 0 var(--lc-spacing-3);
   letter-spacing: -0.01em;
 }
 
@@ -456,14 +475,16 @@
   font-size: 0.85rem;
   line-height: 1.55;
   color: var(--lc-text-secondary);
-  margin: 0 0 1rem;
+  margin: 0 0 var(--lc-spacing-4);
 }
 
 .promos__card-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.6rem 1.1rem;
+  /* AGENT.md §Accessibility — interactive card CTA must hit 44px. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   font-family: var(--lc-font-display);
   font-size: 0.85rem;
   font-weight: 700;

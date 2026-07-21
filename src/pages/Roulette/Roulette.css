@@ -45,12 +45,13 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+  gap: var(--lc-spacing-3);
+  margin-bottom: var(--lc-spacing-4);
+  min-width: 0;
 }
 
 .roulette__toolbar-label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--lc-text-muted);
   margin-right: auto;
 }
@@ -58,13 +59,14 @@
 .roulette__history {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--lc-spacing-2);
 }
 
 .roulette__history-chip {
   min-width: 1.75rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 6px;
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-1) var(--lc-spacing-2);
+  border-radius: var(--lc-radius-sm);
   font-size: 0.7rem;
   font-weight: 700;
   text-align: center;
@@ -105,15 +107,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 0 1rem;
+  padding: var(--lc-spacing-2) 0 var(--lc-spacing-4);
   min-height: 0;
   height: 100%;
   flex: 1;
 }
 
 .roulette__paytable-wrap {
-  margin-top: 0.25rem;
-  padding-top: 1rem;
+  margin-top: var(--lc-spacing-2);
+  padding-top: var(--lc-spacing-4);
   border-top: 1px solid var(--lc-border);
 }
 
@@ -128,17 +130,17 @@
 .roulette__paytable {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--lc-spacing-2);
 }
 
 .roulette__paytable-cell {
   flex: 1 1 4.5rem;
   min-width: 4rem;
   text-align: center;
-  padding: 0.35rem 0.25rem;
+  padding: var(--lc-spacing-1) var(--lc-spacing-2);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border);
-  border-radius: 6px;
+  border-radius: var(--lc-radius-sm);
   opacity: 0.55;
 }
 
@@ -163,7 +165,7 @@
 .roulette__bet-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
 }
 
 .roulette__bet-cell {
@@ -172,12 +174,14 @@
   align-items: center;
   justify-content: center;
   gap: 0.15rem;
-  min-height: 3.25rem;
-  padding: 0.5rem 0.35rem;
+  /* AGENT.md §Accessibility — interactive bet cell must hit 44px desktop. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-2);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-sm);
   cursor: pointer;
+  min-width: 0;
   transition:
     border-color var(--lc-transition),
     background var(--lc-transition),
@@ -238,11 +242,11 @@
 .roulette__error {
   margin: 0;
   color: var(--lc-ruby);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 .roulette__result {
-  padding: 0.75rem;
+  padding: var(--lc-spacing-3);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-sm);
   font-size: 0.9rem;
@@ -289,7 +293,9 @@
 
 .roulette__bet-btn {
   width: 100%;
-  padding: 0.85rem 1rem;
+  /* AGENT.md §Accessibility — 44px hit area via rem so font-scaling works. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   font-family: var(--lc-font-display);
   font-size: 1.05rem;
   font-weight: 700;
@@ -301,7 +307,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.6rem;
+  gap: var(--lc-spacing-3);
   box-shadow: 0 2px 16px var(--lc-crimson-glow), var(--lc-shadow-inset);
   transition:
     filter var(--lc-transition),
@@ -364,11 +370,14 @@
   font-size: 0.8rem;
   cursor: pointer;
   text-decoration: underline;
-  padding: 0;
+  /* AGENT.md §Accessibility — 44px hit area for "show fairness" toggle. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-2);
+  border-radius: var(--lc-radius-sm);
 }
 
 .roulette__fairness-body {
-  margin-top: 0.75rem;
+  margin-top: var(--lc-spacing-3);
   font-size: 0.75rem;
   color: var(--lc-text-secondary);
 }
@@ -393,8 +402,8 @@
 .roulette__seed-label {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  margin: 0.5rem 0;
+  gap: var(--lc-spacing-2);
+  margin: var(--lc-spacing-2) 0;
 }
 
 .roulette__seed-input {
@@ -402,8 +411,10 @@
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-sm);
   color: var(--lc-text-primary);
-  padding: 0.4rem 0.5rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-2);
   font-size: 0.8rem;
+  min-width: 0;
+  field-sizing: content;
 }
 
 .roulette__tool-btn {
@@ -411,10 +422,14 @@
   border: 1px solid var(--lc-border);
   color: var(--lc-text-primary);
   border-radius: var(--lc-radius-sm);
-  padding: 0.4rem 0.75rem;
+  /* AGENT.md §Accessibility — 44px hit area. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
   transition: background var(--lc-transition);
+  min-width: 0;
 }
 
 .roulette__tool-btn:hover:not(:disabled) {

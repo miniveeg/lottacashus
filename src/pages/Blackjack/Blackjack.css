@@ -112,14 +112,14 @@
 
 .bj__result-banner {
   position: absolute;
-  top: 1.25rem;
+  top: var(--lc-spacing-5);
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
-  padding: 0.65rem 1.35rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   background: rgba(10, 10, 11, 0.82);
   border: 1px solid rgba(245, 185, 66, 0.45);
-  border-radius: 999px;
+  border-radius: var(--lc-radius-pill);
   backdrop-filter: blur(8px);
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
   animation: bj-result-in 0.35s ease-out;
@@ -194,7 +194,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.75rem;
+  /* Original gap was 1.75rem; closest token in the --lc-spacing scale is
+     --lc-spacing-6 (2rem). Acceptable slight widening preserves the
+     visual breathing room between the dealer and player zones. */
+  gap: var(--lc-spacing-6);
   width: 100%;
 }
 
@@ -202,7 +205,8 @@
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 2rem 2.5rem;
+  gap: var(--lc-spacing-6) var(--lc-spacing-8);
+  min-width: 0;
 }
 
 .bj__player-zone--split .bj__hand {
@@ -216,7 +220,9 @@
   justify-content: center;
   align-items: center;
   min-height: 7.75rem;
-  padding: 0 0.5rem;
+  padding: 0 var(--lc-spacing-2);
+  /* AGENT.md §Single-row discipline — keep cards in a row inside the panel. */
+  min-width: 0;
 }
 
 .bj__card {
@@ -363,11 +369,14 @@
 .bj__actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
+  min-width: 0;
 }
 
 .bj__action-btn {
-  min-height: 2.5rem;
+  /* AGENT.md §Accessibility — interactive action (Hit/Stand/Double/Split/Insurance)
+     must hit 44px desktop. Was 2.5rem = 40px. */
+  min-height: 2.75rem;
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: var(--lc-radius-sm);
@@ -375,6 +384,7 @@
   background: var(--lc-bg-elevated);
   color: var(--lc-text-primary);
   cursor: pointer;
+  min-width: 0;
   transition:
     transform var(--lc-transition-spring),
     filter var(--lc-transition),
@@ -420,7 +430,7 @@
 }
 
 .bj__hand--active {
-  padding: 0.75rem 1rem;
+  padding: var(--lc-spacing-3) var(--lc-spacing-4);
   border-radius: var(--lc-radius-md);
   background: rgba(245, 185, 66, 0.08);
   outline: 2px solid rgba(245, 185, 66, 0.45);
@@ -469,15 +479,17 @@
 .bj__history {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  padding-top: 0.75rem;
+  gap: var(--lc-spacing-2);
+  padding-top: var(--lc-spacing-3);
   border-top: 1px solid var(--lc-border);
 }
 
 .bj__history-chip {
+  /* Display-only pill (not interactive) — keep compact height. The recent-
+     hands strip should look like a dense index, not a row of buttons. */
   min-width: 3.25rem;
   padding: 0.28rem 0.55rem;
-  border-radius: 6px;
+  border-radius: var(--lc-radius-sm);
   font-size: 0.72rem;
   font-weight: 700;
   font-family: var(--lc-font-mono);
@@ -520,7 +532,7 @@
 }
 
 .bj__fairness {
-  padding-top: 0.75rem;
+  padding-top: var(--lc-spacing-3);
   border-top: 1px solid var(--lc-border);
 }
 
@@ -531,11 +543,14 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  /* AGENT.md §Accessibility — 44px hit area for the fairness toggle. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-2);
+  border-radius: var(--lc-radius-sm);
 }
 
 .bj__fairness-body {
-  margin-top: 0.75rem;
+  margin-top: var(--lc-spacing-3);
   font-size: 0.8rem;
 }
 
@@ -559,18 +574,22 @@
 .bj__seed-input {
   display: block;
   width: 100%;
-  margin-top: 0.25rem;
-  padding: 0.4rem 0.5rem;
+  margin-top: var(--lc-spacing-2);
+  padding: var(--lc-spacing-2) var(--lc-spacing-2);
   font-size: 0.85rem;
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-sm);
   color: var(--lc-text-primary);
+  min-width: 0;
+  field-sizing: content;
 }
 
 .bj__tool-btn {
-  margin-top: 0.5rem;
-  padding: 0.4rem 0.75rem;
+  margin-top: var(--lc-spacing-2);
+  /* AGENT.md §Accessibility — interactive tool button must hit 44px desktop. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   font-size: 0.8rem;
   font-weight: 600;
   background: var(--lc-bg-hover);
@@ -578,10 +597,11 @@
   border-radius: var(--lc-radius-sm);
   color: var(--lc-text-primary);
   cursor: pointer;
+  transition: background var(--lc-transition);
 }
 
 .bj__fairness-note {
-  margin-top: 0.5rem;
+  margin-top: var(--lc-spacing-2);
   color: var(--lc-text-muted);
   font-size: 0.75rem;
 }

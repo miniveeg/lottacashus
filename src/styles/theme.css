@@ -115,6 +115,44 @@
   --lc-radius-lg: 18px;
   --lc-radius-xl: 24px;
   --lc-radius-2xl: 32px;
+  --lc-radius-pill: 9999px;
+
+  /* ── Spacing scale ──
+     Every `padding` / `margin` / `gap` token on every page MUST resolve
+     through this scale (audit: AGENT.md → Implementation rules →
+     Proportionality + Prohibited patterns). Values are on a 4px base
+     grid so spacing snaps visually; token names use T-shirt sizing
+     (-0 … -12) instead of px so reuse is cheap and renaming is free.
+     If a one-off value is genuinely needed, promote it to its own
+     token (e.g. `--lc-tight-gap`) — never use raw rem/px inline. */
+  --lc-spacing-0: 0;
+  --lc-spacing-1: 0.25rem;  /* 4px  */
+  --lc-spacing-2: 0.5rem;   /* 8px  */
+  --lc-spacing-3: 0.75rem;  /* 12px */
+  --lc-spacing-4: 1rem;     /* 16px */
+  --lc-spacing-5: 1.5rem;   /* 24px */
+  --lc-spacing-6: 2rem;     /* 32px */
+  --lc-spacing-8: 3rem;     /* 48px */
+  --lc-spacing-10: 4rem;    /* 64px */
+  --lc-spacing-12: 6rem;    /* 96px */
+
+  /* Shorthand aliases — semantic names for repeated patterns so
+     call-sites read intent instead of a number.
+       card-padding  → standard inside-the-panel padding
+       section-gap   → margin-top between stacked panels / sections
+       row-gap       → flex/grid gap on inline rows */
+  --lc-card-padding: var(--lc-spacing-5);
+  --lc-section-gap: var(--lc-spacing-4);
+  --lc-row-gap: var(--lc-spacing-2);
+
+  /* ── Interactive-target sizes (a11y touch + click) ──
+     WCAG 2.5.5 (AAA) recommends 44×44 CSS-px for clickable targets;
+     WCAG 2.5.8 (AA-extension) makes that enforceable in 2026. The
+     mobile `@media (max-width: 900px)` blocks already bump most
+     controls to 44px; this token keeps desktop honest too. */
+  --lc-target-min-desktop: 2.75rem; /* 44px at 16px root font-size */
+  --lc-target-min-mobile: 2.75rem;  /* identical; alias so callers
+                                       can switch with css only */
 
   /* ── Typography ──
      Inter is the body font for long-form copy (FAQ, legal, settings labels)

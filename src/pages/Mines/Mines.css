@@ -46,8 +46,9 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: var(--lc-spacing-3);
+  margin-bottom: var(--lc-spacing-3);
+  min-width: 0;
 }
 
 .mines__tool-btn {
@@ -55,10 +56,14 @@
   border: 1px solid var(--lc-border);
   color: var(--lc-text-primary);
   border-radius: var(--lc-radius-sm);
-  padding: 0.4rem 0.75rem;
+  /* AGENT.md §Accessibility must-haves — 44px desktop hit area. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-4);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background var(--lc-transition), color var(--lc-transition);
+  min-width: 0;
 }
 
 .mines__tool-btn:hover:not(:disabled) {
@@ -255,7 +260,7 @@
 .mines__message {
   font-size: 0.88rem;
   margin: 0;
-  padding: 0.6rem 0.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
   border-radius: var(--lc-radius-sm);
   border: 1px solid transparent;
   animation: mines-msg-in 0.3s ease-out;
@@ -389,8 +394,8 @@
 }
 
 .mines__fairness {
-  margin-top: 0.5rem;
-  padding-top: 0.75rem;
+  margin-top: var(--lc-spacing-2);
+  padding-top: var(--lc-spacing-3);
   border-top: 1px solid var(--lc-border);
 }
 
@@ -398,14 +403,17 @@
   background: none;
   border: none;
   color: var(--lc-gold);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  /* AGENT.md §Accessibility — 44px hit area on the fairness toggle. */
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-2) var(--lc-spacing-2);
+  border-radius: var(--lc-radius-sm);
 }
 
 .mines__fairness-body {
-  margin-top: 0.75rem;
+  margin-top: var(--lc-spacing-3);
   font-size: 0.8rem;
 }
 
@@ -430,17 +438,19 @@
 .mines__seed-input {
   display: block;
   width: 100%;
-  margin-top: 0.25rem;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.85rem;
+  margin-top: var(--lc-spacing-2);
+  padding: var(--lc-spacing-2) var(--lc-spacing-2);
+  font-size: 0.8rem;
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-sm);
   color: var(--lc-text-primary);
+  min-width: 0;
+  field-sizing: content;
 }
 
 .mines__fairness-note {
-  margin-top: 0.5rem;
+  margin-top: var(--lc-spacing-2);
   color: var(--lc-text-muted);
   font-size: 0.75rem;
 }

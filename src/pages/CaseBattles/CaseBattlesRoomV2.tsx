@@ -81,6 +81,38 @@ export function CaseBattlesRoomV2() {
     };
   }, [battle?.battleId, battle?.status]);
 
+  // Auto-start the battle the moment every slot is filled while we are
+  // still in `waiting`. We do this from a useEffect (rather than from the
+  // click handlers) so a late-joining human also triggers the start without
+  // needing the creator to be present. Idempotent via `autoStartedRef`.
+  //
+  // AUDIT FIX (React #310): This useEffect MUST be invoked unconditionally
+  // on every render (same hook position as the EOS-poll useEffect above).
+  // It previously sat AFTER the three early returns (`!battleId` /
+  // `loading` / `error || !battle`), which meant `useBattleSubscription`
+  // transitioned from loading=true (9 hooks) to loading=false + battle set
+  // (10 hooks) and React threw "Rendered more hooks than during the
+  // previous render" (#310), crashing the page mid-navigation from
+  // /case-battles/create → /case-battles/:battleId. All guards are now
+  // `return` statements INSIDE the effect, so the hook count is constant.
+  useEffect(() => {
+    if (!battle) return;
+    if (battle.status !== "waiting") return;
+    if (autoStartedRef.current) return;
+    if (battle.players.length < battle.maxPlayers) return;
+    // Only the creator can flip waiting → committing. If the creator isn't
+    // present (e.g. they left after filling with bots), the start RPC will
+    // 403 — we surface the error and let the creator retry on rejoin.
+    if (battle.creatorId !== user?.id) return;
+    autoStartedRef.current = true;
+    void startCaseBattle(battle.battleId).then(({ error: err }) => {
+      if (err) {
+        autoStartedRef.current = false; // allow a future re-attempt
+        setActionError(err);
+      }
+    });
+  }, [battle?.status, battle?.players.length, battle?.maxPlayers, battle?.creatorId, battle?.battleId, user?.id]);
+
   if (!battleId) return <Navigate to="/case-battles" replace />;
   if (loading) {
     return (
@@ -113,28 +145,6 @@ export function CaseBattlesRoomV2() {
   const alreadyClaimed = claimed || Boolean(myPlayer?.claimedAt);
   const canClaim = isCompleted && myPayout > 0 && !alreadyClaimed;
   const joinCharge = entryAfterBorrow(battle.entryCost, battle.borrowPercent);
-
-  // Auto-start the battle the moment every slot is filled while we are
-  // still in `waiting`. We do this from a useEffect (rather than from the
-  // click handlers) so a late-joining human also triggers the start without
-  // needing the creator to be present. Idempotent via `autoStartedRef`.
-  useEffect(() => {
-    if (!battle) return;
-    if (battle.status !== "waiting") return;
-    if (autoStartedRef.current) return;
-    if (battle.players.length < battle.maxPlayers) return;
-    // Only the creator can flip waiting → committing. If the creator isn't
-    // present (e.g. they left after filling with bots), the start RPC will
-    // 403 — we surface the error and let the creator retry on rejoin.
-    if (battle.creatorId !== user?.id) return;
-    autoStartedRef.current = true;
-    void startCaseBattle(battle.battleId).then(({ error: err }) => {
-      if (err) {
-        autoStartedRef.current = false; // allow a future re-attempt
-        setActionError(err);
-      }
-    });
-  }, [battle?.status, battle?.players.length, battle?.maxPlayers, battle?.creatorId, battle?.battleId, user?.id]);
 
   async function handleJoin() {
     if (busyRef.current) return;

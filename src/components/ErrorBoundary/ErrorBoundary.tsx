@@ -98,6 +98,19 @@ function DefaultFallback({
   reload: () => void;
 }) {
   const isDev = import.meta.env.DEV;
+  // EXCEPTION-DETAIL POLICY (per audit fix):
+  //   - Title + body always visible (no change for prod).
+  //   - "Error: TypeError" chip is shown in production so users can relay the
+  //     kind of failure to support without opening DevTools.
+  //   - Truncated first-line message below the body is shown in production
+  //     too — render-time TypeError/ReferenceError messages are brief and
+  //     non-sensitive. Capped at 140 chars so a runaway stack-string can't
+  //     blow out the layout.
+  //   - Full stack + component-stack remain dev-only.
+  const errorClass = error.name || "Error";
+  // Trim to first line + cap to 140 chars.
+  const firstLine = error.message ? error.message.split("\n", 1)[0] : "";
+  const summaryLine = firstLine ? firstLine.slice(0, 140) : "";
   return (
     <div className="lc-error-boundary" role="alert">
       <div className="lc-error-boundary__icon" aria-hidden="true">
@@ -108,6 +121,17 @@ function DefaultFallback({
         An unexpected error occurred while rendering this page. You can try
         again, or reload the entire app if the problem persists.
       </p>
+      {errorClass && (
+        <p className="lc-error-boundary__chip" aria-live="polite">
+          <span className="lc-error-boundary__chip-label">Error</span>
+          <code>{errorClass}</code>
+        </p>
+      )}
+      {summaryLine && (
+        <p className="lc-error-boundary__summary" aria-live="polite">
+          <code>{summaryLine}</code>
+        </p>
+      )}
       {isDev && (
         <details className="lc-error-boundary__details">
           <summary>Error details (dev only)</summary>

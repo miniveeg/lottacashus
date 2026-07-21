@@ -352,7 +352,7 @@ export function CaseBattlesCreateV2() {
                       style={{ background: c?.accent ?? "var(--lc-bg-active)" }}
                       aria-hidden
                     >
-                      {c?.name.charAt(0).toUpperCase() ?? "?"}
+                      {c?.name?.charAt(0)?.toUpperCase() ?? "?"}
                     </div>
                     <div className="cb-create__case-thumb-meta">
                       <span className="cb-create__case-thumb-name">{c?.name ?? g.id}</span>
@@ -456,7 +456,7 @@ export function CaseBattlesCreateV2() {
                       <span className="cb-modal__case-count" aria-label={`${current} selected`}>×{current}</span>
                     )}
                     <div className="cb-modal__case-thumb" style={{ background: lootCase.accent ?? "var(--lc-bg-active)" }}>
-                      {lootCase.name.charAt(0)}
+                      {lootCase.name?.charAt(0) ?? "?"}
                     </div>
                     <span className="cb-modal__case-name">{lootCase.name}</span>
                     <span className="cb-modal__case-price">{formatCoins(lootCase.price, coinType)}</span>

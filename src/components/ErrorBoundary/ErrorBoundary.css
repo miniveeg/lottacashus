@@ -48,6 +48,56 @@
   max-width: 28rem;
 }
 
+/* Error-class chip ("Error: TypeError"). Production-visible so users can
+   tell support what KIND of failure happened without opening DevTools. */
+.lc-error-boundary__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.85rem;
+  margin: 0;
+  background: rgba(220, 20, 60, 0.08);
+  border: 1px solid rgba(220, 20, 60, 0.25);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--lc-text-secondary);
+}
+
+.lc-error-boundary__chip-label {
+  font-family: var(--lc-font-body);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+  color: var(--lc-crimson-soft);
+}
+
+.lc-error-boundary__chip code {
+  font-family: var(--lc-font-mono);
+  color: var(--lc-text-primary);
+  font-size: 0.82rem;
+}
+
+/* Truncated first-line message — shows a short, non-sensitive one-liner
+   in production so the user can describe the failure without DevTools. */
+.lc-error-boundary__summary {
+  margin: 0;
+  max-width: 32rem;
+  font-size: 0.82rem;
+  color: var(--lc-text-muted);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.lc-error-boundary__summary code {
+  font-family: var(--lc-font-mono);
+  background: rgba(0, 0, 0, 0.32);
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--lc-radius-sm);
+  border: 1px solid var(--lc-border);
+  color: var(--lc-text-secondary);
+}
+
 .lc-error-boundary__details {
   width: 100%;
   max-width: 32rem;

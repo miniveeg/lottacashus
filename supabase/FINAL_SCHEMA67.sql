@@ -1026,7 +1026,11 @@ begin
   end if;
 
   if p_payout > 0 then
-    perform out_balance from public.game_credit(p_user_id, p_payout, p_coin_type);
+    -- Discard the table-returning game_credit result. `perform <col> from
+    -- <fn>` is parsed as a SELECT and Postgres then complains the column
+    -- `out_balance` is ambiguous. `perform <fn>(...)` discards the SETOF
+    -- cleanly. The trailing profile re-read picks up the new balance.
+    perform public.game_credit(p_user_id, p_payout, p_coin_type);
     select case p_coin_type when 'sweeps_coins' then sweeps_coins else balance end
       into v_balance from public.profiles where id = p_user_id;
   end if;
@@ -1110,7 +1114,11 @@ begin
   end if;
 
   if p_payout > 0 then
-    perform out_balance from public.game_credit(p_user_id, p_payout, p_coin_type);
+    -- Discard the table-returning game_credit result. `perform <col> from
+    -- <fn>` is parsed as a SELECT and Postgres then complains the column
+    -- `out_balance` is ambiguous. `perform <fn>(...)` discards the SETOF
+    -- cleanly. The trailing profile re-read picks up the new balance.
+    perform public.game_credit(p_user_id, p_payout, p_coin_type);
     select case p_coin_type when 'sweeps_coins' then sweeps_coins else balance end
       into v_balance from public.profiles where id = p_user_id;
   end if;
@@ -1197,7 +1205,11 @@ begin
   end if;
 
   if p_payout > 0 then
-    perform out_balance from public.game_credit(p_user_id, p_payout, p_coin_type);
+    -- Discard the table-returning game_credit result. `perform <col> from
+    -- <fn>` is parsed as a SELECT and Postgres then complains the column
+    -- `out_balance` is ambiguous. `perform <fn>(...)` discards the SETOF
+    -- cleanly. The trailing profile re-read picks up the new balance.
+    perform public.game_credit(p_user_id, p_payout, p_coin_type);
     select case p_coin_type when 'sweeps_coins' then sweeps_coins else balance end
       into v_balance from public.profiles where id = p_user_id;
   end if;
@@ -1279,7 +1291,11 @@ begin
   end if;
 
   if p_payout > 0 then
-    perform out_balance from public.game_credit(p_user_id, p_payout, p_coin_type);
+    -- Discard the table-returning game_credit result. `perform <col> from
+    -- <fn>` is parsed as a SELECT and Postgres then complains the column
+    -- `out_balance` is ambiguous. `perform <fn>(...)` discards the SETOF
+    -- cleanly. The trailing profile re-read picks up the new balance.
+    perform public.game_credit(p_user_id, p_payout, p_coin_type);
     select case p_coin_type when 'sweeps_coins' then sweeps_coins else balance end
       into v_balance from public.profiles where id = p_user_id;
   end if;
@@ -1494,7 +1510,11 @@ begin
   end if;
 
   if p_payout > 0 and p_status = 'settled' then
-    perform out_balance from public.game_credit(p_user_id, p_payout, p_coin_type);
+    -- Discard the table-returning game_credit result. `perform <col> from
+    -- <fn>` is parsed as a SELECT and Postgres then complains the column
+    -- `out_balance` is ambiguous. `perform <fn>(...)` discards the SETOF
+    -- cleanly. The trailing profile re-read picks up the new balance.
+    perform public.game_credit(p_user_id, p_payout, p_coin_type);
     select case p_coin_type when 'sweeps_coins' then sweeps_coins else balance end
       into v_balance from public.profiles where id = p_user_id;
   end if;

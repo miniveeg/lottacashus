@@ -572,27 +572,29 @@ create table if not exists public.tx_request_log (
 -- ══════════════════════════════════════════════════════════════════════════════
 --  IDEMPOTENCY KEYS (per game table) — for atomic placer dedupe
 -- ══════════════════════════════════════════════════════════════════════════════
+-- Full (non-partial) unique indexes. The placer SQL functions use
+--   on conflict (user_id, client_request_id) do nothing
+-- WITHOUT a matching WHERE clause. Partial unique indexes (those with a
+-- WHERE predicate, e.g. `where client_request_id is not null`) would NOT
+-- be inferred as the conflict target and Postgres would raise:
+--   ERROR: there is no unique or exclusion constraint matching the ON
+--   CONFLICT specification
+-- Multiple NULL client_request_id rows continue to coexist because
+-- PostgreSQL btree unique indexes treat NULLs as distinct.
 create unique index if not exists crash_bets_idempotency_key
-  on public.crash_bets (user_id, client_request_id)
-  where client_request_id is not null;
+  on public.crash_bets (user_id, client_request_id);
 create unique index if not exists keno_bets_idempotency_key
-  on public.keno_bets (user_id, client_request_id)
-  where client_request_id is not null;
+  on public.keno_bets (user_id, client_request_id);
 create unique index if not exists limbo_bets_idempotency_key
-  on public.limbo_bets (user_id, client_request_id)
-  where client_request_id is not null;
+  on public.limbo_bets (user_id, client_request_id);
 create unique index if not exists roulette_bets_idempotency_key
-  on public.roulette_bets (user_id, client_request_id)
-  where client_request_id is not null;
+  on public.roulette_bets (user_id, client_request_id);
 create unique index if not exists slots_games_idempotency_key
-  on public.slots_games (user_id, client_request_id)
-  where client_request_id is not null;
+  on public.slots_games (user_id, client_request_id);
 create unique index if not exists mines_games_idempotency_key
-  on public.mines_games (user_id, client_request_id)
-  where client_request_id is not null;
+  on public.mines_games (user_id, client_request_id);
 create unique index if not exists blackjack_hands_idempotency_key
-  on public.blackjack_hands (user_id, client_request_id)
-  where client_request_id is not null;
+  on public.blackjack_hands (user_id, client_request_id);
 
 -- ══════════════════════════════════════════════════════════════════════════════
 --  VIEWS — `crash_bets_safe` and `case_battles_safe` (security_barrier hides
@@ -921,7 +923,11 @@ begin
     raise exception 'Invalid crash point.';
   end if;
 
-  select out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type);
+  -- `gd` alias disambiguates the column reference: the enclosing function's
+  -- RETURNS TABLE (out_balance numeric) implicitly declares a local variable
+  -- `out_balance`, so a bare `out_balance` in the FROM list is ambiguous.
+  -- Qualifying as `gd.out_balance` selects the column from the function call.
+  select _gd.out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type) _gd;
 
   insert into public.crash_bets (
     user_id, wager, crash_point, won, payout, coin_type, nonce, client_request_id
@@ -1003,7 +1009,11 @@ begin
   end if;
   -- Per-game max-payout cap removed (per user directive).
 
-  select out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type);
+  -- `gd` alias disambiguates the column reference: the enclosing function's
+  -- RETURNS TABLE (out_balance numeric) implicitly declares a local variable
+  -- `out_balance`, so a bare `out_balance` in the FROM list is ambiguous.
+  -- Qualifying as `gd.out_balance` selects the column from the function call.
+  select _gd.out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type) _gd;
 
   insert into public.keno_bets (
     user_id, wager, risk, picks, drawn, hits, multiplier, payout, nonce, client_request_id
@@ -1091,7 +1101,11 @@ begin
   end if;
   -- Per-game max-payout cap removed (per user directive).
 
-  select out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type);
+  -- `gd` alias disambiguates the column reference: the enclosing function's
+  -- RETURNS TABLE (out_balance numeric) implicitly declares a local variable
+  -- `out_balance`, so a bare `out_balance` in the FROM list is ambiguous.
+  -- Qualifying as `gd.out_balance` selects the column from the function call.
+  select _gd.out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type) _gd;
 
   insert into public.limbo_bets (
     user_id, wager, target_multiplier, result_multiplier, won, payout, nonce, client_request_id
@@ -1182,7 +1196,11 @@ begin
   v_multiplier := case p_bet_type when 'green' then 14::numeric else 2::numeric end;
   -- Per-game max-payout cap removed (per user directive).
 
-  select out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type);
+  -- `gd` alias disambiguates the column reference: the enclosing function's
+  -- RETURNS TABLE (out_balance numeric) implicitly declares a local variable
+  -- `out_balance`, so a bare `out_balance` in the FROM list is ambiguous.
+  -- Qualifying as `gd.out_balance` selects the column from the function call.
+  select _gd.out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type) _gd;
 
   insert into public.roulette_bets (
     user_id, wager, bet_type, result_pocket, result_color, won, payout, nonce, client_request_id
@@ -1268,7 +1286,11 @@ begin
 
   -- Per-game max-payout cap removed (per user directive).
 
-  select out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type);
+  -- `gd` alias disambiguates the column reference: the enclosing function's
+  -- RETURNS TABLE (out_balance numeric) implicitly declares a local variable
+  -- `out_balance`, so a bare `out_balance` in the FROM list is ambiguous.
+  -- Qualifying as `gd.out_balance` selects the column from the function call.
+  select _gd.out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type) _gd;
 
   insert into public.slots_games (
     user_id, wager, reels, won, multiplier, payout, coin_type, nonce, client_request_id
@@ -1376,7 +1398,11 @@ begin
     raise exception 'Mine tile count mismatch.';
   end if;
 
-  select out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type);
+  -- `gd` alias disambiguates the column reference: the enclosing function's
+  -- RETURNS TABLE (out_balance numeric) implicitly declares a local variable
+  -- `out_balance`, so a bare `out_balance` in the FROM list is ambiguous.
+  -- Qualifying as `gd.out_balance` selects the column from the function call.
+  select _gd.out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type) _gd;
 
   insert into public.mines_games (
     user_id, wager, mine_count, mine_tiles, revealed_tiles, gems_revealed,
@@ -1482,7 +1508,11 @@ begin
   -- GC has no wager cap (per user directive).
   -- Per-game max-payout cap removed (per user directive).
 
-  select out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type);
+  -- `gd` alias disambiguates the column reference: the enclosing function's
+  -- RETURNS TABLE (out_balance numeric) implicitly declares a local variable
+  -- `out_balance`, so a bare `out_balance` in the FROM list is ambiguous.
+  -- Qualifying as `gd.out_balance` selects the column from the function call.
+  select _gd.out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type) _gd;
 
   insert into public.blackjack_hands (
     user_id, wager, total_wager, shoe, shoe_index, player_cards, dealer_cards,
@@ -1596,8 +1626,11 @@ begin
 
   if v_crash_point >= p_cashed_at then
     v_payout := round((v_wager * p_cashed_at)::numeric, 100) / 100;
-    select out_balance into v_balance
-      from public.game_credit(p_user_id, v_payout, v_coin);
+    -- `_gc` alias disambiguates the function-call column from the enclosing
+    -- function's implicit RETURNS TABLE out_balance variable. See comment
+    -- in place_*_bet for full explanation.
+    select _gc.out_balance into v_balance
+      from public.game_credit(p_user_id, v_payout, v_coin) _gc;
     update public.crash_bets
       set won = true, payout = v_payout, cashed_at = p_cashed_at, completed_at = now()
       where id = p_bet_id;
@@ -1933,7 +1966,9 @@ begin
   if not found then raise exception 'Active game not found.'; end if;
 
   v_payout := round((v_row.wager * v_row.multiplier)::numeric, 2);
-  select out_balance into v_balance from public.game_credit(p_user_id, v_payout, p_coin_type);
+  -- `_gc` alias disambiguates the column from the enclosing function's
+  -- implicit RETURNS TABLE out_balance variable.
+  select _gc.out_balance into v_balance from public.game_credit(p_user_id, v_payout, p_coin_type) _gc;
 
   update public.mines_games
     set status = 'cashed_out', payout = v_payout, completed_at = now()

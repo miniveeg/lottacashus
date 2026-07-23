@@ -68,3 +68,11 @@ verify_jwt = true
 # Cron-callable (auth via CRON_SECRET header inside the function body).
 [functions.crash-settle-expired]
 verify_jwt = false
+
+# Sub-second crash settle loop — invoked externally every 60 seconds,
+# internally polls crash_settle_due_bets() at 50ms for ~55 seconds per
+# invocation to achieve sub-second settlement precision on the implied
+# wall-clock crash time. Layered above pg_cron (1Hz fallback). Auth via
+# CRON_SECRET header inside the function body.
+[functions.crash-settle-loop]
+verify_jwt = false

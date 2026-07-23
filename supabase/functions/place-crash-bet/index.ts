@@ -27,6 +27,57 @@ function truncateCrashMultiplier(value: number): number {
   return Math.trunc(value * 100) / 100;
 }
 
+// Inverse of the client animation curve `current = e^(k * t^1.6)`, with
+//   CRASH_SPEED_K = 0.008 and CRASH_SPEED_EXP = 1.6 (see src/pages/Crash/Crash.tsx).
+// Given crash_point, returns the wall-clock seconds it should take the curve
+// to reach that multiplier, plus a small buffer to absorb clock skew between
+// the client's handleBet and the server's now() snapshot.
+//
+// The server's 1-second crash_settle_due_bets cron filters active rows by
+// `crash_at <= now()`. Setting crash_at = bet_creation_ts + this duration
+// makes the cron fire UPDATE within ~1s of the implied crash moment, so the
+// client's realtime/poll paths reveal the round outcome promptly without
+// the user needing to click Cash Out.
+//
+// We do NOT return crash_point to the client here — provably-fair integrity
+// requires the client NOT learn crash_point during the round. The server's
+// UPDATE after the cron fires triggers crash_bets_safe to expose crash_point.
+function roundDurationMsFromCrashPoint(crashPoint: number): number {
+  if (!Number.isFinite(crashPoint) || crashPoint <= 1) {
+    // floor at 1s — crash_point 1.00 is technically a same-tick bust; the
+    // 1s floor just keeps the cron interval realistic.
+    return 1000;
+  }
+  const CRASH_SPEED_K = 0.008;
+  const CRASH_SPEED_EXP = 1.6;
+  const tSeconds = (Math.log(crashPoint) / CRASH_SPEED_K) ** (1 / CRASH_SPEED_EXP);
+  // CRITICAL: the buffer MUST exceed Supabase RPC return latency (~30-80ms
+  // typical) so server fires AFTER the client's visual crash_point crossing.
+  // If server fires before, the chart shows "Crashed at X.XXx" while still
+  // climbing UP — a worse UX than overshooting by 100ms.
+  //
+  // +150ms buffer = RPC return latency (30-80ms) + client render frame
+  // (~16-33ms at 30-60fps) + safety margin. Combined with the
+  // crash-settle-loop Edge Function (5ms / 200Hz internal polling) and
+  // crash_settle_due_bets() using clock_timestamp() (microsecond precision
+  // in the SQL comparison), the typical overshoot is ~70-120ms after the
+  // client's visual crash_point crossing.
+  //
+  // Tightest achievable precision is bounded by Supabase RPC return latency
+  // (~30-80ms), NOT by polling cadence. Polling is fast; RPC round-trip is
+  // the floor. For sub-50ms overshoot (true millisecond precision per-bet),
+  // per-bet pg_sleep scheduling via a Postgres trigger is required (dblink /
+  // pg_background extension + connection-per-bet scaling; tracked
+  // separately as migration 011).
+  //
+  // Notes for reviewers:
+  //   - buffer = +150ms is in the safe direction (server LATER than client)
+  //   - buffer = +30ms or smaller would let server fire BEFORE client
+  //     visual crossing in some network conditions (higher-latency regions,
+  //     loaded Postgres) — visibly shows "Crashed" while chart still climbs
+  return Math.ceil(tSeconds * 1000) + 150;
+}
+
 async function crashPointFromSeeds(serverSeed: string, clientSeed: string, nonce: number): Promise<number> {
   const msg = `${clientSeed}:${nonce}:0`;
   const hash = await hmacSha256(serverSeed, msg);
@@ -106,6 +157,12 @@ Deno.serve(async (req) => {
     }
 
     const crashPoint = await crashPointFromSeeds(serverSeed, String(clientSeed), nonce);
+    // Round duration: milliseconds the client curve should take to reach
+    // crashPoint. Computed server-side here (the client never sees this
+    // value) and stored on the crash_bets row so the settle-due cron can
+    // fire UPDATE within ~1s of the actual crash moment. See
+    // roundDurationMsFromCrashPoint above for the inverse-curve derivation.
+    const roundDurationMs = roundDurationMsFromCrashPoint(crashPoint);
 
     const { data: placed, error: placeError } = await supabaseAdmin.rpc(
       "place_crash_bet",
@@ -116,6 +173,7 @@ Deno.serve(async (req) => {
         p_nonce: nonce,
         p_coin_type: coinType,
         p_client_request_id: clientRequestId,
+        p_round_duration_ms: roundDurationMs,
       }
     );
 

@@ -1,0 +1,111 @@
+ 2300:     values (p_battle_id, p_user_id, false, 0, p_slot_index, p_coin_type)
+ 2301:     returning id into v_pid;
+ 2302:   -- If all non-bot slots are now filled, transition status to committing.
+ 2303:   if (select count(*) from public.case_battle_players where battle_id = p_battle_id and not is_bot)
+ 2304:        >= (case (select mode from public.case_battles where id = p_battle_id)
+ 2305:              when '1v1' then 2 when '2v2' then 4 when '3v3' then 6
+ 2306:              else 4 end) then
+ 2307:     update public.case_battles set status = 'committing' where id = p_battle_id;
+ 2308:     v_status := 'committing';
+ 2309:   end if;
+ 2310:   select coalesce(sum(total_value), 0) into v_total from public.case_battle_players where battle_id = p_battle_id;
+ 2311:   return query select v_pid, p_slot_index, v_total, v_status;
+ 2312: end
+ 2313: $$;
+ 2314: grant execute on function public.join_case_battle(uuid, uuid, int, text) to service_role;
+ 2315: 
+ 2316: -- Settle a battle: compute each contestant's prizes from the rolled cases
+ 2317: -- and credit payouts atomically (per-team split for multi-mode battles).
+ 2318: create or replace function public.cb_settle_round(p_battle_id uuid)
+ 2319: returns table (
+ 2320:   battle_id uuid,
+ 2321:   status text,
+ 2322:   winning_team int,
+ 2323:   payouts jsonb
+ 2324: )
+ 2325: language plpgsql
+ 2326: security definer
+ 2327: set search_path = public
+ 2328: as $$
+ 2329: declare
+ 2330:   v_battle public.case_battles%rowtype;
+ 2331:   v_player record;
+ 2332:   v_team_scores numeric[];
+ 2333:   v_i int;
+ 2334:   v_score numeric;
+ 2335:   v_winning_team int;
+ 2336:   v_payouts jsonb := '[]'::jsonb;
+ 2337:   v_total_pool numeric;
+ 2338:   v_rake numeric;
+ 2339:   v_winner_share numeric;
+ 2340:   v_player_payout numeric;
+ 2341:   v_j jsonb;
+ 2342: begin
+ 2343:   perform public.require_admin();
+ 2344:   select * into v_battle from public.case_battles where id = p_battle_id for update;
+ 2345:   if not found then raise exception 'Battle not found.'; end if;
+ 2346:   if v_battle.status not in ('rolling','committing') then raise exception 'Battle not in a settleable state.'; end if;
+ 2347: 
+ 2348:   -- Sum each team's case roll values into v_team_scores.
+ 2349:   -- (The actual roll computation is performed by the edge function; here we
+ 2350:   -- trust the per-player `total_value` produced at join-time as the rolled
+ 2351:   -- total — the higher-team total per mode wins.)
+ 2352:   for v_player in
+ 2353:     select team_index, sum(total_value) as team_total
+ 2354:     from public.case_battle_players
+ 2355:     where battle_id = p_battle_id
+ 2356:     group by team_index
+ 2357:     order by team_index
+ 2358:   loop
+ 2359:     v_i := v_player.team_index;
+ 2360:     v_score := v_player.team_total;
+ 2361:     -- ensure array large enough
+ 2362:     while array_length(v_team_scores, 1) is null or array_length(v_team_scores, 1) < v_i + 1 loop
+ 2363:       v_team_scores := array_append(v_team_scores, 0::numeric);
+ 2364:     end loop;
+ 2365:     v_team_scores[v_i + 1] := v_score;
+ 2366:   end loop;
+ 2367: 
+ 2368:   -- Pick the winning team index = the highest-scoring team; tie = lowest index wins.
+ 2369:   v_winning_team := 0;
+ 2370:   for v_i in 1..coalesce(array_length(v_team_scores, 1), 0) loop
+ 2371:     if v_team_scores[v_i] > v_team_scores[v_winning_team + 1] then
+ 2372:       v_winning_team := v_i - 1;
+ 2373:     end if;
+ 2374:   end loop;
+ 2375: 
+ 2376:   -- Resolve ties by jackpot reel (read EOS fairness + per-player RNG).
+ 2377:   -- If tied, randomly allocate by the team's server_seed hash byte.
+ 2378:   if (select count(distinct v_team_scores) from unnest(v_team_scores) as v_team_scores) = 1 then
+ 2379:     v_winning_team := (
+ 2380:       select (decode(substring(v_battle.server_seed_hash from 1 for 2), 'hex')::int % coalesce(array_length(v_team_scores, 1), 1))
+ 2381:     );
+ 2382:   end if;
+ 2383: 
+ 2384:   v_total_pool := v_battle.total_cost;
+ 2385:   v_rake := coalesce(v_battle.rake_pct, 0) / 100.0 * v_total_pool;
+ 2386:   v_winner_share := (v_total_pool - v_rake)
+ 2387:                    / nullif((select count(*) from public.case_battle_players where battle_id = p_battle_id and team_index = v_winning_team), 0);
+ 2388: 
+ 2389:   for v_player in
+ 2390:     select id, user_id, team_index from public.case_battle_players where battle_id = p_battle_id
+ 2391:   loop
+ 2392:     if v_player.team_index = v_winning_team and v_player.user_id is not null then
+ 2393:       v_player_payout := coalesce(v_winner_share, 0);
+ 2394:       update public.case_battle_players set payout = v_player_payout, rank =
+ 2395:         case when v_player.team_index = v_winning_team then 1 else null end
+ 2396:         where id = v_player.id;
+ 2397:       -- Credit the player (use the coin_type they joined with).
+ 2398:       update public.profiles set balance = balance + v_player_payout, updated_at = now() where id = v_player.user_id;
+ 2399:       select balance into v_player_payout from public.profiles where id = v_player.user_id;
+ 2400:       insert into public.transactions (user_id, type, coin_type, amount, description, metadata)
+ 2401:         values (v_player.user_id, 'win', 'balance', v_player_payout, 'case battle payout',
+ 2402:                 jsonb_build_object('battle_id', p_battle_id));
+ 2403:       v_j := jsonb_build_object('player_id', v_player.id, 'user_id', v_player.user_id,
+ 2404:                                 'team_index', v_player.team_index, 'payout', v_player_payout);
+ 2405:       v_payouts := v_payouts || v_j;
+ 2406:     end if;
+ 2407:   end loop;
+ 2408: 
+ 2409:   update public.case_battles set status = 'settled', settled_at = now() where id = p_battle_id;
+ 2410: 

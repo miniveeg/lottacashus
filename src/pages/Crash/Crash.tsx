@@ -570,6 +570,29 @@ export function Crash() {
     animRef.current = requestAnimationFrame(tick);
   }
 
+  /**
+   * Freeze the chart WITHOUT tearing down the settlement poll + realtime
+   * subscription. Called from the cash-out error path: we don't know the
+   * outcome of the cashout, so we want to stop the rAF (freeze the chart)
+   * but still let the existing poll / realtime path call showCrashed()
+   * when the server-side auto-settle cron closes the bet.
+   *
+   * stopAnimation() (the full cleanup) tears down polling too; that's the
+   * right thing for confirmed outcomes but the wrong thing for unknown
+   * outcomes — calling it here would leave the UI stuck in
+   * phase=running with no path to "crashed".
+   */
+  function freezeChart() {
+    if (animRef.current) {
+      cancelAnimationFrame(animRef.current);
+      animRef.current = 0;
+    }
+    tickRef.current = null;
+    // Deliberately do NOT clear settlementPollRef / realtimeChannelRef —
+    // those need to stay alive so showCrashed() can fire when the server
+    // eventually marks completed_at.
+  }
+
   /** Stop the settlement poll, animation, AND realtime subscription. */
   function stopAnimation() {
     if (animRef.current) {
@@ -852,12 +875,26 @@ export function Crash() {
 
     if (cashErr || !data) {
       if (cancelledRef.current) return;
-      // Network/server error: we don't know the outcome. Stop animation and
-      // let the settlement poll (still running) reveal the crash_point when
-      // the server's auto-settle cron closes the bet. Don't fabricate a
-      // crashPoint — show a generic error.
+      // Network/server error: we don't know the outcome. Freeze the chart
+      // (cancel the rAF) but KEEP the settlement poll + realtime
+      // subscription so they can still detect when the server's auto-settle
+      // cron closes the bet and reveal the actual crash point via
+      // showCrashed(). Calling stopAnimation() here would tear down the
+      // poll+sub AND leave the UI stuck in phase=running with a frozen
+      // chart — exactly the "crash game crashes but doesn't tell the user
+      // that it crashed" symptom users were reporting.
+      //
+      // Order matches the success branch (cleanup before flags) so both
+      // paths release resources in the same order.
+      freezeChart();
       cashingOutRef.current = false;
       setCashingOut(false);
+      // Show the same "Confirming server settlement…" overlay the CLIENT_MAX_MULTIPLIER
+      // cap path uses, so the wait window between chart-freeze and the
+      // poll firing showCrashed() isn't silent (SR-status would otherwise
+      // keep announcing "Round in progress." with no visible signal that
+      // something changed).
+      setConfirming(true);
       setError(cashErr ?? "Cash out failed. The bet will be settled by the server.");
       void refreshProfile();
       return;

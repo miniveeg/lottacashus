@@ -428,8 +428,20 @@ create table if not exists public.crash_bets (
   coin_type text not null check (coin_type in ('balance','sweeps_coins')) default 'balance',
   client_request_id text,
   created_at timestamptz not null default now(),
-  completed_at timestamptz
+  completed_at timestamptz,
+  -- crash_at = created_at + round_duration_ms (implied wall-clock crash).
+  -- Populated by place_crash_bet when the edge fn sends p_round_duration_ms;
+  -- NULL on legacy rows that pre-date migration 010. The 1-second
+  -- crash_settle_due_bets cron selects active rows WHERE crash_at <= now()
+  -- so the realtime UPDATE fires within ~1s of the implied crash moment
+  -- (instead of waiting up to 2 min for crash_settle_expired_bets).
+  crash_at timestamptz,
+  round_duration_ms bigint
 );
+-- Partial index keeps the cron filter cheap as crash_bets table grows.
+create index if not exists crash_bets_due_idx
+  on public.crash_bets (crash_at)
+  where completed_at is null and crash_at is not null;
 create index if not exists idx_crash_bets_user on public.crash_bets(user_id);
 create index if not exists idx_crash_bets_open on public.crash_bets(user_id) where completed_at is null;
 
@@ -771,7 +783,13 @@ begin
     'update public.profiles set %I = $1, updated_at = now() where id = $2', v_col
   ) using v_new_balance, p_user_id;
 
-  return query select v_new_balance;
+  -- Explicit ::numeric cast pins `v_new_balance` (declared numeric(12,2)) to
+  -- the RETURNS TABLE column type (numeric) regardless of cache state.
+  -- Same defensive fix as cash_out_crash's return queries — without it,
+  -- Postgres's plan cache can intermittently raise "structure of query
+  -- does not match function result type" on hot RPC paths when precision
+  -- qualifiers don't match the RETURNS shape verbatim.
+  return query select v_new_balance::numeric;
 end
 $$;
 revoke all on function public.game_debit(uuid, numeric, text) from public;
@@ -808,7 +826,10 @@ begin
   execute format(
     'update public.profiles set %I = $1, updated_at = now() where id = $2', v_col
   ) using v_new_balance, p_user_id;
-  return query select v_new_balance;
+  -- Explicit ::numeric cast pins `v_new_balance` (declared numeric(12,2)) to
+  -- the RETURNS TABLE column type (numeric) regardless of cache state.
+  -- Same defensive fix as cash_out_crash's return queries.
+  return query select v_new_balance::numeric;
 end
 $$;
 revoke all on function public.game_credit(uuid, numeric, text) from public;
@@ -881,7 +902,15 @@ create or replace function public.place_crash_bet(
   p_crash_point numeric,
   p_nonce bigint,
   p_coin_type text,
-  p_client_request_id text default null
+  p_client_request_id text default null,
+  -- round_duration_ms = the wall-clock time (milliseconds) the client
+  -- animation curve `e^(0.008 * t^1.6)` should take to reach p_crash_point.
+  -- Computed by the place-crash-bet edge function using the inverse
+  -- `(ln(crash_point)/0.008)^(1/1.6)`. Used to set `crash_at` so the
+  -- crash_settle_due_bets cron fires UPDATE within ~1s of the actual crash.
+  -- Optional (default null) so legacy callers continue to work; legacy rows
+  -- are picked up by crash_settle_expired_bets 2-min cron instead.
+  p_round_duration_ms bigint default null
 )
 returns table (out_balance numeric, bet_id uuid)
 language plpgsql
@@ -930,9 +959,15 @@ begin
   select _gd.out_balance into v_balance from public.game_debit(p_user_id, p_wager, p_coin_type) _gd;
 
   insert into public.crash_bets (
-    user_id, wager, crash_point, won, payout, coin_type, nonce, client_request_id
+    user_id, wager, crash_point, won, payout, coin_type, nonce,
+    client_request_id, round_duration_ms, crash_at
   ) values (
-    p_user_id, p_wager, p_crash_point, false, 0, p_coin_type, p_nonce, p_client_request_id
+    p_user_id, p_wager, p_crash_point, false, 0, p_coin_type, p_nonce,
+    p_client_request_id, p_round_duration_ms,
+    case when p_round_duration_ms is not null
+      then now() + (p_round_duration_ms * interval '1 millisecond')
+      else null
+    end
   )
   on conflict (user_id, client_request_id) do nothing
   returning id into v_new_id;
@@ -951,8 +986,8 @@ begin
   return query select v_balance, v_new_id;
 end
 $$;
-revoke all on function public.place_crash_bet(uuid, numeric, numeric, bigint, text, text) from public;
-grant execute on function public.place_crash_bet(uuid, numeric, numeric, bigint, text, text) to service_role;
+revoke all on function public.place_crash_bet(uuid, numeric, numeric, bigint, text, text, bigint) from public;
+grant execute on function public.place_crash_bet(uuid, numeric, numeric, bigint, text, text, bigint) to service_role;
 
 -- ══════════════════════════════════════════════════════════════════════════════
 --  KENO — atomic place_keno_bet
@@ -1597,10 +1632,17 @@ begin
     raise exception 'Minimum cash-out is 1.01x.';
   end if;
 
-  select coin_type, wager, crash_point, won, completed_at, payout, cashed_at
+  -- `cb` alias disambiguates the column references: the enclosing function's
+  -- RETURNS TABLE includes `payout numeric, cashed_at numeric, crash_point
+  -- numeric`, so bare references like `select cash_out_crash.crash_point` would
+  -- be ambiguous between the crash_bets column and the implicit OUT variable.
+  -- Qualifying each column with the `cb.` source-alias removes the ambiguity.
+  -- Qualifying `id` and `user_id` in WHERE prevents the same kind of inference
+  -- error if the RETURNS TABLE is ever amended to include either.
+  select cb.coin_type, cb.wager, cb.crash_point, cb.won, cb.completed_at, cb.payout, cb.cashed_at
     into v_coin, v_wager, v_crash_point, v_won, v_completed_at, v_stored_payout, v_stored_cashed_at
-    from public.crash_bets
-    where id = p_bet_id and user_id = p_user_id;
+    from public.crash_bets cb
+    where cb.id = p_bet_id and cb.user_id = p_user_id;
 
   if v_coin is null then
     raise exception 'Bet not found.';
@@ -1610,13 +1652,20 @@ begin
   if v_completed_at is not null then
     select case v_coin when 'sweeps_coins' then sweeps_coins else balance end
       into v_balance from public.profiles where id = p_user_id;
+    -- Explicit ::numeric / ::boolean casts on every SELECT-list expression
+    -- so the RETURN QUERY shape exactly matches the function's RETURNS TABLE
+    -- declaration regardless of plan-cache state. The `0` literal in
+    -- numeric-coalesce and the bare `true`/`false` boolean literals can
+    -- intermittently produce "structure of query does not match function
+    -- result type" under cache pressure; an explicit cast pins the type
+    -- to numeric/boolean so Postgres never has to infer it from context.
     return query select
-      v_balance,
-      coalesce(v_stored_payout, 0),
-      coalesce(v_stored_cashed_at, p_cashed_at),
-      v_crash_point,
-      v_won,
-      true;
+      v_balance::numeric,
+      coalesce(v_stored_payout, 0::numeric)::numeric,
+      coalesce(v_stored_cashed_at, p_cashed_at)::numeric,
+      v_crash_point::numeric,
+      v_won::boolean,
+      true::boolean;
     return;
   end if;
 
@@ -1631,17 +1680,24 @@ begin
     -- in place_*_bet for full explanation.
     select _gc.out_balance into v_balance
       from public.game_credit(p_user_id, v_payout, v_coin) _gc;
-    update public.crash_bets
+    update public.crash_bets cb
       set won = true, payout = v_payout, cashed_at = p_cashed_at, completed_at = now()
-      where id = p_bet_id;
-    return query select v_balance, v_payout, p_cashed_at, v_crash_point, true, false;
+      where cb.id = p_bet_id;
+    -- Explicit cast on every column, including the boolean literals and
+    -- `v_payout` (already numeric, but explicit casts lock the type).
+    return query select v_balance::numeric, v_payout::numeric, p_cashed_at::numeric, v_crash_point::numeric, true::boolean, false::boolean;
   else
-    update public.crash_bets
+    update public.crash_bets cb
       set won = false, payout = 0, completed_at = now()
-      where id = p_bet_id;
+      where cb.id = p_bet_id;
     select case v_coin when 'sweeps_coins' then sweeps_coins else balance end
       into v_balance from public.profiles where id = p_user_id;
-    return query select v_balance, 0, p_cashed_at, v_crash_point, false, false;
+    -- Explicit ::numeric cast pins the `0` literal to numeric. Without it,
+    -- Postgres infers integer from the literal at plan time and can
+    -- intermittently fail with "structure of query does not match function
+    -- result type" when the function is called from a hot RPC path. See
+    -- the same fix on the win and already-settled branches above.
+    return query select v_balance::numeric, 0::numeric, p_cashed_at::numeric, v_crash_point::numeric, false::boolean, false::boolean;
   end if;
 end
 $$;
@@ -1669,6 +1725,58 @@ end
 $$;
 revoke all on function public.crash_settle_expired_bets() from public;
 grant execute on function public.crash_settle_expired_bets() to service_role;
+
+-- Crash-gc-tight: settle active crash bets at their implied wall-clock
+-- crash time. Fired every 1 second via pg_cron (see end of schema).
+-- Marks active rows WHERE crash_at <= now() as lost and sets completed_at,
+-- so the realtime + 2s polling paths in the client detect the round end
+-- within ~1s of the implied crash moment (instead of waiting up to 2 min
+-- for crash_settle_expired_bets 2-min safety-net cron).
+--
+-- Distinct from crash_settle_expired_bets: that one only handles bets with
+-- NULL crash_at (legacy/migration-pre-010 rows) and very old rows. The two
+-- crons cover complementary slices without overlap.
+create or replace function public.crash_settle_due_bets()
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_count int;
+begin
+  update public.crash_bets
+    -- clock_timestamp() (vs now()) returns the actual current wall-clock
+  -- time instead of the transaction-start time. Lets the WHERE comparison
+  -- match rows with microsecond precision at the moment the function
+  -- fires. Combined with the sub-second crash-settle-loop Edge Function
+  -- (50ms internal polling) + the +10ms buffer in place-crash-bet,
+  -- settlement happens ~50-100ms after the implied wall-clock crash moment.
+  set won = false, completed_at = clock_timestamp()
+    where completed_at is null
+      and crash_at is not null
+      and crash_at <= clock_timestamp();
+  get diagnostics v_count = row_count;
+  return v_count;
+end
+$$;
+revoke all on function public.crash_settle_due_bets() from public;
+grant execute on function public.crash_settle_due_bets() to service_role;
+
+-- pg_cron schedule — registers the 1-second settle-due job. Wrapped in a
+-- DO block with exception handler so the schema install succeeds even if
+-- pg_cron is unavailable (e.g. local-only Postgres without the extension).
+do $$
+begin
+  perform cron.schedule(
+    'crash-settle-due-1s',
+    '1 second',
+    $cmd$select public.crash_settle_due_bets()$cmd$
+  );
+exception when undefined_function or insufficient_privilege or feature_not_supported then
+  raise notice 'pg_cron not available; skipping crash_settle_due_bets schedule registration. Enable the pg_cron extension and run: select cron.schedule(''crash-settle-due-1s'', ''1 second'', $$select public.crash_settle_due_bets()$$);';
+end
+$$;
 
 -- ══════════════════════════════════════════════════════════════════════════════
 --  PROVABLY-FAIR SEED MANAGEMENT (consume_keno_nonce covers keno/mines/
@@ -1805,7 +1913,12 @@ begin
   update public.game_pf_seeds set next_nonce = next_nonce + p_advance, updated_at = now()
     where user_id = v_uid
     returning * into v_row;
-  return query select v_row.server_seed, v_row.server_seed_hash, v_row.client_seed, v_row.next_nonce - 1;
+  -- Explicit ::bigint cast on the `next_nonce - 1` arithmetic. Without
+  -- it, Postgres can intermittently raise "structure of query does not
+  -- match function result type" on hot RPC paths because the planner
+  -- infers the arithmetic type from context and can mismatch the
+  -- RETURNS TABLE column type. Same defensive pattern as cash_out_crash.
+  return query select v_row.server_seed::text, v_row.server_seed_hash::text, v_row.client_seed::text, (v_row.next_nonce - 1)::bigint;
 end
 $$;
 grant execute on function public.consume_keno_nonce(uuid, bigint) to service_role;
@@ -1890,7 +2003,12 @@ begin
 
   if p_tile < 0 or p_tile > 24 then raise exception 'Tile index out of range.'; end if;
 
-  select * into v_row from public.mines_games where id = p_game_id and user_id = p_user_id and status = 'active' for update;
+  -- `mg` alias disambiguates the WHERE-column reference: the enclosing
+  -- function's RETURNS TABLE includes `status text`, which would be
+  -- ambiguous vs. mines_games.status from a bare `where status = 'active'`.
+  -- Qualifying all of id/user_id/status as `mg.X` removes the ambiguity
+  -- and is future-proof against any RETURNS TABLE amendment.
+  select * into v_row from public.mines_games mg where mg.id = p_game_id and mg.user_id = p_user_id and mg.status = 'active' for update;
   if not found then raise exception 'Active game not found.'; end if;
 
   v_revealed := v_row.revealed_tiles;
@@ -1962,7 +2080,10 @@ declare
 begin
   perform public.reject_if_self_excluded(p_user_id);
 
-  select * into v_row from public.mines_games where id = p_game_id and user_id = p_user_id and status = 'active' for update;
+  -- `mg` alias disambiguates the WHERE-column reference: the enclosing
+  -- function's RETURNS TABLE includes `status text`, which would be
+  -- ambiguous vs. mines_games.status from a bare `where status = 'active'`.
+  select * into v_row from public.mines_games mg where mg.id = p_game_id and mg.user_id = p_user_id and mg.status = 'active' for update;
   if not found then raise exception 'Active game not found.'; end if;
 
   v_payout := round((v_row.wager * v_row.multiplier)::numeric, 2);
@@ -1970,9 +2091,9 @@ begin
   -- implicit RETURNS TABLE out_balance variable.
   select _gc.out_balance into v_balance from public.game_credit(p_user_id, v_payout, p_coin_type) _gc;
 
-  update public.mines_games
+  update public.mines_games mg
     set status = 'cashed_out', payout = v_payout, completed_at = now()
-    where id = p_game_id;
+    where mg.id = p_game_id;
 
   return query select
     p_game_id, 'cashed_out'::text, v_payout, v_row.multiplier,
@@ -2334,12 +2455,17 @@ begin
   -- (The actual roll computation is performed by the edge function; here we
   -- trust the per-player `total_value` produced at join-time as the rolled
   -- total — the higher-team total per mode wins.)
+  -- `cbp` alias disambiguates the bare column references: the enclosing
+  -- function's RETURNS TABLE includes `battle_id uuid`, so a bare
+  -- `where battle_id = p_battle_id` against case_battle_players would be
+  -- ambiguous against the implicit OUT variable. Qualifying all of
+  -- team_index/total_value/battle_id with `cbp.` removes the ambiguity.
   for v_player in
-    select team_index, sum(total_value) as team_total
-    from public.case_battle_players
-    where battle_id = p_battle_id
-    group by team_index
-    order by team_index
+    select cbp.team_index, sum(cbp.total_value) as team_total
+    from public.case_battle_players cbp
+    where cbp.battle_id = p_battle_id
+    group by cbp.team_index
+    order by cbp.team_index
   loop
     v_i := v_player.team_index;
     v_score := v_player.team_total;
@@ -2369,10 +2495,12 @@ begin
   v_total_pool := v_battle.total_cost;
   v_rake := coalesce(v_battle.rake_pct, 0) / 100.0 * v_total_pool;
   v_winner_share := (v_total_pool - v_rake)
-                   / nullif((select count(*) from public.case_battle_players where battle_id = p_battle_id and team_index = v_winning_team), 0);
+                   / nullif((select count(*) from public.case_battle_players cbp where cbp.battle_id = p_battle_id and cbp.team_index = v_winning_team), 0);
 
+  -- See alias rationale in the team-totals loop above. Same `cbp.`
+  -- qualification disambiguates battle_id from the RETURNS TABLE.
   for v_player in
-    select id, user_id, team_index from public.case_battle_players where battle_id = p_battle_id
+    select cbp.id, cbp.user_id, cbp.team_index from public.case_battle_players cbp where cbp.battle_id = p_battle_id
   loop
     if v_player.team_index = v_winning_team and v_player.user_id is not null then
       v_player_payout := coalesce(v_winner_share, 0);

@@ -1,0 +1,102 @@
+ 1559: --  CRASH — atomic cash_out_crash (fixed idempotent return)
+ 1560: -- ══════════════════════════════════════════════════════════════════════════════
+ 1561: create or replace function public.cash_out_crash(
+ 1562:   p_user_id uuid,
+ 1563:   p_bet_id uuid,
+ 1564:   p_cashed_at numeric
+ 1565: )
+ 1566: returns table (
+ 1567:   out_balance numeric,
+ 1568:   payout numeric,
+ 1569:   cashed_at numeric,
+ 1570:   crash_point numeric,
+ 1571:   success boolean,
+ 1572:   already_settled boolean
+ 1573: )
+ 1574: language plpgsql
+ 1575: security definer
+ 1576: set search_path = public
+ 1577: as $$
+ 1578: declare
+ 1579:   v_max_cap numeric;
+ 1580:   v_coin text;
+ 1581:   v_wager numeric;
+ 1582:   v_crash_point numeric;
+ 1583:   v_won boolean;
+ 1584:   v_completed_at timestamptz;
+ 1585:   v_stored_payout numeric;
+ 1586:   v_stored_cashed_at numeric;
+ 1587:   v_payout numeric;
+ 1588:   v_balance numeric;
+ 1589: begin
+ 1590:   perform public.reject_if_self_excluded(p_user_id);
+ 1591:   -- max_payout cap removed per user directive; payouts are bounded only by
+ 1592:   -- the user's available balance. The constant is read for compatibility but
+ 1593:   -- any null/zero value short-circuits the check below.
+ 1594:   v_max_cap := (select max_payout from public.game_max_constants());
+ 1595: 
+ 1596:   if p_cashed_at is null or p_cashed_at < 1.01 then
+ 1597:     raise exception 'Minimum cash-out is 1.01x.';
+ 1598:   end if;
+ 1599: 
+ 1600:   -- `cb` alias disambiguates the column references: the enclosing function's
+ 1601:   -- RETURNS TABLE includes `payout numeric, cashed_at numeric, crash_point
+ 1602:   -- numeric`, so bare references like `select cash_out_crash.crash_point` would
+ 1603:   -- be ambiguous between the crash_bets column and the implicit OUT variable.
+ 1604:   -- Qualifying each column with the `cb.` source-alias removes the ambiguity.
+ 1605:   -- Qualifying `id` and `user_id` in WHERE prevents the same kind of inference
+ 1606:   -- error if the RETURNS TABLE is ever amended to include either.
+ 1607:   select cb.coin_type, cb.wager, cb.crash_point, cb.won, cb.completed_at, cb.payout, cb.cashed_at
+ 1608:     into v_coin, v_wager, v_crash_point, v_won, v_completed_at, v_stored_payout, v_stored_cashed_at
+ 1609:     from public.crash_bets cb
+ 1610:     where cb.id = p_bet_id and cb.user_id = p_user_id;
+ 1611: 
+ 1612:   if v_coin is null then
+ 1613:     raise exception 'Bet not found.';
+ 1614:   end if;
+ 1615: 
+ 1616:   -- Already settled: return STORED values, not recomputed.
+ 1617:   if v_completed_at is not null then
+ 1618:     select case v_coin when 'sweeps_coins' then sweeps_coins else balance end
+ 1619:       into v_balance from public.profiles where id = p_user_id;
+ 1620:     return query select
+ 1621:       v_balance,
+ 1622:       coalesce(v_stored_payout, 0),
+ 1623:       coalesce(v_stored_cashed_at, p_cashed_at),
+ 1624:       v_crash_point,
+ 1625:       v_won,
+ 1626:       true;
+ 1627:     return;
+ 1628:   end if;
+ 1629: 
+ 1630:   if v_max_cap is not null and v_max_cap > 0 and v_wager * p_cashed_at > v_max_cap then
+ 1631:     raise exception 'Cash-out at %x exceeds cap of %.', p_cashed_at, v_max_cap;
+ 1632:   end if;
+ 1633: 
+ 1634:   if v_crash_point >= p_cashed_at then
+ 1635:     v_payout := round((v_wager * p_cashed_at)::numeric, 100) / 100;
+ 1636:     -- `_gc` alias disambiguates the function-call column from the enclosing
+ 1637:     -- function's implicit RETURNS TABLE out_balance variable. See comment
+ 1638:     -- in place_*_bet for full explanation.
+ 1639:     select _gc.out_balance into v_balance
+ 1640:       from public.game_credit(p_user_id, v_payout, v_coin) _gc;
+ 1641:     update public.crash_bets cb
+ 1642:       set won = true, payout = v_payout, cashed_at = p_cashed_at, completed_at = now()
+ 1643:       where cb.id = p_bet_id;
+ 1644:     return query select v_balance, v_payout, p_cashed_at, v_crash_point, true, false;
+ 1645:   else
+ 1646:     update public.crash_bets cb
+ 1647:       set won = false, payout = 0, completed_at = now()
+ 1648:       where cb.id = p_bet_id;
+ 1649:     select case v_coin when 'sweeps_coins' then sweeps_coins else balance end
+ 1650:       into v_balance from public.profiles where id = p_user_id;
+ 1651:     return query select v_balance, 0, p_cashed_at, v_crash_point, false, false;
+ 1652:   end if;
+ 1653: end
+ 1654: $$;
+ 1655: revoke all on function public.cash_out_crash(uuid, uuid, numeric) from public;
+ 1656: grant execute on function public.cash_out_crash(uuid, uuid, numeric) to service_role;
+ 1657: 
+ 1658: -- Crash-gc: server-side settle of orphaned crash bets (no cashout) — runs as
+ 1659: -- a scheduled cron. Marks rows older than 2 min as settled with won=false.
+ 1660: create or replace function public.crash_settle_expired_bets()

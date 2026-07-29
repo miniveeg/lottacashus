@@ -1,20 +1,5 @@
 /**
  * Case Battles v2 — Arena
- *
- * Key changes from the previous version:
- *   - Waiting branch renders a per-slot "+ Add bot here" button on every
- *     empty slot. Clicking a slot calls `addBotToBattle(battleId, slotIndex)`
- *     so the creator can flexibly bot-fill any specific seat instead of
- *     relying on a single global "Add bot" button. Per-slot still respects
- *     the SQL `cb_add_bot` (battle_id, slot_index) RPC and the
- *     `nextOpenSlot` fallback in `localAddBot`.
- *   - Running branch passes a per-slot randomized spinSpeed (derived from
- *     battleId + slot, see `slotSpinSpeed`) so each reel scrolls at its own
- *     natural rate, and a `syncedLandingStartTime` (captured ONCE per round
- *     when every player's drops are visible) so all reels begin their
- *     landing animation in the same instant. The landing window is fixed
- *     (LAND_DURATION = 2400ms), so the synchronized start means the reveal
- *     feels like a single coordinated "stop" for every contestant.
  */
 
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -23,6 +8,7 @@ import { calculatePayoutForSlot, playerTotalValue, addBotToBattle } from "./case
 import { PlayerColumn } from "./PlayerColumn";
 import { JackpotWheel } from "./JackpotReel";
 import { formatCoins } from "../../lib/format";
+import { useCanPlay } from "../../lib/canPlay";
 import "./CaseBattlesV2.css";
 
 type ArenaProps = {
@@ -32,14 +18,12 @@ type ArenaProps = {
 };
 
 export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaProps) {
+  const canPlay = useCanPlay();
   const [currentRound, setCurrentRound] = useState(0);
   const [landedSlots, setLandedSlots] = useState<Set<number>>(new Set());
   const [animationReady, setAnimationReady] = useState(false);
   const pauseTimerRef = useRef<number>(0);
 
-  // Coordinated landing time — once the next-round drops have all arrived
-  // from realtime, we send a single timestamp down to every PlayerColumn
-  // so all reels transition spinning → landing in lockstep.
   const [syncedLandingStartTime, setSyncedLandingStartTime] = useState<number | null>(null);
 
   const wasCommittedRef = useRef(false);
@@ -61,38 +45,27 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
   const activePlayerCount = battle.players.length;
   const allLanded = activePlayerCount > 0 && landedSlots.size >= activePlayerCount;
 
-  // Visual pause after reels land (1.5s) before advancing.
   useEffect(() => {
     if (!allLanded || battle.status !== "running") {
       setAnimationReady(false);
       return;
     }
-    pauseTimerRef.current = window.setTimeout(
-      () => setAnimationReady(true),
-      1500,
-    );
+    pauseTimerRef.current = window.setTimeout(() => setAnimationReady(true), 1500);
     return () => window.clearTimeout(pauseTimerRef.current);
   }, [allLanded, battle.status]);
 
-  // Gate the round advance: visual pause done AND next round's data present.
   const lastRoundIndex = battle.rounds - 1;
   const nextRoundReady =
-    currentRound < lastRoundIndex &&
-    battle.drops.some((d) => d.round === currentRound + 1);
+    currentRound < lastRoundIndex && battle.drops.some((d) => d.round === currentRound + 1);
 
   useEffect(() => {
     if (!animationReady || !nextRoundReady) return;
     setCurrentRound((r) => r + 1);
     setLandedSlots(new Set());
     setAnimationReady(false);
-    setSyncedLandingStartTime(null); // reset sync for the next round
+    setSyncedLandingStartTime(null);
   }, [animationReady, nextRoundReady]);
 
-  // ── Capture the synced landing timestamp ONCE per round ─────────────
-  // When every player in the battle has a drop for the current round, we
-  // freeze performance.now() and pass it down to every PlayerColumn. Every
-  // reel uses this single timestamp as its landingStart, guaranteeing a
-  // simultaneous stop.
   useEffect(() => {
     if (battle.status !== "running") return;
     if (syncedLandingStartTime != null) return;
@@ -112,14 +85,10 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
     });
   }, []);
 
-  // ── Per-slot "Add bot to this slot" handler ──────────────────────────
-  // Phase polish: replaced the legacy alert() with an inline error slot
-  // so the message persists next to the failing button — the user can
-  // read + dismiss + retry without it auto-disappearing on the next
-  // render (alert() also blocks the JS thread and isn't styleable).
   const [botBusySlot, setBotBusySlot] = useState<number | null>(null);
   const [botError, setBotError] = useState<string | null>(null);
   async function handleAddBotToSlot(slotIndex: number) {
+    if (!canPlay) return;
     if (botBusySlot != null) return;
     setBotError(null);
     setBotBusySlot(slotIndex);
@@ -128,7 +97,6 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
     if (error) setBotError(`Slot ${slotIndex + 1}: ${error}`);
   }
 
-  // ── Waiting state ───────────────────────────────────────────────────
   const isWaitingArena = battle.status === "waiting";
   if (isWaitingArena) {
     return (
@@ -151,29 +119,27 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
               <div key={slot} className={"cb-slot" + (player ? " cb-slot--filled" : " cb-slot--empty")}>
                 {player ? (
                   <>
-                    <div className="cb-slot__avatar">
-                      {player.username.charAt(0).toUpperCase()}
-                    </div>
+                    <div className="cb-slot__avatar">{player.username.charAt(0).toUpperCase()}</div>
                     <span className="cb-slot__name">{player.username}</span>
                     {player.isBot && <span className="cb-slot__bot">BOT</span>}
                   </>
+                ) : isCreator && canPlay ? (
+                  <button
+                    type="button"
+                    className="cb-slot__add-bot"
+                    onClick={() => handleAddBotToSlot(slot)}
+                    disabled={botBusySlot != null}
+                    aria-label={`Add a bot to slot ${slot + 1}`}
+                  >
+                    {botBusySlot === slot ? "Adding…" : "+ Add bot"}
+                  </button>
                 ) : (
-                  isCreator ? (
-                    <button
-                      type="button"
-                      className="cb-slot__add-bot"
-                      onClick={() => handleAddBotToSlot(slot)}
-                      disabled={botBusySlot != null}
-                      aria-label={`Add a bot to slot ${slot + 1}`}
-                    >
-                      {botBusySlot === slot ? "Adding…" : "+ Add bot"}
-                    </button>
-                  ) : (
-                    <span className="cb-slot__empty">
-                      <span className="cb-slot__empty-label">Empty slot</span>
-                      <span className="cb-slot__empty-hint">pending user</span>
+                  <span className="cb-slot__empty">
+                    <span className="cb-slot__empty-label">Empty slot</span>
+                    <span className="cb-slot__empty-hint">
+                      {isCreator && !canPlay ? "log in to add bot" : "pending user"}
                     </span>
-                  )
+                  </span>
                 )}
               </div>
             );
@@ -196,7 +162,6 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
     );
   }
 
-  // ── Committing (EOS wait) state ─────────────────────────────────────
   if (battle.status === "committing") {
     return (
       <div className="cb-arena cb-arena--committing">
@@ -219,7 +184,6 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
     );
   }
 
-  // ── Running state — the live arena ──────────────────────────────────
   if (battle.status === "running") {
     const roundDrops = battle.drops.filter((d) => d.round === currentRound);
     const visibleAllDrops = battle.drops.filter((d) => d.round <= currentRound);
@@ -239,8 +203,8 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
                 i < currentRound
                   ? `Round ${i + 1} complete`
                   : i === currentRound
-                  ? `Round ${i + 1} in progress`
-                  : `Round ${i + 1} upcoming`
+                    ? `Round ${i + 1} in progress`
+                    : `Round ${i + 1} upcoming`
               }
             >
               {i + 1}
@@ -272,25 +236,20 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
     );
   }
 
-  // ── Completed state — static ledger view (+ jackpot wheel) ──────────
-  // Tie-aware winners: every slot with a positive payout_amount counts.
-  const winningSlots = (battle.winningSlots && battle.winningSlots.length > 0)
-    ? battle.winningSlots
-    : battle.players
-        .filter((p) => p.payoutAmount > 0 && !p.isBot)
-        .map((p) => p.slot)
-        .sort((a, c) => a - c);
+  const winningSlots =
+    battle.winningSlots && battle.winningSlots.length > 0
+      ? battle.winningSlots
+      : battle.players
+          .filter((p) => p.payoutAmount > 0 && !p.isBot)
+          .map((p) => p.slot)
+          .sort((a, c) => a - c);
 
   const isJackpot = battle.gamemode === "jackpot";
 
   return (
     <div className={"cb-arena cb-arena--completed" + (isJackpot ? " cb-arena--jackpot" : "")}>
       {isJackpot && (
-        <JackpotWheel
-          battle={battle}
-          winningSlots={winningSlots}
-          userId={userId}
-        />
+        <JackpotWheel battle={battle} winningSlots={winningSlots} userId={userId} />
       )}
       <div
         className="cb-arena__columns"
@@ -313,37 +272,34 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
 
       <div className="cb-arena__results">
         <h2 className="cb-arena__results-title">
-          {winningSlots.length > 0 ? (
-            (() => {
-              // Tie → highlight joint winner(s).
-              // Bot-only winners render as a neutral "Battle complete" line.
-              const winners = battle.players.filter((p) => winningSlots.includes(p.slot));
-              const humanWinners = winners.filter((p) => !p.isBot);
-              if (humanWinners.length === 0) return "Battle complete";
-              if (humanWinners.length === 1) {
-                const w = humanWinners[0]!;
-                if (w.userId === userId || w.username === "You") return "You win!";
-                return `${w.username} wins!`;
-              }
-              // Multiple human winners → tie message.
-              const names = humanWinners.map((p) => p.username).join(" & ");
-              const isMe = humanWinners.some((p) => p.userId === userId || p.username === "You");
-              return isMe ? `You tie! ${names} split the pot 50/50` : `${names} tie and split the pot`;
-            })()
-          ) : (
-            "Battle complete"
-          )}
+          {winningSlots.length > 0
+            ? (() => {
+                const winners = battle.players.filter((p) => winningSlots.includes(p.slot));
+                const humanWinners = winners.filter((p) => !p.isBot);
+                if (humanWinners.length === 0) return "Battle complete";
+                if (humanWinners.length === 1) {
+                  const w = humanWinners[0]!;
+                  if (w.userId === userId || w.username === "You") return "You win!";
+                  return `${w.username} wins!`;
+                }
+                const names = humanWinners.map((p) => p.username).join(" & ");
+                const isMe = humanWinners.some(
+                  (p) => p.userId === userId || p.username === "You"
+                );
+                return isMe
+                  ? `You tie! ${names} split the pot`
+                  : `${names} tie and split the pot`;
+              })()
+            : "Battle complete"}
         </h2>
         {(() => {
           const myPlayerSlot = userId
             ? battle.players.find((p) => p.userId === userId)?.slot
             : undefined;
-          const myPayout = myPlayerSlot !== undefined
-            ? calculatePayoutForSlot(battle, myPlayerSlot)
-            : 0;
-          const myTotalValue = myPlayerSlot !== undefined
-            ? playerTotalValue(battle.drops, myPlayerSlot)
-            : 0;
+          const myPayout =
+            myPlayerSlot !== undefined ? calculatePayoutForSlot(battle, myPlayerSlot) : 0;
+          const myTotalValue =
+            myPlayerSlot !== undefined ? playerTotalValue(battle.drops, myPlayerSlot) : 0;
           if (myPayout > 0 && myTotalValue > 0) {
             return (
               <p className="cb-arena__payout">
@@ -367,21 +323,11 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
   );
 }
 
-/**
- * Stable per-slot randomization of the reel's spin speed.
- *
- * Each slot gets a fixed pixel-per-frame scroll velocity in [4, 12] derived
- * from the (battleId, slot) tuple via a lightweight hash. Different slots
- * GET DIFFERENT speeds (so they appear to spin at different rates), but the
- * speed for any given slot is DETERMINISTIC across remounts — the user sees
- * the same reel feeling on subsequent visits to the same battle.
- */
 function slotSpinSpeed(battleId: string, slot: number): number {
   let h = 0;
   const key = `${battleId}:${slot}`;
   for (let i = 0; i < key.length; i++) {
     h = (h * 31 + key.charCodeAt(i)) | 0;
   }
-  // Map to [4, 12] px/frame.
   return 4 + (Math.abs(h) % 9);
 }

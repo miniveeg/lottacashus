@@ -18,8 +18,8 @@ export const ROULETTE_WIN_RETENTION = GAME_RTP / ROULETTE_FAIR_RTP;
 /** Case catalog EV/price calibrated near 90%. */
 export const CASE_CATALOG_BASE_RTP = 0.9;
 
-/** Target RTP for case battles (94.5%). */
-export const CASE_BATTLES_RTP = 0.945;
+/** Target RTP for case battles (86.5% — product requirement). */
+export const CASE_BATTLES_RTP = 0.865;
 
 /** Roll bias exponent: below 1 favors better items, above 1 favors worse. */
 export const CASE_ROLL_BIAS_EXPONENT = CASE_CATALOG_BASE_RTP / CASE_BATTLES_RTP;

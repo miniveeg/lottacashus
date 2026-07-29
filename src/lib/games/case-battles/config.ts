@@ -1,4 +1,4 @@
-export type BattleGamemode = "normal" | "group" | "terminal" | "jackpot";
+export type BattleGamemode = "standard" | "group" | "terminal" | "jackpot";
 
 export type PlayerModeId =
   | "1v1"
@@ -20,7 +20,7 @@ export const GAMEMODES: {
   live: boolean;
 }[] = [
   {
-    id: "normal",
+    id: "standard",
     name: "Normal",
     description: "The player with the greatest total unboxed wins.",
     live: true,
@@ -109,10 +109,16 @@ export function isTeamMode(mode: string): boolean {
   return mode === "2v2" || mode === "2v2v2" || mode === "3v3";
 }
 
-export const BATTLE_GAMEMODES = ["normal", "group", "terminal", "jackpot"] as const;
+export const BATTLE_GAMEMODES = ["standard", "group", "terminal", "jackpot"] as const;
 
 export function isValidGamemode(mode: string): mode is BattleGamemode {
   return (BATTLE_GAMEMODES as readonly string[]).includes(mode);
+}
+
+/** Normalize legacy DB value "normal" → "standard". */
+export function normalizeGamemode(mode: string): BattleGamemode | string {
+  if (mode === "normal") return "standard";
+  return mode;
 }
 
 export function teamIndexForMode(mode: string, slot: number): number {

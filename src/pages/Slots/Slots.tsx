@@ -8,19 +8,18 @@ import {
   setSlotsClientSeed,
   type SlotsBetResult,
 } from "../../lib/slots";
+import { useCanPlay } from "../../lib/canPlay";
 import { SlotSymbol } from "./SlotSymbols";
 import { Seo } from "../../components/Seo/Seo";
 import { FormAlert } from "../../components/FormAlert/FormAlert";
 import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
 import { BetButton } from "../../components/BetButton/BetButton";
+import { GameGuestBanner } from "../../components/GameGuestBanner/GameGuestBanner";
 import "../../styles/game-controls.css";
 import "./Slots.css";
 
 const REVEAL_DELAY_MS = 2000;
-// Per-reel landing stagger — each reel stops shortly after the previous one
-// for a satisfying left-to-right settle effect.
 const REEL_STOP_STAGGER_MS = 280;
-// Symbol cycle rate during the spin animation. Lower = faster visual flicker.
 const SYMBOL_CYCLE_MS = 55;
 
 function readPrefersReducedMotion(): boolean {
@@ -28,7 +27,6 @@ function readPrefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/** Display names — must match server SYMBOLS in place-slots-bet. */
 const SYMBOL_NAMES: Record<number, string> = {
   0: "Cherry",
   1: "Bell",
@@ -39,15 +37,14 @@ const SYMBOL_NAMES: Record<number, string> = {
   6: "Crown",
 };
 
-/** 3-of-a-kind paytable (96.5% RTP) — single source of truth for the UI. */
 const SLOTS_PAYTABLE: { id: number; mult: number }[] = [
-  { id: 6, mult: 190 }, // Crown
-  { id: 5, mult: 80 },  // Star
-  { id: 4, mult: 30 },  // Watermelon
-  { id: 3, mult: 15 },  // Bar
-  { id: 2, mult: 8 },   // Seven
-  { id: 1, mult: 5 },   // Bell
-  { id: 0, mult: 3 },   // Cherry
+  { id: 6, mult: 190 },
+  { id: 5, mult: 80 },
+  { id: 4, mult: 30 },
+  { id: 3, mult: 15 },
+  { id: 2, mult: 8 },
+  { id: 1, mult: 5 },
+  { id: 0, mult: 3 },
 ];
 
 type ReelState = "idle" | "spinning" | "landed";
@@ -56,13 +53,12 @@ export default function Slots() {
   const { profile, refreshProfile } = useProfile();
   const { coinType, label: coinLabel } = usePlayMode();
   const toast = useToast();
+  const canPlay = useCanPlay();
 
   const [wager, setWager] = useState(1);
   const [wagerInput, setWagerInput] = useState("1");
   const [rolling, setRolling] = useState(false);
   const [reels, setReels] = useState<number[]>([-1, -1, -1]);
-  // Per-reel spin state — each reel moves through spinning → landed independently
-  // so we can stagger the visual landing for a more authentic slot feel.
   const [reelStates, setReelStates] = useState<ReelState[]>(["idle", "idle", "idle"]);
   const [lastResult, setLastResult] = useState<SlotsBetResult | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -74,9 +70,6 @@ export default function Slots() {
   const [showFairness, setShowFairness] = useState(false);
 
   const rafRef = useRef<number>(0);
-  // tickRef holds the most recent rAF `tick` closure so the visibilitychange
-  // handler (audit H5) can resume the spin loop when the tab becomes visible
-  // again.
   const tickRef = useRef<((now: number) => void) | null>(null);
   const lastCycleRef = useRef<number>(0);
   const reelStatesRef = useRef<ReelState[]>(["idle", "idle", "idle"]);
@@ -84,28 +77,20 @@ export default function Slots() {
   const rollingRef = useRef(false);
   const cancelledRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
+  const canPlayRef = useRef(canPlay);
 
-  // Phase polish: ref mirrors so the keyboard-hotkey listener (registered
-  // once with [] deps) can call handleSpin / applyWager safely — they read
-  // from these refs at call time so a stale first-render closure can't trap
-  // the user with the wrong wager / coin / balance. Mirrors Crash+Mines+Keno.
   const wagerRef = useRef(1);
   const coinTypeRef = useRef<string>("balance");
   const profileRef = useRef(profile);
 
-  // Read reduced-motion preference once on mount. The rAF spin animation is
-  // purely decorative (the outcome is server-determined), so reduced-motion
-  // users get the result without the flicker.
   useEffect(() => {
     prefersReducedMotionRef.current = readPrefersReducedMotion();
   }, []);
 
-  // Pause the spin rAF loop when the tab is hidden (audit H5). Browsers
-  // throttle rAF to ~1 fps on hidden tabs, but each throttled tick still
-  // calls setReels → React reconciliation. Cancelling the rAF entirely
-  // eliminates that waste. When the tab becomes visible again and a spin
-  // is still in progress, resume the loop with the SAME tick closure
-  // (captured via tickRef) so the spin continues smoothly.
+  useEffect(() => {
+    canPlayRef.current = canPlay;
+  }, [canPlay]);
+
   useEffect(() => {
     const handleVisibility = () => {
       if (document.hidden) {
@@ -121,13 +106,10 @@ export default function Slots() {
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
-  // Keep ref in sync so the rAF closure always sees the latest reel states.
   useEffect(() => {
     reelStatesRef.current = reelStates;
   }, [reelStates]);
 
-  // Sync ref mirrors for the hotkey handler (also keeps handleSpin safe
-  // across any binding context).
   useEffect(() => {
     wagerRef.current = wager;
     coinTypeRef.current = coinType;
@@ -140,13 +122,13 @@ export default function Slots() {
   }, []);
 
   const activeBalance = useMemo(() => {
-    // Guests / local-play: ProfileContext still holds the demo wallet.
     return coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
   }, [coinType, profile]);
 
   const wagerCap = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
 
   useEffect(() => {
+    if (!canPlay) return;
     fetchSlotsPfState().then(({ data }) => {
       if (data) {
         setPfHash(data.serverSeedHash);
@@ -154,24 +136,20 @@ export default function Slots() {
         setClientSeed(data.clientSeed);
       }
     });
-  }, []);
+  }, [canPlay]);
 
-  const applyWager = useCallback(
-    (value: string) => {
-      const parsed = parseFloat(value);
-      if (!Number.isFinite(parsed) || parsed <= 0) {
-        setWager(1);
-        setWagerInput("1");
-      } else {
-        // Read coin type from ref so applyWager stays correct from the hotkey.
-        const maxWager = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
-        const clamped = Math.min(Math.max(parsed, 1), maxWager);
-        setWager(clamped);
-        setWagerInput(String(clamped));
-      }
-    },
-    []
-  );
+  const applyWager = useCallback((value: string) => {
+    const parsed = parseFloat(value);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      setWager(1);
+      setWagerInput("1");
+    } else {
+      const maxWager = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+      const clamped = Math.min(Math.max(parsed, 1), maxWager);
+      setWager(clamped);
+      setWagerInput(String(clamped));
+    }
+  }, []);
 
   function startRollAnimation() {
     setReelStates(["spinning", "spinning", "spinning"]);
@@ -179,34 +157,24 @@ export default function Slots() {
     lastCycleRef.current = performance.now();
 
     const tick = (now: number) => {
-      // Only update visuals while at least one reel is still spinning.
       if (!reelStatesRef.current.some((s) => s === "spinning")) return;
       if (now - lastCycleRef.current >= SYMBOL_CYCLE_MS) {
         lastCycleRef.current = now;
         setReels((prev) =>
           prev.map((s, i) =>
-            reelStatesRef.current[i] === "spinning"
-              ? Math.floor(Math.random() * 7)
-              : s
+            reelStatesRef.current[i] === "spinning" ? Math.floor(Math.random() * 7) : s
           )
         );
       }
       rafRef.current = requestAnimationFrame(tick);
     };
-    // Expose tick to the visibilitychange handler so it can resume the loop
-    // when the tab becomes visible again (audit H5).
     tickRef.current = tick;
     rafRef.current = requestAnimationFrame(tick);
   }
 
   function stopRollAnimation(finalReels: number[]) {
-    // Land each reel in sequence so the user sees a satisfying left-to-right settle.
     finalReels.forEach((sym, i) => {
       const t = window.setTimeout(() => {
-        // Sync the ref synchronously so the rAF tick stops overwriting this
-        // reel's symbol on the very next frame (the useEffect that mirrors
-        // reelStates → reelStatesRef runs after paint, leaving a one-frame gap
-        // where the just-landed reel's symbol could be replaced with a random one).
         reelStatesRef.current = reelStatesRef.current.map((s, idx) =>
           idx === i ? "landed" : s
         );
@@ -226,14 +194,9 @@ export default function Slots() {
   }
 
   async function handleSpin() {
-    // Double-spin race guard: the Spin button's `disabled={rolling}`
-    // prop prevents most double-clicks, but there's a sub-ms window between
-    // the first click's setRolling(true) state commit and the second click's
-    // handler execution. The ref closes that window synchronously.
     if (rollingRef.current) return;
+    if (!canPlayRef.current) return;
 
-    // Read session values from refs so this handler stays correct in any
-    // binding context (JSX onClick, hotkey listener with [] deps, etc.).
     const wagerNow = wagerRef.current;
     const coinNow = coinTypeRef.current;
     const profNow = profileRef.current;
@@ -277,23 +240,18 @@ export default function Slots() {
       reelStatesRef.current = ["idle", "idle", "idle"];
       setError(apiError ?? "No response from server.");
       setReels([-1, -1, -1]);
-      // Server may have debited before failing — refresh to get the authoritative balance.
       void refreshProfile();
       return;
     }
 
-    // Stop the free-running spin rAF; reel landing timers will settle each reel.
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
     if (reducedMotion) {
-      // Skip the staggered landing animation — set all reels to their final
-      // values simultaneously.
       setReels(data.reels);
       setReelStates(["landed", "landed", "landed"]);
       reelStatesRef.current = ["landed", "landed", "landed"];
     } else {
       stopRollAnimation(data.reels);
-      // Wait for the final reel to land before showing the outcome.
       const lastReelDelay = (data.reels.length - 1) * REEL_STOP_STAGGER_MS + 220;
       await new Promise((r) => setTimeout(r, lastReelDelay));
       if (cancelledRef.current) return;
@@ -304,15 +262,11 @@ export default function Slots() {
     rollingRef.current = false;
     setRolling(false);
 
-    // Server returns the nonce USED for this bet; the next nonce is +1.
     if (data.nonce != null) setPfNonce(data.nonce + 1);
-    // No refreshProfile() here — ProfileContext's realtime subscription on
-    // `profiles` pushes the new balance the instant the server commits the
-    // spin's wager/win transaction. Calling it would fire 2 redundant RPCs
-    // (ensure_user_profile + is_current_user_admin) per spin.
   }
 
   function handleSaveClientSeed() {
+    if (!canPlayRef.current) return;
     const trimmed = clientSeed.trim();
     if (!trimmed) {
       toast.warning("Enter a client seed.");
@@ -327,8 +281,6 @@ export default function Slots() {
     });
   }
 
-  // Cleanup any pending rAF / landing timers when the component unmounts, and
-  // signal the in-flight handleSpin async chain to stop touching state.
   useEffect(() => {
     cancelledRef.current = false;
     return () => {
@@ -339,15 +291,6 @@ export default function Slots() {
     };
   }, [clearLandingTimers]);
 
-  // Keyboard hotkeys. Registered once with [] deps; handlers (handleSpin +
-  // applyWager) read everything from refs internally so first-render
-  // closure values can't trap the user with stale wager/coin/balance.
-  // Focus + modifier guards keep this safe globally (won't hijack Cmd+R;
-  // won't fire while typing in the wager/seed inputs).
-  //   Space / Enter → spin (only when not already rolling)
-  //   [             → half wager (idle only)
-  //   ]             → double wager (idle only), capped by balance + 100k/10M
-  //   M             → max wager (idle only)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -362,7 +305,7 @@ export default function Slots() {
 
       if (k === " " || k === "enter") {
         e.preventDefault();
-        if (!isRolling) void handleSpin();
+        if (!isRolling && canPlayRef.current) void handleSpin();
         return;
       }
       if (k === "[") {
@@ -382,7 +325,6 @@ export default function Slots() {
             coinTypeRef.current === "sweeps_coins"
               ? prof?.sweepsCoins ?? 0
               : prof?.balance ?? 0;
-          // Inline cap avoids depending on the closure-captured wagerCap.
           const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
           const doubled = Math.min(wagerRef.current * 2, activeBalance, cap);
           applyWager(String(Math.max(doubled, 1)));
@@ -412,12 +354,15 @@ export default function Slots() {
     <div className="slots lc-game-page">
       <Seo
         title="Slots"
-        description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 190×, Star pays 80×. 96.5% RTP."
+        description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 190×, Star pays 80×."
         path="/slots"
       />
+      <GameGuestBanner />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Slots</h1>
-        <p className="lc-page__subtitle">Three reels. Match symbols to win. Crown pays 190×, Star pays 80×. 96.5% RTP.</p>
+        <p className="lc-page__subtitle">
+          Three reels. Match symbols to win. Crown pays 190×, Star pays 80×. Provably fair.
+        </p>
       </header>
 
       <div className="slots__layout">
@@ -425,9 +370,7 @@ export default function Slots() {
           <div
             className={`slots__reels${
               !rolling && showResult && lastResult?.won ? " slots__reels--win" : ""
-            }${
-              reels.every((r) => r < 0) && !rolling ? " slots__reels--idle" : ""
-            }`}
+            }${reels.every((r) => r < 0) && !rolling ? " slots__reels--idle" : ""}`}
             role="img"
             aria-label="Slot machine reels"
           >
@@ -437,9 +380,6 @@ export default function Slots() {
                 !rolling && showResult && lastResult?.won && state === "landed";
               const isLoss =
                 !rolling && showResult && lastResult && !lastResult.won && state === "landed";
-              // For the 3-symbol strip: center = result, top/bottom = adjacent
-              // symbols from the symbol ID space (purely decorative). When
-              // spinning, all 3 cycle randomly via the rAF tick above.
               const aboveSymbol = symbol >= 0 ? (symbol + 6) % 7 : -1;
               const belowSymbol = symbol >= 0 ? (symbol + 1) % 7 : -1;
               return (
@@ -453,12 +393,13 @@ export default function Slots() {
                 >
                   {symbol >= 0 ? (
                     <span className="slots__reel-inner">
-                      {/* 3-symbol strip: top (dimmed) / center (win line) / bottom (dimmed).
-                          Audit issue P2 #5 — makes it look like a real slot machine. */}
                       <span className="slots__symbol slots__symbol--adjacent" aria-hidden="true">
                         <SlotSymbol id={aboveSymbol} size={48} />
                       </span>
-                      <span className="slots__symbol slots__symbol--center" aria-label={SYMBOL_NAMES[symbol] ?? `Symbol ${symbol}`}>
+                      <span
+                        className="slots__symbol slots__symbol--center"
+                        aria-label={SYMBOL_NAMES[symbol] ?? `Symbol ${symbol}`}
+                      >
                         <SlotSymbol id={symbol} size={64} />
                       </span>
                       <span className="slots__symbol slots__symbol--adjacent" aria-hidden="true">
@@ -473,16 +414,18 @@ export default function Slots() {
                 </div>
               );
             })}
-            {/* Horizontal win-line indicator across the center row */}
             <div className="slots__win-line" aria-hidden="true" />
           </div>
 
-          {/* Phase polish: idle hint shown only before the first spin. The
-              reels render as `-` placeholders until the first round resolves,
-              so this hint nudges the player to take the obvious action. */}
           {reels.every((r) => r < 0) && !rolling && (
             <p className="slots__press-to-spin" role="note">
-              Press <kbd>Space</kbd> or tap <strong>Spin</strong> to play
+              {canPlay ? (
+                <>
+                  Press <kbd>Space</kbd> or tap <strong>Spin</strong> to play
+                </>
+              ) : (
+                <>Log in to spin</>
+              )}
             </p>
           )}
 
@@ -491,9 +434,7 @@ export default function Slots() {
               {lastResult.won ? (
                 <>
                   <p className="slots__outcome-multiplier">
-                    {lastResult.multiplier}x &mdash;{" "}
-                    {lastResult.symbols.join(" ")}{" "}
-                    win!
+                    {lastResult.multiplier}x &mdash; {lastResult.symbols.join(" ")} win!
                   </p>
                   <p className="slots__outcome-payout">
                     +{coinLabel} {lastResult.payout.toFixed(2)}
@@ -504,13 +445,6 @@ export default function Slots() {
               )}
             </div>
           )}
-          {/* NOTE: an earlier polish pass also added a second SR-only live
-              announcer div with the same role/aria-live — this would have
-              caused screen readers to receive the result TWICE in a row.
-              The outcome <div> above already covers the announcement, so the
-              SR-only duplicate was removed. The .slots__sr-status style +
-              keyframes are intentionally left in place because they're CSS-only
-              and harmless if no element uses them. */}
         </section>
 
         <aside className="slots__controls game-controls">
@@ -532,13 +466,13 @@ export default function Slots() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") applyWager(wagerInput);
                     }}
-                    disabled={rolling}
+                    disabled={rolling || !canPlay}
                     aria-label={`Wager amount in ${coinLabel}`}
                   />
                   <button
                     type="button"
                     className="game-controls__wager-adj"
-                    disabled={rolling}
+                    disabled={rolling || !canPlay}
                     onClick={() => {
                       const half = wager / 2;
                       const clamped = Math.max(half, 1);
@@ -552,7 +486,7 @@ export default function Slots() {
                   <button
                     type="button"
                     className="game-controls__wager-adj"
-                    disabled={rolling}
+                    disabled={rolling || !canPlay}
                     onClick={() => applyWager(String(Math.min(wager * 2, activeBalance, wagerCap)))}
                     aria-label="Double bet"
                   >
@@ -562,7 +496,7 @@ export default function Slots() {
                     type="button"
                     className="game-controls__wager-adj game-controls__wager-adj--max"
                     onClick={() => applyWager(String(Math.min(wagerCap, activeBalance)))}
-                    disabled={rolling}
+                    disabled={rolling || !canPlay}
                     aria-label="Max bet"
                   >
                     Max
@@ -574,23 +508,15 @@ export default function Slots() {
 
           {error && <FormAlert>{error}</FormAlert>}
 
-          {/* Always-visible paytable so players know what to aim for. The
-              winning-symbol row gets `slots__paytable-row--active` after a
-              successful round so the player can connect the payout back to
-              the symbol they hit. */}
           <div className="slots__paytable" aria-label="Paytable">
             <h4 className="slots__paytable-title">Paytable (3 of a kind)</h4>
             <div className="slots__paytable-grid">
               {SLOTS_PAYTABLE.map((row) => {
-                const isWinner =
-                  !!lastResult?.won && lastResult.reels[0] === row.id;
+                const isWinner = !!lastResult?.won && lastResult.reels[0] === row.id;
                 return (
                   <span
                     key={`${row.id}-name`}
-                    className={[
-                      "slots__paytable-row",
-                      isWinner ? "slots__paytable-row--active" : "",
-                    ]
+                    className={["slots__paytable-row", isWinner ? "slots__paytable-row--active" : ""]
                       .filter(Boolean)
                       .join(" ")}
                   >
@@ -599,8 +525,7 @@ export default function Slots() {
                 );
               }).flatMap((nameNode, i) => {
                 const row = SLOTS_PAYTABLE[i]!;
-                const isWinner =
-                  !!lastResult?.won && lastResult.reels[0] === row.id;
+                const isWinner = !!lastResult?.won && lastResult.reels[0] === row.id;
                 return [
                   nameNode,
                   <span
@@ -624,7 +549,9 @@ export default function Slots() {
             onClick={handleSpin}
             busy={rolling}
             busyLabel="Spinning…"
-            label="Spin"
+            label={canPlay ? "Spin" : "Log in to play"}
+            disabled={!canPlay}
+            title={!canPlay ? "Log in to play" : undefined}
           />
 
           <NeedFundsHint />
@@ -632,16 +559,16 @@ export default function Slots() {
           <div className="game-controls__stats">
             <div className="game-controls__stat-row">
               <span className="game-controls__stat-label">Balance ({coinLabel})</span>
-              <span className="game-controls__stat-value">
-                {activeBalance.toFixed(2)}
-              </span>
+              <span className="game-controls__stat-value">{activeBalance.toFixed(2)}</span>
             </div>
             {lastResult && (
               <div className="game-controls__stat-row">
                 <span className="game-controls__stat-label">Last payout</span>
                 <span
                   className={`game-controls__stat-value${
-                    lastResult.won ? " game-controls__stat-value--win" : " game-controls__stat-value--loss"
+                    lastResult.won
+                      ? " game-controls__stat-value--win"
+                      : " game-controls__stat-value--loss"
                   }`}
                 >
                   {lastResult.won ? `+${lastResult.payout.toFixed(2)}` : "0.00"}
@@ -657,12 +584,6 @@ export default function Slots() {
           >
             <summary>Provably Fair</summary>
             <div className="slots__fairness-body">
-              {/* H8 (UI/UX audit): the paytable was previously duplicated here
-                  byte-for-byte from the always-visible block above. Removed
-                  the duplicate — the fairness panel now contains only the
-                  provably-fair disclosure (seed hash, nonce, client seed, RTP
-                  note). The always-visible paytable at the top of the controls
-                  remains the single source of truth. */}
               <label className="slots__fairness-label">
                 Server seed hash
                 <input
@@ -689,11 +610,13 @@ export default function Slots() {
                     className="game-controls__wager-input slots__fairness-input"
                     value={clientSeed}
                     onChange={(e) => setClientSeed(e.target.value)}
+                    disabled={!canPlay}
                   />
                   <button
                     type="button"
                     className="game-controls__play slots__fairness-save-btn"
                     onClick={handleSaveClientSeed}
+                    disabled={!canPlay}
                   >
                     Save
                   </button>
@@ -701,11 +624,7 @@ export default function Slots() {
               </label>
               <p className="slots__fairness-note">
                 Reels are picked via HMAC-SHA256 &mdash; 4-byte float per reel, floor(&times;7).
-              </p>
-              <p className="slots__fairness-note slots__fairness-note--disclosure">
-                RTP disclosure: the reel selection is fair (uniform 1/7 per symbol). The displayed
-                96.5% RTP comes directly from the paytable above &mdash; no additional bias roll is
-                applied to Slots. Verifiable after seed rotation.
+                Outcomes are verifiable after seed rotation.
               </p>
             </div>
           </details>

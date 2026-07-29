@@ -1,18 +1,13 @@
 /**
  * Case Battles v2 — Room (battle view)
- * Uses realtime subscription. No polling.
- *
- * Per-slot "+ Add bot here" buttons live in the arena itself
- * (CaseBattleArenaV2 → `.cb-slot__add-bot`); this component no longer
- * exposes a global Add-bot action. The creator fills any empty slot by
- * clicking it in the waiting-state slot grid, and the auto-start fires
- * once all slots are filled.
  */
 import { useEffect, useRef, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { Seo } from "../../components/Seo/Seo";
+import { GameGuestBanner } from "../../components/GameGuestBanner/GameGuestBanner";
+import { useCanPlay } from "../../lib/canPlay";
 import { useBattleSubscription } from "./useBattleSubscription";
 import { CaseBattleArenaV2 } from "./CaseBattleArenaV2";
 import {
@@ -32,6 +27,7 @@ const EOS_POLL_MS = 2000;
 export function CaseBattlesRoomV2() {
   const { battleId } = useParams();
   const { user } = useAuth();
+  const canPlay = useCanPlay();
   const { refreshProfile } = useProfile();
   const { battle, loading, error } = useBattleSubscription(battleId);
   const [busy, setBusy] = useState(false);
@@ -39,14 +35,10 @@ export function CaseBattlesRoomV2() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [claimed, setClaimed] = useState(false);
   const eosPollRef = useRef<number>(0);
-  // Auto-start guard — fires once when all slots fill so the user never
-  // has to click Start manually (per the product spec). Reset on failures
-  // so the creator can retry on the next render.
   const autoStartedRef = useRef(false);
+  const canPlayRef = useRef(canPlay);
+  canPlayRef.current = canPlay;
 
-  // Poll EOS block while status = 'committing'. Recursive setTimeout instead
-  // of setInterval so a slow response cannot overlap a pending poll (audit M8).
-  // Pauses when the tab is hidden.
   useEffect(() => {
     if (!battle || battle.status !== "committing") return;
 
@@ -63,9 +55,10 @@ export function CaseBattlesRoomV2() {
       if (cancelled) return;
       if (err) {
         consecutiveErrors++;
-        const delay = consecutiveErrors > 3
-          ? Math.min(EOS_POLL_MS * 2 ** (consecutiveErrors - 3), 30_000)
-          : EOS_POLL_MS;
+        const delay =
+          consecutiveErrors > 3
+            ? Math.min(EOS_POLL_MS * 2 ** (consecutiveErrors - 3), 30_000)
+            : EOS_POLL_MS;
         eosPollRef.current = window.setTimeout(poll, delay);
         return;
       }
@@ -81,47 +74,29 @@ export function CaseBattlesRoomV2() {
     };
   }, [battle?.battleId, battle?.status]);
 
-  // Auto-start the battle the moment every slot is filled while we are
-  // still in `waiting`. We do this from a useEffect (rather than from the
-  // click handlers) so a late-joining human also triggers the start without
-  // needing the creator to be present. Idempotent via `autoStartedRef`.
-  //
-  // AUDIT FIX (React #310): This useEffect MUST be invoked unconditionally
-  // on every render (same hook position as the EOS-poll useEffect above).
-  // It previously sat AFTER the three early returns (`!battleId` /
-  // `loading` / `error || !battle`), which meant `useBattleSubscription`
-  // transitioned from loading=true (9 hooks) to loading=false + battle set
-  // (10 hooks) and React threw "Rendered more hooks than during the
-  // previous render" (#310), crashing the page mid-navigation from
-  // /case-battles/create → /case-battles/:battleId. All guards are now
-  // `return` statements INSIDE the effect, so the hook count is constant.
   useEffect(() => {
     if (!battle) return;
     if (battle.status !== "waiting") return;
     if (autoStartedRef.current) return;
     if (battle.players.length < battle.maxPlayers) return;
-    // Only the creator can flip waiting → committing. If the creator isn't
-    // present (e.g. they left after filling with bots), the start RPC will
-    // 403 — we surface the error and let the creator retry on rejoin.
     if (battle.creatorId !== user?.id) return;
+    if (!canPlayRef.current) return;
     autoStartedRef.current = true;
     void startCaseBattle(battle.battleId).then(({ error: err }) => {
       if (err) {
-        autoStartedRef.current = false; // allow a future re-attempt
+        autoStartedRef.current = false;
         setActionError(err);
       }
     });
-  }, [battle?.status, battle?.players.length, battle?.maxPlayers, battle?.creatorId, battle?.battleId, user?.id]);
+  }, [
+    battle?.status,
+    battle?.players.length,
+    battle?.maxPlayers,
+    battle?.creatorId,
+    battle?.battleId,
+    user?.id,
+  ]);
 
-  // Phase polish: contextual hotkey handler for the room. Registered
-  // once with [] deps; reads battle/user from the already-rendering
-  // closure (these are stable for the lifetime of the room page).
-  //   Space / Enter → primary action of current state:
-  //     !myPlayer in waiting → join
-  //     creator + all slots filled → start
-  //     completed + myPayout > 0 + !claimed → claim
-  //   Focus + modifier guards prevent stealing input from text fields or
-  //   hijacking browser shortcuts.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -131,6 +106,7 @@ export function CaseBattlesRoomV2() {
         tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
       if (onTextInput) return;
       if (busyRef.current) return;
+      if (!canPlayRef.current) return;
 
       const k = e.key.toLowerCase();
       if (k !== " " && k !== "enter") return;
@@ -144,19 +120,12 @@ export function CaseBattlesRoomV2() {
       e.preventDefault();
       if (battle.status === "waiting") {
         if (!myPlayer) void handleJoin();
-        else if (
-          isCreator &&
-          battle.players.length >= battle.maxPlayers
-        ) {
+        else if (isCreator && battle.players.length >= battle.maxPlayers) {
           void handleStart();
         }
         return;
       }
-      if (
-        battle.status === "completed" &&
-        myPayout > 0 &&
-        !alreadyClaimed
-      ) {
+      if (battle.status === "completed" && myPayout > 0 && !alreadyClaimed) {
         void handleClaim();
       }
     }
@@ -180,7 +149,9 @@ export function CaseBattlesRoomV2() {
       <div className="cb-room lc-page">
         <div className="cb-room__error">
           <p role="alert">{error ?? "Battle not found."}</p>
-          <Link to="/case-battles" className="lc-btn lc-btn--ghost">Back to battles</Link>
+          <Link to="/case-battles" className="lc-btn lc-btn--ghost">
+            Back to battles
+          </Link>
         </div>
       </div>
     );
@@ -190,14 +161,16 @@ export function CaseBattlesRoomV2() {
   const myPlayer = battle.players.find((p) => p.userId === user?.id);
   const isWaiting = battle.status === "waiting";
   const isCompleted = battle.status === "completed";
-  const canStart = isWaiting && isCreator && battle.players.length >= battle.maxPlayers;
-  const canJoin = isWaiting && !myPlayer;
+  const canStart =
+    canPlay && isWaiting && isCreator && battle.players.length >= battle.maxPlayers;
+  const canJoin = canPlay && isWaiting && !myPlayer;
   const myPayout = myPlayer ? calculatePayoutForSlot(battle, myPlayer.slot) : 0;
   const alreadyClaimed = claimed || Boolean(myPlayer?.claimedAt);
-  const canClaim = isCompleted && myPayout > 0 && !alreadyClaimed;
+  const canClaim = canPlay && isCompleted && myPayout > 0 && !alreadyClaimed;
   const joinCharge = entryAfterBorrow(battle.entryCost, battle.borrowPercent);
 
   async function handleJoin() {
+    if (!canPlayRef.current) return;
     if (busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -209,6 +182,7 @@ export function CaseBattlesRoomV2() {
   }
 
   async function handleStart() {
+    if (!canPlayRef.current) return;
     if (busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -220,6 +194,7 @@ export function CaseBattlesRoomV2() {
   }
 
   async function handleClaim() {
+    if (!canPlayRef.current) return;
     if (!myPlayer || !battle || busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -242,51 +217,75 @@ export function CaseBattlesRoomV2() {
         description="Live Case Battle room. Watch the reels spin in real time."
         path={`/case-battles/${battleId}`}
       />
+      <GameGuestBanner />
 
-      {/* Top bar */}
       <div className="cb-room__topbar">
-        <Link to="/case-battles" className="cb-room__back">← Battles</Link>
+        <Link to="/case-battles" className="cb-room__back">
+          ← Battles
+        </Link>
         <div className="cb-room__info">
-          <span className="cb-room__mode">{gamemodeLabelWithCrazy(battle.gamemode, battle.crazy)}</span>
+          <span className="cb-room__mode">
+            {gamemodeLabelWithCrazy(battle.gamemode, battle.crazy)}
+          </span>
           <span className="cb-room__pmode">{battle.playerMode.toUpperCase()}</span>
-          <span className="cb-room__pot">Pot: {formatCoins(battle.potTotal, battle.coinType)}</span>
+          <span className="cb-room__pot">
+            Pot: {formatCoins(battle.potTotal, battle.coinType)}
+          </span>
           <span className={`cb-room__coin-badge cb-room__coin-badge--${battle.coinType}`}>
             {battle.coinType === "sweeps_coins" ? "SC" : "GC"}
           </span>
         </div>
       </div>
 
-      {actionError && <p className="cb-room__action-error" role="alert">{actionError}</p>}
+      {actionError && (
+        <p className="cb-room__action-error" role="alert">
+          {actionError}
+        </p>
+      )}
 
-      {/* Action buttons for the waiting state — the arena renders per-slot
-          "+ Add bot here" buttons, which feed slot-fill auto-start. The
-          room keeps Join (for non-creators) + Start (once all slots full). */}
       {isWaiting && (
         <div className="cb-room__actions">
           {canJoin && (
-            <button type="button" className="cb-btn cb-btn--primary" onClick={handleJoin} disabled={busy}>
+            <button
+              type="button"
+              className="cb-btn cb-btn--primary"
+              onClick={handleJoin}
+              disabled={busy}
+            >
               Join battle ({formatCoins(joinCharge, battle.coinType)}
               {battle.borrowPercent > 0 ? ` after ${battle.borrowPercent}% borrow` : ""})
             </button>
           )}
+          {!canPlay && isWaiting && !myPlayer && (
+            <p className="cb-room__hint">Log in to join this battle.</p>
+          )}
           {canStart && (
-            <button type="button" className="cb-btn cb-btn--primary" onClick={handleStart} disabled={busy}>
+            <button
+              type="button"
+              className="cb-btn cb-btn--primary"
+              onClick={handleStart}
+              disabled={busy}
+            >
               Start battle
             </button>
           )}
-          {isCreator && !canStart && battle.players.length < battle.maxPlayers && (
+          {isCreator && !canStart && battle.players.length < battle.maxPlayers && canPlay && (
             <p className="cb-room__hint">
-              Click <strong>+ Add bot</strong> on any empty slot below to fill it.
-              Battle auto-starts when all {battle.maxPlayers} slots are filled.
+              Click <strong>+ Add bot</strong> on any empty slot below to fill it. Battle
+              auto-starts when all {battle.maxPlayers} slots are filled.
             </p>
           )}
         </div>
       )}
 
-      {/* Claim button for completed state */}
       {canClaim && (
         <div className="cb-room__claim">
-          <button type="button" className="cb-btn cb-btn--primary cb-btn--claim" onClick={handleClaim} disabled={busy}>
+          <button
+            type="button"
+            className="cb-btn cb-btn--primary cb-btn--claim"
+            onClick={handleClaim}
+            disabled={busy}
+          >
             {busy ? "Claiming…" : `Claim ${formatCoins(myPayout, battle.coinType)}`}
           </button>
         </div>
@@ -297,21 +296,14 @@ export function CaseBattlesRoomV2() {
         </div>
       )}
 
-      {/* Phase polish: hotkey hint footer mirrors the slot-machine controls.
-          Renders only when the user has a primary action available AND
-          nothing else is busy. The hint changes wording depending on the
-          dominant action type. */}
-      {!busy && (canJoin || canStart || canClaim) && (
+      {!busy && canPlay && (canJoin || canStart || canClaim) && (
         <p className="cb-room__hotkey-hint" role="note">
           <kbd>Space</kbd> {canClaim ? "claim" : canStart ? "start" : "join"}
         </p>
       )}
 
-      {/* Arena — pass isCreator so the waiting branch renders per-slot
-          "+ Add bot here" buttons. */}
       <CaseBattleArenaV2 battle={battle} userId={user?.id} isCreator={isCreator} />
 
-      {/* Provably-fair panel — inline collapsible under the arena. */}
       <details className="cb-fairness" data-testid="cb-fairness">
         <summary>Provably fair</summary>
         <div className="cb-fairness__body">
@@ -337,8 +329,8 @@ export function CaseBattlesRoomV2() {
           )}
           {!isCompleted && (
             <p className="cb-fairness__note">
-              The revealed seed is published here once the battle completes —
-              you can then verify every drop against HMAC-SHA256(server seed, nonce).
+              The revealed seed is published here once the battle completes — you can then
+              verify every drop against HMAC-SHA256(server seed, nonce).
             </p>
           )}
         </div>

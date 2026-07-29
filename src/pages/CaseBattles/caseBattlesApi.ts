@@ -13,20 +13,19 @@ import {
   type LocalBattle,
 } from "../../lib/local-case-battles";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+function normalizeGamemode(raw: unknown): BattleGamemode {
+  const s = String(raw ?? "standard");
+  if (s === "normal") return "standard";
+  return s as BattleGamemode;
+}
 
-/**
- * Convert a local in-memory battle to the CaseBattleView shape.
- * Tie-aware: every winning slot (per `winningSlots`) gets its share
- * of the borrow-adjusted pot; bots never receive payout.
- */
 function localToView(b: LocalBattle): CaseBattleView {
   const clamped = Math.max(0, Math.min(80, b.borrowPercent));
   const keepMult = (100 - clamped) / 100;
   return {
     battleId: b.id,
     creatorId: b.creatorId,
-    gamemode: b.gamemode as BattleGamemode,
+    gamemode: normalizeGamemode(b.gamemode),
     crazy: b.crazy,
     playerMode: b.playerMode,
     maxPlayers: b.maxPlayers,
@@ -73,7 +72,7 @@ function parseBattle(row: Record<string, unknown>): CaseBattleView {
   return {
     battleId: String(row.id),
     creatorId: String(row.creator_id ?? ""),
-    gamemode: String(row.gamemode) as BattleGamemode,
+    gamemode: normalizeGamemode(row.gamemode),
     crazy: Boolean(row.crazy),
     playerMode: String(row.player_mode),
     maxPlayers: Number(row.max_players),
@@ -121,34 +120,11 @@ function parseDrop(row: Record<string, unknown>): BattleDrop {
   };
 }
 
-// ─── Public API ──────────────────────────────────────────────────────────────
-
-/**
- * Explicit column list for `case_battles_safe` / `case_battles` reads.
- *
- * Auditing (perf H4 + security R3): `select("*")` previously leaked
- * `internal_seed` and `battle_seed` to the client (the safe view exposes
- * them only when status='completed', but `*` would still ship the columns
- * in the response payload). It also fetched ~10 unused columns (eos fields,
- * seeds) per row, inflating bandwidth on the lobby list.
- *
- * `parseBattle` consumes exactly these fields. `battle_seed` and
- * `internal_seed` are intentionally NOT selected — the V2 client does not
- * read `battleSeed` from the parsed view except inside the provably-fair
- * panel on completed battles. To support that panel we use a separate
- * `ROOM_BATTLE_COLUMNS` (declared below) when fetching a single battle
- * for the room view.
- */
 const LOBBY_BATTLE_COLUMNS =
   "id, creator_id, gamemode, crazy, player_mode, max_players, case_ids, " +
   "rounds, entry_cost, coin_type, borrow_percent, pot_total, status, " +
   "seed_hash, created_at, started_at, completed_at";
 
-/**
- * Room view column list — includes `battle_seed` and `eos_block_id` so
- * the provably-fair panel can show the revealed seed + EOS block binding
- * once the battle completes.
- */
 const ROOM_BATTLE_COLUMNS =
   "id, creator_id, gamemode, crazy, player_mode, max_players, case_ids, " +
   "rounds, entry_cost, coin_type, borrow_percent, pot_total, status, " +
@@ -159,19 +135,8 @@ const PLAYER_COLUMNS = "slot, user_id, is_bot, username, avatar_seed, payout_amo
 const DROP_COLUMNS =
   "slot, round, case_id, item_id, item_name, item_value, item_rarity";
 
-// Safety cap on drops fetched per battle. The schema's
-// `unique(battle_id, slot, round)` constraint bounds the actual row count
-// to max_players(6) × max_rounds(≤50) = 300; 3600 is a generous safety net.
 const DROPS_LIMIT = 3600;
 
-/**
- * Batch player-count query — returns a Map<battleId, count> for all
- * given battle IDs. Used by the lobby to surface accurate player counts
- * without shipping the full `players` array on every battle in the list.
- *
- * Only the Supabase path needs this — the local-play path already
- * supplies player lengths via `localToView`.
- */
 export type PlayerCountMap = Map<string, number>;
 
 async function supabasePlayerCounts(battleIds: string[]): Promise<PlayerCountMap> {
@@ -194,7 +159,6 @@ export async function listOpenBattles(options?: {
   coinType?: "balance" | "sweeps_coins";
 }): Promise<{ data: CaseBattleView[] | null; error: string | null }> {
   if (!isSupabaseConfigured) {
-    // Local-play: filter by coinType + supply the count from in-memory.
     const all = localListOpenBattles().map(localToView);
     const filtered = options?.coinType
       ? all.filter((b) => b.coinType === options.coinType)
@@ -213,23 +177,14 @@ export async function listOpenBattles(options?: {
   }
   const { data, error } = await query;
   if (error) {
-    // Never mix real Supabase errors with the local demo lobby.
     return { data: null, error: error.message };
   }
-  // Cast via `unknown` — see note in supabasePlayerCounts about schema-less inference.
   const battles = ((data ?? []) as unknown as Record<string, unknown>[]).map(parseBattle);
 
-  // Batch-fetch player counts for the rendered row set so each card shows
-  // "n / max" instead of the broken "0 / max" the old code produced
-  // (because BATTLE_COLUMNS intentionally omits the players array).
   const counts = await supabasePlayerCounts(battles.map((b) => b.battleId));
   for (const b of battles) {
     b.playerCount = counts.get(b.battleId) ?? 0;
   }
-  // The lobby query doesn't load payouts (`select` is explicit and minimal),
-  // so winningSlots is unknown here. The room query fills it in once the
-  // user opens the battle. We deliberately leave it undefined in the
-  // lobby so the UI falls back to a generic "battle in progress" pill.
   return { data: battles, error: null };
 }
 
@@ -237,7 +192,6 @@ export async function viewCaseBattle(battleId: string): Promise<{
   data: CaseBattleView | null;
   error: string | null;
 }> {
-  // Check local battles first (covers the local-play case).
   const local = localViewCaseBattle(battleId);
   if (local) return { data: localToView(local), error: null };
   if (!isSupabaseConfigured) return { data: null, error: "Battle not found." };
@@ -265,20 +219,14 @@ export async function viewCaseBattle(battleId: string): Promise<{
   if (battleErr) return { data: null, error: battleErr.message };
   if (!battleRow) return { data: null, error: "Battle not found." };
 
-  // Cast via `unknown` — see note in listOpenBattles about the supabase-js
-  // column-list type inference producing a `GenericStringError` sentinel.
   const battle = parseBattle(battleRow as unknown as Record<string, unknown>);
-  battle.players = (playerRows ?? []).map((p) => {
-    const parsed = parsePlayer(p as unknown as Record<string, unknown>);
-    return parsed;
-  });
-  battle.drops = (dropRows ?? []).map((d) => parseDrop(d as unknown as Record<string, unknown>));
-  // The room view includes full players, so the player count is just
-  // the array length — no separate count query needed here.
+  battle.players = (playerRows ?? []).map((p) =>
+    parsePlayer(p as unknown as Record<string, unknown>)
+  );
+  battle.drops = (dropRows ?? []).map((d) =>
+    parseDrop(d as unknown as Record<string, unknown>)
+  );
   battle.playerCount = battle.players.length;
-  // Derive `winningSlots` from the stored `payout_amount` on each player.
-  // Tied players all carry a non-zero share under the new tie semantics,
-  // so any positive payout amount = winner. Bots never carry a credit.
   if (battle.status === "completed") {
     battle.winningSlots = battle.players
       .filter((p) => p.payoutAmount > 0 && !p.isBot)
@@ -318,7 +266,6 @@ export async function createCaseBattle(params: {
 }
 
 export async function joinCaseBattle(battleId: string): Promise<{ error: string | null }> {
-  // Local battles: creator is already slot 0, so "join" is a no-op.
   const local = localViewCaseBattle(battleId);
   if (local) return { error: null };
   if (!isSupabaseConfigured) return { error: null };
@@ -331,7 +278,6 @@ export async function addBotToBattle(
   slotIndex?: number,
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured) return localAddBot(battleId, slotIndex);
-  // Prefer local only when this battle is already an in-memory demo battle.
   if (localViewCaseBattle(battleId)) return localAddBot(battleId, slotIndex);
   const { error } = await supabase.rpc("cb_add_bot", {
     p_battle_id: battleId,
@@ -351,7 +297,6 @@ export async function startCaseBattle(battleId: string): Promise<{
   data: { seedHash: string; eosBlockTarget: number } | null;
   error: string | null;
 }> {
-  // Local demo battles only — never start a real battle via local engine.
   if (localViewCaseBattle(battleId)) return localStartBattle(battleId);
   if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
   const { data, error } = await invokeEdgeFunction<{
@@ -380,8 +325,6 @@ export async function claimPayout(
 ): Promise<{ data: { balance: number } | null; error: string | null }> {
   if (localViewCaseBattle(battleId)) return localClaimPayout(battleId, slot);
   if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
-  // Edge fn recomputes payout server-side from stored drops — audit #002
-  // dropped the legacy `amount` param.
   const { data, error } = await invokeEdgeFunction<{ balance: number }>("case-battle-v2", {
     action: "claim",
     battleId,
@@ -389,8 +332,6 @@ export async function claimPayout(
   });
   return { data, error };
 }
-
-// ─── Derived helpers ─────────────────────────────────────────────────────────
 
 export function playerTotalValue(drops: BattleDrop[], slot: number): number {
   return drops.filter((d) => d.slot === slot).reduce((sum, d) => sum + d.itemValue, 0);
@@ -405,19 +346,6 @@ export function isPlayerSlot(battle: CaseBattleView, slot: number, userId?: stri
   return player?.userId === userId;
 }
 
-/**
- * Prefer server-stored `payoutAmount` (written at resolve). Fall back to a
- * client estimate only when the column is missing (pre-migration battles).
- *
- * Tie semantics match `computePayouts` in the edge function and
- * `resolveBattle` in local-case-battles.ts:
- *   - Solo: tied slots split pot evenly (last slot absorbs rounding remainder).
- *   - Team (2v2 / 3v3 / 2v2v2): tied teams share the pot; each team's
- *     human members divide their team's slice evenly.
- *   - Group: split among humans equally.
- *   - Jackpot / Crazy jackpot: weighted single-win (approximation only —
- *     real weighting requires the battle seed).
- */
 export function calculatePayoutForSlot(
   battle: CaseBattleView,
   slot: number,
@@ -488,7 +416,6 @@ export function calculatePayoutForSlot(
     return Math.round((teamSlice / humansOnTeam.length) * 100) / 100;
   }
 
-  // Solo tie-aware (1v1 / 1v1v1 / 1v1v1v1).
   const scores = battle.players.map((p) => scoreOf(p.slot));
   let bestScore = scores[0] ?? 0;
   for (const s of scores) {
@@ -500,7 +427,6 @@ export function calculatePayoutForSlot(
     .sort((a, c) => a - c);
   if (!tiedSlots.includes(slot)) return 0;
   const share = Math.round((pot / tiedSlots.length) * 100) / 100;
-  // Last tied slot absorbs the rounding remainder so the total stays equal to pot.
   const lastIdx = tiedSlots.length - 1;
   if (slot === tiedSlots[lastIdx]) {
     return Math.round(pot - share * lastIdx * 100) / 100;
@@ -508,7 +434,7 @@ export function calculatePayoutForSlot(
   return share;
 }
 
-/** @deprecated Prefer calculatePayoutForSlot — kept for call sites that need a single winner. */
+/** @deprecated Prefer calculatePayoutForSlot */
 export function calculateWinner(
   battle: CaseBattleView,
 ): { slot: number; amount: number } | null {

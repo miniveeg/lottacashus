@@ -1,28 +1,13 @@
 /**
- * Case Battles v2 — Create battle (Diceblox-style)
- *
- * UX model:
- *  - "Add Cases" button opens a modal picker with every case in the catalog.
- *  - Each modal card shows a +/- counter; identical cases live in a single
- *    GROUP with a ×count badge so that "5× Phoenix" is one chip, not five.
- *  - Grouped chips can be reordered in three modes:
- *      • Cheapest → Most expensive   (auto-sort by price, ascending)
- *      • Most expensive → Cheapest   (auto-sort by price, descending)
- *      • Custom                      (drag-and-drop)
- *  - Identity constraint: identical cases never interleave because each
- *    case is exactly ONE chip (its count is the multiplier on rounds).
- *  - "Add Case" increments the matching group count (cap 10/copy, 50/cases).
- *  - "Remove Case" decrements; if count hits 0 the chip disappears.
- *
- * The wire `caseIds` array is the run-length expanded flat list used by the
- * server (5× Phoenix → ["phoenix","phoenix",…,"phoenix"] of length 5). The
- * `rounds` count comes from this array's length.
+ * Case Battles v2 — Create battle
  */
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { Seo } from "../../components/Seo/Seo";
+import { GameGuestBanner } from "../../components/GameGuestBanner/GameGuestBanner";
+import { useCanPlay } from "../../lib/canPlay";
 import { createCaseBattle } from "./caseBattlesApi";
 import { GAMEMODES, playerModeOptions, type BattleGamemode } from "./types";
 import { CASE_CATALOG, getCaseById } from "../../lib/games/case-battles";
@@ -39,6 +24,7 @@ const MAX_COUNT_PER_GROUP = 10;
 
 export function CaseBattlesCreateV2() {
   const navigate = useNavigate();
+  const canPlay = useCanPlay();
   const { profile } = useProfile();
   const { coinType, label: coinLabel } = usePlayMode();
   const [gamemode, setGamemode] = useState<BattleGamemode>("standard");
@@ -51,8 +37,6 @@ export function CaseBattlesCreateV2() {
   const [error, setError] = useState<string | null>(null);
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("custom");
-
-  // ─── Modal-local state ───────────────────────────────────────────────
   const [search, setSearch] = useState("");
   const [modalSort, setModalSort] = useState<"price-low" | "price-high" | "popular">("popular");
 
@@ -63,12 +47,12 @@ export function CaseBattlesCreateV2() {
   );
   const actualEntry = entryAfterBorrow(entryCost, borrowPercent);
   const totalRounds = useMemo(() => groups.reduce((s, g) => s + g.count, 0), [groups]);
-  const canCreate = totalRounds >= 1 && totalRounds <= 50 && actualEntry <= balance && !busy;
+  const canCreate =
+    canPlay && totalRounds >= 1 && totalRounds <= 50 && actualEntry <= balance && !busy;
 
   const pModes = playerModeOptions(gamemode);
   const canBeCrazy = GAMEMODES.find((g) => g.id === gamemode)?.canBeCrazy ?? false;
 
-  // ─── Effective order — either user-controlled (`custom`) or auto-sorted ─
   const orderedGroups = useMemo<CaseGroup[]>(() => {
     if (sortMode === "custom") return groups;
     const enriched = groups.map((g) => ({ ...g, _price: getCaseById(g.id)?.price ?? 0 }));
@@ -76,7 +60,6 @@ export function CaseBattlesCreateV2() {
     return enriched.map(({ id, count }) => ({ id, count }));
   }, [groups, sortMode]);
 
-  // ─── Modal case list (search + sort, with selection count badges) ─────
   const sortedCases = useMemo(() => {
     let list = [...CASE_CATALOG];
     const q = search.trim().toLowerCase();
@@ -84,12 +67,11 @@ export function CaseBattlesCreateV2() {
     switch (modalSort) {
       case "price-high": list.sort((a, b) => b.price - a.price); break;
       case "price-low":  list.sort((a, b) => a.price - b.price);  break;
-      default: break; // popular = catalog order
+      default: break;
     }
     return list;
   }, [search, modalSort]);
 
-  // ─── counter helpers ─────────────────────────────────────────────────
   const incrementGroup = useCallback((caseId: string) => {
     setGroups((prev) => {
       if (prev.reduce((s, g) => s + g.count, 0) >= 50) return prev;
@@ -119,7 +101,6 @@ export function CaseBattlesCreateV2() {
 
   const clearAll = () => setGroups([]);
 
-  // ─── Drag-and-drop reordering (native HTML5 DnD) ──────────────────────
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const dragIndexRef = useRef<number | null>(null);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
@@ -160,8 +141,8 @@ export function CaseBattlesCreateV2() {
     handleDragEnd();
   };
 
-  // ─── Submit → flatten groups to ordered caseIds, send to backend ──────
   async function handleCreate() {
+    if (!canPlay) return;
     if (busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -185,23 +166,8 @@ export function CaseBattlesCreateV2() {
     }
   }
 
-  // Read-from-refs variants so the hotkey handler (registered once with
-  // [] deps) doesn't capture stale first-render state when the user adjusts
-  // groups/types/wager/etc. via the controls before pressing the shortcut.
-  const gamemodeRef = useRef<BattleGamemode>("standard");
-  gamemodeRef.current = gamemode;
-  const playerModeRef = useRef<string>("1v1");
-  playerModeRef.current = playerMode;
   const busyRefRead = busyRef;
 
-  // Keyboard hotkeys:
-  //   E       → open the case picker modal (idle only)
-  //   Esc     → close the case picker modal (when modal is open)
-  //   Ctrl/⌘+Enter → submit (only valid when canCreate)
-  // Focus + modifier guards prevent stealing input from text fields or
-  // conflicts with browser shortcuts (Ctrl+Enter is a browser submit in
-  // form contexts — we explicitly check e.preventDefault on the keyboard
-  // path to avoid duplicate submits).
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.altKey) return;
@@ -209,9 +175,6 @@ export function CaseBattlesCreateV2() {
       const tag = el?.tagName;
       const onTextInput =
         tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
-      // Note: SELECT bail not enforced — the case picker sort dropdown
-      // is a <select> and Esc-to-close on it could conflict. We keep
-      // Esc-to-close scoped to the modal (handled inside the modal below).
       const k = e.key.toLowerCase();
       if (k === "escape" && showCaseModal) {
         e.preventDefault();
@@ -224,11 +187,6 @@ export function CaseBattlesCreateV2() {
         setShowCaseModal(true);
         return;
       }
-      // Ctrl/Cmd+Enter → submit. ctrlKey catches BOTH Ctrl (Windows/Linux)
-      // and Cmd (mac) since browsers fire `metaKey` for Cmd — we check
-      // either to support cross-platform. Without ctrl/meta the Enter
-      // keystroke is intentionally NOT bound to create (Enter inside a
-      // <select> or any other focusable would cause submits).
       if ((e.ctrlKey || e.metaKey) && k === "enter") {
         e.preventDefault();
         if (!busyRefRead.current && canCreate) {
@@ -244,6 +202,7 @@ export function CaseBattlesCreateV2() {
   return (
     <div className="cb-create lc-page">
       <Seo title="Create Case Battle" path="/case-battles/create" noindex />
+      <GameGuestBanner />
 
       <div className="cb-create__topbar">
         <button type="button" className="cb-create__exit" onClick={() => navigate("/case-battles")}>
@@ -263,21 +222,23 @@ export function CaseBattlesCreateV2() {
         Creating in <strong>{coinLabel}</strong>. Switch in the topbar to use the other balance.
       </p>
 
-      {/* Phase polish: contextual idle hint shown when no cases are picked
-          yet and the player hasn't typed in any control. Stays out of the
-          way once the user has focus on the type/toggle. */}
       {orderedGroups.length === 0 && (
         <p className="cb-create__press-to-add" role="note">
-          Tap <strong>Add Cases</strong> or press <kbd>E</kbd> to begin
+          {canPlay ? (
+            <>
+              Tap <strong>Add Cases</strong> or press <kbd>E</kbd> to begin
+            </>
+          ) : (
+            <>Log in to create a battle</>
+          )}
         </p>
       )}
 
-      {/* ── Settings bar (mode / type / crazy / borrow) ────────────── */}
       <div className="cb-create__settings">
         <div className="cb-create__setting">
           <label>Mode</label>
           <div className="cb-create__dropdown">
-            <select value={playerMode} onChange={(e) => setPlayerMode(e.target.value)}>
+            <select value={playerMode} onChange={(e) => setPlayerMode(e.target.value)} disabled={!canPlay}>
               {pModes.map((m) => (
                 <option key={m.id} value={m.id}>{m.label}</option>
               ))}
@@ -293,6 +254,7 @@ export function CaseBattlesCreateV2() {
                 key={mode.id}
                 type="button"
                 className={"cb-type-btn" + (gamemode === mode.id ? " cb-type-btn--active" : "")}
+                disabled={!canPlay}
                 onClick={() => {
                   setGamemode(mode.id);
                   if (!mode.canBeCrazy) setCrazy(false);
@@ -313,6 +275,7 @@ export function CaseBattlesCreateV2() {
               type="button"
               className={"cb-toggle" + (crazy ? " cb-toggle--on" : "")}
               onClick={() => setCrazy(!crazy)}
+              disabled={!canPlay}
               aria-pressed={crazy}
             >
               <span className="cb-toggle__knob" />
@@ -325,6 +288,7 @@ export function CaseBattlesCreateV2() {
             type="button"
             className={"cb-toggle" + (borrowPercent > 0 ? " cb-toggle--on" : "")}
             onClick={() => setBorrowPercent(borrowPercent > 0 ? 0 : 50)}
+            disabled={!canPlay}
             aria-pressed={borrowPercent > 0}
             aria-label={`Borrow toggle, currently ${borrowPercent > 0 ? "on at " + borrowPercent + " percent" : "off"}`}
           >
@@ -336,10 +300,9 @@ export function CaseBattlesCreateV2() {
         </div>
       </div>
 
-      {/* ── Case area: drop zone + grouped chip list with DnD ───── */}
       <div className="cb-create__case-area">
         {orderedGroups.length === 0 ? (
-          <button type="button" className="cb-create__add-cases-btn" onClick={() => setShowCaseModal(true)}>
+          <button type="button" className="cb-create__add-cases-btn" onClick={() => setShowCaseModal(true)} disabled={!canPlay}>
             <Plus size={24} />
             <span>Add Cases</span>
           </button>
@@ -359,7 +322,6 @@ export function CaseBattlesCreateV2() {
               </div>
             </div>
 
-            {/* Order selector — switches between custom (DnD) and auto-sorted. */}
             <div className="cb-create__order-bar">
               <span className="cb-create__order-label">Order:</span>
               {(["price-low", "price-high", "custom"] as SortMode[]).map((m) => (
@@ -372,11 +334,6 @@ export function CaseBattlesCreateV2() {
                   {m === "price-low" ? "Cheapest → Most expensive" : m === "price-high" ? "Most expensive → Cheapest" : "Custom (drag)"}
                 </button>
               ))}
-              {sortMode !== "custom" && (
-                <span className="cb-create__order-hint">
-                  Switch to Custom to drag-and-drop reorder
-                </span>
-              )}
             </div>
 
             <div
@@ -424,22 +381,11 @@ export function CaseBattlesCreateV2() {
                       <span className="cb-create__case-thumb-price">{formatCoins(c?.price ?? 0, coinType)}</span>
                     </div>
                     <div className="cb-create__case-thumb-counter" aria-label={`Quantity ${g.count}`}>
-                      <button
-                        type="button"
-                        className="cb-create__counter-btn"
-                        onClick={() => decrementGroup(g.id)}
-                        aria-label={`Remove one ${c?.name ?? g.id}`}
-                      >
+                      <button type="button" className="cb-create__counter-btn" onClick={() => decrementGroup(g.id)} aria-label={`Remove one ${c?.name ?? g.id}`}>
                         <Minus size={10} aria-hidden />
                       </button>
                       <span className="cb-create__counter-value">×{g.count}</span>
-                      <button
-                        type="button"
-                        className="cb-create__counter-btn"
-                        onClick={() => incrementGroup(g.id)}
-                        aria-label={`Add one more ${c?.name ?? g.id}`}
-                        disabled={g.count >= MAX_COUNT_PER_GROUP || totalRounds >= 50}
-                      >
+                      <button type="button" className="cb-create__counter-btn" onClick={() => incrementGroup(g.id)} aria-label={`Add one more ${c?.name ?? g.id}`} disabled={g.count >= MAX_COUNT_PER_GROUP || totalRounds >= 50}>
                         <Plus size={10} aria-hidden />
                       </button>
                     </div>
@@ -451,7 +397,6 @@ export function CaseBattlesCreateV2() {
         )}
       </div>
 
-      {/* ── Summary bar + submit ─────────────────────────────────── */}
       <div className="cb-create__bottom">
         <div className="cb-create__summary-bar">
           <div className="cb-create__summary-item">
@@ -468,38 +413,29 @@ export function CaseBattlesCreateV2() {
           </div>
         </div>
         {error && <p className="cb-create__error" role="alert">{error}</p>}
-        {actualEntry > balance && <p className="cb-create__error">Insufficient {coinLabel} balance</p>}
+        {actualEntry > balance && canPlay && <p className="cb-create__error">Insufficient {coinLabel} balance</p>}
         <button
           type="button"
           className="cb-btn cb-btn--primary cb-create__submit"
           onClick={handleCreate}
           disabled={!canCreate}
         >
-          {busy ? "Creating…" : `Create Battle (${formatCoins(actualEntry, coinType)})`}
+          {!canPlay
+            ? "Log in to create"
+            : busy
+              ? "Creating…"
+              : `Create Battle (${formatCoins(actualEntry, coinType)})`}
         </button>
-        {/* Phase polish: keyboard hint footer. Inside the bottom panel
-            so it sits visually next to the submit button it describes. */}
-        {!busy && (
+        {!busy && canPlay && (
           <p className="cb-create__hotkey-hint" role="note">
             <kbd>E</kbd> add cases · <kbd>⌘</kbd>/<kbd>Ctrl</kbd>+<kbd>Enter</kbd> create
           </p>
         )}
       </div>
 
-      {/* ── Case picker modal ────────────────────────────────────── */}
       {showCaseModal && (
-        <div
-          className="cb-modal-overlay"
-          onClick={() => setShowCaseModal(false)}
-          role="presentation"
-        >
-          <div
-            className="cb-modal"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cb-picker-title"
-          >
+        <div className="cb-modal-overlay" onClick={() => setShowCaseModal(false)} role="presentation">
+          <div className="cb-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="cb-picker-title">
             <div className="cb-modal__header">
               <h2 id="cb-picker-title">Add Cases</h2>
               <button type="button" className="cb-modal__close" onClick={() => setShowCaseModal(false)} aria-label="Close case picker">
@@ -509,12 +445,7 @@ export function CaseBattlesCreateV2() {
             <div className="cb-modal__controls">
               <div className="cb-modal__search">
                 <Search size={16} aria-hidden />
-                <input
-                  type="search"
-                  placeholder="Search cases…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+                <input type="search" placeholder="Search cases…" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <div className="cb-modal__sort">
                 <select value={modalSort} onChange={(e) => setModalSort(e.target.value as typeof modalSort)} aria-label="Sort cases">
@@ -530,10 +461,7 @@ export function CaseBattlesCreateV2() {
                 const current = groups.find((g) => g.id === lootCase.id)?.count ?? 0;
                 const atCap = current >= MAX_COUNT_PER_GROUP || totalRounds >= 50;
                 return (
-                  <div
-                    key={lootCase.id}
-                    className={"cb-modal__case-card" + (current > 0 ? " cb-modal__case-card--selected" : "")}
-                  >
+                  <div key={lootCase.id} className={"cb-modal__case-card" + (current > 0 ? " cb-modal__case-card--selected" : "")}>
                     {current > 0 && (
                       <span className="cb-modal__case-count" aria-label={`${current} selected`}>×{current}</span>
                     )}
@@ -543,22 +471,10 @@ export function CaseBattlesCreateV2() {
                     <span className="cb-modal__case-name">{lootCase.name}</span>
                     <span className="cb-modal__case-price">{formatCoins(lootCase.price, coinType)}</span>
                     <div className="cb-modal__case-actions">
-                      <button
-                        type="button"
-                        className="cb-modal__case-step-btn"
-                        onClick={() => decrementGroup(lootCase.id)}
-                        aria-label={`Remove one ${lootCase.name}`}
-                        disabled={current <= 0}
-                      >
+                      <button type="button" className="cb-modal__case-step-btn" onClick={() => decrementGroup(lootCase.id)} aria-label={`Remove one ${lootCase.name}`} disabled={current <= 0}>
                         <Minus size={10} aria-hidden />
                       </button>
-                      <button
-                        type="button"
-                        className="cb-modal__case-step-btn cb-modal__case-step-btn--add"
-                        onClick={() => incrementGroup(lootCase.id)}
-                        aria-label={`Add one ${lootCase.name}`}
-                        disabled={atCap}
-                      >
+                      <button type="button" className="cb-modal__case-step-btn cb-modal__case-step-btn--add" onClick={() => incrementGroup(lootCase.id)} aria-label={`Add one ${lootCase.name}`} disabled={atCap}>
                         <Plus size={10} aria-hidden />
                       </button>
                     </div>
@@ -574,15 +490,8 @@ export function CaseBattlesCreateV2() {
                 <span className="cb-modal__footer-total">{formatCoins(entryCost, coinType)}</span>
               </div>
               <div className="cb-modal__footer-actions">
-                <button type="button" className="cb-btn cb-btn--ghost" onClick={() => setShowCaseModal(false)}>
-                  Close
-                </button>
-                <button
-                  type="button"
-                  className="cb-btn cb-btn--primary"
-                  onClick={() => setShowCaseModal(false)}
-                  disabled={groups.length === 0}
-                >
+                <button type="button" className="cb-btn cb-btn--ghost" onClick={() => setShowCaseModal(false)}>Close</button>
+                <button type="button" className="cb-btn cb-btn--primary" onClick={() => setShowCaseModal(false)} disabled={groups.length === 0}>
                   Done ({totalRounds} rounds)
                 </button>
               </div>

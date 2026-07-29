@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from "react";
+import { useCanPlay } from "../../lib/canPlay";
 import "./BetButton.css";
 
 type Variant = "primary" | "secondary" | "win" | "danger";
@@ -19,9 +20,7 @@ interface BetButtonProps
   exceedsCap?: boolean;
   /**
    * Caller-controlled disabled flag — AND-gated into `effectiveDisabled`
-   * alongside the `busy`/`exceedsCap` auto-states. Use for game-logic
-   * gates (e.g. Mines cashout when no gems revealed; Keno bet when user
-   * picked zero numbers). Default: false.
+   * alongside the `busy`/`exceedsCap` auto-states and login requirement.
    */
   disabled?: boolean;
   /** Override busy / blocked button labels. */
@@ -33,19 +32,7 @@ interface BetButtonProps
 
 /**
  * Canonical primary action button for every game page.
- *
- * Audit finding (Tier 1 #4): each of the 7 games had its own bet-button
- * implementation with parallel logic — `disabled = busy || exceedsCap`,
- * `aria-disabled`, copy line "{busyLabel ?? exceedsCapLabel ?? label}",
- * and an `aria-busy` flag for screen readers. Plus each game kept its
- * own CSS class (`.bj__deal-btn`, `.keno__bet-btn`, etc.) that re-derived
- * the same crimson gradient pattern. This component produces all that
- * behavior from a single 7-line call site.
- *
- * Design choice: this component renders a plain `<button>` (not a React
- * abstract) so any caller can drop in custom click handlers / event
- * listeners / refs without rebuilding the abstraction. The "shape" of a
- * bet button is consistent; the behavior is always page-specific.
+ * Guests / logged-out users always see a disabled control (no popup).
  */
 export function BetButton({
   label,
@@ -57,21 +44,25 @@ export function BetButton({
   variant = "primary",
   className,
   children,
+  onClick,
   ...rest
 }: BetButtonProps) {
-  // AND-gate the caller-provided `disabled` flag with the auto-states so
-  // game-logic gates (no picks, no gems) compose cleanly with busy/cap.
-  const effectiveDisabled = busy || exceedsCap || callerDisabled;
-  const effectiveLabel = busy
-    ? busyLabel
-    : exceedsCap
-      ? exceedsCapLabel
-      : children ?? label;
+  const canPlay = useCanPlay();
+
+  const effectiveDisabled = busy || exceedsCap || callerDisabled || !canPlay;
+  const effectiveLabel = !canPlay
+    ? "Log in to play"
+    : busy
+      ? busyLabel
+      : exceedsCap
+        ? exceedsCapLabel
+        : (children ?? label);
 
   const cls = [
     "bet-btn",
     `bet-btn--${variant}`,
     busy && "bet-btn--busy",
+    !canPlay && "bet-btn--guest",
     className,
   ]
     .filter(Boolean)
@@ -84,6 +75,14 @@ export function BetButton({
       disabled={effectiveDisabled}
       aria-busy={busy || undefined}
       aria-disabled={effectiveDisabled || undefined}
+      title={!canPlay ? "Log in to place bets" : rest.title}
+      onClick={(e) => {
+        if (!canPlay) {
+          e.preventDefault();
+          return;
+        }
+        onClick?.(e);
+      }}
       {...rest}
     >
       {busy && <span className="bet-btn__spinner" aria-hidden="true" />}

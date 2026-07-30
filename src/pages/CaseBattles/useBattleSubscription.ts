@@ -2,6 +2,8 @@
  * Case Battles v2 — realtime hooks.
  * Replaces the old 1.5s polling with Supabase realtime subscriptions.
  * Battle updates push instantly — zero polling lag.
+ *
+ * Local / fun mode fully removed (redesign-case-battles).
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -75,21 +77,6 @@ export function useBattleSubscription(battleId: string | undefined): {
     };
   }, [battleId, fetchBattle]);
 
-  // Local-play polling: when the battle exists in the local in-memory store
-  // (no realtime subscription will fire), poll every 400ms so the UI picks up
-  // state changes (add bot, start, resolve, claim).
-  useEffect(() => {
-    if (!battleId) return;
-    let active = true;
-    const iv = setInterval(async () => {
-      if (!active) return;
-      const { localViewCaseBattle } = await import("../../lib/local-case-battles");
-      const local = localViewCaseBattle(battleId);
-      if (local) await fetchBattle();
-    }, 400);
-    return () => { active = false; clearInterval(iv); };
-  }, [battleId, fetchBattle]);
-
   return { battle, loading, error, refetch: fetchBattle };
 }
 
@@ -128,9 +115,10 @@ export function useLobbySubscription(options?: {
     fetchLobby();
 
     if (!isSupabaseConfigured) {
-      // Local-play polling: refresh lobby every 1s to pick up new local battles.
-      const iv = setInterval(() => fetchLobby(), 1000);
-      return () => { cancelledRef.current = true; clearInterval(iv); };
+      // No local mode — just stop. listOpenBattles already returns a clear error.
+      return () => {
+        cancelledRef.current = true;
+      };
     }
 
     // Filter the lobby subscription to only receive events for battles the
@@ -138,7 +126,6 @@ export function useLobbySubscription(options?: {
     // Without this filter, Supabase broadcasts EVERY case_battles change to
     // EVERY client — at 1000+ rooms this is N² traffic. The filter pushes
     // filtering server-side so each client only receives relevant events.
-    // (Completed/cancelled battles no longer broadcast to lobby subscribers.)
     const channel = supabase
       .channel("lobby")
       .on(

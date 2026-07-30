@@ -1,6 +1,6 @@
 /** Case battles (mirrors src/lib/games/case-battles) — self-contained for Deno deploy. */
 
-import type { LootCase } from "./caseBattlesTypes.ts";
+import type { LootCase, CaseItem } from "./caseBattlesTypes.ts";
 import { GENERATED_CASE_CATALOG } from "./caseCatalog.generated.ts";
 import { biasCaseRollFloat } from "./rtp.ts";
 
@@ -207,7 +207,7 @@ export function validateCaseSelection(caseIds: string[]): string | null {
   return null;
 }
 
-const VALID_GAMEMODES = ["normal", "group", "terminal", "jackpot"] as const;
+const VALID_GAMEMODES = ["standard", "group", "terminal", "jackpot", "normal"] as const;
 const MAX_BORROW_PERCENT = 80;
 
 export function validateCreateParams(params: {
@@ -219,19 +219,20 @@ export function validateCreateParams(params: {
 }): string | null {
   const caseErr = validateCaseSelection(params.caseIds);
   if (caseErr) return caseErr;
-  if (!(VALID_GAMEMODES as readonly string[]).includes(params.gamemode)) {
+  const gm = params.gamemode === "normal" ? "standard" : params.gamemode;
+  if (!(VALID_GAMEMODES as readonly string[]).includes(params.gamemode) && gm !== "standard") {
     return "Invalid gamemode.";
   }
   if (maxPlayersForMode(params.playerMode) < 2) {
     return "Invalid player mode.";
   }
-  if (params.gamemode === "group" && !["2p", "3p", "4p", "6p"].includes(params.playerMode)) {
+  if (gm === "group" && !["2p", "3p", "4p", "6p"].includes(params.playerMode)) {
     return "Group mode requires 2p, 3p, 4p, or 6p.";
   }
-  if (params.gamemode !== "group" && ["2p", "3p", "4p", "6p"].includes(params.playerMode)) {
+  if (gm !== "group" && ["2p", "3p", "4p", "6p"].includes(params.playerMode)) {
     return "Player mode not valid for this gamemode.";
   }
-  if (params.crazyMode && params.gamemode === "group") {
+  if (params.crazyMode && gm === "group") {
     return "Crazy mode is not available for Group battles.";
   }
   if (params.borrowPercent != null) {
@@ -274,23 +275,6 @@ export function applyBorrowToPayouts(
   });
 }
 
-/**
- * Cryptographic tie-break (audit #002).
- *
- * Previously, ties were broken by lowest slot index — whoever joined first
- * always won. We replace this with a deterministic SHA-256-based coinflip
- * derived from the battleSeed: SHA-256(`${battleSeed}:tie:${slot}`) acts as
- * each slot's "vote". The tied slots are sorted by the hex output and the
- * lowest hex digest wins. The SQL mirror in supabase/migrations/002_ uses
- * the same domain separator so server- and client-side resolutions agree.
- *
- * Falls back to lowest-slot order when `battleSeed` is unknown (pre-commit UI
- * previews only — the server is authoritative so client previews never affect
- * the actual payout).
- *
- * `domain` namespaces the tie domain so a slot or team tie can never collide
- * with the other's hash input. Keep these strings in sync with SQL.
- */
 async function coinflipWinningSlot(
   tiedSlots: number[],
   battleSeed: string | null,
@@ -321,12 +305,6 @@ async function coinflipWinningSlot(
   return ranked[0]!.slot;
 }
 
-/**
- * Async extreme-picker used by the resolveXxx functions. Returns the slot
- * index whose `score(players[i])` is best (max or min per `pickMax`), with
- * ties broken by `coinflipWinningSlot`. Replaces the slot-index-biased
- * `pickExtremeIndex` legacy helper (audit #002).
- */
 async function pickExtremeByScore(
   players: BattlePlayerResult[],
   score: (p: BattlePlayerResult) => number,
@@ -334,7 +312,6 @@ async function pickExtremeByScore(
   battleSeed: string | null,
 ): Promise<number> {
   if (players.length === 0) return -1;
-  // Bucket slots by score so ties are easy to detect.
   const scored = players.map((p) => ({ slot: p.slot, v: score(p) }));
   let bestV = scored[0]!.v;
   for (let i = 1; i < scored.length; i++) {
@@ -357,14 +334,6 @@ function lastRoundValue(p: BattlePlayerResult): number {
   return last ? last.value : 0;
 }
 
-/** Split a payout pool equally among ALL player slots (humans AND bots).
- *
- *  Each slot receives an equal share of the pool. Only humans actually
- *  receive a credit (bots have no `userId` to pay); bot shares are not
- *  paid out — they are effectively returned to the house. This makes Group
- *  mode a true "fair unbox" where the total unboxed value is divided per
- *  seat, so playing with bots reduces each human's take (prevents Group-mode
- *  farming with bots). */
 function splitAmongAllSlots(players: BattlePlayerResult[], payoutPool: number): WinnerPayout[] {
   const slots = [...players].sort((a, b) => a.slot - b.slot);
   if (!slots.length || payoutPool <= 0) return [];
@@ -379,7 +348,6 @@ function splitAmongAllSlots(players: BattlePlayerResult[], payoutPool: number): 
         ? Math.round((payoutPool - distributed) * 100) / 100
         : each;
     distributed += share;
-    // Only humans receive payouts; bot shares are not credited.
     if (!p.isBot && p.userId) {
       payouts.push({ userId: p.userId, amount: share });
     }
@@ -387,7 +355,6 @@ function splitAmongAllSlots(players: BattlePlayerResult[], payoutPool: number): 
   return payouts;
 }
 
-/** Split prize pool evenly across every winning team slot; only humans receive payouts. */
 function splitWinningTeamPayouts(
   teamPlayers: BattlePlayerResult[],
   payoutPool: number
@@ -413,16 +380,11 @@ function splitWinningTeamPayouts(
   return payouts;
 }
 
-/**
- * House edge comes from the case item distribution (cases are priced below
- * their EV so the cumulative unboxed value is below the entry pot). No extra
- * flat rake on top — see audit #002.
- */
 function totalUnboxedPool(players: BattlePlayerResult[]): number {
   return Math.round(players.reduce((s, p) => s + p.totalValue, 0) * 100) / 100;
 }
 
-async function resolveNormal(
+async function resolveStandard(
   players: BattlePlayerResult[],
   playerMode: string,
   _potTotal: number,
@@ -449,7 +411,6 @@ async function resolveNormal(
     };
   }
 
-  // Team: aggregate by team, then coinflip on tied team totals.
   const teamTotals = new Map<number, number>();
   const teamSlots = new Map<number, number[]>();
   for (const p of players) {
@@ -485,10 +446,6 @@ async function resolveNormal(
 
 function resolveGroup(players: BattlePlayerResult[], _potTotal: number): OutcomeResult {
   const unboxedPool = totalUnboxedPool(players);
-  // Group mode: split the total unboxed value equally among ALL player slots
-  // (humans AND bots). Only humans receive actual balance credits; bot shares
-  // are not paid out. All slots are marked as "winners" since everyone
-  // participates in the cooperative unbox.
   const winnerPayouts = splitAmongAllSlots(players, unboxedPool);
   const paidTotal = winnerPayouts.reduce((s, p) => s + p.amount, 0);
 
@@ -529,7 +486,6 @@ async function resolveTerminal(
     };
   }
 
-  // Team: aggregate per team, then coinflip on tied team scores.
   const teamScores = new Map<number, number>();
   const teamSlots = new Map<number, number[]>();
   for (const p of players) {
@@ -602,7 +558,6 @@ async function resolveJackpot(
   const weightValues = jackpotWeightsForPlayers(players, crazy);
 
   if (!isTeamMode(playerMode)) {
-    // Solo jackpot: each player's weight IS their odds.
     const jackpotWeights = players.map((p, i) => ({ slot: p.slot, weight: weightValues[i]! }));
     const idx = await pickWeightedIndex(weightValues, battleSeed, crazy ? "jackpot-winner-crazy" : "jackpot-winner");
     const winner = players[idx]!;
@@ -621,9 +576,6 @@ async function resolveJackpot(
     };
   }
 
-  // Team jackpot: sum per-player weights into team buckets, then pick a team.
-  // Each player's returned weight = their TEAM's total weight so UI percentages
-  // show the team's actual odds (all players on a team share the same fate).
   const teamIds: number[] = [];
   const teamWeights: number[] = [];
   const teamSlots = new Map<number, number[]>();
@@ -683,16 +635,17 @@ async function resolveOutcome(
   battleSeed: string,
   crazy: boolean
 ): Promise<OutcomeResult> {
-  switch (gamemode) {
+  const gm = gamemode === "normal" ? "standard" : gamemode;
+  switch (gm) {
     case "group":
       return resolveGroup(players, potTotal);
     case "terminal":
       return await resolveTerminal(players, playerMode, potTotal, crazy, battleSeed);
     case "jackpot":
       return await resolveJackpot(players, playerMode, potTotal, battleSeed, crazy);
-    case "normal":
+    case "standard":
     default:
-      return await resolveNormal(players, playerMode, potTotal, crazy, battleSeed);
+      return await resolveStandard(players, playerMode, potTotal, crazy, battleSeed);
   }
 }
 
@@ -777,7 +730,7 @@ export async function resolveBattle(params: {
 
   players.sort((a, b) => a.slot - b.slot);
   const potTotal = Math.round(params.potTotal * 100) / 100;
-  const gamemode = params.gamemode || "normal";
+  const gamemode = (params.gamemode === "normal" || !params.gamemode) ? "standard" : params.gamemode;
   const crazy = Boolean(params.crazyMode) && gamemode !== "group";
 
   if (gamemode === "jackpot" && params.deferJackpot) {
@@ -824,75 +777,4 @@ export async function resolveBattle(params: {
     jackpotWeights: outcome.jackpotWeights,
     jackpotReelSlot: outcome.jackpotReelSlot,
   };
-}/**
- * Cryptographic tie-break (audit #002).
- *
- * Previously, ties were broken by lowest slot index — whoever joined first
- * always won. We replace this with a deterministic SHA-256-based coinflip
- * derived from the battleSeed: SHA-256(`${battleSeed}:tie:${slot}`) acts as
- * each slot's "vote". The tied slots are sorted by the hex output and the
- * lowest hex digest wins. The SQL mirror in supabase/migrations/002_ uses
- * the same domain separator so server- and client-side resolutions agree.
- *
- * Falls back to lowest-slot order when `battleSeed` is unknown (pre-commit UI
- * previews only — the server is authoritative so client previews never affect
- * the actual payout).
- *
- * `domain` namespaces the tie domain so a slot or team tie can never collide
- * with the other's hash input. Keep these strings in sync with SQL.
- */
-async function coinflipWinningSlot(
-  tiedSlots: number[],
-  battleSeed: string | null,
-  domain: 'tie' | 'team-tie'
-): Promise<number> {
-  if (tiedSlots.length <= 1) return tiedSlots[0] ?? -1;
-  if (!battleSeed) {
-    return tiedSlots.reduce((a, b) => (a < b ? a : b));
-  }
-  const enc = new TextEncoder();
-  const ranked = await Promise.all(
-    tiedSlots.map(async (slot) => {
-      const buf = await crypto.subtle.digest(
-        'SHA-256',
-        enc.encode(`${battleSeed}:${domain}:${slot}`),
-      );
-      return {
-        slot,
-        hash: Array.from(new Uint8Array(buf))
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join(''),
-      };
-    }),
-  );
-  ranked.sort((a, b) =>
-    a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : a.slot - b.slot
-  );
-  return ranked[0]!.slot;
 }
-
-/**
- * Async extreme-picker used by the resolveXxx functions. Returns the slot
- * index whose `score(players[i])` is best (max or min per `pickMax`), with
- * ties broken by `coinflipWinningSlot`. Replaces the slot-index-biased
- * `pickExtremeIndex` legacy helper (audit #002).
- */
-async function pickExtremeByScore(
-  players: BattlePlayerResult[],
-  score: (p: BattlePlayerResult) => number,
-  pickMax: boolean,
-  battleSeed: string | null,
-): Promise<number> {
-  if (players.length === 0) return -1;
-  // Bucket slots by score so ties are easy to detect.
-  const scored = players.map((p) => ({ slot: p.slot, v: score(p) }));
-  let bestV = scored[0]!.v;
-  for (let i = 1; i < scored.length; i++) {
-    const s = scored[i]!;
-    if (pickMax ? s.v > bestV : s.v < bestV) bestV = s.v;
-  }
-  const tied = scored.filter((s) => s.v === bestV).map((s) => s.slot);
-  return coinflipWinningSlot(tied, battleSeed, 'tie');
-}
-
-

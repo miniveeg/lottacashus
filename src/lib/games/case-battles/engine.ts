@@ -88,16 +88,18 @@ export function validateCreateParams(params: {
   const caseErr = validateCaseSelection(params.caseIds);
   if (caseErr) return caseErr;
   if (maxPlayersForMode(params.playerMode) < 2) return "Invalid player mode.";
-  if (!(BATTLE_GAMEMODES as readonly string[]).includes(params.gamemode)) {
+  // Accept legacy "normal" as alias for "standard"
+  const gm = params.gamemode === "normal" ? "standard" : params.gamemode;
+  if (!(BATTLE_GAMEMODES as readonly string[]).includes(gm)) {
     return "Invalid gamemode.";
   }
-  if (params.gamemode === "group" && !["2p", "3p", "4p", "6p"].includes(params.playerMode)) {
+  if (gm === "group" && !["2p", "3p", "4p", "6p"].includes(params.playerMode)) {
     return "Group mode requires 2p, 3p, 4p, or 6p.";
   }
-  if (params.gamemode !== "group" && ["2p", "3p", "4p", "6p"].includes(params.playerMode)) {
+  if (gm !== "group" && ["2p", "3p", "4p", "6p"].includes(params.playerMode)) {
     return "Player mode not valid for this gamemode.";
   }
-  if (params.crazyMode && params.gamemode === "group") {
+  if (params.crazyMode && gm === "group") {
     return "Crazy mode is not available for Group battles.";
   }
   if (params.borrowPercent != null) {
@@ -295,7 +297,7 @@ async function pickExtremeByScore(
   return coinflipWinningSlot(tied, battleSeed, 'tie');
 }
 
-async function resolveNormal(
+async function resolveStandard(
   players: BattlePlayerResult[],
   playerMode: string,
   _potTotal: number,
@@ -540,15 +542,6 @@ async function resolveJackpot(
     playerTeamIndex[pi] = idx;
   }
 
-  // Build per-player weights where each player gets their team's total weight.
-  // This ensures the displayed percentages match the actual team selection
-  // probability (all players on a team have identical odds).
-  //
-  // Note: the unweighted sum of teamWeights is intentionally NOT computed
-  // here — it was previously calculated as `totalTeamWeight` and then
-  // explicitly voided (`void totalTeamWeight;`) because the UI normalizes
-  // jackpotWeights independently. Removed in audit #4.2 to avoid implying
-  // a value is used when it isn't.
   const jackpotWeights = players.map((p, i) => ({
     slot: p.slot,
     weight: teamWeights[playerTeamIndex[i]] ?? 0,
@@ -587,16 +580,18 @@ async function resolveOutcome(
   battleSeed: string,
   crazy: boolean
 ): Promise<OutcomeResult> {
-  switch (gamemode) {
+  // Normalize legacy "normal" → "standard"
+  const gm = gamemode === "normal" ? "standard" : gamemode;
+  switch (gm) {
     case "group":
       return resolveGroup(players, potTotal);
     case "terminal":
       return await resolveTerminal(players, playerMode, potTotal, crazy, battleSeed);
     case "jackpot":
       return await resolveJackpot(players, playerMode, potTotal, battleSeed, crazy);
-    case "normal":
+    case "standard":
     default:
-      return await resolveNormal(players, playerMode, potTotal, crazy, battleSeed);
+      return await resolveStandard(players, playerMode, potTotal, crazy, battleSeed);
   }
 }
 
@@ -648,7 +643,8 @@ export async function resolveBattle(params: {
 
   players.sort((a, b) => a.slot - b.slot);
   const potTotal = roundCents(params.potTotal);
-  const gamemode = params.gamemode || "normal";
+  // Normalize legacy "normal" → "standard"
+  const gamemode = (params.gamemode === "normal" || !params.gamemode) ? "standard" : params.gamemode;
   const crazy = Boolean(params.crazyMode) && gamemode !== "group";
   const outcome = await resolveOutcome(
     players,

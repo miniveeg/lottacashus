@@ -21,7 +21,7 @@ export const GAMEMODES: {
 }[] = [
   {
     id: "standard",
-    name: "Normal",
+    name: "Standard",
     description: "The player with the greatest total unboxed wins.",
     live: true,
   },

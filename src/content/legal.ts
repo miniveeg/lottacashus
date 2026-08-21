@@ -45,45 +45,43 @@ If you have questions about this Privacy Policy or wish to exercise your data-pr
 `.trim();
 
 export const SWEEPSTAKES_RULES = `
-Last updated: November 18, 2024
+Last updated: August 20, 2026
 
 1. Overview
-These Sweepstakes Rules govern all sweepstakes promotions offered by LottaCash ("the Promoter") on the LottaCash platform. Participation constitutes acceptance of these rules. No purchase or payment of any kind is necessary to enter or win. A purchase will not increase your chances of winning.
+These Rules govern participation on the LottaCash platform. Participation constitutes acceptance of these rules.
 
 2. Eligibility
-Participants must be at least 18 years old (or the age of majority in their jurisdiction, whichever is higher) and legal residents of a jurisdiction where participation is permitted. Employees of the Promoter, its affiliates, and their immediate family members are not eligible. Sweepstakes are void in jurisdictions where prohibited by law, including but not limited to Washington, Idaho, and any other restricted state or territory.
+Participants must be at least 18 years old (or the age of majority in their jurisdiction, whichever is higher) and legal residents of a jurisdiction where participation is permitted. Employees of the operator, its affiliates, and their immediate family members are not eligible. The Service is void in jurisdictions where prohibited by law.
 
-3. How to enter free of charge
-You may obtain Sweeps Coins (SC) free of charge by mailing a handwritten request to the address below. Include your username, email address associated with your LottaCash account, and return address. Limit one request per household per calendar month. SC will be credited to your account within 14 business days of receipt. There is no purchase necessary to enter, and no purchase increases your odds of winning.
+3. Currency
+LottaCash uses a single currency: Sweeps Coins (SC). SC may be obtained by depositing cryptocurrency (credited at 100 SC per $1 USD) and through promotional bonuses. SC may be redeemed for real-money prizes at the rate of 1 SC = $0.01 USD (100 SC = $1), with a minimum redemption of 100 SC ($1 equivalent).
 
-Mailing address:
-LottaCash Sweepstakes — Free Entry Request
+4. How to obtain SC free of charge
+Where required by applicable law, free methods of obtaining limited promotional SC may be offered from time to time. Details of any free-entry or promotional method will be published on the platform. Limit one free request per household per calendar month when a mail-in option is active.
+
+Mailing address (when free-entry mail-in is active):
+LottaCash — Free Entry Request
 PO Box 74020
 Wilmington, DE 19804
 United States
 
-Requests must be postmarked within the promotion period. Allow 4–6 weeks for processing.
-
-4. How to enter with purchase
-When you purchase Gold Coins (GC), you receive a bonus allocation of Sweeps Coins at the rate specified at the time of purchase (currently 1% of the purchase amount in SC). This allocation is a promotional bonus and does not affect your odds in any sweepstakes game.
-
 5. Prizes and odds
-Sweeps Coins (SC) may be redeemed for real-money prizes at the rate of 1 SC = $0.01 USD (100 SC = $1), with a minimum redemption of 100 SC ($1 equivalent). Odds of winning depend on the game selected and are displayed within each game on the platform. All prizes are awarded as cryptocurrency (SOL, LTC, or ETH) transferred to your designated wallet address at the time of redemption.
+Odds of winning depend on the game selected and are displayed within each game on the platform. All redemptions are paid as cryptocurrency (SOL, LTC, or ETH) transferred to your designated wallet address.
 
 6. Prize claim process
-To redeem SC for prizes, submit a redemption request through the Redeem page on the platform. Choose a payout chain (SOL, LTC, or ETH) and provide a valid destination wallet address for that chain. Redemptions are processed after verification and may take up to 3–5 business days. The Promoter reserves the right to verify eligibility and identity before processing any redemption.
+To redeem SC, submit a withdrawal request through the Withdraw page. Choose a payout chain (SOL, LTC, or ETH) and provide a valid destination wallet address. Redemptions are processed after verification and may take up to 3–5 business days. The operator reserves the right to verify eligibility and identity before processing any redemption.
 
 7. General conditions
-The Promoter reserves the right to modify, suspend, or terminate sweepstakes at any time without prior notice. All decisions of the Promoter are final and binding. Participants agree to release and hold harmless the Promoter from any liability arising from participation or prize award.
+The operator reserves the right to modify, suspend, or terminate promotions at any time without prior notice. All decisions of the operator are final and binding. Participants agree to release and hold harmless the operator from any liability arising from participation or prize award.
 
 8. Taxes
-Participants are solely responsible for any taxes, fees, or duties associated with accepting a prize. The Promoter may issue tax forms as required by applicable law.
+Participants are solely responsible for any taxes, fees, or duties associated with accepting a prize. The operator may issue tax forms as required by applicable law.
 
 9. Governing law
-These Sweepstakes Rules are governed by the laws applicable to the jurisdiction of the Promoter. Any disputes shall be resolved in the courts or arbitration as designated by the Promoter.
+These Rules are governed by the laws applicable to the jurisdiction of the operator. Any disputes shall be resolved in the courts or arbitration as designated by the operator.
 
 10. Contact
-For questions about these rules or to request free entry via mail, contact support@lottacash.us.
+For questions about these rules, contact support@lottacash.us.
 `.trim();
 
 export const RESPONSIBLE_GAMING = `

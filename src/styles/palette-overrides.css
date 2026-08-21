@@ -1,0 +1,82 @@
+/* Trusted-casino palette overrides layered on top of legacy hard-coded reds.
+   Keeps lc-pages.css structure intact while finishing the theme recolor. */
+
+.app-shell__main {
+  background:
+    radial-gradient(ellipse 100% 55% at 50% -5%, rgba(201, 168, 76, 0.045) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 45% at 85% 85%, rgba(91, 159, 212, 0.03) 0%, transparent 50%),
+    var(--lc-bg-base);
+}
+
+.lc-page__eyebrow {
+  background: rgba(201, 168, 76, 0.1);
+  border-color: rgba(201, 168, 76, 0.28);
+}
+
+/* Gold CTAs need dark label text for contrast */
+.lc-btn--primary,
+.auth-submit,
+.sidebar__cta,
+.topbar__cta,
+.bet-button,
+.game-controls__bet,
+.keno__bet-btn,
+.mines__bet-btn,
+.limbo__bet-btn,
+.roulette__bet-btn,
+.crash__bet-btn,
+.slots__bet-btn,
+.bj__bet-btn,
+.promos__btn--gold,
+.not-found__btn--gold,
+.wallet__btn--primary {
+  color: var(--lc-text-on-primary) !important;
+}
+
+.lc-tab--active,
+.wallet__tab--active,
+.help__tab--active,
+.wallet__chain-btn--active {
+  color: var(--lc-text-on-primary) !important;
+}
+
+.lc-alert--error,
+.auth-error,
+.admin__banner--error,
+.cb-page__error,
+.cb__error,
+.keno__error,
+.mines__error,
+.limbo__error,
+.bj__error,
+.wallet__error,
+.sidebar-chat__error,
+.settings__error {
+  background: rgba(212, 93, 106, 0.12);
+  border-color: rgba(212, 93, 106, 0.32);
+  color: #e8a0a8;
+}
+
+.lc-alert--success,
+.auth-success,
+.admin__banner--success,
+.settings__success {
+  background: rgba(45, 184, 138, 0.12);
+  border-color: rgba(45, 184, 138, 0.32);
+  color: #7ddec0;
+}
+
+.auth-page {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201, 168, 76, 0.06), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(91, 159, 212, 0.04), transparent 50%),
+    var(--lc-bg-base);
+}
+
+.cbr__loading-pulse {
+  background: linear-gradient(135deg, rgba(201, 168, 76, 0.2), rgba(91, 159, 212, 0.1));
+}
+
+.home__hero {
+  box-shadow: var(--lc-shadow-md);
+}

@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
 import { ORIGINALS_PATH } from "../../content/originals";
+import { PageLayout } from "../../components/PageLayout/PageLayout";
 import { Seo } from "../../components/Seo/Seo";
 import "./NotFound.css";
 
 export function NotFound() {
   return (
-    <div className="not-found lc-page">
+    <PageLayout variant="default" className="not-found" hideHeader>
       <Seo title="Page not found" description="That page doesn't exist or may have moved." path="/404" noindex />
       <div className="not-found__card">
         <p className="not-found__code" aria-hidden="true">
@@ -13,7 +14,7 @@ export function NotFound() {
         </p>
         <h1 className="not-found__title">Page not found</h1>
         <p className="not-found__text">
-          That link doesn&apos;t exist or may have moved. Head back home or jump straight into
+          That link doesn't exist or may have moved. Head back home or jump straight into
           Originals.
         </p>
         <div className="not-found__actions">
@@ -25,6 +26,6 @@ export function NotFound() {
           </Link>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 }

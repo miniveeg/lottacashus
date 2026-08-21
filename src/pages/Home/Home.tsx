@@ -3,22 +3,16 @@ import { Wallet, Zap, TrendingUp, Dices } from "lucide-react";
 import { MotionLink } from "../../components/ui/MotionLink";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
 import { TiltCard } from "../../components/ui/TiltCard";
+import { PageLayout } from "../../components/PageLayout/PageLayout";
 import { useAuth } from "../../contexts/AuthContext";
 import { Seo } from "../../components/Seo/Seo";
 import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Home.css";
 
-// The home page relies on the global `AtmosphericLayer` (mounted in AppShell)
-// for its 3D obsidian shards — we do NOT mount a second ObsidianScene here.
-// The atmospheric canvas is `position: fixed` behind the app shell, so the
-// hero card's `lc-glass` `backdrop-filter: blur(...)` samples the shards
-// through the glass for a layered, cinematic effect without the GPU cost
-// of a second WebGL context.
-
 const pillars = [
   {
-    title: "One wallet",
-    desc: "GC and SC balance across every game. Toggle between them anytime.",
+    title: "One balance",
+    desc: "A single SC wallet across every game. Deposit, play, and redeem from one place.",
     icon: Wallet,
   },
   {
@@ -40,14 +34,10 @@ const pillars = [
 
 export function Home() {
   const { user, loading } = useAuth();
-  // Respect `prefers-reduced-motion`: when set, render the hero copy in its
-  // final state immediately (no fade-up / stagger). `initial={false}` tells
-  // framer-motion to skip the enter animation and use `animate` as the
-  // starting state; children inherit this via variant propagation.
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="home lc-page">
+    <PageLayout variant="default" className="home" hideHeader>
       <Seo title="LottaCash" path="/" />
       <section className="home__hero lc-glass lc-glass--crimson">
         <div className="home__hero-fog" aria-hidden="true" />
@@ -62,7 +52,7 @@ export function Home() {
             SOL · LTC · ETH accepted
           </motion.p>
           <motion.h1 className="home__headline" variants={fadeUpVariants}>
-            Eight provably fair house games. <span>Play in GC or SC.</span>
+            Eight provably fair house games. <span>One SC balance.</span>
           </motion.h1>
           <motion.p className="home__lead" variants={fadeUpVariants}>
             Deposit SOL, LTC, or ETH and play any of the eight provably fair house games. Redeem SC
@@ -72,7 +62,7 @@ export function Home() {
             {!loading && user ? (
               <>
                 <MotionLink to="/deposit" variant="primary" glow>
-                  Deposit &amp; Play
+                  Deposit & Play
                 </MotionLink>
                 <MotionLink to="/originals" variant="secondary">
                   Originals
@@ -92,7 +82,7 @@ export function Home() {
               </>
             )}
             <MotionLink to="/help" variant="ghost">
-              FAQ &amp; Terms
+              FAQ & Terms
             </MotionLink>
           </motion.div>
         </motion.div>
@@ -101,8 +91,8 @@ export function Home() {
       <ScrollReveal className="home__intro">
         <h2 className="home__section-title">From deposit to cash-out</h2>
         <p className="home__section-text">
-          Deposit crypto, get GC plus bonus SC, and play any game. Redeem SC for crypto back to your
-          wallet. Bets, level, deposits, and withdrawals all live in Settings.
+          Deposit crypto, get SC credited at 100 SC per $1, and play any game. Redeem SC for crypto
+          back to your wallet. Bets, level, deposits, and withdrawals all live in Settings.
         </p>
       </ScrollReveal>
 
@@ -132,6 +122,6 @@ export function Home() {
           Open Help page
         </MotionLink>
       </ScrollReveal>
-    </div>
+    </PageLayout>
   );
 }

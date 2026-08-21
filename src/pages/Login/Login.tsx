@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { safeRedirectPath } from "../../lib/authRedirect";
 import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
 import { PageLayout } from "../../components/PageLayout/PageLayout";
@@ -34,6 +35,7 @@ export function Login() {
   const configuredRef = useRef(configured);
   configuredRef.current = configured;
   const formRef = useRef<HTMLFormElement | null>(null);
+
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (!(e.metaKey || e.ctrlKey)) return;
@@ -148,28 +150,31 @@ export function Login() {
 
           <div className="auth-field">
             <label htmlFor="login-password">Password</label>
-            <input
-              id="login-password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              aria-invalid={Boolean(error) || undefined}
-              aria-describedby={error ? "login-error" : undefined}
-            />
+            <div className="auth-password-wrap">
+              <input
+                id="login-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? "login-error" : undefined}
+              />
+              <button
+                type="button"
+                className="auth-password-toggle"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
+              </button>
+            </div>
             <div className="auth-field__row">
-              <label className="auth-checkbox auth-checkbox--inline">
-                <input
-                  type="checkbox"
-                  checked={showPassword}
-                  onChange={(e) => setShowPassword(e.target.checked)}
-                  aria-label="Show password while typing"
-                />
-                <span>Show password</span>
-              </label>
+              <span />
               <p className="auth-forgot">
                 <Link to="/forgot-password">Forgot password?</Link>
               </p>
@@ -184,7 +189,11 @@ export function Login() {
 
         <p className="lc-hotkey-hint" role="note">
           <span className="lc-hotkey-hint__combo">
-            <kbd>{typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"}</kbd>
+            <kbd>
+              {typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
+                ? "⌘"
+                : "Ctrl"}
+            </kbd>
             <kbd>↵</kbd>
           </span>
           <span>log in</span>

@@ -4,27 +4,27 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "What is LottaCash?",
     answer:
-      "LottaCash is an online sweepstakes entertainment platform with a dual-currency wallet: Gold Coins (GC) for fun play and Sweeps Coins (SC) that can be redeemed for real money. House originals (Keno, Mines, Limbo, Roulette, Blackjack, Case Battles, Crash, and Slots) are live now — your account, currencies, stats, and level carry across every game.",
+      "LottaCash is an online casino platform with a single-currency wallet using Sweeps Coins (SC). SC can be used to play all games and can be redeemed for real crypto. House originals (Keno, Mines, Limbo, Roulette, Blackjack, Case Battles, Crash, and Slots) are live now — your account, balance, stats, and level carry across every game.",
   },
   {
-    question: "What are Gold Coins (GC) and Sweeps Coins (SC)?",
+    question: "What are Sweeps Coins (SC)?",
     answer:
-      "Gold Coins (GC) are play-only currency with no redeemable value — use them to enjoy all games. Sweeps Coins (SC) are redeemable for real money at a rate of 1 SC = $0.01 USD (100 SC = $1), with a minimum redemption of 100 SC ($1). You can earn SC through promotional bonuses on deposits, mail-in free entry requests, and special promotions. Toggle between GC and SC using the coin button next to your balance in the top bar.",
+      "Sweeps Coins (SC) are the only currency on LottaCash. They are redeemable for real money at a rate of 1 SC = $0.01 USD (100 SC = $1), with a minimum redemption of 100 SC ($1). You receive SC when you deposit crypto, and you can also earn SC through promotions.",
   },
   {
     question: "How do I create an account?",
     answer:
-      "Click Sign up, choose a username (up to 16 characters), enter your email, and set a password. We send a 6-digit verification code to your email; enter it within 10 minutes to activate your account. New accounts receive 10,000 GC and 100 SC (a $1 redeemable value) as a welcome bonus — no purchase necessary. You can reset your password from the forgot-password page if needed.",
+      "Click Sign up, choose a username (up to 16 characters), enter your email, and set a password. We send a 6-digit verification code to your email; enter it within 10 minutes to activate your account. New accounts receive a welcome bonus of SC. You can reset your password from the forgot-password page if needed.",
   },
   {
     question: "How do deposits work?",
     answer:
-      "Open Deposit while logged in. You receive unique deposit addresses for SOL, LTC, and ETH. Send crypto to your address; once the transaction reaches the required confirmations, your Gold Coins (GC) balance is credited at the current market rate. Every deposit also earns a 1% Sweeps Coins (SC) bonus. You can track activity in Settings and notifications.",
+      "Open Deposit while logged in. You receive unique deposit addresses for SOL, LTC, and ETH. Send crypto to your address; once the transaction reaches the required confirmations, your SC balance is credited at 100 SC per $1 USD. You can track activity in Settings and notifications.",
   },
   {
     question: "How do withdrawals work?",
     answer:
-      "Open Withdraw, choose a chain (SOL, LTC, or ETH), enter a valid destination wallet address, and redeem Sweeps Coins (SC) for crypto. Minimum is 100 SC ($1 USD). The SC is reserved while the request is pending; payouts are sent from our treasury after review, typically within 3–5 business days. Gold Coins (GC) are not redeemable for cash.",
+      "Open Withdraw, choose a chain (SOL, LTC, or ETH), enter a valid destination wallet address, and redeem Sweeps Coins (SC) for crypto. Minimum is 100 SC ($1 USD). The SC is reserved while the request is pending; payouts are sent from our treasury after review, typically within 3–5 business days.",
   },
   {
     question: "How do I redeem Sweeps Coins (SC)?",
@@ -34,7 +34,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "How does leveling work?",
     answer:
-      "Your level (0–100) is based on lifetime SC (Sweeps Coins) wagered only — GC wagers do not count toward leveling. Early levels require relatively little volume; later levels require much more. Level 100 is designed around $500,000 total SC wagered. View your level and progress in the top bar or under Account in Settings.",
+      "Your level (0–100) is based on lifetime SC wagered. Early levels require relatively little volume; later levels require much more. Level 100 is designed around $500,000 total SC wagered. View your level and progress in the top bar or under Account in Settings.",
   },
   {
     question: "Can I link Discord?",
@@ -44,7 +44,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Why did my balance change without playing?",
     answer:
-      "Deposits increase your Gold Coins; withdrawals decrease them. Pending withdrawals reserve funds until completed or failed. SC redemptions deduct from your Sweeps Coins balance. Wagers and wins from house originals update your balances, wager stats, and level shown in Settings.",
+      "Deposits increase your SC balance; withdrawals decrease it. Pending withdrawals reserve funds until completed or failed. Wagers and wins from house originals update your balances, wager stats, and level shown in Settings.",
   },
   {
     question: "Is there a minimum withdrawal / redemption?",
@@ -69,7 +69,7 @@ export const FAQ_ITEMS: FaqItem[] = [
 ];
 
 export const TERMS_OF_SERVICE = `
-Last updated: November 18, 2024
+Last updated: August 20, 2026
 
 1. Acceptance of terms
 By accessing or using LottaCash ("the Service"), you agree to these Terms of Service ("Terms"). If you do not agree, do not use the Service.
@@ -80,17 +80,17 @@ You must be at least 18 years old or the minimum legal age in your jurisdiction,
 3. Account registration
 You must provide accurate information when registering. You are responsible for safeguarding your login credentials and for all activity under your account. Usernames may not exceed 16 characters. One account per person unless we approve otherwise in writing.
 
-4. Dual-currency sweepstakes model
-The Service operates on a sweepstakes model with two currencies: Gold Coins (GC) for free play with no redeemable value, and Sweeps Coins (SC) which are redeemable for real money at the rate of 1 SC = $0.01 USD (100 SC = $1), subject to a minimum redemption of 100 SC ($1). No purchase is necessary to obtain SC — see our Sweepstakes Rules for free entry options. Balances of both currencies are displayed in your account.
+4. Single-currency model
+The Service uses a single currency: Sweeps Coins (SC). SC are redeemable for real money at the rate of 1 SC = $0.01 USD (100 SC = $1), subject to a minimum redemption of 100 SC ($1). Balances are displayed in your account.
 
 5. Wallet and balances
-Gold Coin balances are displayed in USD for convenience. Sweeps Coin balances are displayed as SC units. Deposits are credited after blockchain confirmations at rates determined at the time of credit. Withdrawals and SC redemptions are subject to minimum amounts, review, and processing times. We may delay or refuse transactions suspected of fraud, error, or legal risk.
+Sweeps Coin balances are displayed as SC units. Deposits are credited after blockchain confirmations at rates determined at the time of credit (100 SC per $1 USD). Withdrawals and SC redemptions are subject to minimum amounts, review, and processing times. We may delay or refuse transactions suspected of fraud, error, or legal risk.
 
 6. Crypto deposits and withdrawals
 You are solely responsible for sending assets to the correct address and network. Transactions sent to wrong addresses or chains may be unrecoverable. Network fees and confirmation times are outside our control.
 
 7. Wagering and leveling
-Levels are calculated from lifetime SC (Sweeps Coins) wager volume only; GC wagers do not contribute to leveling. Levels may be adjusted if we detect abuse, collusion, or technical errors.
+Levels are calculated from lifetime SC wager volume. Levels may be adjusted if we detect abuse, collusion, or technical errors.
 
 8. Prohibited conduct
 You may not: use the Service where prohibited by law; launder funds; use bots or exploits; create multiple accounts to abuse promotions; harass staff or other users; or attempt to compromise the platform. We may suspend or terminate accounts and withhold balances involved in violations, subject to applicable law.

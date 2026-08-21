@@ -13,7 +13,7 @@ export type ProfileBalance = {
 } | null | undefined;
 
 /** Active playable balance — always SC. */
-export function activeBalance(profile: ProfileBalance): number {
+export function getActiveBalance(profile: ProfileBalance): number {
   return profile?.sweepsCoins ?? 0;
 }
 

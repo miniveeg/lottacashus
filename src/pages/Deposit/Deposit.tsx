@@ -1,10 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { Inbox } from "lucide-react";
-// NOTE: `qrcode` is dynamically imported inside `loadAddress` (audit M2/L1).
-// The library is ~50 KB raw / ~15 KB gzipped and is only needed once a
-// deposit address is generated. Eager-importing it pulled it into the main
-// `index-*.js` chunk and shipped it to every user on every route.
 import { useAuth } from "../../contexts/AuthContext";
 import { loginUrl } from "../../lib/authRedirect";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -12,8 +8,7 @@ import { useToast } from "../../contexts/ToastContext";
 import { isSupabaseConfigured } from "../../lib/supabase";
 import { fetchDepositAddress, fetchMyDeposits } from "../../lib/crypto";
 import {
-  depositBonusSc,
-  depositGc,
+  depositSc,
   formatCoins,
   formatCoinsWithUsd,
   formatUsd,
@@ -39,7 +34,6 @@ export function Deposit() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [deposits, setDeposits] = useState<CryptoDepositRow[]>([]);
-  // Track known deposit IDs to fire toast only on new ones
   const knownDepositIds = useRef<Set<string>>(new Set());
 
   const loadAddress = useCallback(async (c: CryptoChain) => {
@@ -57,14 +51,8 @@ export function Deposit() {
     }
     const addr = data?.address ?? null;
     setAddress(addr);
-    // Generate a QR code for the deposit address so mobile wallet users can
-    // scan instead of typing. The QR encodes the bare address (most wallets
-    // accept this for SOL/LTC/ETH).
     if (addr) {
       try {
-        // Lazy-load the qrcode library only when we actually need to render
-        // a QR code (audit M2/L1). This keeps the 50 KB library out of the
-        // main bundle for users who never visit /deposit.
         const QRCode = (await import("qrcode")).default;
         const url = await QRCode.toDataURL(addr, {
           width: 180,
@@ -74,16 +62,11 @@ export function Deposit() {
         });
         setQrDataUrl(url);
       } catch {
-        // QR generation is a nice-to-have — if it fails, the address text +
-        // copy button still work.
+        // QR generation is a nice-to-have
       }
     }
   }, []);
 
-  // PERFORMANCE: hold the toast API in a ref so `loadDeposits` can use it
-  // without taking `toast` as a dependency. This breaks the re-render loop
-  // where every toast event would invalidate `loadDeposits`, re-fire the
-  // deposits fetch, and recreate the 15s polling interval.
   const toastRef = useRef(toast);
   toastRef.current = toast;
 
@@ -93,8 +76,6 @@ export function Deposit() {
     if (!data) return;
     const rows = data;
     setDeposits(rows);
-    // Toast for newly-detected deposits (skip on first load to avoid spamming
-    // the user with toasts for every existing deposit when the page mounts).
     rows.forEach((d) => {
       if (!knownDepositIds.current.has(d.id) && knownDepositIds.current.size > 0) {
         toastRef.current.success(`Deposit detected: ${formatUsd(d.usd_amount)} ${d.chain.toUpperCase()}`);
@@ -114,17 +95,11 @@ export function Deposit() {
   useEffect(() => {
     if (!user) return;
     loadDeposits();
-    // Skip polling when Supabase is unconfigured — fetchMyDeposits already
-    // short-circuits, but avoid spinning an interval that does nothing.
     if (!isSupabaseConfigured) return;
     const t = setInterval(loadDeposits, 15000);
     return () => clearInterval(t);
   }, [user, loadDeposits]);
 
-  // 🔴 Same redirect-to-self bug as Settings.tsx (ACCOUNT agent's finding #9):
-  // hardcode the redirect path instead of reading `useLocation().pathname`,
-  // which re-evaluates to `/login` on the post-Navigate re-render and
-  // clobbers `?redirect=%2Fdeposit` → `?redirect=%2Flogin`.
   if (!authLoading && (!user || isGuest)) {
     return <Navigate to={loginUrl("/deposit")} replace />;
   }
@@ -142,9 +117,6 @@ export function Deposit() {
 
   async function handleCopy() {
     if (!address) return;
-    // navigator.clipboard can be undefined in non-secure (HTTP) contexts or
-    // when the Permissions API denies clipboard-write. Fall back to the
-    // legacy execCommand path so the copy button keeps working.
     let ok = false;
     try {
       if (navigator.clipboard?.writeText) {
@@ -196,25 +168,23 @@ export function Deposit() {
 
       <section className="wallet__info-panel" aria-label="How deposits work">
         <p className="wallet__info-text">
-          Deposit crypto to fund your account. You'll receive Gold Coins (GC) for gameplay plus
-          bonus Sweeps Coins (SC) as a promotional reward.
+          Deposit crypto to fund your account. You'll receive Sweeps Coins (SC) that you can use to
+          play and redeem for real crypto.
         </p>
         <p className="wallet__info-rate">
-          <strong>100 GC = $1 USD</strong> &middot; <strong>1 bonus SC per $1 deposited</strong>
+          <strong>100 SC = $1 USD</strong>
         </p>
         <p className="wallet__info-example">
           <span className="wallet__info-example-input">$10</span>
           <span className="wallet__info-example-arrow" aria-hidden="true">&rarr;</span>
           <span className="wallet__info-example-output">
-            {formatCoins(depositGc(10), "balance")} + {formatCoins(depositBonusSc(10), "sweeps_coins")} bonus
+            {formatCoins(depositSc(10))}
           </span>
         </p>
       </section>
 
       <p className="wallet__hint wallet__hint--balance">
-        Gold Coins (GC): <strong>{formatCoinsWithUsd(profile?.balance ?? 0, "balance")}</strong>
-        <br />
-        Sweeps Coins (SC): <strong>{formatCoinsWithUsd(profile?.sweepsCoins ?? 0, "sweeps_coins")}</strong>
+        Balance (SC): <strong>{formatCoinsWithUsd(profile?.sweepsCoins ?? 0)}</strong>
       </p>
 
       {!configured && (
@@ -328,18 +298,13 @@ export function Deposit() {
                 {d.crypto_amount} {d.chain.toUpperCase()}
               </p>
               <p className="wallet__hint wallet__hint--meta wallet__hint--yield">
-                Yields: {formatCoins(depositGc(d.usd_amount), "balance")} +{" "}
-                {formatCoins(depositBonusSc(d.usd_amount), "sweeps_coins")} bonus
+                Yields: {formatCoins(depositSc(d.usd_amount))}
               </p>
             </div>
           ))
         )}
       </section>
 
-      {/* Hotkey hint footer — teaches the user that selecting the address
-          text + native Cmd/Ctrl+C is the canonical copy gesture. The Copy
-          button's aria-label already mentions clipboard, but the kbd hint
-          removes the discovery friction for keyboard-only users. */}
       {address && (
         <p className="lc-hotkey-hint" role="note">
           <span className="lc-hotkey-hint__combo">

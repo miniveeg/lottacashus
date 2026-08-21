@@ -1,19 +1,52 @@
-/* LottaCash — Auth page chrome.
-   The actual form styling has been unified around the shared `.lc-input`
-   utility class (lc-pages.css). This file only carries the page-specific
-   card backdrop + step-indicator layout that doesn't belong in the
-   shared layer. */
+/* LottaCash — Auth pages (login / signup / forgot-password) */
 
 .auth-page {
   background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255, 204, 68, 0.07), transparent 60%),
-    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(155, 114, 255, 0.04), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(201, 168, 76, 0.07), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(91, 159, 212, 0.04), transparent 50%),
     var(--lc-bg-base);
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--lc-spacing-6) var(--lc-spacing-4);
 }
 
 .auth-card {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 2.25rem);
+  background: var(--lc-bg-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-xl);
+  box-shadow: var(--lc-shadow-md), var(--lc-glass-highlight);
+}
+
+.auth-card__logo {
+  display: block;
+  margin: 0 auto var(--lc-spacing-4);
+}
+
+.auth-card__title {
+  font-family: var(--lc-font-display);
+  font-weight: 800;
+  font-size: clamp(1.35rem, 3vw, 1.65rem);
+  letter-spacing: -0.02em;
+  text-align: center;
+  margin: 0 0 var(--lc-spacing-2);
+  color: var(--lc-text-primary);
+}
+
+.auth-card__subtitle {
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--lc-text-secondary);
+  margin: 0 0 var(--lc-spacing-5);
+  line-height: 1.45;
 }
 
 .auth-card code {
@@ -25,14 +58,313 @@
   color: var(--lc-amber);
 }
 
-/* One-off fix: the `.lc-alert` system used by <FormAlert> needs a
-   slightly tighter margin-top when it sits in a form section. The 12+
-   per-page error classes this replaced (`.auth-error`, `.bj__error`,
-   `.mines__error`, ...) all added the same margin-top ~0.5rem inline.
-   Audit (AGENT.md §Proportionality): margin-bottom now resolves through
-   the spacing scale instead of an arbitrary rem value. */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lc-spacing-4);
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.auth-field label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lc-text-muted);
+}
+
+.auth-field input[type="email"],
+.auth-field input[type="password"],
+.auth-field input[type="text"],
+.auth-field input[type="date"],
+.auth-code-input {
+  min-height: 2.75rem;
+  padding: 0.6rem 0.9rem;
+  font-family: var(--lc-font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--lc-text-primary);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+  border-radius: var(--lc-radius-md);
+  width: 100%;
+  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.auth-field input:hover:not(:disabled),
+.auth-code-input:hover:not(:disabled) {
+  border-color: var(--lc-border-accent);
+}
+
+.auth-field input:focus,
+.auth-field input:focus-visible,
+.auth-code-input:focus,
+.auth-code-input:focus-visible {
+  outline: none;
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
+}
+
+.auth-field input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-field input[aria-invalid="true"] {
+  border-color: rgba(212, 93, 106, 0.55);
+}
+
+.auth-field-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--lc-text-muted);
+}
+
+.auth-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-password-wrap input {
+  padding-right: 2.75rem;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--lc-radius-sm);
+  color: var(--lc-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--lc-transition), background var(--lc-transition);
+}
+
+.auth-password-toggle:hover {
+  color: var(--lc-crimson-soft);
+  background: var(--lc-crimson-glow);
+}
+
+.auth-password-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--lc-focus-ring);
+}
+
+.auth-field__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lc-spacing-3);
+  flex-wrap: wrap;
+  margin-top: 0.15rem;
+}
+
+.auth-forgot {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.auth-forgot a {
+  color: var(--lc-crimson-soft);
+  text-decoration: none;
+}
+
+.auth-forgot a:hover {
+  text-decoration: underline;
+}
+
+.auth-checkbox {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  line-height: 1.4;
+}
+
+.auth-checkbox--inline {
+  align-items: center;
+  font-size: 0.82rem;
+}
+
+.auth-checkbox-link {
+  color: var(--lc-crimson-soft);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-checkbox-link:hover {
+  text-decoration: underline;
+}
+
+.auth-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.85rem;
+  margin-top: var(--lc-spacing-2);
+  padding: 0.7rem 1.25rem;
+  border: none;
+  border-radius: var(--lc-radius-md);
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  color: var(--lc-text-on-primary);
+  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
+  box-shadow: 0 2px 16px var(--lc-crimson-glow), var(--lc-shadow-inset);
+  cursor: pointer;
+  transition: transform var(--lc-transition-spring), filter var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.auth-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 6px 24px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
+}
+
+.auth-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.auth-submit__spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid transparent;
+  border-top-color: var(--lc-text-on-primary);
+  border-radius: 50%;
+  animation: auth-spin 0.7s linear infinite;
+}
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+.auth-footer {
+  margin: var(--lc-spacing-5) 0 0;
+  text-align: center;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--lc-text-secondary);
+}
+
+.auth-footer a {
+  color: var(--lc-crimson-soft);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+.auth-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: var(--lc-spacing-5);
+}
+
+.auth-steps__dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--lc-text-muted);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border-strong);
+}
+
+.auth-steps__dot--active {
+  color: var(--lc-text-on-primary);
+  background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
+  border-color: transparent;
+}
+
+.auth-steps__dot--done {
+  color: var(--lc-emerald);
+  border-color: rgba(45, 184, 138, 0.4);
+  background: rgba(45, 184, 138, 0.12);
+}
+
+.auth-steps__sep {
+  width: 2rem;
+  height: 2px;
+  background: var(--lc-border-strong);
+  border-radius: 1px;
+}
+
+.auth-secondary-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--lc-spacing-3);
+  flex-wrap: wrap;
+}
+
+.auth-link-btn {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--lc-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.auth-link-btn:hover:not(:disabled) {
+  color: var(--lc-crimson-soft);
+}
+
+.auth-link-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.auth-code-input {
+  font-family: var(--lc-font-mono);
+  font-size: 1.25rem !important;
+  letter-spacing: 0.35em;
+  text-align: center;
+}
+
 .auth-card .lc-alert,
 .auth-form .lc-alert {
   margin-top: 0;
   margin-bottom: var(--lc-spacing-3);
+}
+
+@media (max-width: 480px) {
+  .auth-page {
+    padding: var(--lc-spacing-4) var(--lc-spacing-3);
+  }
+  .auth-card {
+    padding: 1.25rem;
+  }
 }

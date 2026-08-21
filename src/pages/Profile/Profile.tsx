@@ -34,11 +34,6 @@ const BADGES: Badge[] = [
   { id: "veteran", name: "Veteran", icon: Calendar, description: "Account age 30+ days", check: (p) => { if (!p.memberSince) return false; return (Date.now() - new Date(p.memberSince).getTime()) / 86400000 >= 30; } },
 ];
 
-// Level progress is derived from the shared `lib/leveling.ts` engine (curve,
-// cap 100, $500k for max) so the Profile page agrees with Settings, the
-// Topbar level badge, and the Leaderboard. Previously this page used a
-// local linear `totalWagered / 100` calc that produced absurd levels like
-// 843 — contradicting the rest of the site.
 function calcLevel(totalWagered: number): { level: number; xp: number; xpMax: number } {
   const progress = getLevelProgress(totalWagered);
   if (progress.isMaxLevel) {
@@ -60,23 +55,12 @@ export function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [claiming, setClaiming] = useState(false);
   const [claimMsg, setClaimMsg] = useState<string | null>(null);
-  // C3 (UI/UX audit): claim success/error styling was previously decided by
-  // substring-matching "error"/"Error" in `claimMsg` — a real success message
-  // that happens to contain "error" would render red, and an error phrased
-  // without the literal word "error" would render green. Track an explicit
-  // `claimIsError` flag set by `handleClaim` based on the API outcome.
   const [claimIsError, setClaimIsError] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const isOwnProfile = !routeUsername;
   const displayProfile = isOwnProfile ? authProfile : null;
 
-  // For own-profile view, `stats` is derived from `authProfile` purely so the
-  // empty-state check has something to read. The render path uses
-  // `displayProfile || stats`, so when `authProfile` is loaded the derived
-  // stats are shadowed. We only depend on the specific fields we copy so the
-  // 1.5s ProfileContext balance-poll doesn't re-run this effect (and re-set
-  // state) every cycle.
   useEffect(() => {
     let cancelled = false;
     async function load() {
@@ -86,17 +70,12 @@ export function ProfilePage() {
         if (isOwnProfile && authProfile) {
           s = {
             username: authProfile.username,
-            balance: authProfile.balance,
+            balance: authProfile.sweepsCoins,
             totalWagered: authProfile.totalWagered,
             totalDeposited: authProfile.totalDeposited,
             totalWithdrawn: authProfile.totalWithdrawn,
             totalWins: authProfile.totalWins,
             totalLosses: authProfile.totalLosses,
-            // audit v3.3: was hardcoded `null` here, which permanently locked
-            // the Veteran badge (>30 days member) for own-profile views even
-            // for accounts that qualified. Now sourced from ProfileContext's
-            // `createdAt` (ProfileContext's PROFILE_SELECT now includes
-            // `created_at`).
             memberSince: authProfile.createdAt ?? null,
             referralCode: null,
           };
@@ -114,14 +93,12 @@ export function ProfilePage() {
     isOwnProfile,
     routeUsername,
     authProfile?.username,
-    authProfile?.balance,
+    authProfile?.sweepsCoins,
     authProfile?.totalWagered,
     authProfile?.totalDeposited,
     authProfile?.totalWithdrawn,
     authProfile?.totalWins,
     authProfile?.totalLosses,
-    // Include createdAt so the Veteran badge flips from "locked" to "earned"
-    // the instant Supabase delivers the row (or realtime updates it).
     authProfile?.createdAt,
   ]);
 
@@ -149,16 +126,12 @@ export function ProfilePage() {
       setClaimIsError(false);
     }
     setClaiming(false);
-    // Refresh referral info
     const r = await fetchReferralInfo();
     if (r) setReferralInfo(r);
   }, []);
 
   const handleCopy = useCallback(() => {
     if (!referralInfo?.referralCode) return;
-    // navigator.clipboard can be undefined in non-secure contexts (HTTP) or
-    // when the Permissions API denies write access. Fall back to a transient
-    // textarea + execCommand so the copy action never throws an uncaught error.
     const code = referralInfo.referralCode;
     const confirmCopied = () => {
       setCopied(true);
@@ -166,13 +139,11 @@ export function ProfilePage() {
     };
     try {
       if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(code).then(confirmCopied, () => {
-          /* clipboard rejected; silently skip confirmation */
-        });
+        navigator.clipboard.writeText(code).then(confirmCopied, () => {});
         return;
       }
     } catch {
-      /* fall through to legacy path */
+      /* fall through */
     }
     try {
       const ta = document.createElement("textarea");
@@ -186,20 +157,14 @@ export function ProfilePage() {
       document.body.removeChild(ta);
       confirmCopied();
     } catch {
-      /* clipboard unavailable; no confirmation */
+      /* clipboard unavailable */
     }
   }, [referralInfo]);
 
-  // ⌨️ Keyboard shortcut: Cmd/Ctrl+C copies the referral code when focus is
-  // NOT inside an input/textarea (so we don't hijack the user's normal
-  // copy-paste workflow while copying their own text). Mirrors the
-  // pattern used in the 8 gamemode rounds.
   useEffect(() => {
     if (!isOwnProfile) return;
     if (!referralInfo?.referralCode) return;
     function onKeyDown(e: KeyboardEvent) {
-      // Don't fire inside form controls — Cmd/Ctrl+C there means
-      // "copy the selected text in this field", not "copy my code".
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
       if (!(e.metaKey || e.ctrlKey)) return;
@@ -216,9 +181,6 @@ export function ProfilePage() {
     return <Navigate to={loginUrl("/profile")} replace />;
   }
 
-  // Own-profile view waits on both auth and profile loading so we don't flash
-  // "Profile not found" during the brief window between the session resolving
-  // and ProfileContext finishing its initial fetch.
   if (loading || (isOwnProfile && (authLoading || profileLoading))) {
     return (
       <div className="lc-page">
@@ -256,10 +218,11 @@ export function ProfilePage() {
     ? new Date(stats.memberSince).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
     : null;
 
-  // Badges only inspect `totalWagered` and `memberSince`. Build a minimal
-  // ProfileStats-like input so the badge predicates don't need to know about
-  // the UserProfile | ProfileStats union. `memberSince` is now sourced from
-  // `authProfile.createdAt` for own-profile views (audit v3.3).
+  const scBalance =
+    isOwnProfile && authProfile
+      ? authProfile.sweepsCoins
+      : (p as { sweepsCoins?: number }).sweepsCoins ?? (p as ProfileStats).balance ?? 0;
+
   const badgeInput: ProfileStats = {
     username: p.username ?? null,
     balance: 0,
@@ -279,7 +242,6 @@ export function ProfilePage() {
         description="LottaCash player profile — level, stats, badges, and referral earnings."
         path={isOwnProfile ? "/profile" : `/profile/${routeUsername}`}
       />
-      {/* Hero */}
       <section className="profile-hero">
         <div className="profile-hero__avatar" aria-hidden="true">
           {p.username ? p.username[0].toUpperCase() : "?"}
@@ -304,24 +266,14 @@ export function ProfilePage() {
         </div>
       </section>
 
-      {/* Stats grid */}
       <section className="profile-stats">
         <div className="profile-stat">
-          <UiIcon name="gem" size={18} />
-          <span className="profile-stat__label">Gold Coins</span>
-          <span className="profile-stat__value">{formatCoinsWithUsd(p.balance, "balance")}</span>
-          <span className="profile-stat__sublabel">Play money</span>
-        </div>
-        <div className="profile-stat">
           <UiIcon name="redeem" size={18} />
-          <span className="profile-stat__label">Sweeps Coins</span>
+          <span className="profile-stat__label">Balance (SC)</span>
           <span className="profile-stat__value">
-            {formatCoinsWithUsd(
-              (p as { sweepsCoins?: number }).sweepsCoins ?? 0,
-              "sweeps_coins"
-            )}
+            {formatCoinsWithUsd(scBalance)}
           </span>
-          <span className="profile-stat__sublabel">Redeemable for cash</span>
+          <span className="profile-stat__sublabel">Play & redeem</span>
         </div>
         <div className="profile-stat">
           <UiIcon name="target" size={18} />
@@ -352,7 +304,6 @@ export function ProfilePage() {
         </div>
       </section>
 
-      {/* Badges */}
       <section className="profile-section">
         <h2 className="profile-section__title">Badges</h2>
         <div className="profile-badges">
@@ -382,7 +333,6 @@ export function ProfilePage() {
         </div>
       </section>
 
-      {/* Referral section (own profile only) */}
       {isOwnProfile && referralInfo && (
         <section className="profile-section">
           <h2 className="profile-section__title">Affiliate & Referrals</h2>

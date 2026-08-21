@@ -1,0 +1,23 @@
+.lc-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.lc-slider-wrap .lc-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lc-slider__value {
+  flex-shrink: 0;
+  min-width: 1.75rem;
+  text-align: right;
+  font-family: var(--lc-font-numeric);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--lc-crimson-soft);
+  letter-spacing: 0.02em;
+}

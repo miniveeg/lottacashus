@@ -1,12 +1,14 @@
-// ── Dual-currency constants ────────────────────────────────────────────────
+// ── Single-currency constants (SC only) ────────────────────────────────────
 // 100 SC = $1 USD  →  1 SC = $0.01
-// 100 GC = $1 USD  →  1 GC = $0.01  (display only; GC has no redemption value)
 export const SC_PER_USD = 100;
-export const GC_PER_USD = 100;
 export const SC_USD_RATE = 1 / SC_PER_USD; // 0.01
-export const GC_USD_RATE = 1 / GC_PER_USD; // 0.01
 
-export type CoinType = "balance" | "sweeps_coins";
+/** @deprecated GC removed — kept only so old imports do not break during transition. */
+export const GC_PER_USD = SC_PER_USD;
+/** @deprecated GC removed */
+export const GC_USD_RATE = SC_USD_RATE;
+
+export type CoinType = "sweeps_coins";
 
 export function formatUsd(amount: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -33,30 +35,27 @@ export function getCashFlowTally(deposited: number, withdrawn: number) {
   return { net, label, formatted: formatSignedUsd(net) };
 }
 
-// ── Coin helpers ───────────────────────────────────────────────────────────
+// ── Coin helpers (SC only) ─────────────────────────────────────────────────
 
-/** Convert a coin amount to its USD equivalent. */
-export function coinsToUsd(amount: number, coinType: CoinType): number {
-  const rate = coinType === "sweeps_coins" ? SC_USD_RATE : GC_USD_RATE;
-  return amount * rate;
+/** Convert SC amount to its USD equivalent. */
+export function coinsToUsd(amount: number, _coinType?: CoinType | string): number {
+  return amount * SC_USD_RATE;
 }
 
-/** Convert a USD amount to coins. */
-export function usdToCoins(usd: number, coinType: CoinType): number {
-  const perUsd = coinType === "sweeps_coins" ? SC_PER_USD : GC_PER_USD;
-  return usd * perUsd;
+/** Convert a USD amount to SC. */
+export function usdToCoins(usd: number, _coinType?: CoinType | string): number {
+  return usd * SC_PER_USD;
 }
 
-/** Format a coin amount with its symbol, e.g. "1,234.56 GC". */
-export function formatCoins(amount: number, coinType: CoinType): string {
-  const symbol = coinType === "sweeps_coins" ? "SC" : "GC";
-  return `${formatNumber(amount)} ${symbol}`;
+/** Format a coin amount with SC symbol, e.g. "1,234.56 SC". */
+export function formatCoins(amount: number, _coinType?: CoinType | string): string {
+  return `${formatNumber(amount)} SC`;
 }
 
-/** Format a coin amount with its USD equivalent, e.g. "1,234.56 GC ($12.35)". */
-export function formatCoinsWithUsd(amount: number, coinType: CoinType): string {
-  const usd = coinsToUsd(amount, coinType);
-  return `${formatCoins(amount, coinType)} (${formatUsd(usd)})`;
+/** Format a coin amount with its USD equivalent, e.g. "1,234.56 SC ($12.35)". */
+export function formatCoinsWithUsd(amount: number, _coinType?: CoinType | string): string {
+  const usd = coinsToUsd(amount);
+  return `${formatCoins(amount)} (${formatUsd(usd)})`;
 }
 
 /** Plain number formatting with 2 decimals and thousands separators. */
@@ -67,12 +66,17 @@ export function formatNumber(amount: number): string {
   }).format(amount);
 }
 
-/** The bonus SC a user receives for a given USD deposit (1 SC per $1). */
-export function depositBonusSc(usdAmount: number): number {
-  return Math.floor(usdAmount);
+/** SC credited for a given USD deposit (100 SC per $1). */
+export function depositSc(usdAmount: number): number {
+  return Math.floor(usdAmount * SC_PER_USD);
 }
 
-/** The GC a user receives for a given USD deposit (100 GC per $1). */
-export function depositGc(usdAmount: number): number {
-  return Math.floor(usdAmount * GC_PER_USD);
+/** @deprecated Use depositSc — GC removed. */
+export function depositBonusSc(usdAmount: number): number {
+  return depositSc(usdAmount);
+}
+
+/** @deprecated GC removed — returns 0. */
+export function depositGc(_usdAmount: number): number {
+  return 0;
 }

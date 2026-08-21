@@ -1,0 +1,50 @@
+-- ══════════════════════════════════════════════════════════════════════════════
+-- LottaCash — Canonical schema entrypoint
+-- ══════════════════════════════════════════════════════════════════════════════
+--
+-- THIS FILE IS THE SINGLE SOURCE OF TRUTH FOR HOW TO PROVISION THE DATABASE.
+--
+-- Do NOT run the historical files in supabase/archive/. They are kept only
+-- for archaeology and must never be applied to a production or staging project.
+--
+-- ──────────────────────────────────────────────────────────────────────────────
+-- GREENFIELD (new Supabase project with zero data)
+-- ──────────────────────────────────────────────────────────────────────────────
+--
+-- 1. Open Supabase Dashboard → SQL Editor → New query.
+-- 2. Paste the ENTIRE contents of:
+--        supabase/lottacash-complete-setup.sql
+--    and Run.  (This is the bootstrap: all tables, RLS, core RPCs, Case Battles
+--    V2, and the fixes that were originally in migrations/001.)
+-- 3. Then apply the remaining ordered migrations in numerical order:
+--        supabase/migrations/002_case_battles_audit_fixes.sql
+--        supabase/migrations/003_mines_deposit_security.sql
+--        ...
+--        supabase/migrations/012_sitewide_sc_and_rpc_fixes.sql
+--    Each is idempotent. Run them one after another (or concatenate if preferred).
+--
+-- After step 3 the database is production-ready.
+--
+-- ──────────────────────────────────────────────────────────────────────────────
+-- EXISTING DATABASE (already has data)
+-- ──────────────────────────────────────────────────────────────────────────────
+--
+-- NEVER re-run lottacash-complete-setup.sql (it is destructive).
+-- Apply only the migrations that have not yet been applied, in order.
+-- Track applied migrations yourself or use Supabase migration tooling.
+--
+-- ──────────────────────────────────────────────────────────────────────────────
+-- VERIFICATION (run after schema is applied)
+-- ──────────────────────────────────────────────────────────────────────────────
+--
+--   select count(*) from public.profiles;
+--   select proname from pg_proc where pronamespace = 'public'::regnamespace
+--     and proname like 'cb_%' order by 1;          -- expect V2 case-battle RPCs
+--   select proname from pg_proc where proname like 'place_%_bet';
+--   select * from pg_publication_tables where pubname = 'supabase_realtime';
+--
+-- See DEPLOY.md and PRODUCTION_READY.md for the full bring-up sequence
+-- (Edge secrets, function deploy, cron, Vercel env).
+--
+-- Historical files live in supabase/archive/ and are NOT part of the
+-- production path.

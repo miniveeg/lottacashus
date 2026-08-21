@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
 import { EmptyState } from "../../components/EmptyState/EmptyState";
+import { PageLayout } from "../../components/PageLayout/PageLayout";
 import { formatUsd } from "../../lib/format";
 import { fetchBiggestWins, fetchMostWagered, type LeaderboardTab, type LeaderboardEntry } from "../../lib/leaderboard";
 import { useProfile } from "../../contexts/ProfileContext";
@@ -34,16 +35,17 @@ export function Leaderboard() {
   }, [tab]);
 
   return (
-    <div className="lc-page leaderboard-page">
+    <PageLayout
+      variant="medium"
+      className="leaderboard-page"
+      title="Leaderboard"
+      subtitle="The top 50 players by biggest single win or total volume wagered."
+    >
       <Seo
         title="Leaderboard"
         description="Top 50 LottaCash players by biggest single win or total volume wagered."
         path="/leaderboard"
       />
-      <header className="lc-page__header">
-        <h1 className="lc-page__title">Leaderboard</h1>
-        <p className="lc-page__subtitle">The top 50 players by biggest single win or total volume wagered.</p>
-      </header>
 
       <div className="lc-tabs" role="tablist" aria-label="Leaderboard categories">
         <button
@@ -114,23 +116,11 @@ export function Leaderboard() {
                           aria-label={`Rank ${entry.rank}`}
                         >
                           {entry.rank === 1 ? (
-                            <Trophy
-                              size={20}
-                              className="leaderboard-table__medal-icon--gold"
-                              aria-hidden="true"
-                            />
+                            <Trophy size={20} className="leaderboard-table__medal-icon--gold" aria-hidden="true" />
                           ) : entry.rank === 2 ? (
-                            <Trophy
-                              size={20}
-                              className="leaderboard-table__medal-icon--silver"
-                              aria-hidden="true"
-                            />
+                            <Trophy size={20} className="leaderboard-table__medal-icon--silver" aria-hidden="true" />
                           ) : (
-                            <Trophy
-                              size={20}
-                              className="leaderboard-table__medal-icon--bronze"
-                              aria-hidden="true"
-                            />
+                            <Trophy size={20} className="leaderboard-table__medal-icon--bronze" aria-hidden="true" />
                           )}
                         </span>
                       ) : (
@@ -165,6 +155,6 @@ export function Leaderboard() {
           </table>
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 }

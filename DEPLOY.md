@@ -71,13 +71,10 @@ npx supabase db push
 
 ### 1.4 Case Battles tables only (if missing)
 
-If core schema exists but case battles tables are missing, also run:
-
-```text
-supabase/case-battles-v2-setup.sql
-```
-
-Then re-run **002** and **004** so `cb_claim_payout` and `payout_amount` match the app.
+Case Battles V2 tables are included in `supabase/lottacash-complete-setup.sql`.
+If you have an older database that is missing them, apply the ordered migrations
+starting from `002` (see `supabase/schema.sql` for the canonical sequence).
+Do **not** run files from `supabase/archive/` — they are historical only.
 
 ### 1.5 Auth settings (Dashboard)
 
@@ -342,7 +339,7 @@ Migrations on top of older DBs:
 |---------|-----|
 | CORS errors from games | Set `ALLOWED_ORIGINS` to exact Vercel domain(s), no trailing slash mismatch |
 | “Supabase is not configured” | Missing `VITE_*` on Vercel → set + redeploy |
-| Claim fails “No payout” | Redeploy `case-battle-v2` + run migration **004**; old battles need re-resolve or manual payout |
+| Claim fails “No payout” | Redeploy `case-battle-v2` + run migration **004`; old battles need re-resolve or manual payout |
 | Signup email never arrives | Check `SMTP_*` secrets + Edge Function logs |
 | Deposits not crediting | Cron for `poll-deposits` + `CRON_SECRET` + chain API keys |
 | Crash stuck “running” | Deploy + schedule `crash-settle-expired` |

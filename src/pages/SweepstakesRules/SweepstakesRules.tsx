@@ -1,22 +1,22 @@
 import { SWEEPSTAKES_RULES } from "../../content/legal";
 import { LegalDocument } from "../../components/LegalDocument/LegalDocument";
+import { PageLayout } from "../../components/PageLayout/PageLayout";
 import { Seo } from "../../components/Seo/Seo";
 import "../Privacy/Privacy.css";
 
 export function SweepstakesRules() {
   return (
-    <div className="legal-page lc-page lc-page--narrow">
+    <PageLayout
+      variant="narrow"
+      className="legal-page"
+      title="Sweepstakes Rules"
+      subtitle="Official rules for participation and prize redemption."
+    >
       <Seo
         title="Sweepstakes Rules"
         path="/sweepstakes"
-        description="Official LottaCash sweepstakes rules: eligibility, free entry by mail, prizes, odds, and redemption terms."
+        description="Official LottaCash rules: eligibility, free entry, prizes, odds, and redemption terms."
       />
-      <header className="lc-page__header legal-page__header">
-        <h1 className="lc-page__title">Sweepstakes Rules</h1>
-        <p className="lc-page__subtitle">
-          Official rules for sweepstakes participation and prize redemption.
-        </p>
-      </header>
 
       <section className="lc-panel legal-page__panel" aria-label="Sweepstakes Rules text">
         <LegalDocument
@@ -25,6 +25,6 @@ export function SweepstakesRules() {
           id="sweepstakes-rules-body"
         />
       </section>
-    </div>
+    </PageLayout>
   );
 }

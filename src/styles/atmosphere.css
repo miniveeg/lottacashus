@@ -1,4 +1,4 @@
-/* Atmospheric layers — obsidian, fog, noise */
+/* Atmospheric layers — deep navy, soft gold wash, light grain */
 
 .lc-atmosphere {
   position: fixed;
@@ -11,27 +11,23 @@
 .lc-atmosphere__canvas {
   position: absolute;
   inset: 0;
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
 .lc-atmosphere__fog {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(220, 20, 60, 0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 80% 60% at 90% 70%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse 70% 50% at 10% 80%, rgba(56, 189, 248, 0.03) 0%, transparent 45%);
-  animation: lc-fog-drift 24s ease-in-out infinite alternate;
-  /* No `will-change` — for slow 24s drift animations, the browser's
-     compositing heuristics handle layer promotion more efficiently than
-     a permanent `will-change` declaration, which would force the element
-     onto its own GPU layer for the entire page lifetime. */
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(201, 168, 76, 0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 90% 70%, rgba(91, 159, 212, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse 70% 50% at 10% 80%, rgba(45, 184, 138, 0.03) 0%, transparent 45%);
+  animation: lc-fog-drift 28s ease-in-out infinite alternate;
 }
 
 .lc-atmosphere__noise {
   position: absolute;
   inset: 0;
-  opacity: 0.035;
+  opacity: 0.028;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 180px 180px;
 }
@@ -39,9 +35,7 @@
 .lc-atmosphere__vignette {
   position: absolute;
   inset: 0;
-  /* Subtle vignette so edges don't feel overwhelming; kept under 0.55
-     so content near the viewport edges stays legible. */
-  background: radial-gradient(ellipse 85% 75% at 50% 50%, transparent 45%, rgba(0, 0, 0, 0.5) 100%);
+  background: radial-gradient(ellipse 85% 75% at 50% 50%, transparent 45%, rgba(0, 0, 0, 0.45) 100%);
 }
 
 @keyframes lc-fog-drift {
@@ -53,7 +47,6 @@
   .lc-atmosphere__fog { animation: none; }
 }
 
-/* Glass surface utility */
 .lc-glass {
   background: var(--lc-bg-glass);
   backdrop-filter: blur(var(--lc-glass-blur));
@@ -62,18 +55,10 @@
   box-shadow: var(--lc-shadow-sm), var(--lc-glass-highlight);
 }
 
-/* Graceful fallback when backdrop-filter is unavailable (older Firefox,
-   disabled-GPU contexts): use a more opaque surface so text stays
-   legible without the blur. This covers `.lc-glass` (the utility class)
-   AND every hand-rolled glass surface across the site that uses
-   `var(--lc-bg-glass)` as its background — including all Case Battles
-   panels (.cbr__arena, .cbr__p-col, .cbr__join-panel, .cbh__card,
-   .cbc__*) and the per-page panels in Profile/Admin/Wallet/Settings. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .lc-glass,
   .lc-panel,
   .glass-panel,
-  /* Case Battles — heaviest backdrop-filter user (audit #2.4) */
   .cbr__arena,
   .cbr__p-col,
   .cbr__join-panel,
@@ -84,7 +69,6 @@
   .cbh__panel,
   .cbc__panel,
   .cbc__summary-bar,
-  /* Per-page glass panels */
   .profile-hero,
   .profile-stat,
   .profile-referral,
@@ -101,5 +85,5 @@
 
 .lc-glass--crimson {
   border-color: var(--lc-border-accent);
-  box-shadow: var(--lc-shadow-sm), 0 0 24px rgba(220, 20, 60, 0.08), var(--lc-glass-highlight);
+  box-shadow: var(--lc-shadow-sm), 0 0 20px rgba(201, 168, 76, 0.06), var(--lc-glass-highlight);
 }

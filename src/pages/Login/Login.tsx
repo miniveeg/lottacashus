@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { safeRedirectPath } from "../../lib/authRedirect";
 import { BrandLogo } from "../../components/BrandLogo/BrandLogo";
+import { PageLayout } from "../../components/PageLayout/PageLayout";
 import { useAuth } from "../../contexts/AuthContext";
 import { useToast } from "../../contexts/ToastContext";
 import { analytics } from "../../lib/analytics";
@@ -10,12 +11,6 @@ import { Seo } from "../../components/Seo/Seo";
 import "../../components/BrandLogo/BrandLogo.css";
 import "../Auth/Auth.css";
 
-// SECURITY (H7): client-side rate limiting on login attempts. Without this,
-// an attacker could brute-force passwords at the speed of the network round-
-// trip. The cap is 5 attempts per 60 seconds per email — generous enough for
-// legitimate typo retries, but blocks distributed brute force from a single
-// browser. Server-side rate limiting (Supabase Auth's built-in throttling)
-// provides the real backstop; this is a UX-layer defense.
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 60_000;
 
@@ -32,13 +27,8 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  // Track recent attempts in a ref (no re-render needed) — array of timestamps.
   const attemptsRef = useRef<AttemptEntry[]>([]);
 
-  // ⌨️ Cmd/Ctrl+Enter submits the login form. Mirrors the gamemode
-  // hotkey pattern: silent no-op when a request is already in flight or
-  // the form is unconfigured. Listener registered once; gate state read
-  // through refs so it doesn't re-register on every render.
   const submittingRef = useRef(false);
   submittingRef.current = submitting;
   const configuredRef = useRef(configured);
@@ -61,16 +51,15 @@ export function Login() {
 
   if (loading) {
     return (
-      <div className="auth-page lc-page lc-page--auth">
+      <PageLayout variant="auth" className="auth-page" hideHeader>
         <div className="lc-loading">
           <div className="lc-loading__pulse" aria-hidden />
           <p>Loading…</p>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
-  // Only real sessions skip the form (offline guests stay on the form).
   if (user && !isGuest) {
     return <Navigate to={redirectTo} replace />;
   }
@@ -90,7 +79,6 @@ export function Login() {
       return;
     }
 
-    // SECURITY (H7): enforce the rate limit before sending the request.
     const now = Date.now();
     attemptsRef.current = attemptsRef.current.filter((a) => now - a.at < WINDOW_MS);
     if (attemptsRef.current.length >= MAX_ATTEMPTS) {
@@ -113,7 +101,6 @@ export function Login() {
       return;
     }
 
-    // Success — clear the attempt history so a legit user doesn't carry it.
     attemptsRef.current = [];
     analytics.login.success();
     toast.success("Welcome back!");
@@ -121,7 +108,7 @@ export function Login() {
   }
 
   return (
-    <div className="auth-page lc-page lc-page--auth">
+    <PageLayout variant="auth" className="auth-page" hideHeader>
       <Seo title="Log in" path="/login" noindex />
       <div className="auth-card">
         <BrandLogo className="auth-card__logo" size={72} />
@@ -204,9 +191,9 @@ export function Login() {
         </p>
 
         <p className="auth-footer">
-          Don&apos;t have an account? <Link to="/signup">Sign up</Link>
+          Don't have an account? <Link to="/signup">Sign up</Link>
         </p>
       </div>
-    </div>
+    </PageLayout>
   );
 }

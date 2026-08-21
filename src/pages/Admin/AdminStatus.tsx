@@ -180,7 +180,7 @@ export function AdminStatus() {
           next[apiIdx] = {
             ...next[apiIdx]!,
             state: "ok",
-            detail: `RPC ok (${ms} ms).",
+            detail: `RPC ok (${ms} ms).`,
             latencyMs: ms,
           };
         }

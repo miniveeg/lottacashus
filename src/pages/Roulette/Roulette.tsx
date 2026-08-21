@@ -13,6 +13,7 @@ import {
   rouletteWinChance,
 } from "../../lib/games/roulette";
 import { formatCoins } from "../../lib/format";
+import { getActiveBalance, clampWager, SC_MAX_WAGER } from "../../lib/gameWallet";
 import {
   fetchRoulettePfState,
   placeRouletteBet,
@@ -36,9 +37,6 @@ const BET_OPTIONS: {
   { type: "green", label: "Green (0)", payout: "36×", odds: "1/37" },
 ];
 
-// L15 (UI/UX audit): history entries include a monotonic id so React keys
-// don't collide when two consecutive rounds land on the same pocket (the
-// prior `key={`${h.pocket}-${i}`}` could collide after rotation).
 type HistoryEntry = { id: number; pocket: number; color: RouletteColor };
 
 export function Roulette() {
@@ -53,8 +51,6 @@ export function Roulette() {
   const [displayPocket, setDisplayPocket] = useState<number | null>(null);
   const [displayColor, setDisplayColor] = useState<RouletteColor | null>(null);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  // Monotonic counter for HistoryEntry.id — bumped each time a new entry is
-  // pushed so React keys are stable across rotations.
   const historyIdRef = useRef(0);
   const [lastResult, setLastResult] = useState<{
     pocket: number;
@@ -70,18 +66,12 @@ export function Roulette() {
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
 
-  // Refs for race-safety (spinningRef) and async cleanup (cancelledRef).
-  // Mirrors the KENO_MINES / LIMBO_CRASH agents' busyRef/cancelledRef pattern.
   const spinningRef = useRef(false);
   const cancelledRef = useRef(false);
 
-  // Phase polish: ref mirrors so the keyboard-hotkey listener (registered
-  // once with [] deps) and the refactored async handleBet always read the
-  // most recent values. Mirrors the established Crash+Mines+Keno+Slots+Limbo
-  // pattern.
   const wagerRef = useRef(1);
   const betTypeRef = useRef<RouletteBetType>("red");
-  const coinTypeRef = useRef<string>("balance");
+  const coinTypeRef = useRef<string>("sweeps_coins");
   const profileRef = useRef(profile);
 
   const winChance = useMemo(() => rouletteWinChance(betType), [betType]);
@@ -99,9 +89,6 @@ export function Roulette() {
     if (user) loadPf();
   }, [user, loadPf]);
 
-  // Unmount cleanup: mark the component cancelled so in-flight spin awaits
-  // don't fire setState on a dead component (React 19 silently no-ops, but
-  // this prevents the leak and clears the spinning flag for any queued click).
   useEffect(() => {
     cancelledRef.current = false;
     return () => {
@@ -110,7 +97,6 @@ export function Roulette() {
     };
   }, []);
 
-  // Sync ref mirrors for the hotkey handler and refactored async paths.
   useEffect(() => {
     wagerRef.current = wager;
     betTypeRef.current = betType;
@@ -118,16 +104,6 @@ export function Roulette() {
     profileRef.current = profile;
   }, [wager, betType, coinType, profile]);
 
-  // Keyboard hotkeys. Registered once with [] deps; handleBet reads from
-  // refs so stale first-render closures can't trap the user. Focus +
-  // modifier guards keep this safe globally. Quick bet selectors below
-  // require that the element the user types in IS NOT a text input —
-  // otherwise typing "1" in the wager field would accidentally swap the bet.
-  //   Space / Enter → spin (only if !spinning && activeBalance ≥ wager)
-  //   [             → half wager (idle only)
-  //   ]             → double wager (idle only)
-  //   M             → max wager (idle only)
-  //   1 / 2 / 3     → Red / Black / Green selector (idle only, not in input)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -140,7 +116,6 @@ export function Roulette() {
       const k = e.key.toLowerCase();
       const isSpinning = spinningRef.current;
 
-      // === SPIN / WAGER CONTROLS ===
       if (k === " " || k === "enter") {
         e.preventDefault();
         if (!isSpinning) void handleBet();
@@ -159,12 +134,8 @@ export function Roulette() {
         if (!isSpinning) {
           e.preventDefault();
           const prof = profileRef.current;
-          const activeBalance =
-            coinTypeRef.current === "sweeps_coins"
-              ? (prof?.sweepsCoins ?? 0)
-              : (prof?.balance ?? 0);
-          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
-          const doubled = Math.min(wagerRef.current * 2, activeBalance, cap);
+          const bal = getActiveBalance(prof);
+          const doubled = Math.min(wagerRef.current * 2, bal, SC_MAX_WAGER);
           if (doubled >= 1) {
             setWager(doubled);
             setWagerInput(doubled.toFixed(2));
@@ -175,13 +146,8 @@ export function Roulette() {
       if (k === "m") {
         if (!isSpinning) {
           e.preventDefault();
-          const prof = profileRef.current;
-          const activeBalance =
-            coinTypeRef.current === "sweeps_coins"
-              ? (prof?.sweepsCoins ?? 0)
-              : (prof?.balance ?? 0);
-          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
-          const max = Math.min(cap, activeBalance);
+          const bal = getActiveBalance(profileRef.current);
+          const max = Math.min(SC_MAX_WAGER, bal);
           if (max >= 1) {
             setWager(max);
             setWagerInput(max.toFixed(2));
@@ -189,9 +155,6 @@ export function Roulette() {
         }
         return;
       }
-      // === QUICK-BET SELECTORS ===
-      // Only fire if not in input field (already checked). Note: pressing
-      // "2" in the wager input is harmless because we bail above.
       if (k === "1") {
         if (!isSpinning) {
           e.preventDefault();
@@ -220,9 +183,7 @@ export function Roulette() {
   }, []);
 
   const applyWager = (value: number) => {
-    // Read coin type from ref so this is safe from the hotkey's [] deps.
-    const maxBet = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
-    const v = Math.max(1, Math.min(maxBet, value));
+    const v = Math.max(1, Math.min(SC_MAX_WAGER, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -230,22 +191,13 @@ export function Roulette() {
   const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
   const handleBet = async () => {
-    // Synchronous re-entrancy guard — the Bet button's `disabled={spinning}`
-    // prop relies on a re-render cycle that leaves a sub-ms race window
-    // between the first click's setSpinning(true) commit and a second click.
     if (spinningRef.current) return;
 
-    // Read all session values from refs so this handler is safe from any
-    // binding context (JSX onClick, hotkey listener, etc.).
     const wagerNow = wagerRef.current;
     const betTypeNow = betTypeRef.current;
     const coinNow = coinTypeRef.current;
-    const profNow = profileRef.current;
-    const activeBalanceNow =
-      coinNow === "sweeps_coins"
-        ? (profNow?.sweepsCoins ?? 0)
-        : (profNow?.balance ?? 0);
-    if (activeBalanceNow < wagerNow) {
+    const bal = getActiveBalance(profileRef.current);
+    if (bal < wagerNow) {
       setError("Insufficient balance.");
       return;
     }
@@ -268,7 +220,6 @@ export function Roulette() {
       spinningRef.current = false;
       setSpinning(false);
       setError(betErr ?? "Bet failed.");
-      // Server may have debited before failing — refresh to stay accurate.
       void refreshProfile();
       return;
     }
@@ -283,15 +234,11 @@ export function Roulette() {
 
     setDisplayPocket(data.resultPocket);
     setDisplayColor(data.resultColor);
-    // Keep spinningRef true through the settle animation so a second bet
-    // cannot fire mid-wheel. Visual spin stops so the CSS settle transition runs.
     setSpinning(false);
     setHistory((h) =>
       [{ id: ++historyIdRef.current, pocket: data.resultPocket, color: data.resultColor }, ...h].slice(0, HISTORY_MAX)
     );
 
-    // Wait for the wheel settle animation (4.2s CSS transition) before showing
-    // the result banner, so the player sees the outcome exactly when the wheel lands.
     await wait(4400);
     if (cancelledRef.current) {
       spinningRef.current = false;
@@ -307,10 +254,6 @@ export function Roulette() {
     });
     setPfNonce(data.nonce + 1);
     spinningRef.current = false;
-    // No refreshProfile() here — ProfileContext's realtime subscription on
-    // `profiles` pushes the new balance the instant the server commits the
-    // bet. Calling it would fire 2 redundant RPCs (ensure_user_profile +
-    // is_current_user_admin) per bet.
   };
 
   const saveClientSeed = async () => {
@@ -397,11 +340,6 @@ export function Roulette() {
               >
                 {BET_OPTIONS.map((opt) => {
                   const isSelected = betType === opt.type;
-                  // Winning cell: bet grid highlight when last result matches
-                  // the selected bet type and the round was a win. The
-                  // pulse runs once and fades into static after the round
-                  // resolves (matches Slots reels--win + Keno paytable-row
-                  // patterns — no infinite loops).
                   const isWinner =
                     !!lastResult?.won && lastResult.betType === opt.type;
                   return (
@@ -465,8 +403,8 @@ export function Roulette() {
                 type="button"
                 className="game-controls__wager-adj"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(wager * 2, activeBalance));
+                  const bal = getActiveBalance(profile);
+                  applyWager(Math.min(wager * 2, bal));
                 }}
                 disabled={spinning}
                 aria-label="Double bet"
@@ -477,8 +415,8 @@ export function Roulette() {
                 type="button"
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
+                  const bal = getActiveBalance(profile);
+                  applyWager(Math.min(SC_MAX_WAGER, bal));
                 }}
                 disabled={spinning}
                 aria-label="Max bet"
@@ -486,7 +424,6 @@ export function Roulette() {
                 MAX
               </button>
             </div>
-
           </div>
 
           {error && <FormAlert>{error}</FormAlert>}
@@ -516,10 +453,6 @@ export function Roulette() {
             label="Bet"
           />
 
-          {/* Phase polish: hotkey hint footer. Tells desktop users that
-              Space/Enter spins, [/] adjusts wager, 1/2/3 selects bet type.
-              Sits between the Bet button and the NeedFundsHint so it's
-              contextually adjacent to the controls it describes. */}
           {!spinning && (
             <p className="roulette__hotkey-hint" role="note">
               <kbd>Space</kbd> spin · <kbd>[</kbd>/<kbd>]</kbd> wager · <kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd> bet

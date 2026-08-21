@@ -13,6 +13,7 @@
 @import "./atmosphere.css";
 @import "./animations.css";
 @import "./ui-motion.css";
+@import "./palette-overrides.css";
 
 *, *::before, *::after {
   box-sizing: border-box;

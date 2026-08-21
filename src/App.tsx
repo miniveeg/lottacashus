@@ -20,8 +20,6 @@ import { Withdraw } from "./pages/Withdraw/Withdraw";
 import { Help } from "./pages/Help/Help";
 import { Originals } from "./pages/Originals/Originals";
 
-// Lazy-load game pages and secondary routes so the initial bundle stays small.
-// Each route is fetched on demand the first time a user navigates to it.
 const Keno = lazy(() => import("./pages/Keno/Keno").then((m) => ({ default: m.Keno })));
 const Mines = lazy(() => import("./pages/Mines/Mines").then((m) => ({ default: m.Mines })));
 const Limbo = lazy(() => import("./pages/Limbo/Limbo").then((m) => ({ default: m.Limbo })));
@@ -51,6 +49,7 @@ const Redeem = lazy(() => import("./pages/Redeem/Redeem"));
 const ResponsibleGaming = lazy(() =>
   import("./pages/ResponsibleGaming/ResponsibleGaming").then((m) => ({ default: m.ResponsibleGaming }))
 );
+const Example = lazy(() => import("./pages/Example/Example").then((m) => ({ default: m.Example })));
 
 function PageFallback() {
   return (
@@ -63,7 +62,6 @@ function PageFallback() {
   );
 }
 
-/** Wrap a lazy-loaded page in a Suspense boundary with a consistent fallback. */
 function LazyPage({ children }: { children: ReactNode; label?: string }) {
   return <Suspense fallback={<PageFallback />}>{children}</Suspense>;
 }
@@ -83,7 +81,6 @@ export default function App() {
                 <ToastProvider>
                   <ToastRegion />
                   <Routes>
-                  {/* Core auth & account routes — eager-loaded for instant first paint. */}
                   <Route path="/" element={<Shell><Home /></Shell>} />
                   <Route path="/login" element={<Shell><Login /></Shell>} />
                   <Route path="/signup" element={<Shell><Signup /></Shell>} />
@@ -94,7 +91,12 @@ export default function App() {
                   <Route path="/help" element={<Shell><Help /></Shell>} />
                   <Route path="/originals" element={<Shell><Originals /></Shell>} />
 
-                  {/* Game & secondary routes — lazy-loaded. */}
+                  {/* Canonical layout reference — same shell as every other route */}
+                  <Route
+                    path="/_example"
+                    element={<Shell><LazyPage><Example /></LazyPage></Shell>}
+                  />
+
                   <Route
                     path="/keno"
                     element={<Shell><LazyPage label="Loading Keno…"><Keno /></LazyPage></Shell>}
@@ -178,7 +180,6 @@ export default function App() {
                     path="/redeem"
                     element={<Shell><LazyPage><Redeem /></LazyPage></Shell>}
                   />
-                  {/* Legacy AMOE marketing URL → official rules */}
                   <Route
                     path="/free-entry"
                     element={<Shell><Navigate to="/sweepstakes" replace /></Shell>}

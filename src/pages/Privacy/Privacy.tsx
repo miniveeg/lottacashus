@@ -1,22 +1,22 @@
 import { PRIVACY_POLICY } from "../../content/legal";
 import { LegalDocument } from "../../components/LegalDocument/LegalDocument";
+import { PageLayout } from "../../components/PageLayout/PageLayout";
 import { Seo } from "../../components/Seo/Seo";
 import "./Privacy.css";
 
 export function Privacy() {
   return (
-    <div className="legal-page lc-page lc-page--narrow">
+    <PageLayout
+      variant="narrow"
+      className="legal-page"
+      title="Privacy Policy"
+      subtitle="How we collect, use, and protect your information."
+    >
       <Seo
         title="Privacy Policy"
         path="/privacy"
         description="How LottaCash collects, uses, and protects your personal information, including GDPR and CCPA rights."
       />
-      <header className="lc-page__header legal-page__header">
-        <h1 className="lc-page__title">Privacy Policy</h1>
-        <p className="lc-page__subtitle">
-          How we collect, use, and protect your information.
-        </p>
-      </header>
 
       <section className="lc-panel legal-page__panel" aria-label="Privacy Policy text">
         <LegalDocument
@@ -25,6 +25,6 @@ export function Privacy() {
           id="privacy-policy-body"
         />
       </section>
-    </div>
+    </PageLayout>
   );
 }

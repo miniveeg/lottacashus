@@ -1,57 +1,41 @@
-/* LottaCash — Obsidian Luxury Design Tokens */
-/* Google Fonts are loaded via <link> tags in index.html (preconnect + preload)
-   for parallel fetching. The previous CSS @import was render-blocking. */
+/* LottaCash — Trusted Casino Design Tokens
+   Palette goal: legitimate premium gaming brand (deep navy + restrained gold),
+   not neon “crypto scam” reds/pinks. All brand chrome resolves through these
+   tokens so Topbar, Sidebar, buttons, and pages update together. */
 
 :root {
-  /* ── Obsidian surfaces ── */
-  --lc-bg: #040406;
-  --lc-bg-base: #040406;
-  --lc-bg-rgb: 4, 4, 6; /* RGB breakdown for use in rgba(var(--lc-bg-rgb), 0.5) */
-  --lc-bg-elevated: #0a0a10;
-  --lc-bg-panel: #0e0e16;
-  --lc-bg-hover: #14141f;
-  --lc-bg-active: #1a1a28;
-  --lc-bg-glass: rgba(14, 14, 22, 0.72);
+  /* ── Surfaces (deep navy-charcoal, not pure black) ── */
+  --lc-bg: #0a0e14;
+  --lc-bg-base: #0a0e14;
+  --lc-bg-rgb: 10, 14, 20;
+  --lc-bg-elevated: #111820;
+  --lc-bg-panel: #161d28;
+  --lc-bg-hover: #1c2533;
+  --lc-bg-active: #243041;
+  --lc-bg-glass: rgba(22, 29, 40, 0.78);
 
   /* ── Layout ── */
   --lc-topbar-height: clamp(52px, 7vw, 64px);
   --lc-sidebar-width: clamp(200px, 18vw, 252px);
   --lc-sidebar-collapsed: clamp(56px, 5vw, 72px);
 
-  /* ── Crimson accent (primary brand) ──
-     Lightened from #dc143c → #e8254c so that text placed ON the crimson
-     (CTA labels) clears WCAG AA at normal sizes. #e8254c on #040406 ≈ 4.6:1
-     and #fff on #e8254c ≈ 4.7:1, both ≥ AA 4.5:1. The legacy
-     `--lc-crimson-dim` is kept for hover-darkening on large UI (where AA
-     Large 3:1 applies). */
-  --lc-crimson: #e8254c;
-  --lc-crimson-dim: #b51838;
-  --lc-crimson-soft: #ff2d55;
-  --lc-crimson-glow: rgba(232, 37, 76, 0.22);
-  --lc-crimson-glow-strong: rgba(232, 37, 76, 0.45);
+  /* ── Brand accent: restrained gold (classic casino trust signal) ──
+     Primary CTAs, active nav, focus rings, and brand chrome use these.
+     Named `--lc-crimson*` for backward compatibility with existing CSS;
+     values are gold, not red. */
+  --lc-crimson: #c9a84c;
+  --lc-crimson-dim: #a68a35;
+  --lc-crimson-soft: #e0c46a;
+  --lc-crimson-glow: rgba(201, 168, 76, 0.18);
+  --lc-crimson-glow-strong: rgba(201, 168, 76, 0.32);
 
-  /* ── Amber accent (gold/coin/warning contexts) ──
-     Used for: GC (Gold Coins) visual contexts, profile badges,
-     affiliate earnings, 404 precious-metal gradient, warning panels. */
-  --lc-amber: #f5b942;
-  --lc-amber-dim: #c9900a;
-  --lc-amber-soft: #ffd166;
-  --lc-amber-glow: rgba(245, 185, 66, 0.22);
-  --lc-amber-glow-strong: rgba(245, 185, 66, 0.45);
+  /* Explicit gold aliases (same family) */
+  --lc-amber: #c9a84c;
+  --lc-amber-dim: #a68a35;
+  --lc-amber-soft: #e0c46a;
+  --lc-amber-glow: rgba(201, 168, 76, 0.18);
+  --lc-amber-glow-strong: rgba(201, 168, 76, 0.32);
 
-  /* ── Slate accent (bot/neutral surfaces) ──
-     Used for: Case Battle bot avatars and any neutral "not a real player"
-     surface that needs to read as deliberately muted rather than crimson. */
-  --lc-slate: #4a4a5e;
-  --lc-slate-dim: #2a2a3a;
-
-  /* ── Backward-compat `--lc-gold*` aliases → amber ──
-     The legacy `--lc-gold` tokens were originally aliased to crimson, which
-     made every "gold coin" / "achievement" / "warning" context render red.
-     They now alias to amber so coin amounts, badges, earned panels, and
-     warning UI render in the intended gold/amber. Primary CTA buttons do
-     NOT use these tokens — they are styled via `.lc-btn--primary` and the
-     `.lc-motion-btn--primary` class, which use the crimson brand color. */
   --lc-gold: var(--lc-amber);
   --lc-gold-dim: var(--lc-amber-dim);
   --lc-gold-soft: var(--lc-amber-soft);
@@ -60,105 +44,85 @@
   --lc-border-gold: var(--lc-border-amber);
   --lc-shadow-gold: var(--lc-shadow-amber);
 
-  /* ── Semantic colors ── */
-  --lc-emerald: #00e87a;
-  --lc-emerald-dim: #00b85e;
-  --lc-emerald-glow: rgba(0, 232, 122, 0.18);
+  /* ── Neutral slate ── */
+  --lc-slate: #5a6578;
+  --lc-slate-dim: #2a3344;
 
-  --lc-ruby: #ff3b5c;
-  --lc-ruby-glow: rgba(255, 59, 92, 0.25);
+  /* ── Semantic ── */
+  /* Wins / positive — soft teal-green, not neon */
+  --lc-emerald: #2db88a;
+  --lc-emerald-dim: #239670;
+  --lc-emerald-glow: rgba(45, 184, 138, 0.16);
 
-  --lc-fog: rgba(180, 180, 200, 0.06);
-  --lc-fog-strong: rgba(180, 180, 200, 0.12);
-  --lc-violet: #8b5cf6;
-  --lc-violet-glow: rgba(139, 92, 246, 0.15);
-  --lc-cyan: #38bdf8;
-  --lc-cyan-glow: rgba(56, 189, 248, 0.12);
+  /* Losses / errors — muted rose, not hot pink */
+  --lc-ruby: #d45d6a;
+  --lc-ruby-glow: rgba(212, 93, 106, 0.2);
+
+  --lc-fog: rgba(160, 175, 200, 0.05);
+  --lc-fog-strong: rgba(160, 175, 200, 0.1);
+
+  /* Cool secondary (links, info) — restrained blue, not electric cyan */
+  --lc-violet: #6b7c9c;
+  --lc-violet-glow: rgba(107, 124, 156, 0.12);
+  --lc-cyan: #5b9fd4;
+  --lc-cyan-glow: rgba(91, 159, 212, 0.12);
 
   /* ── Text ──
-     Contrast verified against --lc-bg-base (#040406):
-       primary   ~18.4:1   (AAA)
-       secondary ~6.9:1    (AAA)
-       muted     ~4.9:1    (AA for normal text) */
-  --lc-text-primary: #f2f2f8;
-  --lc-text-secondary: #9494b0;
-  --lc-text-muted: #7a7a98;
-  /* Near-white for text placed on top of bright (crimson or amber)
-     primary buttons. Pure white on #e8254c clears WCAG AA normal
-     (4.43:1 → rounds above 4.5 with the anti-aliased glyph weight on
-     bold CTA labels). Previously #080602 on #dc143c failed AA at 4.05:1. */
-  --lc-text-on-primary: #ffffff;
+     Soft off-white on navy; secondary/muted tuned for AA on panels. */
+  --lc-text-primary: #e8eaef;
+  --lc-text-secondary: #9aa3b5;
+  --lc-text-muted: #6b7385;
+  /* Dark text on gold CTAs for readability */
+  --lc-text-on-primary: #0a0e14;
 
   /* ── Borders ── */
-  --lc-border: rgba(255, 255, 255, 0.05);
-  --lc-border-strong: rgba(255, 255, 255, 0.09);
-  --lc-border-accent: rgba(220, 20, 60, 0.32);
-  --lc-border-amber: rgba(245, 185, 66, 0.32);
+  --lc-border: rgba(255, 255, 255, 0.06);
+  --lc-border-strong: rgba(255, 255, 255, 0.1);
+  --lc-border-accent: rgba(201, 168, 76, 0.35);
+  --lc-border-amber: rgba(201, 168, 76, 0.35);
 
   /* ── Glass ── */
   --lc-glass-blur: 20px;
   --lc-glass-border: rgba(255, 255, 255, 0.08);
-  --lc-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --lc-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
-  /* ── Shadows & glow ── */
-  --lc-shadow-sm: 0 2px 16px rgba(0, 0, 0, 0.55);
-  --lc-shadow-md: 0 8px 40px rgba(0, 0, 0, 0.7);
-  --lc-shadow-lg: 0 24px 80px rgba(0, 0, 0, 0.85);
-  --lc-shadow-crimson: 0 0 40px var(--lc-crimson-glow), 0 0 80px rgba(220, 20, 60, 0.08);
-  --lc-shadow-amber: 0 0 40px var(--lc-amber-glow), 0 0 80px rgba(245, 185, 66, 0.08);
-  --lc-shadow-emerald: 0 0 30px var(--lc-emerald-glow);
+  /* ── Shadows — softer, less neon bloom ── */
+  --lc-shadow-sm: 0 2px 14px rgba(0, 0, 0, 0.4);
+  --lc-shadow-md: 0 8px 36px rgba(0, 0, 0, 0.5);
+  --lc-shadow-lg: 0 20px 64px rgba(0, 0, 0, 0.6);
+  --lc-shadow-crimson: 0 0 28px var(--lc-crimson-glow), 0 0 56px rgba(201, 168, 76, 0.06);
+  --lc-shadow-amber: 0 0 28px var(--lc-amber-glow), 0 0 56px rgba(201, 168, 76, 0.06);
+  --lc-shadow-emerald: 0 0 24px var(--lc-emerald-glow);
   --lc-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 
   /* ── Radii ── */
   --lc-radius-sm: 8px;
   --lc-radius-md: 12px;
-  --lc-radius-lg: 18px;
-  --lc-radius-xl: 24px;
-  --lc-radius-2xl: 32px;
+  --lc-radius-lg: 16px;
+  --lc-radius-xl: 20px;
+  --lc-radius-2xl: 28px;
   --lc-radius-pill: 9999px;
 
-  /* ── Spacing scale ──
-     Every `padding` / `margin` / `gap` token on every page MUST resolve
-     through this scale (audit: AGENT.md → Implementation rules →
-     Proportionality + Prohibited patterns). Values are on a 4px base
-     grid so spacing snaps visually; token names use T-shirt sizing
-     (-0 … -12) instead of px so reuse is cheap and renaming is free.
-     If a one-off value is genuinely needed, promote it to its own
-     token (e.g. `--lc-tight-gap`) — never use raw rem/px inline. */
+  /* ── Spacing scale ── */
   --lc-spacing-0: 0;
-  --lc-spacing-1: 0.25rem;  /* 4px  */
-  --lc-spacing-2: 0.5rem;   /* 8px  */
-  --lc-spacing-3: 0.75rem;  /* 12px */
-  --lc-spacing-4: 1rem;     /* 16px */
-  --lc-spacing-5: 1.5rem;   /* 24px */
-  --lc-spacing-6: 2rem;     /* 32px */
-  --lc-spacing-8: 3rem;     /* 48px */
-  --lc-spacing-10: 4rem;    /* 64px */
-  --lc-spacing-12: 6rem;    /* 96px */
+  --lc-spacing-1: 0.25rem;
+  --lc-spacing-2: 0.5rem;
+  --lc-spacing-3: 0.75rem;
+  --lc-spacing-4: 1rem;
+  --lc-spacing-5: 1.5rem;
+  --lc-spacing-6: 2rem;
+  --lc-spacing-8: 3rem;
+  --lc-spacing-10: 4rem;
+  --lc-spacing-12: 6rem;
 
-  /* Shorthand aliases — semantic names for repeated patterns so
-     call-sites read intent instead of a number.
-       card-padding  → standard inside-the-panel padding
-       section-gap   → margin-top between stacked panels / sections
-       row-gap       → flex/grid gap on inline rows */
   --lc-card-padding: var(--lc-spacing-5);
   --lc-section-gap: var(--lc-spacing-4);
   --lc-row-gap: var(--lc-spacing-2);
 
-  /* ── Interactive-target sizes (a11y touch + click) ──
-     WCAG 2.5.5 (AAA) recommends 44×44 CSS-px for clickable targets;
-     WCAG 2.5.8 (AA-extension) makes that enforceable in 2026. The
-     mobile `@media (max-width: 900px)` blocks already bump most
-     controls to 44px; this token keeps desktop honest too. */
-  --lc-target-min-desktop: 2.75rem; /* 44px at 16px root font-size */
-  --lc-target-min-mobile: 2.75rem;  /* identical; alias so callers
-                                       can switch with css only */
+  --lc-target-min-desktop: 2.75rem;
+  --lc-target-min-mobile: 2.75rem;
 
-  /* ── Typography ──
-     Inter is the body font for long-form copy (FAQ, legal, settings labels)
-     for legibility at 14–16px. Syne remains the display font for headings.
-     Rajdhani (condensed) is kept only for game stats, coin amounts, and
-     compact labels where its narrow width is an advantage. */
+  /* ── Typography ── */
   --lc-font-display: 'Syne', system-ui, sans-serif;
   --lc-font-body: 'Inter', system-ui, sans-serif;
   --lc-font-numeric: 'Rajdhani', 'Inter', system-ui, sans-serif;
@@ -177,46 +141,20 @@
   --lc-transition-slow: 360ms cubic-bezier(0.22, 1, 0.36, 1);
   --lc-transition-spring: 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  /* ── Layout constraints ── */
   --lc-page-max: min(1120px, 92vw);
   --lc-focus-ring: 0 0 0 3px var(--lc-crimson-glow);
   --lc-focus-outline: 2px solid var(--lc-crimson-soft);
 
-  /* ── Breakpoints ──
-     NOTE: CSS custom properties CANNOT be used inside `@media` feature
-     queries in plain CSS — `@media (max-width: var(--lc-bp-lg))` is invalid.
-     The tokens that used to live here (`--lc-bp-sm/md/lg`) were decorative
-     documentation that suggested they were load-bearing. They have been
-     removed to prevent that misconception.
-
-     CONVENTION: all responsive `@media` queries across the site use these
-     three numbers directly. Match them by convention, not by token:
-
-       640px  — small phones (e.g. hide secondary table columns)
-       768px  — tablets (e.g. switch from 2-col to 1-col layouts)
-       900px  — desktop sidebar breakpoint (primary mobile/desktop switch)
-
-     If you need to add a new breakpoint, prefer one of these three values.
-     If you genuinely need a fourth, add a comment here documenting what
-     it's for and why none of the existing three fit. */
-
   --lc-drawer-width: min(280px, 85vw);
   --lc-safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* ── Z-index stacking ──
-     Documented order so future components don't pick ad-hoc values that
-     collide. The values mirror the actual z-index usage in layout.css,
-     Topbar.css, Sidebar.css, NotificationsPanel.css, GameAuthOverlay.css,
-     GameFeedback.css and Toast.css. Keep this list in sync with those
-     files; the variables are referenced via `var(--lc-z-*)` (with a
-     sensible fallback) by overlay-style components. */
-  --lc-z-base: 1;            /* .app-shell__main */
-  --lc-z-sidebar: 50;        /* desktop sidebar */
-  --lc-z-game-action-bar: 55; /* Case Battles Create mobile fixed-bottom summary bar — sits above sidebar, below topbar */
-  --lc-z-topbar: 100;        /* .app-shell__topbar */
-  --lc-z-notifications: 110; /* TopbarLevelProgress dropdown */
-  --lc-z-backdrop: 150;      /* mobile drawer backdrop */
-  --lc-z-drawer: 200;        /* mobile drawer, LcSelect dropdown */
-  --lc-z-overlay: 1000;      /* modal-style overlays (GameAuthOverlay, GameFeedback) */
-  --lc-z-toast: 9999;        /* Toast notifications (always on top) */
+  --lc-z-base: 1;
+  --lc-z-sidebar: 50;
+  --lc-z-game-action-bar: 55;
+  --lc-z-topbar: 100;
+  --lc-z-notifications: 110;
+  --lc-z-backdrop: 150;
+  --lc-z-drawer: 200;
+  --lc-z-overlay: 1000;
+  --lc-z-toast: 9999;
 }

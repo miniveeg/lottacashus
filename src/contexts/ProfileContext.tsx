@@ -29,9 +29,6 @@ export type UserProfile = {
   discordUsername: string | null;
   discordAvatar: string | null;
   discordLinkedAt: string | null;
-  /** ISO timestamp from the profiles row's `created_at` column. Drives the
-   *  Profile page's Veteran badge (audit v3.3 — previously hardcoded null
-   *  for own-profile views, which permanently locked the badge). */
   createdAt: string | null;
 };
 
@@ -43,10 +40,6 @@ type ProfileContextValue = {
 };
 
 const ProfileContext = createContext<ProfileContextValue | null>(null);
-
-// AUDIT R4: BALANCE_POLL_MS (1500ms) poll removed — the Supabase realtime
-// subscription + visibilitychange listener now cover all profile-update cases
-// without the redundant polling that caused Topbar to re-render every 1.5s.
 
 const PROFILE_SELECT =
   "username, email, is_admin, balance, sweeps_coins, total_wagered, total_deposited, total_withdrawn, total_wins, total_losses, discord_id, discord_username, discord_avatar, discord_linked_at, created_at";
@@ -67,7 +60,9 @@ function rowToProfile(row: Record<string, unknown>, isAdminOverride?: boolean): 
     username: (row.username as string | null) ?? null,
     email: (row.email as string | null) ?? null,
     isAdmin: isAdminOverride ?? Boolean(row.is_admin),
-    balance: parseNum(row.balance),
+    // SC-only: balance mirrors sweeps_coins so any remaining dual-path
+    // game code (balance vs sweepsCoins) reads the same SC wallet.
+    balance: parseNum(row.sweeps_coins),
     sweepsCoins: parseNum(row.sweeps_coins),
     totalWagered: parseNum(row.total_wagered),
     totalDeposited: parseNum(row.total_deposited),
@@ -82,16 +77,13 @@ function rowToProfile(row: Record<string, unknown>, isAdminOverride?: boolean): 
   };
 }
 
-// AUDIT-BYPASS: when VITE_AUDIT_BYPASS=1, return a fake admin profile so the
-// admin route and all auth-gated pages render their real UI. Network calls to
-// Supabase will fail (invalid token) but the UI shells render with this data.
 const AUDIT_BYPASS = import.meta.env.VITE_AUDIT_BYPASS === "1";
 const AUDIT_PROFILE: UserProfile | null = AUDIT_BYPASS
   ? {
       username: "AuditViewer",
       email: "auditor@lottacash.local",
       isAdmin: true,
-      balance: 12500.0,
+      balance: 42.5,
       sweepsCoins: 42.5,
       totalWagered: 84210.5,
       totalDeposited: 1500.0,
@@ -102,17 +94,10 @@ const AUDIT_PROFILE: UserProfile | null = AUDIT_BYPASS
       discordUsername: null,
       discordAvatar: null,
       discordLinkedAt: null,
-      // Pretend the audit account is 90 days old so the Veteran badge (>=30d)
-      // also exercises the "earned" branch in visual-regression audits instead
-      // of always rendering in the locked slot.
       createdAt: new Date(Date.now() - 90 * 86400000).toISOString(),
     }
   : null;
 
-// Throttle realtime apply to ~5Hz (200ms) so rapid-fire betting doesn't
-// re-render the Topbar + Balance rail 5+ times per second. Trailing-edge
-// keeps the most recent balance — no value is lost, only the rate is capped.
-// Returns a `flushNow` for the cleanup path to commit the last pending row.
 function makeThrottledApply(applyFn: (row: Record<string, unknown>, isAdmin: boolean | undefined) => void) {
   let timer: ReturnType<typeof setTimeout> | null = null;
   let lastAppliedAt = 0;
@@ -150,13 +135,6 @@ function makeThrottledApply(applyFn: (row: Record<string, unknown>, isAdmin: boo
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user, session } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(AUDIT_PROFILE);
-  // Start `true` so that consumers (e.g. AdminRoute, ProtectedRoute) don't
-  // briefly see `profileLoading=false` + `profile=null` on the very first
-  // render after a user becomes available — that combination would cause a
-  // flash-of-wrong-redirect (the route guard treats "no profile + not loading"
-  // as "definitely not an admin" and bounces to `/`). The bootstrap effect
-  // below will flip this to `false` once the profile fetch settles, or
-  // immediately if there is no user.
   const [profileLoading, setProfileLoading] = useState(AUDIT_BYPASS ? false : true);
   const profileRef = useRef<UserProfile | null>(null);
   profileRef.current = profile;
@@ -165,15 +143,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     if (!row) return;
     setProfile((prev) => {
       const next = rowToProfile(row, isAdminOverride);
-      // SECURITY FIX (M2): previously, if a user was ever an admin and was
-      // then demoted (admin sets is_admin=false), the client kept isAdmin=true
-      // until a full page reload — leaking admin-only UI (user list, redemptions)
-      // to the demoted user for the duration of the session. The original
-      // "stickiness" was meant to prevent a one-render flicker, but the cost
-      // (UI leak after demotion) outweighs the benefit. Trust the server.
-      // The AdminRoute + server-side require_admin() still gate actual admin
-      // actions; this only affects whether the admin UI is *visible*.
-      void prev; // (prev still read to keep the setter signature stable)
+      void prev;
       return next;
     });
   }, []);
@@ -237,19 +207,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   );
 
   const refreshProfile = useCallback(async () => {
-    // In guest/local-play mode, refresh from the localStorage wallet.
     if (!isSupabaseConfigured || (user?.id === "guest" && !session?.access_token)) {
-      setProfile((prev) => prev
-        ? { ...prev, balance: localBalance("balance"), sweepsCoins: localBalance("sweeps_coins") }
-        : prev);
+      setProfile((prev) =>
+        prev
+          ? { ...prev, balance: localBalance("sweeps_coins"), sweepsCoins: localBalance("sweeps_coins") }
+          : prev
+      );
       return;
     }
     await fetchProfile({ silent: true });
   }, [fetchProfile, user?.id, session?.access_token]);
 
-  // Guest / local-play mode: when there's no real session (user is a guest),
-  // back the profile with the localStorage wallet so game balance checks work
-  // and the topbar shows the local balance.
   useEffect(() => {
     if (AUDIT_BYPASS) return;
     if (user?.id === "guest" || !session?.access_token) {
@@ -257,7 +225,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         username: "Guest",
         email: null,
         isAdmin: false,
-        balance: localBalance("balance"),
+        balance: localBalance("sweeps_coins"),
         sweepsCoins: localBalance("sweeps_coins"),
         totalWagered: 0,
         totalDeposited: 0,
@@ -268,7 +236,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         discordUsername: null,
         discordAvatar: null,
         discordLinkedAt: null,
-        // Guests have no real account — keep the Veteran badge locked.
         createdAt: null,
       };
       setProfile(localProfile);
@@ -277,9 +244,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id, session?.access_token]);
 
-  // Guest / local-play: keep topbar balances in sync with localStorage.
-  // Realtime only works with Supabase; local-play writes never emit events,
-  // so we poll cheaply while guest mode is active (and refresh on focus).
   useEffect(() => {
     if (isSupabaseConfigured && user?.id !== "guest") return;
     if (user?.id !== "guest" && isSupabaseConfigured) return;
@@ -287,10 +251,9 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const syncLocal = () => {
       setProfile((prev) => {
         if (!prev) return prev;
-        const balance = localBalance("balance");
         const sweepsCoins = localBalance("sweeps_coins");
-        if (prev.balance === balance && prev.sweepsCoins === sweepsCoins) return prev;
-        return { ...prev, balance, sweepsCoins };
+        if (prev.balance === sweepsCoins && prev.sweepsCoins === sweepsCoins) return prev;
+        return { ...prev, balance: sweepsCoins, sweepsCoins };
       });
     };
 
@@ -323,11 +286,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     let channel: RealtimeChannel | null = null;
     const throttle = makeThrottledApply((row, isAdmin) => applyProfile(row, isAdmin));
 
-    // Synchronously mark loading as soon as we know we have a user — this
-    // closes the gap between the auth state flipping to "logged in" and the
-    // async `start()` function reaching `fetchProfile({ showLoading: true })`.
-    // Without this, route guards like AdminRoute see `profileLoading=false` +
-    // `profile=null` for one render and bounce to `/`.
     setProfileLoading(true);
 
     async function start() {
@@ -354,22 +312,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           }
         )
         .subscribe();
-
-      // AUDIT R4: removed the redundant 1.5s setInterval poll that ran
-      // `fetchProfile({ silent: true })` every BALANCE_POLL_MS. The Supabase
-      // realtime subscription above already pushes profile changes (including
-      // balance updates from bets/deposits) the instant they happen, and the
-      // visibilitychange + focus listeners below refresh on tab return. The
-      // poll doubled RPC load and caused the Topbar (a useProfile consumer)
-      // to re-render every 1.5s for no benefit. Realtime + visibility is
-      // sufficient and far cheaper. + throttle above caps the realtime
-      // render rate at ~5Hz to prevent UI lockup during auto-betting.
     }
 
     start();
 
-    // Refresh profile when the tab becomes visible again (covers the case
-    // where realtime events were dropped while the tab was hidden).
     const onVisible = () => {
       if (document.visibilityState === "visible") fetchProfile({ silent: true });
     };

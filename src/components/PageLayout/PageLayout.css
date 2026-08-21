@@ -1,0 +1,22 @@
+/* PageLayout body — keeps content spacing consistent under the shared header. */
+
+.lc-page-layout__body {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Auth variant: body inherits flex centering from .lc-page--auth */
+.lc-page--auth .lc-page-layout__body {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Game pages: body stretches so the board/controls fill available height */
+.lc-game-page .lc-page-layout__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}

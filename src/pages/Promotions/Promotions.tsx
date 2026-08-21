@@ -134,12 +134,11 @@ export function Promotions() {
         </p>
       </header>
 
-      {/* Active promotions grid — real offers, not just the affiliate program. */}
       <div className="promos__grid">
         <article className="promos__card promos__card--welcome">
           <div className="promos__card-badge promos__card-badge--new">New players</div>
           <h3 className="promos__card-title">Welcome bonus</h3>
-          <p className="promos__card-amount">10,000 GC + 100 SC</p>
+          <p className="promos__card-amount">100 SC</p>
           <p className="promos__card-desc">
             Free on signup. Play any game immediately — no deposit required. SC is redeemable for
             real crypto.
@@ -201,7 +200,7 @@ export function Promotions() {
             <div className="promos__affiliate-referral">
               <h3 className="promos__affiliate-referral-title">Have a referral code?</h3>
               <p className="promos__affiliate-referral-text">
-                Enter your friend&apos;s code when you create an account. You can only set it once.
+                Enter your friend's code when you create an account. You can only set it once.
               </p>
               <Link to={signupUrl(pathname)} className="promos__btn promos__btn--gold">
                 Sign up with a code
@@ -219,10 +218,6 @@ export function Promotions() {
         ) : affiliateLoading ? (
           <p className="promos__affiliate-muted">Loading your affiliate stats…</p>
         ) : affiliateError ? (
-          /* AUDIT R8: previously this error branch replaced the entire affiliate
-           * UI with a single <p>. Now we show the error inline and still render
-           * the referral-code form + CTA so the page is useful even when the
-           * affiliate-stats RPC fails (e.g. RLS denies in demo mode). */
           <>
             <p className="promos__affiliate-error" role="alert">
               {affiliateError}

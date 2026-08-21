@@ -39,7 +39,7 @@ export function GameFeedback({
   type,
   amount,
   multiplier,
-  coinType = "balance",
+  coinType = "sweeps_coins",
   durationMs,
   onDismiss,
 }: GameFeedbackProps) {

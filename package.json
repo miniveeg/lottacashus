@@ -12,7 +12,9 @@
     "sweep:remote": "node scripts/invoke-sweep-deposits.mjs",
     "sweep:remote:health": "node scripts/invoke-sweep-deposits.mjs --health",
     "sweep:dry": "node scripts/manual-sweep-deposits.mjs --dry-run",
-    "sweep:manual": "node scripts/manual-sweep-deposits.mjs"
+    "sweep:manual": "node scripts/manual-sweep-deposits.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
@@ -43,6 +45,7 @@
     "ethers": "^6.13.0",
     "tiny-secp256k1": "^2.2.3",
     "typescript": "~5.8.3",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "vitest": "^4.1.11"
   }
 }

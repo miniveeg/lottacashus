@@ -37,6 +37,9 @@ const CaseBattlesRoom = lazy(() =>
   import("./pages/CaseBattles/CaseBattlesRoomV2").then((m) => ({ default: m.CaseBattlesRoomV2 }))
 );
 const Admin = lazy(() => import("./pages/Admin/Admin").then((m) => ({ default: m.Admin })));
+const AdminStatus = lazy(() =>
+  import("./pages/Admin/AdminStatus").then((m) => ({ default: m.AdminStatus }))
+);
 const Promotions = lazy(() => import("./pages/Promotions/Promotions").then((m) => ({ default: m.Promotions })));
 const Leaderboard = lazy(() => import("./pages/Leaderboard/Leaderboard").then((m) => ({ default: m.Leaderboard })));
 const ProfilePage = lazy(() => import("./pages/Profile/Profile").then((m) => ({ default: m.ProfilePage })));
@@ -91,7 +94,6 @@ export default function App() {
                   <Route path="/help" element={<Shell><Help /></Shell>} />
                   <Route path="/originals" element={<Shell><Originals /></Shell>} />
 
-                  {/* Canonical layout reference — same shell as every other route */}
                   <Route
                     path="/_example"
                     element={<Shell><LazyPage><Example /></LazyPage></Shell>}
@@ -160,6 +162,16 @@ export default function App() {
                       <Shell>
                         <AdminRoute>
                           <LazyPage label="Loading admin…"><Admin /></LazyPage>
+                        </AdminRoute>
+                      </Shell>
+                    }
+                  />
+                  <Route
+                    path="/admin/status"
+                    element={
+                      <Shell>
+                        <AdminRoute>
+                          <LazyPage label="Loading status…"><AdminStatus /></LazyPage>
                         </AdminRoute>
                       </Shell>
                     }

@@ -23,3 +23,9 @@ Thumbs.db
 # Vercel
 .vercel
 .aider*
+
+# Supabase CLI local state
+supabase/.temp/
+
+# Local Claude Code dev config
+.claude/

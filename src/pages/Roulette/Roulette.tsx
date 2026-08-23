@@ -13,7 +13,7 @@ import {
   rouletteWinChance,
 } from "../../lib/games/roulette";
 import { formatCoins } from "../../lib/format";
-import { getActiveBalance, clampWager, SC_MAX_WAGER } from "../../lib/gameWallet";
+import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
 import {
   fetchRoulettePfState,
   placeRouletteBet,

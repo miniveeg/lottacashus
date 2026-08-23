@@ -22,9 +22,26 @@ const GRID_SIZE = 40;
 const MAX_PICKS = 10;
 const REVEAL_STAGGER_MS = 110;
 
+// M7 (UI/UX audit): detect prefers-reduced-motion so the staggered reveal
+// collapses to an instant reveal. The CSS keyframes are already suppressed
+// by the global `@media (prefers-reduced-motion: reduce)` rule, but the JS
+// setTimeout chain still fired 10 times — making the reveal take 1.1s even
+// for users who explicitly asked for less motion. Now: stagger = 0 when
+// reduced-motion is on, so all 10 numbers reveal at once.
 function readPrefersReducedMotion(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined" || !window.matchMedia) return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function randomPick(count: number): number[] {
+  const pool = Array.from({ length: GRID_SIZE }, (_, i) => i + 1);
+  const picked: number[] = [];
+  for (let i = 0; i < count && pool.length > 0; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    picked.push(pool[idx]!);
+    pool.splice(idx, 1);
+  }
+  return picked.sort((a, b) => a - b);
 }
 
 export function Keno() {
@@ -41,20 +58,37 @@ export function Keno() {
   const [revealCount, setRevealCount] = useState(0);
   const [lastResult, setLastResult] = useState<{
     hits: number;
-    payout: number;
     multiplier: number;
+    payout: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
+
   const [pfHash, setPfHash] = useState<string | null>(null);
   const [pfNonce, setPfNonce] = useState(0);
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
-  const [randomPickKey, setRandomPickKey] = useState(0);
-  const [reduceMotion, setReduceMotion] = useState(false);
 
+  // Bumped each time the user clicks Auto Pick so the dice <span>'s CSS
+  // roll animation restarts (paired with `key=`). Mirrors Mines.
+  const [randomPickKey, setRandomPickKey] = useState(0);
+
+  // Ref mirror of `drawing` so handleBet can guard against re-entrant
+  // clicks without waiting for a state-commit + re-render cycle.
   const drawingRef = useRef(false);
+  // Reveal-animation timeout IDs — cleared on unmount or new bet so they
+  // can't fire setState on an unmounted component or interleave with a
+  // new round's reveal.
   const revealTimeoutsRef = useRef<number[]>([]);
+  // M7: track reduced-motion preference + a "skip" flag so the user can
+  // instantly reveal all 10 numbers without waiting for the stagger.
+  const [reduceMotion, setReduceMotion] = useState(false);
   const skipRevealRef = useRef(false);
+
+  // Phase polish: ref mirrors of session state so the keyboard-hotkey
+  // handler (registered once with `[]` deps below) and every binding can
+  // read the latest values without stale-closure traps. Mirrors the
+  // pattern established in Crash + Mines.
+  const pickCountRef = useRef(0);
   const selectedRef = useRef<number[]>([]);
   const wagerRef = useRef(1);
   const coinTypeRef = useRef<string>("balance");
@@ -63,13 +97,15 @@ export function Keno() {
   const drawnRef = useRef<number[] | null>(null);
   const reduceMotionRef = useRef(false);
 
+  const pickCount = selected.length;
   const paytable = useMemo(
-    () => getPaytableRow(risk, Math.max(1, selected.length)),
-    [risk, selected.length]
+    () => (pickCount > 0 ? getPaytableRow(pickCount, risk) : []),
+    [pickCount, risk]
   );
 
   const loadPf = useCallback(async () => {
-    const { data } = await fetchKenoPfState();
+    const { data, error: pfErr } = await fetchKenoPfState();
+    if (pfErr) return;
     if (data) {
       setPfHash(data.serverSeedHash);
       setPfNonce(data.nextNonce);
@@ -81,35 +117,29 @@ export function Keno() {
     if (user) loadPf();
   }, [user, loadPf]);
 
+  // Sync ref mirrors for the hotkey listener (also keeps handleBet et al.
+  // safe across any binding context).
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const apply = () => {
-      setReduceMotion(mq.matches);
-      reduceMotionRef.current = mq.matches;
-    };
-    apply();
-    mq.addEventListener("change", apply);
-    return () => mq.removeEventListener("change", apply);
-  }, []);
-
-  useEffect(() => {
+    pickCountRef.current = selected.length;
     selectedRef.current = selected;
     wagerRef.current = wager;
     coinTypeRef.current = coinType;
     profileRef.current = profile;
     riskRef.current = risk;
     drawnRef.current = drawn;
-  }, [selected, wager, coinType, profile, risk, drawn]);
+    reduceMotionRef.current = reduceMotion;
+  }, [selected, wager, coinType, profile, risk, drawn, reduceMotion]);
 
-  useEffect(() => {
-    drawingRef.current = false;
-    return () => {
-      drawingRef.current = false;
-      for (const id of revealTimeoutsRef.current) window.clearTimeout(id);
-      revealTimeoutsRef.current = [];
-    };
-  }, []);
-
+  // Keyboard hotkeys. Registered once with `[]` deps; ref-aware handlers
+  // (handleBet / autoPick / clearTable / applyWager / skipReveal) read
+  // everything via refs so the captured closures stay correct for the
+  // lifetime of the page. Focus + modifier guards keep this safe globally
+  // (won't hijack Cmd+R; won't fire while typing in the wager/seed inputs).
+  //   Space / Enter → bet (if pickCount ≥ 1 and not drawing)
+  //   [ / ]         → half / double wager (idle only)
+  //   C             → clear selection (idle only)
+  //   A             → auto-pick random numbers (idle only)
+  //   S             → skip reveal animation (drawing only, !reduceMotion)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -118,31 +148,119 @@ export function Keno() {
       const onTextInput =
         tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable === true;
       if (onTextInput) return;
+
       const k = e.key.toLowerCase();
       const isDrawing = drawingRef.current;
-      const picks = selectedRef.current.length;
+      const picks = pickCountRef.current;
+
       if (k === " " || k === "enter") {
         e.preventDefault();
         if (!isDrawing && picks >= 1) void handleBet();
         return;
       }
-      if (k === "r") {
-        e.preventDefault();
-        if (!isDrawing) autoPick();
+      if (k === "[") {
+        if (!isDrawing) {
+          e.preventDefault();
+          applyWager(wagerRef.current / 2);
+        }
+        return;
+      }
+      if (k === "]") {
+        if (!isDrawing) {
+          e.preventDefault();
+          const activeBalance =
+            coinTypeRef.current === "sweeps_coins"
+              ? profileRef.current?.sweepsCoins ?? 0
+              : profileRef.current?.balance ?? 0;
+          applyWager(Math.min(wagerRef.current * 2, activeBalance));
+        }
         return;
       }
       if (k === "c") {
-        e.preventDefault();
-        if (!isDrawing) clearTable();
+        if (!isDrawing) {
+          e.preventDefault();
+          clearTable();
+        }
+        return;
+      }
+      if (k === "a") {
+        if (!isDrawing) {
+          e.preventDefault();
+          autoPick();
+        }
+        return;
+      }
+      if (k === "s") {
+        if (isDrawing && drawnRef.current !== null && !reduceMotionRef.current) {
+          e.preventDefault();
+          skipReveal();
+        }
         return;
       }
     }
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Clear any pending reveal-animation timeouts on unmount so they can't
+  // fire setState on an unmounted component.
+  useEffect(() => {
+    return () => {
+      for (const id of revealTimeoutsRef.current) {
+        window.clearTimeout(id);
+      }
+      revealTimeoutsRef.current = [];
+      drawingRef.current = false;
+    };
+  }, []);
+
+  // M7: live-track prefers-reduced-motion. The OS setting can be toggled
+  // while the page is open, so we re-read on the `change` event.
+  useEffect(() => {
+    setReduceMotion(readPrefersReducedMotion());
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handler = (e: MediaQueryListEvent) => setReduceMotion(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  // M7: skip the staggered reveal — instantly show all 10 numbers + result.
+  // Called by the "Skip" button (visible only while the reveal is in progress)
+  // OR by the S hotkey (drawn + reduceMotion guards live in the listener).
+  const skipReveal = useCallback(() => {
+    // Read drawn from ref so this stays correct from the hotkey listener.
+    const drawnNow = drawnRef.current;
+    if (!drawnNow) return;
+    for (const id of revealTimeoutsRef.current) {
+      window.clearTimeout(id);
+    }
+    revealTimeoutsRef.current = [];
+    skipRevealRef.current = true;
+    setRevealCount(drawnNow.length);
+    if (drawnNow.length > 0) {
+      const r = lastResultRef.current;
+      if (r) {
+        setLastResult(r);
+      }
+      drawingRef.current = false;
+      setDrawing(false);
+      setPfNonce((pfNonceRef.current ?? 0) + 1);
+      void loadPf();
+    }
+  }, [loadPf]);
+
   const toggleNumber = (n: number) => {
     if (drawingRef.current) return;
+    setError(null);
+    // If a previous round's drawn numbers are still on screen, clear them
+    // so the user sees only their new selection (not stale drawn/hit state).
+    if (drawn !== null) {
+      setDrawn(null);
+      setRevealCount(0);
+      setLastResult(null);
+    }
     setSelected((prev) => {
       if (prev.includes(n)) return prev.filter((x) => x !== n);
       if (prev.length >= MAX_PICKS) return prev;
@@ -150,33 +268,46 @@ export function Keno() {
     });
   };
 
-  const autoPick = () => {
-    if (drawingRef.current) return;
-    const pool = Array.from({ length: GRID_SIZE }, (_, i) => i + 1);
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    const count = selectedRef.current.length || 10;
-    setSelected(pool.slice(0, Math.min(count, MAX_PICKS)).sort((a, b) => a - b));
-    setRandomPickKey((k) => k + 1);
-  };
-
   const clearTable = () => {
     if (drawingRef.current) return;
+    // Mirror to refs synchronously so hotkey C / S fired in the same
+    // tick see the cleared state (no stale-closure visual on screen).
+    selectedRef.current = [];
+    drawnRef.current = null;
     setSelected([]);
+    setDrawn(null);
+    setRevealCount(0);
+    setLastResult(null);
+    setError(null);
+  };
+
+  const autoPick = () => {
+    if (drawingRef.current) return;
+    // Read pickCount from ref so this stays correct from the hotkey.
+    const count = pickCountRef.current > 0 ? pickCountRef.current : 10;
+    const nextSelected = randomPick(Math.min(count, MAX_PICKS));
+    // Mirror to ref synchronously (same value React commits via setState)
+    // so the S/C/[/] hotkeys that fire before re-render see the fresh
+    // selection — avoiding any partial-frame rounding.
+    selectedRef.current = nextSelected;
+    setSelected(nextSelected);
     setDrawn(null);
     drawnRef.current = null;
     setRevealCount(0);
     setLastResult(null);
+    // Bump key so the dice <span> remounts → CSS @keyframes restarts.
+    setRandomPickKey((n) => n + 1);
   };
 
   const applyWager = (value: number) => {
+    // Read coin type from ref so this stays correct from the hotkey.
     const maxBet = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
-    const v = Math.max(0.01, Math.min(maxBet, value));
+    const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
+
+  const halfWager = () => applyWager(wager / 2);
 
   const handleBet = async () => {
     if (drawingRef.current) return;
@@ -185,6 +316,8 @@ export function Keno() {
       setError(authErr);
       return;
     }
+    // Read everything from refs — safe to call from any binding context
+    // (JSX onClick, hotkey listener with [] deps, etc.).
     const picks = selectedRef.current;
     const pickCount = picks.length;
     const wagerNow = wagerRef.current;
@@ -206,11 +339,17 @@ export function Keno() {
     setError(null);
     drawingRef.current = true;
     setDrawing(true);
+    // Mirror drawnRef.current = null synchronously so the S hotkey
+    // can't reuse the previous round's drawn array if S fires in the
+    // same tick as Space (race window before next render).
     drawnRef.current = null;
     setDrawn(null);
     setRevealCount(0);
     setLastResult(null);
-    for (const id of revealTimeoutsRef.current) window.clearTimeout(id);
+    // Cancel any still-pending reveal timeouts from a prior round.
+    for (const id of revealTimeoutsRef.current) {
+      window.clearTimeout(id);
+    }
     revealTimeoutsRef.current = [];
 
     const { data, error: betErr } = await placeKenoBet({
@@ -224,62 +363,142 @@ export function Keno() {
       drawingRef.current = false;
       setDrawing(false);
       setError(betErr ?? "Bet failed.");
+      // Server may have debited before the error — refresh to get truth.
       void refreshProfile();
       return;
     }
 
+    // Reveal drawn numbers one-by-one for satisfying stagger.
+    // M7: when prefers-reduced-motion is set, collapse the stagger to 0
+    // (all 10 numbers reveal instantly) — the user explicitly asked for
+    // less motion, and the CSS keyframes are already suppressed.
     setDrawn(data.drawn);
     drawnRef.current = data.drawn;
-    const stagger = reduceMotionRef.current ? 0 : REVEAL_STAGGER_MS;
-    if (stagger === 0) {
-      setRevealCount(data.drawn.length);
-    } else {
-      for (let i = 1; i <= data.drawn.length; i++) {
-        const id = window.setTimeout(() => {
-          if (!skipRevealRef.current) setRevealCount(i);
-        }, i * stagger);
-        revealTimeoutsRef.current.push(id);
-      }
-    }
-
-    const waitMs = stagger === 0 ? 0 : data.drawn.length * stagger + 200;
-    await new Promise((r) => setTimeout(r, waitMs));
-
-    setLastResult({
+    // Stash the result + nonce so the skip button can finalize instantly
+    // without waiting for the last setTimeout to fire.
+    lastResultRef.current = {
       hits: data.hits,
-      payout: data.payout,
       multiplier: data.multiplier,
-    });
-    setPfNonce(data.nonce + 1);
-    drawingRef.current = false;
-    setDrawing(false);
+      payout: data.payout,
+    };
+    pfNonceRef.current = data.nonce;
+    const stagger = reduceMotionRef.current ? 0 : REVEAL_STAGGER_MS;
+    revealTimeoutsRef.current = data.drawn.map((_, i) =>
+      window.setTimeout(() => {
+        setRevealCount(i + 1);
+        if (i === data.drawn.length - 1) {
+          setLastResult({
+            hits: data.hits,
+            multiplier: data.multiplier,
+            payout: data.payout,
+          });
+          drawingRef.current = false;
+          setDrawing(false);
+          setPfNonce(data.nonce + 1);
+          revealTimeoutsRef.current = [];
+          void loadPf();
+        }
+      }, (i + 1) * stagger)
+    );
   };
 
-  const numbers = Array.from({ length: GRID_SIZE }, (_, i) => i + 1);
-  const drawnSet = useMemo(() => new Set((drawn ?? []).slice(0, revealCount)), [drawn, revealCount]);
-  const selectedSet = useMemo(() => new Set(selected), [selected]);
+  // M7: refs to expose the pending result + nonce to the skipReveal callback.
+  const lastResultRef = useRef<{ hits: number; multiplier: number; payout: number } | null>(null);
+  const pfNonceRef = useRef<number>(0);
+
+  const saveClientSeed = async () => {
+    const { error: seedErr } = await setKenoClientSeed(clientSeed);
+    if (seedErr) setError(seedErr);
+    else await loadPf();
+  };
+
+  const drawnSet = drawn ? new Set(drawn.slice(0, revealCount)) : null;
+  const selectedSet = new Set(selected);
+  const revealComplete = drawn !== null && revealCount >= drawn.length;
 
   return (
     <div className="keno lc-game-page">
       <Seo
         title="Keno"
-        description="Pick up to 10 numbers. Match the draw to win. Provably fair."
+        description="Pick 1–10 numbers on a 40-tile board. Four risk modes from safe to extreme. Provably fair, 96.5% RTP."
         path="/keno"
       />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Keno</h1>
         <p className="lc-page__subtitle">
-          Pick up to 10 numbers. Match the draw to win. Provably fair.
+          Pick 1–10 numbers from 40, 10 drawn per round. Provably fair — 96.5% RTP.
         </p>
       </header>
 
       <div className="keno__layout">
         <section className="keno__board-panel">
-          <div className="keno__grid" role="group" aria-label="Keno numbers">
-            {numbers.map((n) => {
+          <div className="keno__board-toolbar">
+            <span className="keno__pick-count">
+              {pickCount}/{MAX_PICKS} selected
+            </span>
+            <button
+              type="button"
+              // key={randomPickKey} remounts → <span aria-hidden> dice-roll @keyframes replays.
+              key={randomPickKey}
+              className="keno__tool-btn keno__tool-btn--auto"
+              onClick={autoPick}
+              disabled={drawing}
+              aria-label="Auto pick random numbers (shortcut: A)"
+            >
+              <span aria-hidden="true">🎲</span> Auto Pick
+            </button>
+            <button
+              type="button"
+              className="keno__tool-btn"
+              onClick={clearTable}
+              disabled={drawing}
+            >
+              Clear
+            </button>
+            {/* M7: Skip-animation button — visible only while the staggered
+                reveal is in progress (drawing=true AND not all 10 revealed
+                AND reduced-motion is NOT set — reduced-motion users already
+                get instant reveal). Lets impatient players skip to the result. */}
+            {drawing && !revealComplete && !reduceMotion && (
+              <button
+                type="button"
+                className="keno__tool-btn keno__tool-btn--skip"
+                onClick={skipReveal}
+                aria-label="Skip reveal animation"
+              >
+                Skip ⏭
+              </button>
+            )}
+          </div>
+
+          {/* Empty-board warm-up: subtle breath pulse on the grid background
+              when no numbers are picked. The active className is added
+              only when idle so it doesn't compete with the reveal animation. */}
+          <div
+            className={[
+              "keno__grid",
+              pickCount === 0 && !drawing ? "keno__grid--idle" : "",
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            role="group"
+            aria-label="Keno number grid"
+          >
+            {Array.from({ length: GRID_SIZE }, (_, i) => i + 1).map((n) => {
               const isSelected = selectedSet.has(n);
-              const isDrawn = drawnSet.has(n);
+              const isDrawn = drawnSet?.has(n);
               const isHit = isSelected && isDrawn;
+              // Draw order index for stagger animation — the position of this
+              // number in the drawn array determines its reveal delay.
+              const drawIndex = drawn ? drawn.indexOf(n) : -1;
+              const cellAriaLabel = [
+                `Number ${n}`,
+                isSelected ? "selected" : "not selected",
+                isDrawn ? "drawn" : null,
+                isHit ? "hit" : null,
+              ]
+                .filter(Boolean)
+                .join(", ");
               return (
                 <button
                   key={n}
@@ -292,25 +511,41 @@ export function Keno() {
                   ]
                     .filter(Boolean)
                     .join(" ")}
+                  style={isDrawn && drawIndex >= 0 ? { ["--draw-index" as string]: drawIndex } as CSSProperties : undefined}
                   onClick={() => toggleNumber(n)}
                   disabled={drawing}
                   aria-pressed={isSelected}
+                  aria-label={cellAriaLabel}
                 >
-                  {n}
+                  <span className="keno__cell-num">{n}</span>
+                  {isHit && <span className="keno__cell-gem" aria-hidden="true" />}
                 </button>
               );
             })}
           </div>
 
-          {lastResult && !drawing && (
-            <div
-              className={`keno__outcome${lastResult.payout > 0 ? " keno__outcome--win" : " keno__outcome--loss"}`}
-              role="status"
-            >
-              {lastResult.hits} hit{lastResult.hits === 1 ? "" : "s"}
-              {lastResult.payout > 0
-                ? ` — won ${formatCoins(lastResult.payout, coinType)} (${lastResult.multiplier}×)`
-                : " — no payout"}
+          {pickCount > 0 && (
+            <div className="keno__paytable-wrap">
+              <p className="keno__paytable-title">Payout table ({pickCount} picks)</p>
+              <div className="keno__paytable">
+                {paytable.map((mult, hits) => (
+                  <div
+                    key={hits}
+                    className={[
+                      "keno__paytable-cell",
+                      lastResult?.hits === hits && drawn && "keno__paytable-cell--active",
+                      mult > 0 && "keno__paytable-cell--pays",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                  >
+                    <span className="keno__paytable-hits">{hits}</span>
+                    <span className="keno__paytable-mult">
+                      {mult > 0 ? `${mult}×` : "—"}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </section>
@@ -318,27 +553,16 @@ export function Keno() {
         <aside className="keno__controls game-controls">
           <div className="game-controls__options">
             <div className="game-controls__option">
-              <label className="game-controls__option-label" htmlFor="keno-risk">
+              <span className="game-controls__option-label" id="keno-risk-label">
                 Risk
-              </label>
+              </span>
               <LcSelect
-                id="keno-risk"
                 value={risk}
-                onChange={(v) => setRisk(v as KenoRisk)}
-                options={KENO_RISKS.map((r) => ({ value: r, label: r }))}
+                options={KENO_RISKS}
+                onChange={setRisk}
                 disabled={drawing}
+                aria-label="Keno risk level"
               />
-            </div>
-            <div className="game-controls__option">
-              <span className="game-controls__option-label">Picks ({selected.length}/{MAX_PICKS})</span>
-              <div className="game-controls__presets">
-                <button type="button" className="game-controls__preset" onClick={autoPick} disabled={drawing} key={randomPickKey}>
-                  Auto
-                </button>
-                <button type="button" className="game-controls__preset" onClick={clearTable} disabled={drawing}>
-                  Clear
-                </button>
-              </div>
             </div>
           </div>
 
@@ -360,19 +584,138 @@ export function Keno() {
                 }}
                 disabled={drawing}
               />
-              <button type="button" className="game-controls__wager-adj" onClick={() => applyWager(wager / 2)} disabled={drawing} aria-label="Half bet">½</button>
-              <button type="button" className="game-controls__wager-adj" onClick={() => {
-                const bal = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                applyWager(Math.min(wager * 2, bal));
-              }} disabled={drawing} aria-label="Double bet">2×</button>
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={halfWager}
+                disabled={drawing}
+                aria-label="Half bet"
+              >
+                ½
+              </button>
+              <button
+                type="button"
+                className="game-controls__wager-adj"
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(wager * 2, activeBalance));
+                }}
+                disabled={drawing}
+                aria-label="Double bet"
+              >
+                2×
+              </button>
+              <button
+                type="button"
+                className="game-controls__wager-adj game-controls__wager-adj--max"
+                onClick={() => {
+                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
+                }}
+                disabled={drawing}
+                aria-label="Max bet"
+              >
+                MAX
+              </button>
             </div>
           </div>
 
           {error && <FormAlert>{error}</FormAlert>}
 
-          <BetButton onClick={handleBet} busy={drawing} busyLabel="Drawing…" label="Bet" />
+          {lastResult && drawn && (
+            <div
+              className={`keno__result${lastResult.payout > 0 ? " keno__result--win" : " keno__result--loss"}`}
+              role="status"
+              aria-live="polite"
+            >
+              <p>
+                <strong>{lastResult.hits}</strong> hit
+                {lastResult.hits !== 1 ? "s" : ""} —{" "}
+                <strong>{lastResult.multiplier}×</strong>
+              </p>
+              <p className="keno__result-payout">
+                {lastResult.payout > 0
+                  ? `Won ${formatCoins(lastResult.payout, coinType)}`
+                  : "No win this round"}
+              </p>
+            </div>
+          )}
+
+          {/* SR-only live announcer for screen readers — progressive
+              count during stagger + single completion summary once
+              revealComplete. Uses the existing revealComplete helper so
+              the completion branch is reachable (drawing synchronously
+              flips to false at the same render lastResult becomes truthy,
+              so `drawing && lastResult` would never both be true). */}
+          <div className="keno__sr-status" role="status" aria-live="polite">
+            {drawing && drawn && revealCount > 0 && lastResult == null
+              ? `Revealed ${revealCount} of ${drawn.length}.`
+              : revealComplete && lastResult
+                ? `Round complete: ${lastResult.hits} hit${lastResult.hits === 1 ? "" : "s"}, ${lastResult.multiplier}×.`
+                : ""}
+          </div>
+
+          <BetButton
+            onClick={handleBet}
+            busy={drawing}
+            busyLabel={revealComplete ? "Done…" : "Drawing…"}
+            label="Bet"
+            disabled={pickCount < 1}
+          />
+
 
           <NeedFundsHint />
+
+          <div className="keno__fairness">
+            <button
+              type="button"
+              className="keno__fairness-toggle"
+              onClick={() => setShowFairness((v) => !v)}
+              aria-expanded={showFairness}
+            >
+              {showFairness ? "Hide" : "Show"} provably fair
+            </button>
+            {showFairness && (
+              <div className="keno__fairness-body">
+                <p>
+                  <span className="keno__fairness-k">Server seed (hash)</span>
+                  <code className="keno__hash">{pfHash ?? "…"}</code>
+                </p>
+                <p>
+                  <span className="keno__fairness-k">Next nonce</span>
+                  <code>{pfNonce}</code>
+                </p>
+                <label className="keno__seed-label">
+                  Client seed
+                  <input
+                    type="text"
+                    className="keno__seed-input"
+                    value={clientSeed}
+                    maxLength={64}
+                    onChange={(e) => setClientSeed(e.target.value)}
+                    disabled={drawing}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="keno__tool-btn"
+                  onClick={saveClientSeed}
+                  disabled={drawing}
+                >
+                  Save client seed
+                </button>
+                <p className="keno__fairness-note">
+                  Draws use HMAC-SHA256 with Fisher-Yates selection (Stake Keno).
+                </p>
+                <p className="keno__fairness-note keno__fairness-note--disclosure">
+                  RTP disclosure: base draw odds target ~99% RTP; a deterministic
+                  bias roll (HMAC-SHA256, same seeds) downgrades ~2.5% of would-be
+                  wins to losses to enforce the displayed 96.5% RTP. The bias is
+                  verifiable post-rotation using the revealed server seed.
+                </p>
+              </div>
+            )}
+          </div>
         </aside>
       </div>
     </div>

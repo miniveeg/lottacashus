@@ -280,9 +280,11 @@ export async function addBotToBattle(
 ): Promise<{ error: string | null }> {
   if (!isSupabaseConfigured) return localAddBot(battleId, slotIndex);
   if (localViewCaseBattle(battleId)) return localAddBot(battleId, slotIndex);
+  const slot = Number.isInteger(slotIndex) ? Number(slotIndex) : 0;
   const { error } = await supabase.rpc("cb_add_bot", {
     p_battle_id: battleId,
-    p_slot_index: slotIndex ?? null,
+    p_slot_index: slot,
+    p_bot_name: "Bot " + (slot + 1),
   });
   return { error: error?.message ?? null };
 }

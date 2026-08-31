@@ -175,6 +175,23 @@ select option {
   will-change: auto;
 }
 
+/* Lazy-route fallback: compact first paint, hide footer so it does not stack top-left. */
+.lc-page-transition:has(.lc-route-fallback) {
+  height: auto;
+  min-height: 0;
+}
+.lc-page-transition:has(.lc-route-fallback) .site-footer {
+  display: none;
+}
+.lc-route-fallback {
+  flex: 0 0 auto;
+  width: 100%;
+}
+.lc-loading--inline {
+  min-height: 8rem;
+  padding: 1.5rem 1rem;
+}
+
 :focus-visible {
   outline: var(--lc-focus-outline);
   outline-offset: 2px;

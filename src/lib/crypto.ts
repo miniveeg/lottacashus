@@ -1,13 +1,63 @@
 import { invokeEdgeFunction } from "./edgeFunctions";
 import { isSupabaseConfigured, supabase } from "./supabase";
 import type { CryptoChain, CryptoDepositRow, DepositAddressResponse } from "../types/crypto";
+import { extractDepositAddress } from "./wireIds";
+
+export { extractDepositAddress } from "./wireIds";
 
 const NOT_CONFIGURED_ERROR = "Supabase is not configured. Add your keys to .env.";
 
 export async function fetchDepositAddress(
   chain: CryptoChain
 ): Promise<{ data: DepositAddressResponse | null; error: string | null }> {
-  return invokeEdgeFunction<DepositAddressResponse>("get-deposit-address", { chain });
+  try {
+    const invoked = await invokeEdgeFunction<DepositAddressResponse>("get-deposit-address", { chain });
+    const fromInvoke = extractDepositAddress(invoked.data);
+    if (fromInvoke) {
+      return {
+        data: {
+          chain,
+          address: fromInvoke,
+          confirmationsRequired: Number(
+            (invoked.data as DepositAddressResponse | null)?.confirmationsRequired ?? (chain === "sol" ? 1 : chain === "ltc" ? 6 : 12)
+          ),
+        },
+        error: null,
+      };
+    }
+    if (invoked.error) {
+      const fallback = await readSavedDepositAddress(chain);
+      if (fallback) return { data: fallback, error: null };
+      return { data: null, error: invoked.error };
+    }
+    const saved = await readSavedDepositAddress(chain);
+    if (saved) return { data: saved, error: null };
+    return { data: null, error: "Deposit address was not returned. Try again." };
+  } catch (err) {
+    const saved = await readSavedDepositAddress(chain);
+    if (saved) return { data: saved, error: null };
+    const message = err instanceof Error ? err.message : "Failed to get deposit address.";
+    return { data: null, error: message };
+  }
+}
+
+async function readSavedDepositAddress(
+  chain: CryptoChain
+): Promise<DepositAddressResponse | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data, error } = await supabase
+    .from("user_deposit_addresses")
+    .select("address, chain")
+    .eq("chain", chain)
+    .maybeSingle();
+  if (error || !data?.address) return null;
+  const addr = String(data.address).trim();
+  if (!addr) return null;
+  return {
+    chain,
+    address: addr,
+    confirmationsRequired: chain === "sol" ? 1 : chain === "ltc" ? 6 : 12,
+  };
 }
 
 export async function fetchMyDeposits(userId?: string): Promise<{

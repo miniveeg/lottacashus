@@ -524,7 +524,14 @@ export function Blackjack() {
               : (id: string, ct?: string) => insuranceBlackjack(id, Boolean(insuranceTake), ct);
     // Always use the coin type locked when the hand started.
     const actionCoin = current.coinType || handCoinType || coinTypeRef.current;
-    const { data, error: err } = await fn(current.handId, actionCoin);
+    let { data, error: err } = await fn(current.handId, actionCoin);
+    if (err && /active hand not found/i.test(err)) {
+      const restored = await restoreActiveHand();
+      current = handRef.current;
+      if (restored && current?.handId) {
+        ({ data, error: err } = await fn(current.handId, actionCoin));
+      }
+    }
     if (cancelledRef.current) {
       busyRef.current = false;
       return;

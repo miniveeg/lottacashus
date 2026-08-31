@@ -133,7 +133,7 @@ function formatMultiplier(v: number): string {
 // Polling interval for detecting server-side bet settlement (when the user
 // never cashes out). The server's crash_settle_expired_bets cron runs every
 // 60s; we poll every 2s for a responsive UX.
-const SETTLEMENT_POLL_MS = 2_000;
+const SETTLEMENT_POLL_MS = 400;
 
 export function Crash() {
   const { user, isGuest } = useAuth();
@@ -243,7 +243,7 @@ export function Crash() {
   wagerRef.current = wager;
   profileRef.current = profile;
   coinTypeRef.current = coinType;
-  betIdRef.current = betId;
+  if (betId) betIdRef.current = betId;
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchCrashPfState();
@@ -735,7 +735,7 @@ export function Crash() {
   function startSettlementPoll(betId: string) {
     if (!isSupabaseConfigured) return;
     if (settlementPollRef.current) clearInterval(settlementPollRef.current);
-    settlementPollRef.current = window.setInterval(async () => {
+    const pollOnce = async () => {
       if (cancelledRef.current) {
         if (settlementPollRef.current) clearInterval(settlementPollRef.current);
         return;
@@ -758,7 +758,9 @@ export function Crash() {
       } catch {
         // Swallow — polling errors are non-fatal; the next interval retries.
       }
-    }, SETTLEMENT_POLL_MS);
+    };
+    void pollOnce();
+    settlementPollRef.current = window.setInterval(() => { void pollOnce(); }, SETTLEMENT_POLL_MS);
   }
 
   // Responsive canvas: scale the backing store to match the displayed size × DPR
@@ -827,6 +829,7 @@ export function Crash() {
     setError(null);
     setLastResult(null);
     setBetId(null);
+    betIdRef.current = null;
     setConfirming(false);
     // Intermediate "placing" phase: Bet is disabled, Cash Out is hidden
     // until we have a server-issued betId.
@@ -919,6 +922,7 @@ export function Crash() {
       freezeChart();
       cashingOutRef.current = false;
       setCashingOut(false);
+      void revealCrashFromServer(id);
       // Show the same "Confirming server settlement…" overlay the CLIENT_MAX_MULTIPLIER
       // cap path uses, so the wait window between chart-freeze and the
       // poll firing showCrashed() isn't silent (SR-status would otherwise

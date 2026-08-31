@@ -286,11 +286,21 @@
   box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
 }
 
+.keno .keno__board-panel {
+  overflow: visible;
+  height: auto;
+  min-height: min(24rem, 70dvh);
+  padding-bottom: 1.75rem;
+}
+
 .keno__paytable-wrap {
   margin-top: var(--lc-spacing-3);
   padding-top: var(--lc-spacing-3);
+  padding-bottom: 0.75rem;
   border-top: 1px solid var(--lc-border);
   flex-shrink: 0;
+  overflow: visible;
+  min-height: 4.5rem;
 }
 
 .keno__paytable-title {

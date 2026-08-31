@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
     if (!authHeader) return jsonResponse({ error: "Log in required." }, 401, req);
 
     const body = await req.json();
-    const betId = String(body?.betId ?? "");
+    const betId = String(body?.betId ?? body?.bet_id ?? "");
     const cashedAtMultiplier = Number(body?.cashedAtMultiplier ?? 0);
     const coinType = String(body?.coinType ?? "balance");
 

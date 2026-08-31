@@ -1,5 +1,8 @@
 import { invokeEdgeFunction } from "./edgeFunctions";
 import { supabase, isSupabaseConfigured } from "./supabase";
+import { extractCrashBetId } from "./wireIds";
+
+export { extractCrashBetId } from "./wireIds";
 
 export type CrashPfState = {
   serverSeedHash: string;
@@ -119,10 +122,10 @@ export async function placeCrashBet(params: {
 
   if (error) return { data: null as CrashBetResult | null, error };
   if (!data) return { data: null, error: "No response from server." };
-  const row = data as CrashBetResult & { bet_id?: string };
-  const betId = String(row.betId ?? row.bet_id ?? "");
+  const betId = extractCrashBetId(data);
   if (!betId) return { data: null, error: "No bet id returned." };
   clearRequestId(IDEM_KEY_CRASH_BET);
+  const row = data as CrashBetResult;
   return { data: { ...row, betId }, error: null };
 }
 
@@ -153,6 +156,7 @@ export async function cashOutCrash(params: {
     alreadySettled: boolean;
   }>("cash-out-crash", {
     betId: params.betId,
+    bet_id: params.betId,
     cashedAtMultiplier: params.cashedAtMultiplier,
     coinType: params.coinType ?? "balance",
   });

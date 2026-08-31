@@ -236,7 +236,7 @@ function placeCrashBet(body: Record<string, unknown>): Result {
 }
 
 function cashOutCrash(body: Record<string, unknown>): Result {
-  const betId = String(body.betId);
+  const betId = String(body.betId ?? body.bet_id ?? "");
   const cashedAt = Number(body.cashedAtMultiplier);
   const coinType = "sweeps_coins";
   if (!isFinite(cashedAt) || cashedAt < 1.01) return { data: null, error: "Minimum cash-out is 1.01×." };

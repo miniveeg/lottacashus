@@ -69,14 +69,15 @@ async function loadHand(
   const { data, error } = await admin
     .from("blackjack_hands")
     .select(
-      "id, shoe, shoe_index, player_cards, dealer_cards, wager, total_wager, doubled, dealer_revealed, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, nonce"
+      "id, shoe, shoe_index, player_cards, dealer_cards, wager, total_wager, doubled, dealer_revealed, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, nonce, status"
     )
     .eq("id", handId)
     .eq("user_id", userId)
-    .eq("status", "player_turn")
     .maybeSingle();
 
   if (error || !data) return null;
+  const status = String((data as { status?: string }).status ?? "");
+  if (status === "settled" || status === "cancelled") return null;
   return data as HandRow;
 }
 
@@ -212,6 +213,7 @@ Deno.serve(async (req) => {
       return jsonResponse({
         active: true,
         handId: row.id,
+        hand_id: row.id,
         wager: Number(row.wager),
         coinType: String((row as { coin_type?: string }).coin_type ?? "balance"),
         status: row.phase === "insurance_offer" ? "insurance_offer" : "player_turn",
@@ -287,7 +289,8 @@ Deno.serve(async (req) => {
           : "player_turn";
 
       return jsonResponse({
-        handId: row?.hand_id,
+        handId: row?.hand_id ?? row?.out_hand_id ?? row?.id,
+        hand_id: row?.hand_id ?? row?.out_hand_id ?? row?.id,
         balance: Number(row?.out_balance ?? 0),
         coinType,
         status: responseStatus,

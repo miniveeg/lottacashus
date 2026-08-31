@@ -187,7 +187,8 @@ Deno.serve(async (req) => {
       | undefined;
 
     return jsonResponse({
-      betId: row?.bet_id,
+      betId: row?.bet_id ?? row?.out_bet_id ?? row?.id,
+      bet_id: row?.bet_id ?? row?.out_bet_id ?? row?.id,
       // SECURITY: do NOT return crashPoint here. The client learns the crash
       // point only when the round resolves (settle-loss / a dedicated reveal
       // endpoint). Returning it in the bet-creation response lets a client

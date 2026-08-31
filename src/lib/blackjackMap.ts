@@ -42,7 +42,10 @@ function asNumberArray(value: unknown): number[] {
 
 function firstDefined(data: Record<string, unknown>, ...keys: string[]): unknown {
   for (const key of keys) {
-    if (data[key] != null) return data[key];
+    const v = data[key];
+    if (v == null) continue;
+    if (typeof v === "string" && v.trim() === "") continue;
+    return v;
   }
   return undefined;
 }

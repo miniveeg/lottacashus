@@ -128,7 +128,7 @@ export function hitBlackjack(
   | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
   | { data: null; error: string; active?: boolean }
 > {
-  return blackjackAction({ action: "hit", handId, coinType: coinType ?? "balance" });
+  return blackjackAction({ action: "hit", handId, hand_id: handId, coinType: coinType ?? "balance" });
 }
 
 export function standBlackjack(
@@ -138,7 +138,7 @@ export function standBlackjack(
   | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
   | { data: null; error: string; active?: boolean }
 > {
-  return blackjackAction({ action: "stand", handId, coinType: coinType ?? "balance" });
+  return blackjackAction({ action: "stand", handId, hand_id: handId, coinType: coinType ?? "balance" });
 }
 
 export function doubleBlackjack(
@@ -148,7 +148,7 @@ export function doubleBlackjack(
   | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
   | { data: null; error: string; active?: boolean }
 > {
-  return blackjackAction({ action: "double", handId, coinType: coinType ?? "balance" });
+  return blackjackAction({ action: "double", handId, hand_id: handId, coinType: coinType ?? "balance" });
 }
 
 export function splitBlackjack(
@@ -158,7 +158,7 @@ export function splitBlackjack(
   | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
   | { data: null; error: string; active?: boolean }
 > {
-  return blackjackAction({ action: "split", handId, coinType: coinType ?? "balance" });
+  return blackjackAction({ action: "split", handId, hand_id: handId, coinType: coinType ?? "balance" });
 }
 
 export function insuranceBlackjack(
@@ -172,6 +172,7 @@ export function insuranceBlackjack(
   return blackjackAction({
     action: "insurance",
     handId,
+    hand_id: handId,
     take,
     coinType: coinType ?? "balance",
   });

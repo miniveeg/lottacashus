@@ -41,7 +41,29 @@
     </noscript>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="lc-boot" role="status" aria-live="polite">
+        <img src="/logo.png" width="40" height="40" alt="" />
+        <p>LottaCash</p>
+      </div>
+    </div>
+    <style>
+      html, body, #root { background: #0a0e14; min-height: 100dvh; margin: 0; }
+      .lc-boot {
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        color: #c9a84c;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+      .lc-boot img { border-radius: 6px; }
+      .lc-boot p { margin: 0; font-size: 0.85rem; }
+    </style>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

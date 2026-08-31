@@ -56,8 +56,8 @@ const Example = lazy(() => import("./pages/Example/Example").then((m) => ({ defa
 
 function PageFallback() {
   return (
-    <div className="lc-page">
-      <div className="lc-loading" role="status" aria-live="polite">
+    <div className="lc-page lc-route-fallback" role="status" aria-live="polite">
+      <div className="lc-loading lc-loading--inline">
         <div className="lc-loading__pulse" aria-hidden />
         <p>Loading…</p>
       </div>

@@ -41,8 +41,8 @@ export function Deposit() {
     setError(null);
     setQrDataUrl(null);
     analytics.wallet.depositInitiated(c);
+    try {
     const { data, error: err } = await fetchDepositAddress(c);
-    setLoadingAddr(false);
     if (err) {
       setError(err);
       setAddress(null);
@@ -50,20 +50,31 @@ export function Deposit() {
       return;
     }
     const addr = data?.address ?? null;
+    if (!addr) {
+      setError("Could not load a deposit address. Please try again.");
+      setAddress(null);
+      return;
+    }
     setAddress(addr);
-    if (addr) {
-      try {
-        const QRCode = (await import("qrcode")).default;
-        const url = await QRCode.toDataURL(addr, {
-          width: 180,
-          margin: 1,
-          color: { dark: "#040406", light: "#ffffff" },
-          errorCorrectionLevel: "M",
-        });
-        setQrDataUrl(url);
-      } catch {
-        // QR generation is a nice-to-have
-      }
+    try {
+      const QRCode = (await import("qrcode")).default;
+      const url = await QRCode.toDataURL(addr, {
+        width: 180,
+        margin: 1,
+        color: { dark: "#040406", light: "#ffffff" },
+        errorCorrectionLevel: "M",
+      });
+      setQrDataUrl(url);
+    } catch {
+      // QR generation is a nice-to-have
+    }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Could not load a deposit address.";
+      setError(message);
+      setAddress(null);
+      analytics.networkError("Deposit.loadAddress", message);
+    } finally {
+      setLoadingAddr(false);
     }
   }, []);
 

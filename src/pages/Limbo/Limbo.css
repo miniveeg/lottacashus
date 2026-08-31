@@ -357,6 +357,13 @@
   color: var(--lc-text-secondary);
 }
 
+.limbo .limbo__stage-panel {
+  overflow: visible;
+  height: auto;
+  min-height: min(28rem, 70dvh);
+  padding-bottom: 2rem;
+}
+
 .limbo__outcome {
   text-align: center;
   font-size: 0.95rem;
@@ -364,6 +371,7 @@
   border-radius: var(--lc-radius-sm);
   width: 100%;
   max-width: 24rem;
+  flex-shrink: 0;
   animation: limbo-outcome-in 0.3s ease-out;
 }
 
@@ -384,6 +392,9 @@
   gap: 0.35rem;
   justify-content: center;
   max-width: 24rem;
+  flex-shrink: 0;
+  padding-bottom: 0.5rem;
+  min-height: 2.75rem;
 }
 
 .limbo__history-chip {

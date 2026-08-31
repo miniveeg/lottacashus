@@ -270,7 +270,7 @@
 .wallet__tab--active,
 .help__tab--active,
 .wallet__chain-btn--active {
-  color: #fff !important;
+  color: var(--lc-text-on-primary) !important;
   background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim)) !important;
   border-color: transparent !important;
   box-shadow: 0 2px 12px var(--lc-crimson-glow);
@@ -368,12 +368,12 @@
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
-  padding: 2rem 1.5rem;
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
   min-height: 0;
   height: 100%;
-  overflow: auto;
+  overflow: hidden;
 }
 
 /* Unified game control panels — consistent styling */
@@ -523,7 +523,9 @@
 }
 
 .lc-input:focus, .lc-input:focus-visible,
-.wallet__input:focus, .admin__input:focus, .settings__input:focus {
+.wallet__input:focus, .wallet__input:focus-visible,
+.admin__input:focus, .admin__input:focus-visible,
+.settings__input:focus, .settings__input:focus-visible {
   outline: none;
   border-color: var(--lc-border-accent);
   box-shadow: var(--lc-focus-ring);

@@ -403,20 +403,34 @@
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-md);
   outline: none;
+  min-height: var(--lc-target-min-desktop);
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.sidebar-chat__input:focus,
+.sidebar-chat__input:focus-visible {
+  outline: none;
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .sidebar-chat__send {
   flex-shrink: 0;
+  min-height: var(--lc-target-min-desktop);
   padding: 0.5rem 0.75rem;
   font-family: var(--lc-font-display);
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: var(--lc-radius-md);
-  color: #fff;
+  color: var(--lc-text-on-primary);
   background: linear-gradient(135deg, var(--lc-emerald), var(--lc-emerald-dim));
   box-shadow: 0 2px 10px var(--lc-emerald-glow);
   transition: filter var(--lc-transition), transform var(--lc-transition);
+}
+
+.sidebar-chat__send:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 @media (max-width: 900px) {

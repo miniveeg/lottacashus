@@ -73,12 +73,15 @@
     border-color var(--lc-transition);
 }
 
-.game-guest-banner__dismiss:hover,
-.game-guest-banner__dismiss:focus-visible {
+.game-guest-banner__dismiss:hover {
   background: var(--lc-bg-hover);
   color: var(--lc-text-primary);
   border-color: var(--lc-border-strong);
-  outline: none;
+}
+
+.game-guest-banner__dismiss:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 @media (max-width: 480px) {

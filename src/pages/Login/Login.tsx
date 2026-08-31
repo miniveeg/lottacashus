@@ -168,7 +168,6 @@ export function Login() {
                 className="auth-password-toggle"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
               </button>

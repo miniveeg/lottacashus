@@ -127,10 +127,11 @@
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
-.game-controls__wager-input:focus {
+.game-controls__wager-input:focus,
+.game-controls__wager-input:focus-visible {
   outline: none;
   border-color: var(--lc-border-accent);
-  box-shadow: 0 0 0 3px var(--lc-crimson-glow);
+  box-shadow: var(--lc-focus-ring);
 }
 
 /* Wager half/double buttons are now styled by .game-controls__wager-adj

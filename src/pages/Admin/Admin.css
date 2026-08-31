@@ -29,6 +29,7 @@
   letter-spacing: -0.02em;
   color: var(--lc-text-primary);
   margin: 0 0 0.25rem;
+  text-wrap: balance;
 }
 
 .admin__subtitle {
@@ -50,7 +51,13 @@
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-sm);
   cursor: pointer;
-  transition: all var(--lc-transition);
+  min-height: var(--lc-target-min-desktop);
+  transition: transform var(--lc-transition), opacity var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition), background var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.admin__refresh-btn:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 .admin__refresh-btn:hover:not(:disabled) {
@@ -157,11 +164,12 @@
 }
 
 .admin__stat-value {
-  font-family: var(--lc-font-display);
+  font-family: var(--lc-font-numeric);
   font-weight: 800;
   font-size: 1.4rem;
   color: var(--lc-text-primary);
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .admin__stat-value--accent {
@@ -195,7 +203,13 @@
   border-radius: var(--lc-radius-sm);
   cursor: pointer;
   white-space: nowrap;
-  transition: all var(--lc-transition);
+  min-height: var(--lc-target-min-desktop);
+  transition: transform var(--lc-transition), opacity var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition), background var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.admin__tab:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 .admin__tab:hover {
@@ -204,7 +218,7 @@
 }
 
 .admin__tab--active {
-  color: #fff;
+  color: var(--lc-text-on-primary);
   background: linear-gradient(135deg, var(--lc-crimson), var(--lc-crimson-dim));
   border-color: var(--lc-crimson);
   box-shadow: 0 2px 12px rgba(220, 20, 60, 0.25);
@@ -225,7 +239,7 @@
 }
 
 .admin__tab--active .admin__tab-badge {
-  color: #fff;
+  color: var(--lc-text-on-primary);
   background: rgba(255, 255, 255, 0.25);
 }
 
@@ -295,7 +309,7 @@
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-md);
   cursor: pointer;
-  transition: all var(--lc-transition);
+  transition: transform var(--lc-transition), opacity var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition), background var(--lc-transition), box-shadow var(--lc-transition);
 }
 
 .admin__overview-card:hover {
@@ -327,12 +341,13 @@
 }
 
 .admin__overview-count {
-  font-family: var(--lc-font-display);
+  font-family: var(--lc-font-numeric);
   font-weight: 800;
   font-size: 2rem;
   color: var(--lc-text-primary);
   margin: 0 0 0.25rem;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .admin__overview-meta {
@@ -465,15 +480,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 2.75rem;
+  height: 2.75rem;
   color: var(--lc-text-muted);
   background: var(--lc-bg-hover);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-sm);
   cursor: pointer;
-  transition: all var(--lc-transition);
+  transition: transform var(--lc-transition), opacity var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition), background var(--lc-transition), box-shadow var(--lc-transition);
   flex-shrink: 0;
+}
+
+.admin__icon-btn:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 .admin__icon-btn:hover {
@@ -528,10 +548,11 @@
   color: var(--lc-text-muted);
 }
 
-.admin__input:focus {
+.admin__input:focus,
+.admin__input:focus-visible {
   outline: none;
-  border-color: var(--lc-crimson);
-  box-shadow: 0 0 0 3px var(--lc-crimson-glow);
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .admin__input:disabled {
@@ -552,8 +573,14 @@
   border-radius: var(--lc-radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
-  transition: all var(--lc-transition);
+  min-height: var(--lc-target-min-desktop);
+  transition: transform var(--lc-transition), opacity var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition), background var(--lc-transition), box-shadow var(--lc-transition);
   white-space: nowrap;
+}
+
+.admin__btn:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 .admin__btn:disabled {
@@ -563,7 +590,7 @@
 
 .admin__btn--primary {
   background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson));
-  color: #fff;
+  color: var(--lc-text-on-primary);
   border-color: var(--lc-crimson);
   box-shadow: 0 2px 12px rgba(220, 20, 60, 0.2);
 }
@@ -824,10 +851,14 @@
   .admin__spin,
   .admin__tab,
   .admin__btn,
+  .admin__refresh-btn,
+  .admin__icon-btn,
+  .admin__input,
   .admin__overview-card,
   .admin__withdrawal-card,
   .admin__stat-card {
     animation: none !important;
     transition: none !important;
+    transform: none !important;
   }
 }

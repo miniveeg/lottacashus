@@ -214,13 +214,7 @@ export function CaseBattlesCreateV2() {
         <button type="button" className="cb-create__exit" onClick={() => navigate("/case-battles")}>
           ← Exit
         </button>
-        <h1 className="cb-create__title">Create Battle</h1>
-        <span
-          className={`cb-room__coin-badge cb-create__currency-badge cb-room__coin-badge--${coinType}`}
-          aria-label={`Playing in ${coinLabel}`}
-        >
-          {coinLabel}
-        </span>
+        <h1 className="cb-create__title">Create battle</h1>
       </div>
 
       <p className="cb-create__currency-note">
@@ -430,7 +424,7 @@ export function CaseBattlesCreateV2() {
             ? "Log in to create"
             : busy
               ? "Creating…"
-              : `Create Battle (${formatCoins(actualEntry, coinType)})`}
+              : `Create battle (${formatCoins(actualEntry, coinType)})`}
         </button>
         {!busy && canPlay && (
           <p className="cb-create__hotkey-hint" role="note">

@@ -205,17 +205,16 @@
 }
 
 .limbo__stage-panel {
-  /* unified via lc-pages.css — overridden padding below for display area
-     (kept close to the original 2rem/1.5rem values so the rocket stage
-     doesn't get squeezed by token jumps). */
-  padding: var(--lc-spacing-6) var(--lc-spacing-4);
+  /* unified via lc-pages.css — keep the inner stack tight so the rocket
+     stage fills the panel instead of sitting in an empty well. */
+  padding: var(--lc-spacing-4);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--lc-spacing-5);
+  gap: var(--lc-spacing-4);
   min-height: 0;
   height: 100%;
-  justify-content: center;
+  justify-content: stretch;
   flex: 1;
 }
 

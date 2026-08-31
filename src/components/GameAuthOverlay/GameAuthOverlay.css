@@ -56,6 +56,11 @@
   outline: none;
 }
 
+.game-auth-overlay__card:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
+}
+
 .game-auth-overlay__close {
   position: absolute;
   top: 0.6rem;
@@ -74,12 +79,15 @@
     border-color var(--lc-transition);
 }
 
-.game-auth-overlay__close:hover,
-.game-auth-overlay__close:focus-visible {
+.game-auth-overlay__close:hover {
   background: var(--lc-bg-hover);
   color: var(--lc-text-primary);
   border-color: var(--lc-border-strong);
-  outline: none;
+}
+
+.game-auth-overlay__close:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 .game-auth-overlay__icon {

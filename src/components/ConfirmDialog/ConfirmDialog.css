@@ -49,6 +49,16 @@
   outline: none;
 }
 
+.confirm-dialog__card:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
+}
+
+.confirm-dialog__btn:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
+}
+
 .confirm-dialog__title {
   font-family: var(--lc-font-display);
   font-size: 1.15rem;
@@ -99,7 +109,7 @@
 
 .confirm-dialog__btn--primary {
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson) 100%);
-  color: #fff;
+  color: var(--lc-text-on-primary);
   box-shadow: 0 4px 20px var(--lc-crimson-glow);
 }
 

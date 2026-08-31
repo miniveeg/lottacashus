@@ -69,7 +69,8 @@
   box-sizing: border-box;
 }
 
-.redeem__input:focus {
+.redeem__input:focus,
+.redeem__input:focus-visible {
   outline: none;
   border-color: var(--lc-border-accent);
   box-shadow: var(--lc-focus-ring);

@@ -35,7 +35,7 @@ export function CaseBattlesHubV2() {
             Open cases head-to-head. Highest total value wins the pot.
           </p>
         </div>
-        <Link to="/case-battles/create" className="cb-hub__create-btn">
+        <Link to="/case-battles/create" className="cb-btn cb-btn--primary cb-hub__create-btn">
           Create battle
         </Link>
       </header>
@@ -68,8 +68,8 @@ export function CaseBattlesHubV2() {
             <p className="cb-hub__empty-hint">
               Stack cases, pick a mode, and put a pot in play.
             </p>
-            <Link to="/case-battles/create" className="cb-hub__create-btn">
-              Create a battle
+            <Link to="/case-battles/create" className="cb-btn cb-btn--primary cb-hub__create-btn">
+              Create battle
             </Link>
           </div>
         ) : (

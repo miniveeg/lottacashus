@@ -29,8 +29,8 @@
   align-items: stretch;
   flex: 1;
   min-height: 0;
-  /* Stretch to fill all remaining vertical space in the flex column */
-  height: 0;
+  /* Size to content like Mines — height:0 was stretching the board and
+     leaving an empty stage around the packed 40-cell grid. */
 }
 
 @media (max-width: 900px) {
@@ -138,10 +138,11 @@
   grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 0.4rem;
   row-gap: 0.4rem;
-  /* Take remaining space but pack rows — stretch was creating ~90px gaps. */
-  flex: 1;
+  /* Pack rows at the start so leftover panel height does not open gaps
+     between cells (stretch) or an empty stage (center). */
+  flex: 0 1 auto;
   min-height: 0;
-  align-content: center;
+  align-content: start;
   align-items: stretch;
   justify-items: stretch;
 }

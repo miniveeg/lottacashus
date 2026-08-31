@@ -17,6 +17,14 @@ input[type="range"],
   outline: none;
 }
 
+input[type="range"]:focus-visible,
+.lc-slider:focus-visible,
+.game-controls__mines-slider:focus-visible,
+.limbo__target-slider:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 4px;
+}
+
 input[type="range"]:disabled,
 .lc-slider:disabled,
 .game-controls__mines-slider:disabled {
@@ -217,8 +225,11 @@ input[type="datetime-local"] {
 }
 
 input[type="date"]:focus,
+input[type="date"]:focus-visible,
 input[type="time"]:focus,
-input[type="datetime-local"]:focus {
+input[type="time"]:focus-visible,
+input[type="datetime-local"]:focus,
+input[type="datetime-local"]:focus-visible {
   outline: none;
   border-color: var(--lc-border-accent);
   box-shadow: var(--lc-focus-ring);
@@ -250,7 +261,9 @@ input[type="search"] {
 }
 
 input[type="number"]:focus,
-input[type="search"]:focus {
+input[type="number"]:focus-visible,
+input[type="search"]:focus,
+input[type="search"]:focus-visible {
   outline: none;
   border-color: var(--lc-border-accent);
   box-shadow: var(--lc-focus-ring);
@@ -297,7 +310,8 @@ select:not(.lc-select-native-keep) {
   color-scheme: dark;
 }
 
-select:not(.lc-select-native-keep):focus {
+select:not(.lc-select-native-keep):focus,
+select:not(.lc-select-native-keep):focus-visible {
   outline: none;
   border-color: var(--lc-border-accent);
   box-shadow: var(--lc-focus-ring);

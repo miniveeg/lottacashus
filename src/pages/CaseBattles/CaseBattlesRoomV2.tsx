@@ -229,7 +229,7 @@ export function CaseBattlesRoomV2() {
           <span className="cb-room__pot">
             Pot: {formatCoins(battle.potTotal, battle.coinType)}
           </span>
-          <span className={`cb-room__coin-badge cb-room__coin-badge--${battle.coinType}`}>
+          <span className={`lc-chip cb-room__coin-badge cb-room__coin-badge--${battle.coinType}`}>
             {battle.coinType === "sweeps_coins" ? "SC" : "GC"}
           </span>
         </div>

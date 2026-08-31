@@ -120,13 +120,14 @@
 }
 
 .confirm-dialog__btn--destructive {
-  background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 100%);
-  box-shadow: 0 4px 20px rgba(220, 20, 60, 0.35);
+  background: var(--lc-ruby);
+  color: var(--lc-text-primary);
+  box-shadow: 0 4px 20px var(--lc-ruby-glow);
 }
 
 .confirm-dialog__btn--destructive:hover:not(:disabled) {
   filter: brightness(1.12);
-  box-shadow: 0 6px 28px rgba(220, 20, 60, 0.5);
+  box-shadow: 0 6px 28px var(--lc-ruby-glow);
 }
 
 .confirm-dialog__btn:focus-visible {

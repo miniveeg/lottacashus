@@ -119,8 +119,11 @@ export async function placeCrashBet(params: {
 
   if (error) return { data: null as CrashBetResult | null, error };
   if (!data) return { data: null, error: "No response from server." };
+  const row = data as CrashBetResult & { bet_id?: string };
+  const betId = String(row.betId ?? row.bet_id ?? "");
+  if (!betId) return { data: null, error: "No bet id returned." };
   clearRequestId(IDEM_KEY_CRASH_BET);
-  return { data, error: null };
+  return { data: { ...row, betId }, error: null };
 }
 
 export async function cashOutCrash(params: {

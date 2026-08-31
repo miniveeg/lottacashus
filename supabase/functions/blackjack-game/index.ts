@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
       const { data: row, error } = await admin
         .from("blackjack_hands")
         .select(
-          "id, wager, total_wager, doubled, player_cards, dealer_cards, dealer_revealed, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index"
+          "id, wager, total_wager, doubled, player_cards, dealer_cards, dealer_revealed, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, coin_type"
         )
         .eq("user_id", user.id)
         .eq("status", "player_turn")
@@ -213,6 +213,7 @@ Deno.serve(async (req) => {
         active: true,
         handId: row.id,
         wager: Number(row.wager),
+        coinType: String((row as { coin_type?: string }).coin_type ?? "balance"),
         status: row.phase === "insurance_offer" ? "insurance_offer" : "player_turn",
         ...clientHandPayload(state),
       });

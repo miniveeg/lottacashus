@@ -1,5 +1,22 @@
-import { invokeEdgeFunction } from "./edgeFunctions";
+import { invokeEdgeFunction, type InvokeEdgeFunctionOptions } from "./edgeFunctions";
 import { supabase, isSupabaseConfigured } from "./supabase";
+import {
+  mapBlackjackHand,
+  type BlackjackActionResult,
+} from "./blackjackMap";
+
+export type {
+  BlackjackActionResult,
+  BlackjackHandView,
+  BlackjackPlayerHandView,
+} from "./blackjackMap";
+export {
+  isActiveBlackjackConflict,
+  isPlayableBlackjackStatus,
+  isSettledBlackjackStatus,
+  mapBlackjackHand,
+  normalizeResumedBlackjack,
+} from "./blackjackMap";
 import {
   getOrCreateRequestId,
   clearRequestId,
@@ -12,42 +29,6 @@ export type BlackjackPfState = {
   nextNonce: number;
 };
 
-export type BlackjackPlayerHandView = {
-  cards: number[];
-  total: number;
-  wager: number;
-  doubled: boolean;
-  finished: boolean;
-};
-
-export type BlackjackHandView = {
-  handId: string;
-  wager: number;
-  totalWager: number;
-  doubled: boolean;
-  playerCards: number[];
-  dealerCards: number[];
-  dealerRevealed: boolean;
-  playerTotal: number;
-  dealerTotal: number;
-  canDouble: boolean;
-  canSplit: boolean;
-  canInsurance: boolean;
-  insuranceAmount: number;
-  phase: string;
-  isSplit: boolean;
-  activeHandIndex: number;
-  playerHands: BlackjackPlayerHandView[];
-};
-
-export type BlackjackActionResult = BlackjackHandView & {
-  balance: number;
-  status: string;
-  outcome?: string | null;
-  payout?: number;
-  nonce?: number;
-  coinType: string;
-};
 
 function parsePf(data: unknown): BlackjackPfState | null {
   const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | null;
@@ -94,61 +75,26 @@ export async function setBlackjackClientSeed(
   return { error: error?.message ?? null };
 }
 
-function asNumberArray(value: unknown): number[] {
-  return Array.isArray(value) ? (value as number[]) : [];
-}
-
-function asPlayerHands(value: unknown): BlackjackPlayerHandView[] {
-  if (!Array.isArray(value)) return [];
-  return (value as BlackjackPlayerHandView[]).map((h) => ({
-    cards: asNumberArray(h?.cards),
-    total: Number(h?.total ?? 0),
-    wager: Number(h?.wager ?? 0),
-    doubled: Boolean(h?.doubled),
-    finished: Boolean(h?.finished),
-  }));
-}
-
-function mapHand(data: Record<string, unknown>): BlackjackActionResult {
-  const playerHands = asPlayerHands(data.playerHands);
-  return {
-    handId: String(data.handId ?? ""),
-    balance: Number(data.balance ?? 0),
-    status: String(data.status ?? ""),
-    outcome: (data.outcome as string | null) ?? null,
-    payout: data.payout != null ? Number(data.payout) : undefined,
-    nonce: data.nonce != null ? Number(data.nonce) : undefined,
-    coinType: String(data.coinType ?? "balance"),
-    wager: Number(data.wager ?? 0),
-    totalWager: Number(data.totalWager ?? 0),
-    doubled: Boolean(data.doubled),
-    playerCards: asNumberArray(data.playerCards),
-    dealerCards: asNumberArray(data.dealerCards),
-    dealerRevealed: Boolean(data.dealerRevealed),
-    playerTotal: Number(data.playerTotal ?? 0),
-    dealerTotal: Number(data.dealerTotal ?? 0),
-    canDouble: Boolean(data.canDouble),
-    canSplit: Boolean(data.canSplit),
-    canInsurance: Boolean(data.canInsurance),
-    insuranceAmount: Number(data.insuranceAmount ?? 0),
-    phase: String(data.phase ?? "player_turn"),
-    isSplit: Boolean(data.isSplit),
-    activeHandIndex: Number(data.activeHandIndex ?? 0),
-    playerHands,
-  };
-}
-
 export async function blackjackAction(
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
+  options?: InvokeEdgeFunctionOptions
 ): Promise<
   | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
   | { data: null; error: string; active?: boolean }
 > {
-  const { data, error } = await invokeEdgeFunction<Record<string, unknown>>("blackjack-game", body);
+  const { data, error } = await invokeEdgeFunction<Record<string, unknown>>(
+    "blackjack-game",
+    body,
+    options
+  );
   if (error) return { data: null, error };
   if (!data) return { data: null, error: "No response from server." };
   if (data.active === false) return { data: null, error: null, active: false };
-  return { data: mapHand(data), error: null };
+  return {
+    data: mapBlackjackHand(data, { assumeInProgress: data.active === true }),
+    error: null,
+    active: data.active === true ? true : undefined,
+  };
 }
 
 export async function startBlackjack(
@@ -235,5 +181,5 @@ export function fetchActiveBlackjack(): Promise<
   | { data: BlackjackActionResult | null; error: string | null; active?: boolean }
   | { data: null; error: string; active?: boolean }
 > {
-  return blackjackAction({ action: "active" });
+  return blackjackAction({ action: "active" }, { retryOnTransient: true });
 }

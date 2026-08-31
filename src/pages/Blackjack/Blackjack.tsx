@@ -18,6 +18,10 @@ import {
   splitBlackjack,
   standBlackjack,
   startBlackjack,
+  isActiveBlackjackConflict,
+  isPlayableBlackjackStatus,
+  isSettledBlackjackStatus,
+  normalizeResumedBlackjack,
   type BlackjackActionResult,
 } from "../../lib/blackjack";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
@@ -146,9 +150,11 @@ export function Blackjack() {
   // Space to deal without manually clicking out of the field.
   const inputsRef = useRef<HTMLInputElement | null>(null);
 
-  const insuranceOffer = hand?.status === "insurance_offer";
-  const playing = hand?.status === "player_turn" || insuranceOffer;
-  const settled = hand?.status === "settled";
+  const insuranceOffer = isPlayableBlackjackStatus(hand?.status ?? "", hand?.phase) &&
+    (hand?.status === "insurance_offer" || hand?.phase === "insurance_offer");
+  const playing =
+    Boolean(hand) && isPlayableBlackjackStatus(hand?.status ?? "", hand?.phase);
+  const settled = Boolean(hand) && isSettledBlackjackStatus(hand?.status ?? "", hand?.phase);
   const showTable = Boolean(hand);
 
   const loadPf = useCallback(async () => {
@@ -161,28 +167,48 @@ export function Blackjack() {
   }, []);
 
   const applyHand = useCallback((data: BlackjackActionResult | null) => {
-    if (!data) {
-      setHand(null);
-      return;
-    }
+    handRef.current = data;
     setHand(data);
   }, []);
 
-  const resume = useCallback(async () => {
+  /** Restore an in-progress server hand onto the felt. Returns true when cards/actions are showing. */
+  const restoreActiveHand = useCallback(async (): Promise<boolean> => {
     const res = await fetchActiveBlackjack();
-    if (cancelledRef.current) return;
-    if (res.error || !res.data) return;
-    if (res.data.status === "player_turn" || res.data.status === "insurance_offer") {
-      applyHand(res.data);
+    if (cancelledRef.current) return false;
+
+    if (res.active === false || (!res.data && !res.error)) {
+      setError((prev) => (isActiveBlackjackConflict(prev) ? null : prev));
+      return false;
     }
+
+    if (!res.data) return false;
+
+    if (isSettledBlackjackStatus(res.data.status, res.data.phase)) {
+      setError((prev) => (isActiveBlackjackConflict(prev) ? null : prev));
+      return false;
+    }
+
+    const restored = normalizeResumedBlackjack(res.data);
+    if (!restored.handId) {
+      setError((prev) => (isActiveBlackjackConflict(prev) ? null : prev));
+      return false;
+    }
+
+    applyHand(restored);
+    if (restored.coinType) setHandCoinType(restored.coinType);
+    if (restored.wager > 0) {
+      setWager(restored.wager);
+      setWagerInput(restored.wager.toFixed(2));
+    }
+    setError(null);
+    return isPlayableBlackjackStatus(restored.status, restored.phase);
   }, [applyHand]);
 
   useEffect(() => {
-    if (user) {
-      loadPf();
-      resume();
-    }
-  }, [user, loadPf, resume]);
+    if (!user) return;
+    loadPf();
+    void restoreActiveHand();
+  }, [user, loadPf, restoreActiveHand]);
 
   // Unmount cleanup: mark the component cancelled so in-flight action awaits
   // don't fire setState on a dead component (React 19 silently no-ops, but
@@ -417,7 +443,6 @@ export function Blackjack() {
     busyRef.current = true;
     setError(null);
     setLastMessage(null);
-    setHand(null);
     setHandCoinType(coinNow);
     setBusy(true);
     const { data, error: err } = await startBlackjack(wagerNow, coinNow);
@@ -425,15 +450,32 @@ export function Blackjack() {
       busyRef.current = false;
       return;
     }
-    setBusy(false);
-    busyRef.current = false;
     if (err || !data) {
+      if (isActiveBlackjackConflict(err)) {
+        const restored = await restoreActiveHand();
+        if (cancelledRef.current) {
+          busyRef.current = false;
+          return;
+        }
+        setBusy(false);
+        busyRef.current = false;
+        if (!restored) {
+          setError(null);
+          setHandCoinType(null);
+          void refreshProfile();
+        }
+        return;
+      }
+      setBusy(false);
+      busyRef.current = false;
       setError(err ?? "Could not start hand.");
       setHandCoinType(null);
       // Server may have debited before failing — refresh to stay accurate.
       void refreshProfile();
       return;
     }
+    setBusy(false);
+    busyRef.current = false;
     applyHand(data);
     if (data.status === "settled") {
       finishSettled(data);
@@ -452,7 +494,17 @@ export function Blackjack() {
   ) => {
     // Synchronous re-entrancy guard — same sub-ms race window as handleStart.
     if (busyRef.current) return;
-    if (!hand?.handId) return;
+    let current = handRef.current;
+    if (!current?.handId) {
+      const restored = await restoreActiveHand();
+      current = handRef.current;
+      if (!restored || !current?.handId) {
+        if (!cancelledRef.current) {
+          setError("No active hand to play. Deal a new one.");
+        }
+        return;
+      }
+    }
     busyRef.current = true;
     setBusy(true);
     setError(null);
@@ -467,8 +519,8 @@ export function Blackjack() {
               ? splitBlackjack
               : (id: string, ct?: string) => insuranceBlackjack(id, Boolean(insuranceTake), ct);
     // Always use the coin type locked when the hand started.
-    const actionCoin = handCoinType ?? coinType;
-    const { data, error: err } = await fn(hand.handId, actionCoin);
+    const actionCoin = current.coinType || handCoinType || coinTypeRef.current;
+    const { data, error: err } = await fn(current.handId, actionCoin);
     if (cancelledRef.current) {
       busyRef.current = false;
       return;

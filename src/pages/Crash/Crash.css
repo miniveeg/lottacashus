@@ -274,6 +274,9 @@
 }
 
 .crash__cashout-btn {
+  position: relative;
+  z-index: 6;
+  pointer-events: auto;
   min-height: 3rem;
   padding: 0.85rem 1rem;
   border-radius: var(--lc-radius-lg);

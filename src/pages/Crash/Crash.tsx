@@ -220,6 +220,7 @@ export function Crash() {
   const [clientSeed, setClientSeed] = useState("default");
   const [showFairness, setShowFairness] = useState(false);
   const [betId, setBetId] = useState<string | null>(null);
+  const betIdRef = useRef<string | null>(null);
   // True when the client animation self-capped at CLIENT_MAX_MULTIPLIER
   // (1,000,000x) before the server confirmed the actual crash point. We
   // freeze the chart and show a "Confirming server settlement…" overlay
@@ -242,6 +243,7 @@ export function Crash() {
   wagerRef.current = wager;
   profileRef.current = profile;
   coinTypeRef.current = coinType;
+  betIdRef.current = betId;
 
   const loadPf = useCallback(async () => {
     const { data } = await fetchCrashPfState();
@@ -847,7 +849,18 @@ export function Crash() {
       return;
     }
 
-    setBetId(data.betId);
+    const id = String(data.betId ?? "");
+    if (!id) {
+      setPhase("idle");
+      phaseRef.current = "idle";
+      displayPhaseRef.current = "idle";
+      setError("Bet placed but no round id was returned. Refresh and try again.");
+      busyRef.current = false;
+      void refreshProfile();
+      return;
+    }
+    betIdRef.current = id;
+    setBetId(id);
     setPfNonce(data.nonce + 1);
     setPhase("running");
     phaseRef.current = "running";
@@ -858,12 +871,12 @@ export function Crash() {
     // upper bound; it stops when the user cashes out, the cashout fails (server
     // reveals crash_point), or the settlement poll detects server-side close.
     startAnimation();
-    startSettlementPoll(data.betId);
+    startSettlementPoll(id);
     // Realtime subscription is the primary detection path. The poll is a
     // fallback for environments where Realtime isn't configured. Without
     // this, the chart kept climbing indefinitely until the 60s cron fired
     // (the user's main bug report).
-    subscribeCrashRealtime(data.betId);
+    subscribeCrashRealtime(id);
     void refreshProfile();
   };
 
@@ -871,7 +884,8 @@ export function Crash() {
     // Double-cashout race: rapid clicks could trigger two cashOutCrash calls
     // before the first settled. busyRef + cashingOutRef guard both paths.
     if (busyRef.current || cashingOutRef.current) return;
-    if (!betId || phaseRef.current !== "running") return;
+    const id = betIdRef.current;
+    if (!id || phaseRef.current !== "running") return;
 
     cashingOutRef.current = true;
     setCashingOut(true);
@@ -884,9 +898,9 @@ export function Crash() {
     // so the screen doesn't go black while we wait for the server. We'll stop
     // after we get a response.
     const { data, error: cashErr } = await cashOutCrash({
-      betId,
+      betId: id,
       cashedAtMultiplier: multAtClick,
-      coinType,
+      coinType: coinTypeRef.current,
     });
 
     if (cashErr || !data) {

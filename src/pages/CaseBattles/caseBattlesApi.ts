@@ -256,7 +256,8 @@ export async function createCaseBattle(params: {
     p_case_ids: params.caseIds,
     p_entry_cost: params.entryCost,
     p_coin_type: params.coinType,
-    p_borrow_percent: params.borrowPercent,
+    // PostgREST matches this 7-arg signature (p_borrow_percent int).
+    p_borrow_percent: Math.max(0, Math.min(80, Math.round(Number(params.borrowPercent) || 0))),
   });
   if (error) {
     return { data: null, error: error.message };

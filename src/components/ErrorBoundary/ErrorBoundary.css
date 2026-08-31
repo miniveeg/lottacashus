@@ -26,9 +26,9 @@
   width: 4.5rem;
   height: 4.5rem;
   border-radius: 50%;
-  background: rgba(220, 20, 60, 0.12);
-  color: var(--lc-crimson-soft);
-  border: 1px solid rgba(220, 20, 60, 0.25);
+  background: var(--lc-ruby-glow);
+  color: var(--lc-ruby);
+  border: 1px solid var(--lc-ruby-glow);
 }
 
 .lc-error-boundary__title {
@@ -151,7 +151,9 @@
 .lc-error-boundary__btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.45rem;
+  min-height: 2.75rem;
   padding: 0.55rem 1.1rem;
   font-family: var(--lc-font-body);
   font-size: 0.9rem;
@@ -161,7 +163,7 @@
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-sm);
   cursor: pointer;
-  transition: all var(--lc-transition);
+  transition: border-color var(--lc-transition), color var(--lc-transition), background var(--lc-transition), transform var(--lc-transition), box-shadow var(--lc-transition), filter var(--lc-transition);
 }
 
 .lc-error-boundary__btn:hover:not(:disabled) {
@@ -177,7 +179,7 @@
 
 .lc-error-boundary__btn--primary {
   background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson));
-  color: #fff;
+  color: var(--lc-text-on-primary);
   border-color: var(--lc-crimson);
   box-shadow: 0 2px 12px var(--lc-crimson-glow);
 }

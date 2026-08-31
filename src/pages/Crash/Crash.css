@@ -61,20 +61,26 @@
    hasn't started yet. Displays a subtle pulsing "WAITING FOR ROUND" overlay
    so the canvas doesn't feel like dead air. Audit issue P2 #7. */
 .crash__canvas-wrap--idle::before {
-  content: "WAITING FOR ROUND";
+  content: "Waiting for round";
   position: absolute;
-  top: 50%;
+  top: 0.85rem;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   font-family: var(--lc-font-display);
-  font-size: 0.9rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--lc-text-muted);
-  opacity: 0.5;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lc-text-secondary);
+  padding: 0.28rem 0.75rem;
+  border-radius: var(--lc-radius-pill);
+  border: 1px solid var(--lc-border-strong);
+  background: rgba(10, 14, 20, 0.62);
+  opacity: 0.9;
   animation: crash-idle-pulse 2s ease-in-out infinite;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
+  white-space: nowrap;
 }
 
 @keyframes crash-idle-pulse {
@@ -497,6 +503,7 @@
    preserved. */
 @media (prefers-reduced-motion: reduce) {
   .crash__canvas-wrap,
+  .crash__canvas-wrap--idle::before,
   .crash__canvas-wrap--crashed,
   .crash__canvas-wrap--crashed::after,
   .crash__canvas-wrap--confirming,

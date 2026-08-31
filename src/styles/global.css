@@ -51,6 +51,11 @@ button {
   cursor: pointer;
   border: none;
   background: none;
+  touch-action: manipulation;
+}
+
+a, [role="button"] {
+  touch-action: manipulation;
 }
 
 ul { list-style: none; }

@@ -91,10 +91,12 @@
 
 .promos__affiliate-claim-amount {
   margin: 0;
+  font-family: var(--lc-font-numeric);
   font-size: 1.75rem;
   font-weight: 800;
   color: var(--lc-amber);
   line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .promos__affiliate-claim-hint {
@@ -438,8 +440,8 @@
 
 .promos__card-badge--new {
   color: var(--lc-crimson-soft);
-  background: rgba(232, 37, 76, 0.1);
-  border: 1px solid rgba(232, 37, 76, 0.25);
+  background: var(--lc-crimson-glow);
+  border: 1px solid var(--lc-border-accent);
 }
 
 .promos__card-badge--daily {
@@ -462,12 +464,13 @@
 }
 
 .promos__card-amount {
-  font-family: var(--lc-font-display);
+  font-family: var(--lc-font-numeric);
   font-weight: 800;
   font-size: 1.35rem;
   color: var(--lc-text-primary);
   margin: 0 0 var(--lc-spacing-3);
   letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
 
 .promos__card-desc {
@@ -490,10 +493,16 @@
   font-weight: 700;
   border-radius: var(--lc-radius-sm);
   background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
-  color: #fff;
+  color: var(--lc-text-on-primary);
   box-shadow: 0 2px 16px var(--lc-crimson-glow);
   transition: filter var(--lc-transition), transform var(--lc-transition);
   align-self: flex-start;
+}
+
+.promos__btn:focus-visible,
+.promos__card-btn:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 .promos__card-btn:hover {
@@ -516,5 +525,21 @@
 @media (max-width: 560px) {
   .promos__grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.promos__affiliate-recent-amount,
+.promos__rate-value {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .promos__card,
+  .promos__card-btn {
+    transition: none !important;
+  }
+  .promos__card:hover,
+  .promos__card-btn:hover {
+    transform: none;
   }
 }

@@ -1,10 +1,12 @@
 .slots {
   --slot-reel-size: 110px;
+  --slot-reel-height: 168px;
 }
 
 @media (min-width: 600px) {
   .slots {
     --slot-reel-size: 150px;
+    --slot-reel-height: 228px;
   }
 }
 
@@ -54,7 +56,7 @@
 
 .slots__reel {
   width: var(--slot-reel-size);
-  height: var(--slot-reel-size);
+  height: var(--slot-reel-height);
   display: grid;
   place-items: center;
   background: var(--lc-bg-elevated);
@@ -541,7 +543,7 @@
   .slots__reel {
     /* Keep the reels readable on a 360px viewport. */
     width: calc(var(--slot-reel-size) - 12px);
-    height: calc(var(--slot-reel-size) - 12px);
+    height: calc(var(--slot-reel-height) - 16px);
   }
   .slots__paytable-grid {
     gap: var(--lc-spacing-1) var(--lc-spacing-2);

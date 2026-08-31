@@ -222,9 +222,10 @@
 }
 
 .wallet__info-example-input {
-  font-family: var(--lc-font-mono);
+  font-family: var(--lc-font-numeric);
   font-weight: 700;
   color: var(--lc-text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .wallet__info-example-arrow {
@@ -233,9 +234,10 @@
 }
 
 .wallet__info-example-output {
-  font-family: var(--lc-font-mono);
+  font-family: var(--lc-font-numeric);
   font-weight: 700;
   color: var(--lc-emerald);
+  font-variant-numeric: tabular-nums;
 }
 
 /* ── Withdraw SC balance panel ──────────────────────────────────────── */
@@ -318,7 +320,6 @@
   border-radius: var(--lc-radius-md);
   color: var(--lc-text-primary);
   min-width: 0;
-  field-sizing: content;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
@@ -473,7 +474,7 @@
 .wallet__qr-hint {
   font-size: 0.68rem;
   font-weight: 600;
-  color: var(--lc-text-muted);
+  color: var(--lc-text-on-primary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: 0;

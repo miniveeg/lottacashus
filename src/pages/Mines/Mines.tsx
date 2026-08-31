@@ -612,9 +612,9 @@ export function Mines() {
               variant="win"
               onClick={() => handleCashout(false)}
               busy={busy}
-              busyLabel="…"
+              busyLabel="Cashing out…"
               disabled={gemsRevealed < 1}
-              label={`Cash out ${formatCoins(potentialPayout, coinType)}`}
+              label={`Cash out ${multiplier.toFixed(2)}×`}
             />
           )}
 

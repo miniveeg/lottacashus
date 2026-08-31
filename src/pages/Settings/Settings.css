@@ -374,7 +374,6 @@
   color: var(--lc-text-primary);
   font-size: 0.95rem;
   min-width: 0;
-  field-sizing: content;
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
@@ -666,7 +665,12 @@
   font-size: 0.95rem;
   cursor: pointer;
   min-width: 0;
-  field-sizing: content;
+}
+
+.settings__select:focus-visible {
+  outline: none;
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .settings__select:disabled {
@@ -794,7 +798,7 @@
 /* ── Provably Fair — server seed rotation (audit R3) ── */
 .settings__btn--rotate {
   background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
-  color: #fff;
+  color: var(--lc-text-on-primary);
   box-shadow: 0 2px 16px var(--lc-crimson-glow);
 }
 
@@ -906,14 +910,16 @@
   border-radius: var(--lc-radius-sm);
   color: var(--lc-text-primary);
   min-width: 0;
-  field-sizing: content;
-  transition: border-color var(--lc-transition);
+  transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
 .settings__verify-input:focus,
-.settings__verify-select:focus {
+.settings__verify-input:focus-visible,
+.settings__verify-select:focus,
+.settings__verify-select:focus-visible {
   outline: none;
-  border-color: var(--lc-crimson-soft);
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .settings__verify-result {
@@ -947,8 +953,11 @@
 .settings__stat-value,
 .settings__tally-value,
 .settings__limit-usage-list strong,
-.settings__dirty-flag {
+.settings__dirty-flag,
+.settings__tx-amount--pos,
+.settings__tx-amount--neg {
   font-variant-numeric: tabular-nums;
+  font-family: var(--lc-font-numeric);
 }
 
 /* Focus-visible rings on the limit-bar progressbar — it is a focusable

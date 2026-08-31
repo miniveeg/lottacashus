@@ -250,7 +250,7 @@ export function Withdraw() {
             aria-disabled={submitting || !configured}
           >
             {submitting && <span className="wallet__btn__spinner" aria-hidden="true" />}
-            {submitting ? "Submitting…" : "Request withdrawal"}
+            {submitting ? "Cashing out…" : "Cash out"}
           </button>
         </form>
 
@@ -259,7 +259,7 @@ export function Withdraw() {
             <kbd>{typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"}</kbd>
             <kbd>↵</kbd>
           </span>
-          <span>submit withdrawal</span>
+          <span>cash out</span>
         </p>
 
         <p className="wallet__hint wallet__hint--note">

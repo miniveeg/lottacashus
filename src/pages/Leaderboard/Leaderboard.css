@@ -13,6 +13,7 @@
   font-size: 1.75rem;
   font-weight: 700;
   margin: 0 0 var(--lc-spacing-2);
+  text-wrap: balance;
 }
 
 .leaderboard-header__subtitle {
@@ -93,12 +94,12 @@
 
 /* Highlight the current signed-in user's row (overrides top-N tint). */
 .leaderboard-table__row--me td {
-  background: rgba(220, 20, 60, 0.12);
-  box-shadow: inset 3px 0 0 var(--lc-crimson, #dc143c);
+  background: var(--lc-crimson-glow);
+  box-shadow: inset 3px 0 0 var(--lc-crimson);
 }
 
 .leaderboard-table__row--me:hover td {
-  background: rgba(220, 20, 60, 0.18);
+  background: var(--lc-crimson-glow-strong);
 }
 
 .leaderboard-table__you {
@@ -109,8 +110,8 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #fff;
-  background: var(--lc-crimson, #dc143c);
+  color: var(--lc-text-on-primary);
+  background: var(--lc-crimson);
 }
 
 /* Empty state */
@@ -147,10 +148,11 @@
 .leaderboard-table__rank {
   width: 3rem;
   text-align: center;
-  font-family: var(--lc-font-display);
+  font-family: var(--lc-font-numeric);
   font-weight: 700;
   color: var(--lc-text-muted);
   font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .leaderboard-table__medal {
@@ -160,15 +162,15 @@
 }
 
 .leaderboard-table__medal-icon--gold {
-  color: #ffd700;
+  color: var(--lc-gold-soft);
 }
 
 .leaderboard-table__medal-icon--silver {
-  color: #c0c0c0;
+  color: var(--lc-text-secondary);
 }
 
 .leaderboard-table__medal-icon--bronze {
-  color: #cd7f32;
+  color: var(--lc-amber-dim);
 }
 
 .leaderboard-table__user {
@@ -194,17 +196,25 @@
 
 .leaderboard-table__amount {
   text-align: right;
-  font-family: var(--lc-font-display);
+  font-family: var(--lc-font-numeric);
   font-weight: 600;
   color: var(--lc-emerald);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .leaderboard-table__secondary {
   text-align: right;
+  font-family: var(--lc-font-numeric);
   color: var(--lc-text-secondary);
   font-size: 0.85rem;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.lc-tab:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 /* ── Mobile ── */

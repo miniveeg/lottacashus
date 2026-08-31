@@ -39,8 +39,11 @@
 
 .roulette__board-panel {
   /* unified via lc-pages.css — keep PAYOUTS in-flow, not clipped */
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  height: 100%;
 }
 
 .roulette__board-toolbar {
@@ -489,8 +492,10 @@
 /* Wheel (inside board panel — matches site tokens) */
 .roulette-wheel {
   position: relative;
-  width: min(100%, 560px);
-  max-height: min(72vh, 640px);
+  width: min(100%, 520px);
+  min-width: min(280px, 100%);
+  min-height: min(280px, 62dvh);
+  max-height: min(68dvh, 560px);
   aspect-ratio: 1;
 }
 

@@ -22,25 +22,27 @@ export function Sidebar() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {collapsed ? <ChevronRight size={16} aria-hidden="true" /> : <ChevronLeft size={16} aria-hidden="true" />}
         </motion.button>
       </div>
 
       <div className="sidebar__body">{isChatMode ? <SidebarChat /> : <SidebarNav />}</div>
 
-      <motion.button
-        type="button"
-        className="sidebar__mode-btn"
-        onClick={toggleMode}
-        aria-label={isChatMode ? "Switch to sidebar navigation" : "Switch to live chat"}
-        whileHover={{ y: -2, boxShadow: "0 6px 28px var(--lc-crimson-glow)" }}
-        whileTap={{ scale: 0.98 }}
-      >
-        {isChatMode ? <PanelLeft size={16} /> : <MessageSquare size={16} />}
-        <span className="sidebar__mode-btn-label">
-          {isChatMode ? "Navigation" : "Live Chat"}
-        </span>
-      </motion.button>
+      <div className="sidebar__footer">
+        <motion.button
+          type="button"
+          className="sidebar__mode-btn"
+          onClick={toggleMode}
+          aria-label={isChatMode ? "Switch to sidebar navigation" : "Switch to live chat"}
+          whileHover={{ y: -2, boxShadow: "0 6px 28px var(--lc-crimson-glow)" }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {isChatMode ? <PanelLeft size={16} aria-hidden="true" /> : <MessageSquare size={16} aria-hidden="true" />}
+          <span className="sidebar__mode-btn-label">
+            {isChatMode ? "Navigation" : "Live Chat"}
+          </span>
+        </motion.button>
+      </div>
     </aside>
   );
 }

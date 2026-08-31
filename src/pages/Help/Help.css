@@ -12,6 +12,7 @@
   font-size: 1.75rem;
   letter-spacing: -0.02em;
   margin-bottom: var(--lc-spacing-2);
+  text-wrap: balance;
 }
 
 .help__subtitle {
@@ -48,8 +49,13 @@
   background: var(--lc-bg-hover);
 }
 
+.help__tab:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
+}
+
 .help__tab--active {
-  color: var(--lc-bg-base);
+  color: var(--lc-text-on-primary);
   background: linear-gradient(135deg, var(--lc-gold), var(--lc-gold-dim));
   border-color: transparent;
 }
@@ -98,6 +104,11 @@
 
 .help__faq-question:hover {
   background: var(--lc-bg-hover);
+}
+
+.help__faq-question:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: -2px;
 }
 
 .help__faq-chevron {
@@ -218,7 +229,7 @@
   width: 100%;
   /* AGENT.md §Accessibility — search input must hit 44px desktop. */
   min-height: 2.75rem;
-  padding: var(--lc-spacing-2) 2.5rem var(--lc-spacing-2) 2.4rem;
+  padding: var(--lc-spacing-2) 3.25rem var(--lc-spacing-2) 2.4rem;
   font-size: 0.9rem;
   color: var(--lc-text-primary);
   background: var(--lc-bg-base);
@@ -229,10 +240,11 @@
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition);
 }
 
-.help__search-input:focus {
+.help__search-input:focus,
+.help__search-input:focus-visible {
   outline: none;
-  border-color: var(--lc-crimson-soft);
-  box-shadow: 0 0 0 3px rgba(232, 37, 76, 0.12);
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .help__search-input::placeholder {
@@ -263,6 +275,11 @@
 .help__search-clear:hover {
   background: var(--lc-bg-hover);
   color: var(--lc-text-primary);
+}
+
+.help__search-clear:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 /* Empty search state */
@@ -296,4 +313,19 @@
 .help__faq-empty-btn:hover {
   background: var(--lc-bg-active);
   color: var(--lc-text-primary);
+}
+
+.help__faq-empty-btn:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help__tab,
+  .help__faq-question,
+  .help__search-input,
+  .help__search-clear,
+  .help__faq-empty-btn {
+    transition: none !important;
+  }
 }

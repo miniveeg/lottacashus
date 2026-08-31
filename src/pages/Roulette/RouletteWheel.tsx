@@ -43,9 +43,9 @@ function labelPosition(index: number): { x: number; y: number; rotate: number } 
 }
 
 const FILL: Record<RouletteColor, string> = {
-  red: "#b91c1c",
-  black: "#1a1f2e",
-  green: "#15803d",
+  red: "#9b2335",
+  black: "#141820",
+  green: "#0f5c3a",
 };
 
 export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {

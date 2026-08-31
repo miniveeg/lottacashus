@@ -2,7 +2,7 @@
 
 .game-controls {
   min-width: 0;
-  overflow-x: hidden;
+  overflow-x: visible;
   overflow-y: auto;
 }
 
@@ -114,9 +114,10 @@
 .game-controls__wager-input {
   min-width: 0;
   width: 100%;
-  min-height: 2.6rem;
+  min-height: var(--lc-target-min-desktop);
   padding: 0.5rem 0.75rem;
   font-family: var(--lc-font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 1.05rem;
   font-weight: 500;
   color: var(--lc-text-primary);
@@ -226,7 +227,7 @@
 
 /* ── Wager adjustment (half/double/max) ── */
 .game-controls__wager-adj {
-  min-height: 2.6rem;
+  min-height: var(--lc-target-min-desktop);
   display: flex;
   align-items: center;
   justify-content: center;

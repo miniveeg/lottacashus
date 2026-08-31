@@ -494,20 +494,24 @@ export function Blackjack() {
   ) => {
     // Synchronous re-entrancy guard — same sub-ms race window as handleStart.
     if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    setError(null);
     let current = handRef.current;
     if (!current?.handId) {
       const restored = await restoreActiveHand();
       current = handRef.current;
+      if (cancelledRef.current) {
+        busyRef.current = false;
+        return;
+      }
       if (!restored || !current?.handId) {
-        if (!cancelledRef.current) {
-          setError("No active hand to play. Deal a new one.");
-        }
+        busyRef.current = false;
+        setBusy(false);
+        setError("No active hand to play. Deal a new one.");
         return;
       }
     }
-    busyRef.current = true;
-    setBusy(true);
-    setError(null);
     const fn =
       action === "hit"
         ? hitBlackjack

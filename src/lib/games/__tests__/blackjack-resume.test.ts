@@ -88,6 +88,21 @@ describe("blackjack resume helpers", () => {
     expect(isPlayableBlackjackStatus(resumed.status, resumed.phase)).toBe(true);
   });
 
+  it("maps a raw row id onto handId and hides the hole card by default", () => {
+    const hand = mapBlackjackHand(
+      {
+        id: "row-9",
+        player_cards: [1, 2],
+        dealer_cards: [3],
+        phase: "player_turn",
+      },
+      { assumeInProgress: true }
+    );
+    expect(hand.handId).toBe("row-9");
+    expect(hand.dealerRevealed).toBe(false);
+    expect(hand.status).toBe("player_turn");
+  });
+
   it("does not treat a finished hand as playable after normalize", () => {
     const hand = mapBlackjackHand({
       handId: "done",

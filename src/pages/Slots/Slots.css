@@ -39,8 +39,7 @@
   min-height: 0;
   height: 100%;
   padding: var(--lc-spacing-5) var(--lc-spacing-4);
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
+  /* felt comes from lc-pages.css unified board chrome */
   border-radius: var(--lc-radius-lg);
   flex: 1;
   min-width: 0;

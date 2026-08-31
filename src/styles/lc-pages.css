@@ -353,8 +353,15 @@
    height: 100% ensures they stretch to fill their grid cell. */
 .keno__board-panel, .mines__board-panel,
 .roulette__board-panel, .slots__stage {
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
+  background:
+    radial-gradient(ellipse 85% 65% at 50% 28%, rgba(28, 122, 78, 0.22) 0%, transparent 68%),
+    radial-gradient(ellipse 100% 80% at 50% 110%, rgba(0, 0, 0, 0.35) 0%, transparent 58%),
+    linear-gradient(165deg, #0d3324 0%, #0a1f18 48%, #071410 100%);
+  border: 1px solid rgba(34, 120, 78, 0.38);
+  box-shadow:
+    inset 0 0 0 1px rgba(201, 168, 76, 0.1),
+    inset 0 0 64px rgba(0, 0, 0, 0.32),
+    0 8px 28px rgba(0, 0, 0, 0.22);
   border-radius: var(--lc-radius-lg);
   padding: 1.25rem;
   display: flex;
@@ -365,8 +372,15 @@
 }
 
 .limbo__stage-panel {
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
+  background:
+    radial-gradient(ellipse 85% 65% at 50% 28%, rgba(28, 122, 78, 0.22) 0%, transparent 68%),
+    radial-gradient(ellipse 100% 80% at 50% 110%, rgba(0, 0, 0, 0.35) 0%, transparent 58%),
+    linear-gradient(165deg, #0d3324 0%, #0a1f18 48%, #071410 100%);
+  border: 1px solid rgba(34, 120, 78, 0.38);
+  box-shadow:
+    inset 0 0 0 1px rgba(201, 168, 76, 0.1),
+    inset 0 0 64px rgba(0, 0, 0, 0.32),
+    0 8px 28px rgba(0, 0, 0, 0.22);
   border-radius: var(--lc-radius-lg);
   padding: 1.25rem;
   display: flex;

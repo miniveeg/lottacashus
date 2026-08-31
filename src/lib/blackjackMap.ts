@@ -50,7 +50,7 @@ function firstDefined(data: Record<string, unknown>, ...keys: string[]): unknown
 function asPlayerHands(value: unknown): BlackjackPlayerHandView[] {
   if (!Array.isArray(value)) return [];
   return (value as Record<string, unknown>[]).map((h) => ({
-    cards: asNumberArray(h?.cards),
+    cards: asNumberArray(h?.cards ?? h?.player_cards),
     total: Number(h?.total ?? 0),
     wager: Number(h?.wager ?? 0),
     doubled: Boolean(h?.doubled),
@@ -86,7 +86,7 @@ export function isSettledBlackjackStatus(status: string, phase?: string): boolea
 }
 
 export function isPlayableBlackjackStatus(status: string, phase?: string): boolean {
-  const raw = status || phase || "";
+  const raw = (status || phase || "").toLowerCase();
   return raw === "player_turn" || raw === "insurance_offer";
 }
 

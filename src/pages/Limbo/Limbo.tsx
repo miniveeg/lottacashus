@@ -314,8 +314,8 @@ export function Limbo() {
               <line x1="0" y1="100" x2="320" y2="100" stroke="rgba(255,255,255,0.05)" strokeWidth="1"/>
               <line x1="0" y1="60" x2="320" y2="60" stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
               <g className="limbo__target-bar">
-                <line x1="20" y1="90" x2="300" y2="90" stroke={lastResult?.won ? "#22c55e" : lastResult && !lastResult.won ? "#ef4444" : "rgba(245,185,66,0.7)"} strokeWidth="2" strokeDasharray="8 4"/>
-                <text x="304" y="94" fill={lastResult?.won ? "#22c55e" : lastResult && !lastResult.won ? "#ef4444" : "rgba(245,185,66,0.85)"} fontSize="10" fontWeight="700" fontFamily="monospace">{target.toFixed(2)}×</text>
+                <line className="limbo__target-line" x1="20" y1="90" x2="300" y2="90" strokeWidth="2" strokeDasharray="8 4"/>
+                <text className="limbo__target-label" x="304" y="94" fontSize="10" fontWeight="700" fontFamily="monospace">{target.toFixed(2)}×</text>
               </g>
               <g className={`limbo__rocket${rolling ? " limbo__rocket--flying" : ""}${lastResult?.won ? " limbo__rocket--win" : lastResult && !lastResult.won ? " limbo__rocket--loss" : ""}`}>
                 <ellipse cx="160" cy="138" rx="7" ry="12" fill="rgba(251,146,60,0.85)" className="limbo__flame"/>

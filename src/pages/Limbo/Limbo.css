@@ -41,8 +41,8 @@
   flex: 1 1 auto;
   min-height: min(42vh, 420px);
   height: 100%;
-  background: var(--lc-bg-panel);
-  border: 1px solid var(--lc-border);
+  background: transparent;
+  border: 1px solid rgba(201, 168, 76, 0.16);
   border-radius: var(--lc-radius-lg);
   padding: var(--lc-spacing-2);
   overflow: hidden;
@@ -751,3 +751,17 @@
     min-width: 3rem;
   }
 }
+
+
+/* Target line uses pit tokens, not Tailwind green/red */
+.limbo__target-line {
+  stroke: var(--lc-gold);
+}
+.limbo__target-label {
+  fill: var(--lc-gold);
+  font-variant-numeric: tabular-nums;
+}
+.limbo__rocket-stage--win .limbo__target-line { stroke: var(--lc-emerald); }
+.limbo__rocket-stage--win .limbo__target-label { fill: var(--lc-emerald); }
+.limbo__rocket-stage--loss .limbo__target-line { stroke: var(--lc-ruby); }
+.limbo__rocket-stage--loss .limbo__target-label { fill: var(--lc-ruby); }

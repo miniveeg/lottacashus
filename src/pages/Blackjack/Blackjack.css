@@ -66,7 +66,7 @@
 .bj__table-panel--blackjack {
   box-shadow:
     inset 0 0 80px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(34, 197, 94, 0.35),
+    0 0 0 1px var(--lc-emerald-glow),
     0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
@@ -74,7 +74,7 @@
 .bj__table-panel--bust {
   box-shadow:
     inset 0 0 80px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(239, 68, 68, 0.25),
+    0 0 0 1px var(--lc-ruby-glow),
     0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
@@ -147,22 +147,22 @@
 
 .bj__table-panel--win .bj__result-banner,
 .bj__table-panel--blackjack .bj__result-banner {
-  border-color: rgba(34, 197, 94, 0.55);
+  border-color: var(--lc-emerald);
 }
 
 .bj__table-panel--win .bj__result-text,
 .bj__table-panel--blackjack .bj__result-text {
-  color: #86efac;
+  color: var(--lc-emerald);
 }
 
 .bj__table-panel--lose .bj__result-banner,
 .bj__table-panel--bust .bj__result-banner {
-  border-color: rgba(239, 68, 68, 0.45);
+  border-color: var(--lc-ruby);
 }
 
 .bj__table-panel--lose .bj__result-text,
 .bj__table-panel--bust .bj__result-text {
-  color: #fca5a5;
+  color: var(--lc-ruby);
 }
 
 .bj__hand {
@@ -308,8 +308,8 @@
 }
 
 .bj__card--hidden {
-  background: linear-gradient(135deg, #1a3352 0%, #0c1929 50%, #1e3a5f 100%);
-  border: 2px solid rgba(245, 185, 66, 0.35);
+  background: linear-gradient(135deg, #5c1824 0%, #2a0e14 50%, #6e1d2c 100%);
+  border: 2px solid rgba(201, 168, 76, 0.4);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
@@ -333,14 +333,14 @@
 
 .bj__deal-btn {
   width: 100%;
-  min-height: 2.75rem;
+  min-height: var(--lc-target-min-desktop);
   font-family: var(--lc-font-display);
   font-weight: 700;
   font-size: 1rem;
   border: none;
   border-radius: var(--lc-radius-md);
   background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
-  color: #fff;
+  color: var(--lc-text-on-primary);
   cursor: pointer;
   transition: filter var(--lc-transition), transform var(--lc-transition-spring);
 }
@@ -372,7 +372,8 @@
 .bj__action-btn {
   /* AGENT.md §Accessibility — interactive action (Hit/Stand/Double/Split/Insurance)
      must hit 44px desktop. Was 2.5rem = 40px. */
-  min-height: 2.75rem;
+  min-height: var(--lc-target-min-desktop);
+  font-family: var(--lc-font-display);
   font-weight: 700;
   font-size: 0.9rem;
   border-radius: var(--lc-radius-sm);
@@ -400,9 +401,9 @@
 }
 
 .bj__action-btn--stand {
-  background: rgba(34, 197, 94, 0.15);
-  border-color: rgba(34, 197, 94, 0.4);
-  color: #86efac;
+  background: var(--lc-emerald-glow);
+  border-color: var(--lc-emerald);
+  color: var(--lc-emerald);
 }
 
 .bj__action-btn--double {
@@ -414,9 +415,9 @@
 
 .bj__action-btn--split {
   grid-column: span 2;
-  background: rgba(96, 165, 250, 0.12);
-  border-color: rgba(96, 165, 250, 0.45);
-  color: #93c5fd;
+  background: var(--lc-gold-glow);
+  border-color: var(--lc-gold-dim);
+  color: var(--lc-gold);
 }
 
 .bj__action-btn--insurance {
@@ -509,9 +510,9 @@
 
 .bj__history-chip--blackjack,
 .bj__history-chip--win {
-  border-color: rgba(34, 197, 94, 0.5);
-  color: #86efac;
-  background: rgba(34, 197, 94, 0.08);
+  border-color: var(--lc-emerald);
+  color: var(--lc-emerald);
+  background: var(--lc-emerald-glow);
 }
 
 .bj__history-chip--push {
@@ -522,9 +523,9 @@
 
 .bj__history-chip--lose,
 .bj__history-chip--bust {
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #fca5a5;
-  background: rgba(239, 68, 68, 0.06);
+  border-color: var(--lc-ruby);
+  color: var(--lc-ruby);
+  background: var(--lc-ruby-glow);
 }
 
 .bj__fairness {
@@ -714,7 +715,7 @@
 }
 
 .bj__deal-btn:focus-visible {
-  outline: 2px solid #fff;
+  outline: var(--lc-focus-outline);
   outline-offset: 2px;
 }
 
@@ -726,9 +727,9 @@
   animation: bj-table-celebrate-emerald 1.5s cubic-bezier(0.22, 0.61, 0.36, 1) 1;
 }
 @keyframes bj-table-celebrate-emerald {
-  0%   { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(34, 197, 94, 0.75), 0 8px 32px rgba(0, 0, 0, 0.25); }
-  40%  { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 4px rgba(34, 197, 94, 0.65), 0 0 32px 8px rgba(34, 197, 94, 0.45), 0 8px 32px rgba(0, 0, 0, 0.25); }
-  100% { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(34, 197, 94, 0.35), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  0%   { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(45, 184, 138, 0.75), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  40%  { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 4px rgba(45, 184, 138, 0.65), 0 0 32px 8px rgba(45, 184, 138, 0.45), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  100% { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(45, 184, 138, 0.35), 0 8px 32px rgba(0, 0, 0, 0.25); }
 }
 
 .bj__table-panel--lose,
@@ -736,9 +737,9 @@
   animation: bj-table-celebrate-ruby 1.5s cubic-bezier(0.22, 0.61, 0.36, 1) 1;
 }
 @keyframes bj-table-celebrate-ruby {
-  0%   { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(239, 68, 68, 0.65), 0 8px 32px rgba(0, 0, 0, 0.25); }
-  40%  { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 4px rgba(239, 68, 68, 0.55), 0 0 28px 6px rgba(239, 68, 68, 0.35), 0 8px 32px rgba(0, 0, 0, 0.25); }
-  100% { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(239, 68, 68, 0.25), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  0%   { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 0 rgba(212, 93, 106, 0.65), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  40%  { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 4px rgba(212, 93, 106, 0.55), 0 0 28px 6px rgba(212, 93, 106, 0.35), 0 8px 32px rgba(0, 0, 0, 0.25); }
+  100% { box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(212, 93, 106, 0.25), 0 8px 32px rgba(0, 0, 0, 0.25); }
 }
 
 .bj__table-panel--push {

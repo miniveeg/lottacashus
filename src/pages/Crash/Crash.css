@@ -45,6 +45,8 @@
 
 .crash__canvas-wrap {
   position: relative;
+  display: flex;
+  flex-direction: column;
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
@@ -162,9 +164,10 @@
 
 .crash__canvas {
   display: block;
+  flex: 1;
   width: 100%;
-  height: auto;
-  aspect-ratio: 600 / 320;
+  height: 100%;
+  min-height: 0;
 }
 
 .crash__multiplier-overlay {

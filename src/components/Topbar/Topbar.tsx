@@ -10,7 +10,7 @@ import { usePlayMode } from "../../contexts/PlayModeContext";
 import { useSidebar } from "../../contexts/SidebarContext";
 import { useToast } from "../../contexts/ToastContext";
 import { loginUrl, signupUrl } from "../../lib/authRedirect";
-import { formatUsd, formatCoins, coinsToUsd } from "../../lib/format";
+import { formatUsd, formatCoins, formatNumber, coinsToUsd } from "../../lib/format";
 import { analytics } from "../../lib/analytics";
 import { BrandLogo } from "../BrandLogo/BrandLogo";
 import { PRIMARY_SIDEBAR_ID } from "../AppShell/AppShell";
@@ -46,11 +46,13 @@ export function Topbar() {
   // Single balance: always SC (sweeps_coins)
   const activeBalance = !user ? 0 : (profile?.sweepsCoins ?? 0);
 
+  // formatCoins already appends " SC"; the chip has a separate SC label,
+  // so show the number only — otherwise guests read "SC 0.00 SC".
   const balanceDisplay = !user
-    ? formatCoins(0, coinType)
+    ? formatNumber(0)
     : profileLoading
       ? "…"
-      : formatCoins(activeBalance, coinType);
+      : formatNumber(activeBalance);
 
   const balanceUsd = coinsToUsd(activeBalance, coinType);
 

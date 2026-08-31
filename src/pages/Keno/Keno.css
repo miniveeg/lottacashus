@@ -136,11 +136,14 @@
   display: grid;
   /* auto-fill 8 columns; cells shrink as small as needed to fit the panel */
   grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: clamp(0.25rem, 0.5vw, 0.4rem);
-  /* Take up remaining flex space but never overflow */
+  gap: 0.4rem;
+  row-gap: 0.4rem;
+  /* Take remaining space but pack rows — stretch was creating ~90px gaps. */
   flex: 1;
   min-height: 0;
-  align-content: stretch;
+  align-content: center;
+  align-items: stretch;
+  justify-items: stretch;
 }
 
 /* On very small screens, drop to 5 columns only if the viewport is tiny */

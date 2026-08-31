@@ -1,5 +1,5 @@
 import { useRef, type ReactNode, type ForwardRefExoticComponent, type RefAttributes } from "react";
-import { motion, useInView, useReducedMotion, type Variants } from "framer-motion";
+import { motion, useReducedMotion, type Variants } from "framer-motion";
 import { fadeUpVariants } from "../../lib/motion";
 
 type ScrollRevealProps = {
@@ -30,11 +30,11 @@ type MotionTagComponent = ForwardRefExoticComponent<
 
 export function ScrollReveal({ children, className, delay = 0, as = "div" }: ScrollRevealProps) {
   const ref = useRef<HTMLElement | null>(null);
-  // `useInView` is built on `IntersectionObserver` (no scroll listener), so
-  // it is cheap to keep mounted even when reduced motion skips the actual
-  // animation. The hook must be called unconditionally per the Rules of
-  // Hooks; we ignore its return value on the reduced-motion path.
-  const inView = useInView(ref, { once: true, margin: "-8% 0px" });
+  // Cards used to start at opacity 0 via useInView({ margin: "-8% 0px" }).
+  // Overflow parents (`.app-shell` hidden + `.app-shell__main` scroll)
+  // meant the observer often never fired, so Home / Originals tables
+  // stayed invisible until a scroll that never came. Visible by default;
+  // reduced-motion still skips the fade entirely.
   const reduceMotion = useReducedMotion();
   const MotionTag = motion[as] as unknown as MotionTagComponent;
 
@@ -55,8 +55,8 @@ export function ScrollReveal({ children, className, delay = 0, as = "div" }: Scr
     <MotionTag
       ref={ref}
       className={className}
-      initial="hidden"
-      animate={inView ? "visible" : "hidden"}
+      initial={false}
+      animate="visible"
       variants={fadeUpVariants}
       custom={delay}
     >

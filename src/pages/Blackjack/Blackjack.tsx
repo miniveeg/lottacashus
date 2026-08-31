@@ -590,9 +590,31 @@ export function Blackjack() {
                 </div>
               </div>
             ) : (
-              <p className="bj__press-to-deal" role="note">
-                Press <kbd>Space</kbd> or tap <strong>Deal</strong> to begin
-              </p>
+              <div className="bj__table-play">
+                <div className="bj__hand bj__hand--dealer">
+                  <p className="bj__hand-label">
+                    Dealer <span className="bj__hand-total">—</span>
+                  </p>
+                  <div className="bj__cards" aria-hidden="true">
+                    <div className="bj__card bj__card--slot" />
+                    <div className="bj__card bj__card--slot" />
+                  </div>
+                </div>
+                <p className="bj__press-to-deal" role="note">
+                  Press <kbd>Space</kbd> or tap <strong>Deal</strong> to begin
+                </p>
+                <div className="bj__player-zone">
+                  <div className="bj__hand bj__hand--player">
+                    <p className="bj__hand-label">
+                      You <span className="bj__hand-total">—</span>
+                    </p>
+                    <div className="bj__cards" aria-hidden="true">
+                      <div className="bj__card bj__card--slot" />
+                      <div className="bj__card bj__card--slot" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </section>

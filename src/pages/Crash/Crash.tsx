@@ -65,11 +65,23 @@ function niceCeil(v: number): number {
 }
 function niceTicksUpTo(maxY: number, count = 5): number[] {
   if (maxY <= 1) return [1];
+  // Linear ticks while the chart lives near 1–5× so 1.0× sits on the
+  // floor and 2.0× is not clustered into the top 30% of a dead plot.
+  if (maxY <= 5) {
+    const step = maxY <= 2 ? 0.25 : 0.5;
+    const ticks: number[] = [];
+    for (let t = 1; t <= maxY + 1e-9; t += step) {
+      ticks.push(Number(t.toFixed(2)));
+    }
+    if (ticks[ticks.length - 1] !== maxY) ticks.push(maxY);
+    return ticks;
+  }
   const exp = Math.log10(maxY);
-  const ticks: number[] = [];
-  for (let i = 0; i < count; i++) {
+  const ticks: number[] = [1];
+  for (let i = 1; i < count; i++) {
     const v = (i / (count - 1)) * exp;
-    ticks.push(niceCeil(Math.pow(10, v)));
+    const snapped = niceCeil(Math.pow(10, v));
+    if (snapped > 1) ticks.push(snapped);
   }
   return Array.from(new Set(ticks)).sort((a, b) => a - b);
 }

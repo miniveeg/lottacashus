@@ -59,7 +59,7 @@ export default function Slots() {
   const canPlay = useCanPlay();
 
   const [wager, setWager] = useState(1);
-  const [wagerInput, setWagerInput] = useState("1");
+  const [wagerInput, setWagerInput] = useState("1.00");
   const [rolling, setRolling] = useState(false);
   const [reels, setReels] = useState<number[]>([-1, -1, -1]);
   const [reelStates, setReelStates] = useState<ReelState[]>(["idle", "idle", "idle"]);
@@ -147,12 +147,12 @@ export default function Slots() {
     const parsed = parseFloat(value);
     if (!Number.isFinite(parsed) || parsed <= 0) {
       setWager(1);
-      setWagerInput("1");
+      setWagerInput("1.00");
     } else {
       const maxWager = SC_MAX_WAGER;
       const clamped = Math.min(Math.max(parsed, 1), maxWager);
       setWager(clamped);
-      setWagerInput(String(clamped));
+      setWagerInput(clamped.toFixed(2));
     }
   }, []);
 
@@ -319,7 +319,7 @@ export default function Slots() {
           e.preventDefault();
           const half = Math.max(wagerRef.current / 2, 1);
           setWager(half);
-          setWagerInput(String(half));
+          setWagerInput(half.toFixed(2));
         }
         return;
       }
@@ -418,13 +418,7 @@ export default function Slots() {
 
           {reels.every((r) => r < 0) && !rolling && (
             <p className="slots__press-to-spin" role="note">
-              {canPlay ? (
-                <>
-                  Press <kbd>Space</kbd> or tap <strong>Spin</strong> to play
-                </>
-              ) : (
-                <>Log in to spin</>
-              )}
+              Press <kbd>Space</kbd> or tap <strong>Spin</strong> to play
             </p>
           )}
 
@@ -465,18 +459,18 @@ export default function Slots() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") applyWager(wagerInput);
                     }}
-                    disabled={rolling || !canPlay}
+                    disabled={rolling}
                     aria-label={`Wager amount in ${coinLabel}`}
                   />
                   <button
                     type="button"
                     className="game-controls__wager-adj"
-                    disabled={rolling || !canPlay}
+                    disabled={rolling}
                     onClick={() => {
                       const half = wager / 2;
                       const clamped = Math.max(half, 1);
                       setWager(clamped);
-                      setWagerInput(String(clamped));
+                      setWagerInput(clamped.toFixed(2));
                     }}
                     aria-label="Half bet"
                   >
@@ -485,7 +479,7 @@ export default function Slots() {
                   <button
                     type="button"
                     className="game-controls__wager-adj"
-                    disabled={rolling || !canPlay}
+                    disabled={rolling}
                     onClick={() => applyWager(String(Math.min(wager * 2, activeBalance, wagerCap)))}
                     aria-label="Double bet"
                   >
@@ -495,7 +489,7 @@ export default function Slots() {
                     type="button"
                     className="game-controls__wager-adj game-controls__wager-adj--max"
                     onClick={() => applyWager(String(Math.min(wagerCap, activeBalance)))}
-                    disabled={rolling || !canPlay}
+                    disabled={rolling}
                     aria-label="Max bet"
                   >
                     Max

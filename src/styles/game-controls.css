@@ -2,7 +2,8 @@
 
 .game-controls {
   min-width: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Shared game-page subtitle style. Game pages previously declared their own
@@ -104,7 +105,7 @@
 
 .game-controls__wager-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 2.75rem 2.75rem 3.25rem;
+  grid-template-columns: minmax(0, 1fr) 2.75rem 2.75rem minmax(3.4rem, auto);
   gap: 0.4rem;
   width: 100%;
   align-items: stretch;
@@ -265,6 +266,7 @@
   color: var(--lc-text-on-primary);
   border-color: transparent;
   box-shadow: 0 2px 10px var(--lc-crimson-glow);
+  white-space: nowrap;
 }
 
 .game-controls__wager-adj--max:hover:not(:disabled) {

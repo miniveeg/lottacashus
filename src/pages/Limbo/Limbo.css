@@ -37,17 +37,23 @@
 
 .limbo__rocket-stage {
   width: 100%;
-  max-width: 380px;
+  max-width: none;
+  flex: 1 1 auto;
+  min-height: min(42vh, 420px);
+  height: 100%;
   background: var(--lc-bg-panel);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-lg);
   padding: var(--lc-spacing-2);
   overflow: hidden;
+  display: flex;
+  align-items: stretch;
 }
 
 .limbo__rocket-svg {
   width: 100%;
-  height: auto;
+  height: 100%;
+  min-height: min(42vh, 420px);
   display: block;
 }
 

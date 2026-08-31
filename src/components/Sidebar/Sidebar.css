@@ -47,8 +47,14 @@
   flex-direction: column;
 }
 
-.sidebar__body > nav,
+.sidebar__body > nav { flex: 0 0 auto; }
 .sidebar__body > .sidebar-chat { flex: 1; min-height: 0; }
+
+@media (max-height: 1100px) {
+  .sidebar__section { padding: 0.4rem 0.55rem; }
+  .sidebar__link { padding: 0.48rem 0.7rem; }
+  .sidebar__label { padding: 0 0.55rem 0.35rem; }
+}
 
 .sidebar__section { padding: 0.65rem 0.55rem; }
 .sidebar--chat .sidebar__section { display: none; }

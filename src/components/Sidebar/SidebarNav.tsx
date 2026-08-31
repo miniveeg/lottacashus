@@ -90,7 +90,7 @@ function NavLink({ item }: { item: NavItem }) {
 export function SidebarNav() {
   const { profile } = useProfile();
   const { collapsed } = useSidebar();
-  const [legalOpen, setLegalOpen] = useState(true);
+  const [legalOpen, setLegalOpen] = useState(false);
 
   const legalItems: NavItem[] = profile?.isAdmin
     ? [...legalNav, { icon: "admin", label: "Admin", href: "/admin" }]

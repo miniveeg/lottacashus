@@ -93,9 +93,10 @@
   align-items: center;
   justify-content: center;
   min-height: inherit;
+  height: 100%;
   padding: 2rem 1.5rem 2.5rem;
   width: 100%;
-  max-width: min(640px, 100%);
+  max-width: none;
   margin: 0 auto;
 }
 
@@ -640,6 +641,16 @@
 /* Idle hint shown on the felt table when no hand is in progress. Replaces
    the muted .bj__hint-center with a kbd-styled "Press Space or tap Deal"
    callout, mirroring the Keno/Slots/Limbo idiom. */
+.bj__card--slot {
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px dashed rgba(245, 185, 66, 0.28);
+  box-shadow: none;
+  animation: none;
+}
+.bj__card--slot::after {
+  content: none;
+}
+
 .bj__press-to-deal {
   text-align: center;
   color: rgba(255, 255, 255, 0.55);
@@ -742,11 +753,14 @@
    chip. Two variants: default (wager + deal) and --actions (in-hand). */
 .bj__hotkey-hint {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--lc-text-muted);
   letter-spacing: 0.02em;
   text-align: center;
   padding: var(--lc-spacing-1) var(--lc-spacing-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .bj__hotkey-hint--actions {

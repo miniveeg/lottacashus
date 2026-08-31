@@ -184,7 +184,7 @@ a:focus:not(:focus-visible),
 
 .lc-hotkey-hint {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   gap: var(--lc-spacing-2) var(--lc-spacing-4);
   margin: var(--lc-spacing-3) 0 0;
@@ -195,6 +195,7 @@ a:focus:not(:focus-visible),
   letter-spacing: 0.01em;
   border-top: 1px dashed var(--lc-border);
   text-align: center;
+  overflow: hidden;
 }
 
 .lc-hotkey-hint > span {
@@ -202,6 +203,8 @@ a:focus:not(:focus-visible),
   align-items: center;
   gap: 0.35rem;
   min-width: 0;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .lc-hotkey-hint__combo {

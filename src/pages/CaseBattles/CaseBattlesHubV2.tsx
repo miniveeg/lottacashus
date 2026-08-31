@@ -29,7 +29,7 @@ export function CaseBattlesHubV2() {
       <header className="cb-hub__header">
         <div>
           <h1 className="cb-hub__title">
-            Case Battles <span className="cb-hub__coin-badge">{coinLabel}</span>
+            Case Battles
           </h1>
           <p className="cb-hub__subtitle">
             Open cases head-to-head. Highest total value wins the pot.

@@ -18,6 +18,7 @@ import {
   setLimboClientSeed,
 } from "../../lib/limbo";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
+import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
 import "../../styles/game-controls.css";
 import "./Limbo.css";
 
@@ -148,11 +149,8 @@ export function Limbo() {
         if (!isRolling) {
           e.preventDefault();
           const prof = profileRef.current;
-          const activeBalance =
-            coinTypeRef.current === "sweeps_coins"
-              ? (prof?.sweepsCoins ?? 0)
-              : (prof?.balance ?? 0);
-          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          const activeBalance = getActiveBalance(prof);
+          const cap = SC_MAX_WAGER;
           const doubled = Math.min(wagerRef.current * 2, activeBalance, cap);
           if (doubled >= 1) {
             setWager(doubled);
@@ -165,11 +163,8 @@ export function Limbo() {
         if (!isRolling) {
           e.preventDefault();
           const prof = profileRef.current;
-          const activeBalance =
-            coinTypeRef.current === "sweeps_coins"
-              ? (prof?.sweepsCoins ?? 0)
-              : (prof?.balance ?? 0);
-          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          const activeBalance = getActiveBalance(prof);
+          const cap = SC_MAX_WAGER;
           const max = Math.min(cap, activeBalance);
           if (max >= 1) {
             setWager(max);
@@ -185,7 +180,7 @@ export function Limbo() {
   }, []);
 
   const applyWager = (value: number) => {
-    const maxBet = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+    const maxBet = SC_MAX_WAGER;
     const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
@@ -211,10 +206,7 @@ export function Limbo() {
     const targetNow = targetRef.current;
     const coinNow = coinTypeRef.current;
     const profNow = profileRef.current;
-    const activeBalanceNow =
-      coinNow === "sweeps_coins"
-        ? (profNow?.sweepsCoins ?? 0)
-        : (profNow?.balance ?? 0);
+    const activeBalanceNow = getActiveBalance(profNow);
     if (activeBalanceNow < wagerNow) {
       setError("Insufficient balance.");
       return;
@@ -472,8 +464,8 @@ export function Limbo() {
                 disabled={rolling}
               />
               <button type="button" className="game-controls__wager-adj" onClick={() => applyWager(wager / 2)} disabled={rolling} aria-label="Half bet">½</button>
-              <button type="button" className="game-controls__wager-adj" onClick={() => { const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0); applyWager(Math.min(wager * 2, activeBalance)); }} disabled={rolling} aria-label="Double bet">2×</button>
-              <button type="button" className="game-controls__wager-adj game-controls__wager-adj--max" onClick={() => { const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0); applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance)); }} disabled={rolling} aria-label="Max bet">MAX</button>
+              <button type="button" className="game-controls__wager-adj" onClick={() => { const activeBalance = getActiveBalance(profile); applyWager(Math.min(wager * 2, activeBalance)); }} disabled={rolling} aria-label="Double bet">2×</button>
+              <button type="button" className="game-controls__wager-adj game-controls__wager-adj--max" onClick={() => { const activeBalance = getActiveBalance(profile); applyWager(Math.min(SC_MAX_WAGER, activeBalance)); }} disabled={rolling} aria-label="Max bet">MAX</button>
             </div>
           </div>
 

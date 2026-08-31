@@ -7,12 +7,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
   width: 100%;
-  padding: 0.75rem 1.25rem;
+  min-height: var(--lc-target-min-desktop);
+  padding: var(--lc-spacing-3) var(--lc-spacing-5);
   font-family: var(--lc-font-display);
   font-weight: 800;
-  font-size: 0.95rem;
+  font-size: var(--lc-text-sm);
   letter-spacing: 0.02em;
   border-radius: var(--lc-radius-md);
   border: 1px solid transparent;
@@ -26,11 +27,15 @@
   cursor: not-allowed;
 }
 
-/* Primary = crimson brand (matches .lc-btn--primary so existing game
-   pages render the same color when swapped in). */
+.bet-btn:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
+}
+
+/* Primary = gold brand (matches .lc-btn--primary). */
 .bet-btn--primary {
   background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
-  color: #fff;
+  color: var(--lc-text-on-primary);
   box-shadow: 0 2px 16px var(--lc-crimson-glow), var(--lc-shadow-inset);
 }
 
@@ -40,10 +45,14 @@
   box-shadow: 0 6px 28px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
 }
 
+.bet-btn--primary:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
 /* Win = emerald for cash-out variants. */
 .bet-btn--win {
   background: linear-gradient(135deg, var(--lc-emerald), var(--lc-emerald-dim));
-  color: #042014;
+  color: var(--lc-text-on-primary);
   box-shadow: 0 2px 16px var(--lc-emerald-glow), var(--lc-shadow-inset);
 }
 
@@ -55,8 +64,8 @@
 
 /* Danger = ruby for high-risk situations (cashout-failed, etc). */
 .bet-btn--danger {
-  background: linear-gradient(135deg, #ff5577, #c71f3a);
-  color: #fff;
+  background: linear-gradient(135deg, var(--lc-ruby), var(--lc-ruby));
+  color: var(--lc-text-primary);
   box-shadow: 0 2px 16px var(--lc-ruby-glow), var(--lc-shadow-inset);
 }
 
@@ -88,4 +97,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .bet-btn__spinner { animation: none; }
+  .bet-btn--primary:hover:not(:disabled),
+  .bet-btn--win:hover:not(:disabled),
+  .bet-btn--primary:active:not(:disabled) {
+    transform: none;
+  }
 }

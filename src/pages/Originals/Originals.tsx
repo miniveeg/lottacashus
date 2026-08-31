@@ -45,7 +45,7 @@ function FeaturedCard({ game }: { game: OriginalGame }) {
           <div className="originals__featured-meta">
             {game.rtp && <span className="originals__meta-chip">{game.rtp}</span>}
             {game.maxWin && <span className="originals__meta-chip originals__meta-chip--win">Max {game.maxWin}</span>}
-            {game.minBet != null && <span className="originals__meta-chip">Min {game.minBet} GC</span>}
+            {game.minBet != null && <span className="originals__meta-chip">Min {game.minBet} SC</span>}
             {game.difficulty != null && <DifficultyMeter level={game.difficulty} />}
           </div>
           <span className="originals__featured-cta">
@@ -113,8 +113,8 @@ export function Originals() {
           Eight games. One wallet.
         </motion.h1>
         <motion.p className="lc-page__subtitle originals__lead" variants={fadeUpVariants}>
-          Provably fair, built in-house, and tied to a single balance. Wager in Gold Coins for fun or
-          Sweeps Coins for real crypto redemptions. Your level climbs across every game.
+          Provably fair, built in-house, and tied to a single SC stack. Same chips on every table.
+          Your level climbs across every game.
         </motion.p>
       </motion.header>
 
@@ -126,8 +126,8 @@ export function Originals() {
           <span className="originals__stat-label">House games</span>
         </div>
         <div className="originals__stat">
-          <span className="originals__stat-num">96.5%</span>
-          <span className="originals__stat-label">RTP (most games)</span>
+          <span className="originals__stat-num">Fair</span>
+          <span className="originals__stat-label">Provably fair</span>
         </div>
         <div className="originals__stat">
           <span className="originals__stat-num">1M×</span>

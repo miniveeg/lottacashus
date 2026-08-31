@@ -63,14 +63,13 @@ export function CaseBattlesHubV2() {
         ) : battles.length === 0 ? (
           <div className="cb-hub__empty">
             <p>
-              No active <strong>{coinLabel}</strong> battles right now.
+              No open battles on the floor.
             </p>
             <p className="cb-hub__empty-hint">
-              Switch currency in the top bar to see others,
-              or open one yourself.
+              Stack cases, pick a mode, and put a pot in play.
             </p>
             <Link to="/case-battles/create" className="cb-hub__create-btn">
-              Create the first {coinLabel} battle
+              Create a battle
             </Link>
           </div>
         ) : (

@@ -93,20 +93,20 @@
   overflow: hidden;
   padding: var(--lc-spacing-6) var(--lc-spacing-6);
   background:
-    radial-gradient(ellipse 90% 60% at 80% -10%, rgba(232, 37, 76, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 70% 50% at 10% 110%, rgba(139, 92, 246, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 60% at 80% -10%, var(--lc-crimson-glow-strong) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 10% 110%, var(--lc-violet-glow) 0%, transparent 55%),
     var(--lc-bg-glass);
   backdrop-filter: blur(18px);
   border: 1px solid var(--lc-border-accent);
   border-radius: var(--lc-radius-lg);
-  box-shadow: var(--lc-shadow-md), 0 0 48px rgba(232, 37, 76, 0.08);
+  box-shadow: var(--lc-shadow-md), 0 0 48px var(--lc-crimson-glow);
   transition: border-color var(--lc-transition), box-shadow var(--lc-transition), transform var(--lc-transition);
   min-width: 0;
 }
 
 .originals__featured-link:hover {
   border-color: var(--lc-crimson);
-  box-shadow: var(--lc-shadow-lg), 0 0 64px rgba(232, 37, 76, 0.16);
+  box-shadow: var(--lc-shadow-lg), 0 0 64px var(--lc-crimson-glow-strong);
   transform: translateY(-2px);
 }
 
@@ -116,7 +116,7 @@
   right: -10%;
   width: 60%;
   height: 180%;
-  background: radial-gradient(ellipse at center, rgba(232, 37, 76, 0.12) 0%, transparent 60%);
+  background: radial-gradient(ellipse at center, var(--lc-crimson-glow) 0%, transparent 60%);
   pointer-events: none;
   animation: originals-glow-drift 12s ease-in-out infinite alternate;
 }
@@ -222,7 +222,7 @@
 
 .originals__card:hover {
   border-color: var(--lc-border-accent);
-  box-shadow: var(--lc-shadow-md), 0 0 28px rgba(232, 37, 76, 0.1);
+  box-shadow: var(--lc-shadow-md), 0 0 28px var(--lc-crimson-glow);
   transform: translateY(-2px);
 }
 
@@ -239,8 +239,8 @@
   width: var(--lc-spacing-10);
   height: var(--lc-spacing-10);
   color: var(--lc-crimson-soft);
-  background: rgba(232, 37, 76, 0.1);
-  border: 1px solid rgba(232, 37, 76, 0.22);
+  background: var(--lc-crimson-glow);
+  border: 1px solid var(--lc-border-accent);
   border-radius: var(--lc-radius-md);
 }
 
@@ -314,8 +314,8 @@
 
 .originals__meta-chip--win {
   color: var(--lc-amber);
-  background: rgba(245, 185, 66, 0.08);
-  border-color: rgba(245, 185, 66, 0.22);
+  background: var(--lc-gold-glow);
+  border-color: var(--lc-border-amber);
 }
 
 /* ── Badges ── */
@@ -326,9 +326,9 @@
   letter-spacing: 0.06em;
   padding: var(--lc-spacing-1) var(--lc-spacing-3);
   border-radius: var(--lc-radius-pill);
-  background: rgba(0, 232, 122, 0.12);
+  background: var(--lc-emerald-glow);
   color: var(--lc-emerald);
-  border: 1px solid rgba(0, 232, 122, 0.3);
+  border: 1px solid var(--lc-emerald-dim);
 }
 
 .originals__badge--soon {
@@ -338,9 +338,9 @@
 }
 
 .originals__badge--featured {
-  background: rgba(232, 37, 76, 0.14);
+  background: var(--lc-crimson-glow);
   color: var(--lc-crimson-soft);
-  border-color: rgba(232, 37, 76, 0.32);
+  border-color: var(--lc-border-accent);
 }
 
 /* ── Difficulty meter ── */

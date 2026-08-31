@@ -15,6 +15,7 @@ import {
 import { formatCoins } from "../../lib/format";
 import { fetchKenoPfState, placeKenoBet, setKenoClientSeed } from "../../lib/keno";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
+import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
 import "../../styles/game-controls.css";
 import "./Keno.css";
 
@@ -168,10 +169,7 @@ export function Keno() {
       if (k === "]") {
         if (!isDrawing) {
           e.preventDefault();
-          const activeBalance =
-            coinTypeRef.current === "sweeps_coins"
-              ? profileRef.current?.sweepsCoins ?? 0
-              : profileRef.current?.balance ?? 0;
+          const activeBalance = getActiveBalance(profileRef.current);
           applyWager(Math.min(wagerRef.current * 2, activeBalance));
         }
         return;
@@ -301,7 +299,7 @@ export function Keno() {
 
   const applyWager = (value: number) => {
     // Read coin type from ref so this stays correct from the hotkey.
-    const maxBet = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+    const maxBet = SC_MAX_WAGER;
     const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
@@ -330,7 +328,7 @@ export function Keno() {
     }
 
     const activeBalance =
-      coinNow === "sweeps_coins" ? (profNow?.sweepsCoins ?? 0) : (profNow?.balance ?? 0);
+      getActiveBalance(profNow);
     if (wagerNow > activeBalance) {
       setError("Insufficient balance.");
       return;
@@ -597,7 +595,7 @@ export function Keno() {
                 type="button"
                 className="game-controls__wager-adj"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  const activeBalance = getActiveBalance(profile);
                   applyWager(Math.min(wager * 2, activeBalance));
                 }}
                 disabled={drawing}
@@ -609,8 +607,8 @@ export function Keno() {
                 type="button"
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
+                  const activeBalance = getActiveBalance(profile);
+                  applyWager(Math.min(SC_MAX_WAGER, activeBalance));
                 }}
                 disabled={drawing}
                 aria-label="Max bet"

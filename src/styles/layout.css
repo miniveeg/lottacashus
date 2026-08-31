@@ -118,7 +118,7 @@
   z-index: 1000;
   padding: 0.6rem 1rem;
   background: var(--lc-crimson);
-  color: #fff;
+  color: var(--lc-text-on-primary);
   font-family: var(--lc-font-body);
   font-weight: 700;
   font-size: 0.9rem;
@@ -132,7 +132,7 @@
 .app-shell__skip-link:focus-visible {
   transform: translateY(0);
   pointer-events: auto;
-  outline: 2px solid #fff;
+  outline: 2px solid var(--lc-text-on-primary);
   outline-offset: 2px;
   box-shadow: var(--lc-shadow-crimson);
 }

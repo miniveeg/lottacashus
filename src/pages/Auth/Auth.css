@@ -237,6 +237,11 @@
   transition: transform var(--lc-transition-spring), filter var(--lc-transition), box-shadow var(--lc-transition);
 }
 
+.auth-submit:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
+}
+
 .auth-submit:hover:not(:disabled) {
   transform: translateY(-1px);
   filter: brightness(1.06);

@@ -11,7 +11,7 @@ export type OriginalGame = {
   hook?: string;
   /** Difficulty 1–5 (shown as a meter). */
   difficulty?: 1 | 2 | 3 | 4 | 5;
-  /** Min bet in GC. */
+  /** Min bet in SC. */
   minBet?: number;
   /** Max payout multiplier (e.g. "1,000,000×"). */
   maxWin?: string;
@@ -111,7 +111,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
   {
     id: "slots",
     name: "Slots",
-    description: "Three reels, seven symbols. Crown pays 100×, Star pays 35×. Match three to win.",
+    description: "Three reels, seven symbols. Crown pays 190×, Star pays 80×. Match three to win.",
     rtp: "Provably fair",
     href: "/slots",
     live: true,
@@ -119,7 +119,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
     hook: "Match three. Crown is king.",
     difficulty: 1,
     minBet: 1,
-    maxWin: "100×",
+    maxWin: "190×",
   },
 ];
 

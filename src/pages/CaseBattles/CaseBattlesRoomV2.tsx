@@ -6,7 +6,6 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { Seo } from "../../components/Seo/Seo";
-import { GameGuestBanner } from "../../components/GameGuestBanner/GameGuestBanner";
 import { useCanPlay } from "../../lib/canPlay";
 import { useBattleSubscription } from "./useBattleSubscription";
 import { CaseBattleArenaV2 } from "./CaseBattleArenaV2";
@@ -217,7 +216,6 @@ export function CaseBattlesRoomV2() {
         description="Live Case Battle room. Watch the reels spin in real time."
         path={`/case-battles/${battleId}`}
       />
-      <GameGuestBanner />
 
       <div className="cb-room__topbar">
         <Link to="/case-battles" className="cb-room__back">

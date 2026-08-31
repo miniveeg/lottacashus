@@ -26,13 +26,14 @@ interface BetButtonProps
   /** Override busy / blocked button labels. */
   busyLabel?: string;
   exceedsCapLabel?: string;
-  /** Alternative action color set. Default: "primary" (crimson brand). */
+  /** Alternative action color set. Default: "primary" (gold brand). */
   variant?: Variant;
 }
 
 /**
  * Canonical primary action button for every game page.
- * Guests / logged-out users always see a disabled control (no popup).
+ * Local/demo play stays enabled. Real-money guests see "Log in to play"
+ * (handlers also call realMoneyBetError on the bet path).
  */
 export function BetButton({
   label,

@@ -18,6 +18,7 @@ import {
   startMinesGame,
 } from "../../lib/mines";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
+import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
 import "../../styles/game-controls.css";
 import "./Mines.css";
 
@@ -193,9 +194,7 @@ export function Mines() {
         if (!isPlaying && !isBusy) {
           e.preventDefault();
           const activeBalance =
-            coinTypeRef.current === "sweeps_coins"
-              ? profileRef.current?.sweepsCoins ?? 0
-              : profileRef.current?.balance ?? 0;
+            getActiveBalance(profileRef.current);
           applyWager(Math.min(wagerRef.current * 2, activeBalance));
         }
         return;
@@ -217,7 +216,7 @@ export function Mines() {
   };
 
   const applyWager = (value: number) => {
-    const maxWager = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    const maxWager = SC_MAX_WAGER;
     const v = Math.max(1, Math.min(maxWager, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
@@ -237,7 +236,7 @@ export function Mines() {
     const coinNow = coinTypeRef.current;
     const profNow = profileRef.current;
     const activeBalance =
-      coinNow === "sweeps_coins" ? (profNow?.sweepsCoins ?? 0) : (profNow?.balance ?? 0);
+      getActiveBalance(profNow);
     if (wagerNow > activeBalance) {
       setError("Insufficient balance.");
       return;
@@ -564,7 +563,7 @@ export function Mines() {
                 type="button"
                 className="game-controls__wager-adj"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  const activeBalance = getActiveBalance(profile);
                   applyWager(Math.min(wager * 2, activeBalance));
                 }}
                 disabled={playing || busy}
@@ -576,8 +575,8 @@ export function Mines() {
                 type="button"
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  const maxWager = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+                  const activeBalance = getActiveBalance(profile);
+                  const maxWager = SC_MAX_WAGER;
                   applyWager(Math.min(maxWager, activeBalance));
                 }}
                 disabled={playing || busy}

@@ -1,11 +1,14 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Wallet, Zap, TrendingUp, Dices } from "lucide-react";
+import { Link } from "react-router-dom";
 import { MotionLink } from "../../components/ui/MotionLink";
 import { ScrollReveal } from "../../components/ui/ScrollReveal";
 import { TiltCard } from "../../components/ui/TiltCard";
 import { PageLayout } from "../../components/PageLayout/PageLayout";
 import { useAuth } from "../../contexts/AuthContext";
 import { Seo } from "../../components/Seo/Seo";
+import { ORIGINAL_GAMES } from "../../content/originals";
+import { GAME_ICONS } from "../../components/BrandGameIcons";
 import { fadeUpVariants, staggerContainer } from "../../lib/motion";
 import "./Home.css";
 
@@ -33,8 +36,9 @@ const pillars = [
 ];
 
 export function Home() {
-  const { user, loading } = useAuth();
+  const { user, loading, isGuest } = useAuth();
   const reduceMotion = useReducedMotion();
+  const signedIn = Boolean(user) && !isGuest;
 
   return (
     <PageLayout variant="default" className="home" hideHeader>
@@ -59,13 +63,13 @@ export function Home() {
             back to your own wallet. Every wager raises your level — permanently.
           </motion.p>
           <motion.div className="home__cta" variants={fadeUpVariants}>
-            {!loading && user ? (
+            {!loading && signedIn ? (
               <>
                 <MotionLink to="/deposit" variant="primary" glow>
-                  Deposit & Play
+                  Buy chips
                 </MotionLink>
                 <MotionLink to="/originals" variant="secondary">
-                  Originals
+                  Sit a table
                 </MotionLink>
                 <MotionLink to="/profile" variant="ghost">
                   Your profile
@@ -79,6 +83,9 @@ export function Home() {
                 <MotionLink to="/login" variant="secondary">
                   Log in
                 </MotionLink>
+                <MotionLink to="/originals" variant="ghost">
+                  Browse tables
+                </MotionLink>
               </>
             )}
             <MotionLink to="/help" variant="ghost">
@@ -88,10 +95,34 @@ export function Home() {
         </motion.div>
       </section>
 
-      <ScrollReveal className="home__intro">
-        <h2 className="home__section-title">From deposit to cash-out</h2>
+      <ScrollReveal className="home__floor">
+        <p className="home__floor-eyebrow">The floor</p>
+        <h2 className="home__section-title">Eight tables. One stack.</h2>
         <p className="home__section-text">
-          Deposit crypto, get SC credited at 100 SC per $1, and play any game. Redeem SC for crypto
+          Same chips on every original. Sit down, place a bet, cash out — or walk.
+        </p>
+        <div className="home__tables">
+          {ORIGINAL_GAMES.map((game) => {
+            const Icon = GAME_ICONS[game.id];
+            return (
+              <Link key={game.id} to={game.href} className="home__table">
+                <span className="home__table-icon" aria-hidden="true">
+                  {Icon ? <Icon size={22} /> : null}
+                </span>
+                <span className="home__table-copy">
+                  <span className="home__table-name">{game.name}</span>
+                  <span className="home__table-hook">{game.hook}</span>
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </ScrollReveal>
+
+      <ScrollReveal className="home__intro">
+        <h2 className="home__section-title">From chips in to cash out</h2>
+        <p className="home__section-text">
+          Deposit crypto, get SC credited at 100 SC per $1, and play any table. Redeem SC for crypto
           back to your wallet. Bets, level, deposits, and withdrawals all live in Settings.
         </p>
       </ScrollReveal>

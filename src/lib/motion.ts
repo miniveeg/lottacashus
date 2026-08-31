@@ -40,8 +40,8 @@ export const staggerContainer: Variants = {
 export const glowPulse = {
   scale: [1, 1.02, 1],
   boxShadow: [
-    "0 0 20px rgba(220, 20, 60, 0.15)",
-    "0 0 32px rgba(220, 20, 60, 0.35)",
-    "0 0 20px rgba(220, 20, 60, 0.15)",
+    "0 0 20px var(--lc-crimson-glow)",
+    "0 0 32px var(--lc-crimson-glow-strong)",
+    "0 0 20px var(--lc-crimson-glow)",
   ],
 };

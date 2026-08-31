@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { useToast } from "../../contexts/ToastContext";
@@ -9,12 +10,13 @@ import {
   type SlotsBetResult,
 } from "../../lib/slots";
 import { useCanPlay } from "../../lib/canPlay";
+import { realMoneyBetError } from "../../lib/assertCanPlay";
+import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
 import { SlotSymbol } from "./SlotSymbols";
 import { Seo } from "../../components/Seo/Seo";
 import { FormAlert } from "../../components/FormAlert/FormAlert";
 import { NeedFundsHint } from "../../components/NeedFundsHint/NeedFundsHint";
 import { BetButton } from "../../components/BetButton/BetButton";
-import { GameGuestBanner } from "../../components/GameGuestBanner/GameGuestBanner";
 import "../../styles/game-controls.css";
 import "./Slots.css";
 
@@ -50,6 +52,7 @@ const SLOTS_PAYTABLE: { id: number; mult: number }[] = [
 type ReelState = "idle" | "spinning" | "landed";
 
 export default function Slots() {
+  const { user, isGuest } = useAuth();
   const { profile, refreshProfile } = useProfile();
   const { coinType, label: coinLabel } = usePlayMode();
   const toast = useToast();
@@ -78,6 +81,8 @@ export default function Slots() {
   const cancelledRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
   const canPlayRef = useRef(canPlay);
+  const userRef = useRef(user);
+  const isGuestRef = useRef(isGuest);
 
   const wagerRef = useRef(1);
   const coinTypeRef = useRef<string>("balance");
@@ -89,7 +94,9 @@ export default function Slots() {
 
   useEffect(() => {
     canPlayRef.current = canPlay;
-  }, [canPlay]);
+    userRef.current = user;
+    isGuestRef.current = isGuest;
+  }, [canPlay, user, isGuest]);
 
   useEffect(() => {
     const handleVisibility = () => {
@@ -121,11 +128,9 @@ export default function Slots() {
     landingTimersRef.current = [];
   }, []);
 
-  const activeBalance = useMemo(() => {
-    return coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-  }, [coinType, profile]);
+  const activeBalance = useMemo(() => getActiveBalance(profile), [profile]);
 
-  const wagerCap = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+  const wagerCap = SC_MAX_WAGER;
 
   useEffect(() => {
     if (!canPlay) return;
@@ -144,7 +149,7 @@ export default function Slots() {
       setWager(1);
       setWagerInput("1");
     } else {
-      const maxWager = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+      const maxWager = SC_MAX_WAGER;
       const clamped = Math.min(Math.max(parsed, 1), maxWager);
       setWager(clamped);
       setWagerInput(String(clamped));
@@ -195,15 +200,16 @@ export default function Slots() {
 
   async function handleSpin() {
     if (rollingRef.current) return;
-    if (!canPlayRef.current) return;
+    const authErr = realMoneyBetError(userRef.current, isGuestRef.current);
+    if (authErr) {
+      setError(authErr);
+      return;
+    }
 
     const wagerNow = wagerRef.current;
     const coinNow = coinTypeRef.current;
     const profNow = profileRef.current;
-    const activeBalanceNow =
-      coinNow === "sweeps_coins"
-        ? (profNow?.sweepsCoins ?? 0)
-        : (profNow?.balance ?? 0);
+    const activeBalanceNow = getActiveBalance(profNow);
 
     setError(null);
     setShowResult(false);
@@ -321,11 +327,8 @@ export default function Slots() {
         if (!isRolling) {
           e.preventDefault();
           const prof = profileRef.current;
-          const activeBalance =
-            coinTypeRef.current === "sweeps_coins"
-              ? prof?.sweepsCoins ?? 0
-              : prof?.balance ?? 0;
-          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          const activeBalance = getActiveBalance(prof);
+          const cap = SC_MAX_WAGER;
           const doubled = Math.min(wagerRef.current * 2, activeBalance, cap);
           applyWager(String(Math.max(doubled, 1)));
         }
@@ -335,11 +338,8 @@ export default function Slots() {
         if (!isRolling) {
           e.preventDefault();
           const prof = profileRef.current;
-          const activeBalance =
-            coinTypeRef.current === "sweeps_coins"
-              ? prof?.sweepsCoins ?? 0
-              : prof?.balance ?? 0;
-          const cap = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+          const activeBalance = getActiveBalance(prof);
+          const cap = SC_MAX_WAGER;
           applyWager(String(Math.min(cap, activeBalance)));
         }
         return;
@@ -357,7 +357,6 @@ export default function Slots() {
         description="Three-reel provably fair slot machine. Match symbols to win — Crown pays 190×, Star pays 80×."
         path="/slots"
       />
-      <GameGuestBanner />
       <header className="lc-page__header">
         <h1 className="lc-page__title">Slots</h1>
         <p className="lc-page__subtitle">
@@ -549,9 +548,7 @@ export default function Slots() {
             onClick={handleSpin}
             busy={rolling}
             busyLabel="Spinning…"
-            label={canPlay ? "Spin" : "Log in to play"}
-            disabled={!canPlay}
-            title={!canPlay ? "Log in to play" : undefined}
+            label="Spin"
           />
 
           <NeedFundsHint />

@@ -21,6 +21,7 @@ import {
   type BlackjackActionResult,
 } from "../../lib/blackjack";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
+import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
 import "../../styles/game-controls.css";
 import "./Blackjack.css";
 
@@ -224,14 +225,10 @@ export function Blackjack() {
   useEffect(() => {
     function readSession() {
       const wagerNow = wagerRef.current;
-      const coinNow = coinTypeRef.current;
       const profNow = profileRef.current;
       const handNow = handRef.current;
-      const activeBalance =
-        coinNow === "sweeps_coins"
-          ? (profNow?.sweepsCoins ?? 0)
-          : (profNow?.balance ?? 0);
-      return { wagerNow, coinNow, profNow, handNow, activeBalance };
+      const activeBalance = getActiveBalance(profNow);
+      return { wagerNow, handNow, activeBalance };
     }
     function onKey(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -242,7 +239,7 @@ export function Blackjack() {
       if (onTextInput) return;
 
       const k = e.key.toLowerCase();
-      const { wagerNow, coinNow, handNow, activeBalance } = readSession();
+      const { wagerNow, handNow, activeBalance } = readSession();
       const isBusy = busyRef.current;
       const status = handNow?.status;
 
@@ -259,7 +256,7 @@ export function Blackjack() {
       if (k === "]") {
         if (isBusy || status === "player_turn" || status === "insurance_offer") return;
         e.preventDefault();
-        const cap = coinNow === "sweeps_coins" ? 100_000 : 10_000_000;
+        const cap = SC_MAX_WAGER;
         const doubled = Math.min(wagerNow * 2, activeBalance, cap);
         if (doubled >= 1) {
           setWager(doubled);
@@ -271,7 +268,7 @@ export function Blackjack() {
       if (k === "m") {
         if (isBusy || status === "player_turn" || status === "insurance_offer") return;
         e.preventDefault();
-        const cap = coinNow === "sweeps_coins" ? 100_000 : 10_000_000;
+        const cap = SC_MAX_WAGER;
         const max = Math.min(cap, activeBalance);
         if (max >= 1) {
           setWager(max);
@@ -366,7 +363,7 @@ export function Blackjack() {
 
   const applyWager = (value: number) => {
     // Read coin type from ref so this is safe from the hotkey's [] deps.
-    const maxBet = coinTypeRef.current === "sweeps_coins" ? 100_000 : 10_000_000;
+    const maxBet = SC_MAX_WAGER;
     const v = Math.max(1, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
@@ -412,10 +409,7 @@ export function Blackjack() {
     const wagerNow = wagerRef.current;
     const coinNow = coinTypeRef.current;
     const profNow = profileRef.current;
-    const activeBalanceNow =
-      coinNow === "sweeps_coins"
-        ? (profNow?.sweepsCoins ?? 0)
-        : (profNow?.balance ?? 0);
+    const activeBalanceNow = getActiveBalance(profNow);
     if (activeBalanceNow < wagerNow) {
       setError("Insufficient balance.");
       return;
@@ -636,7 +630,7 @@ export function Blackjack() {
                 type="button"
                 className="game-controls__wager-adj"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  const activeBalance = getActiveBalance(profile);
                   applyWager(Math.min(wager * 2, activeBalance));
                 }}
                 disabled={playing || busy}
@@ -648,8 +642,8 @@ export function Blackjack() {
                 type="button"
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  applyWager(Math.min(coinType === "sweeps_coins" ? 100_000 : 10_000_000, activeBalance));
+                  const activeBalance = getActiveBalance(profile);
+                  applyWager(Math.min(SC_MAX_WAGER, activeBalance));
                 }}
                 disabled={playing || busy}
                 aria-label="Max bet"
@@ -679,7 +673,7 @@ export function Blackjack() {
                   className="bj__action-btn bj__action-btn--insurance"
                   onClick={() => runAction("insurance", true)}
                   disabled={
-                    busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.insuranceAmount ?? 0)
+                    busy || (getActiveBalance(profile)) < (hand?.insuranceAmount ?? 0)
                   }
                 >
                   Insurance
@@ -717,7 +711,7 @@ export function Blackjack() {
                   type="button"
                   className="bj__action-btn bj__action-btn--double"
                   onClick={() => runAction("double")}
-                  disabled={busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.wager ?? 0)}
+                  disabled={busy || (getActiveBalance(profile)) < (hand?.wager ?? 0)}
                 >
                   Double
                 </button>
@@ -727,7 +721,7 @@ export function Blackjack() {
                   type="button"
                   className="bj__action-btn bj__action-btn--split"
                   onClick={() => runAction("split")}
-                  disabled={busy || (coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0)) < (hand?.wager ?? 0)}
+                  disabled={busy || (getActiveBalance(profile)) < (hand?.wager ?? 0)}
                 >
                   Split
                 </button>

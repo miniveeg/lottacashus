@@ -52,12 +52,12 @@
 
 /* Warning variant — e.g. Limbo max-payout-cap notice. */
 .game-controls__option-hint--warn {
-  margin-top: 0.35rem;
-  padding: 0.4rem 0.55rem;
+  margin-top: var(--lc-spacing-1);
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
   color: var(--lc-amber);
-  background: rgba(245, 185, 66, 0.08);
+  background: var(--lc-gold-glow);
   border-left: 2px solid var(--lc-amber);
-  border-radius: 0 4px 4px 0;
+  border-radius: 0 var(--lc-radius-sm) var(--lc-radius-sm) 0;
 }
 
 .game-controls__option .lc-select-root { width: 100%; }
@@ -140,22 +140,27 @@
 
 .game-controls__play {
   width: 100%;
-  margin-top: 0.85rem;
-  min-height: 3rem;
+  margin-top: var(--lc-spacing-4);
+  min-height: var(--lc-target-min-desktop);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: var(--lc-spacing-2);
   border-radius: var(--lc-radius-lg);
   font-family: var(--lc-font-display);
-  font-size: 0.92rem;
+  font-size: var(--lc-text-sm);
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #fff;
+  color: var(--lc-text-on-primary);
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
   box-shadow: 0 2px 20px var(--lc-crimson-glow), var(--lc-shadow-inset);
   transition: transform var(--lc-transition-spring), filter var(--lc-transition), box-shadow var(--lc-transition);
+}
+
+.game-controls__play:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }
 
 .game-controls__play:hover:not(:disabled) {
@@ -183,7 +188,7 @@
 }
 
 .game-controls__play--cashout:hover:not(:disabled) {
-  box-shadow: 0 6px 32px rgba(0,232,122,0.35);
+  box-shadow: 0 6px 32px var(--lc-emerald-glow);
 }
 
 .game-controls__stats {
@@ -233,6 +238,11 @@
   transition: background var(--lc-transition), color var(--lc-transition), border-color var(--lc-transition), transform var(--lc-transition-spring);
 }
 
+.game-controls__wager-adj:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
+}
+
 .game-controls__wager-adj:hover:not(:disabled) {
   background: var(--lc-bg-hover);
   color: var(--lc-crimson-soft);
@@ -252,14 +262,14 @@
 /* MAX button — wider than ½/2× and has distinct accent */
 .game-controls__wager-adj--max {
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
-  color: #fff;
+  color: var(--lc-text-on-primary);
   border-color: transparent;
   box-shadow: 0 2px 10px var(--lc-crimson-glow);
 }
 
 .game-controls__wager-adj--max:hover:not(:disabled) {
   filter: brightness(1.1);
-  color: #fff;
+  color: var(--lc-text-on-primary);
   border-color: transparent;
 }
 
@@ -278,12 +288,20 @@
    The class is BEM-suffixed per game (e.g. keno__fairness-note--disclosure)
    but the shared visual lives here so all games stay consistent. */
 [class*="fairness-note--disclosure"] {
-  margin-top: 0.6rem !important;
-  padding: 0.55rem 0.7rem;
+  margin-top: var(--lc-spacing-3) !important;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
   border-left: 2px solid var(--lc-amber);
-  background: rgba(245, 185, 66, 0.06);
-  border-radius: 0 6px 6px 0;
+  background: var(--lc-gold-glow);
+  border-radius: 0 var(--lc-radius-sm) var(--lc-radius-sm) 0;
   color: var(--lc-text-secondary);
-  font-size: 0.78rem;
+  font-size: var(--lc-text-xs);
   line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-controls__play:hover:not(:disabled),
+  .game-controls__play:active:not(:disabled),
+  .game-controls__wager-adj:active:not(:disabled) {
+    transform: none;
+  }
 }

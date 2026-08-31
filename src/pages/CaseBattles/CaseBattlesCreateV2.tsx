@@ -6,12 +6,14 @@ import { useNavigate } from "react-router-dom";
 import { useProfile } from "../../contexts/ProfileContext";
 import { usePlayMode } from "../../contexts/PlayModeContext";
 import { Seo } from "../../components/Seo/Seo";
-import { GameGuestBanner } from "../../components/GameGuestBanner/GameGuestBanner";
 import { useCanPlay } from "../../lib/canPlay";
+import { realMoneyBetError } from "../../lib/assertCanPlay";
+import { useAuth } from "../../contexts/AuthContext";
 import { createCaseBattle } from "./caseBattlesApi";
 import { GAMEMODES, playerModeOptions, type BattleGamemode } from "./types";
 import { CASE_CATALOG, getCaseById } from "../../lib/games/case-battles";
 import { formatCoins } from "../../lib/format";
+import { getActiveBalance } from "../../lib/gameWallet";
 import { entryAfterBorrow } from "../../lib/games/case-battles/config";
 import { Plus, Minus, X, Search, ChevronDown, Info, GripVertical } from "lucide-react";
 import "./CaseBattlesV2.css";
@@ -25,6 +27,7 @@ const MAX_COUNT_PER_GROUP = 10;
 export function CaseBattlesCreateV2() {
   const navigate = useNavigate();
   const canPlay = useCanPlay();
+  const { user, isGuest } = useAuth();
   const { profile } = useProfile();
   const { coinType, label: coinLabel } = usePlayMode();
   const [gamemode, setGamemode] = useState<BattleGamemode>("standard");
@@ -40,7 +43,7 @@ export function CaseBattlesCreateV2() {
   const [search, setSearch] = useState("");
   const [modalSort, setModalSort] = useState<"price-low" | "price-high" | "popular">("popular");
 
-  const balance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+  const balance = getActiveBalance(profile);
   const entryCost = useMemo(
     () => groups.reduce((s, g) => s + (getCaseById(g.id)?.price ?? 0) * g.count, 0),
     [groups],
@@ -142,7 +145,11 @@ export function CaseBattlesCreateV2() {
   };
 
   async function handleCreate() {
-    if (!canPlay) return;
+    const authErr = realMoneyBetError(user, isGuest);
+    if (authErr) {
+      setError(authErr);
+      return;
+    }
     if (busyRef.current) return;
     busyRef.current = true;
     setBusy(true);
@@ -202,7 +209,6 @@ export function CaseBattlesCreateV2() {
   return (
     <div className="cb-create lc-page">
       <Seo title="Create Case Battle" path="/case-battles/create" noindex />
-      <GameGuestBanner />
 
       <div className="cb-create__topbar">
         <button type="button" className="cb-create__exit" onClick={() => navigate("/case-battles")}>
@@ -219,7 +225,7 @@ export function CaseBattlesCreateV2() {
 
       <p className="cb-create__currency-note">
         <Info size={14} aria-hidden />
-        Creating in <strong>{coinLabel}</strong>. Switch in the topbar to use the other balance.
+        Entry comes off your <strong>{coinLabel}</strong> stack.
       </p>
 
       {orderedGroups.length === 0 && (
@@ -236,9 +242,9 @@ export function CaseBattlesCreateV2() {
 
       <div className="cb-create__settings">
         <div className="cb-create__setting">
-          <label>Mode</label>
+          <label htmlFor="cb-create-mode">Mode</label>
           <div className="cb-create__dropdown">
-            <select value={playerMode} onChange={(e) => setPlayerMode(e.target.value)} disabled={!canPlay}>
+            <select id="cb-create-mode" value={playerMode} onChange={(e) => setPlayerMode(e.target.value)} disabled={!canPlay}>
               {pModes.map((m) => (
                 <option key={m.id} value={m.id}>{m.label}</option>
               ))}
@@ -445,7 +451,7 @@ export function CaseBattlesCreateV2() {
             <div className="cb-modal__controls">
               <div className="cb-modal__search">
                 <Search size={16} aria-hidden />
-                <input type="search" placeholder="Search cases…" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <input type="search" placeholder="Search cases…" value={search} onChange={(e) => setSearch(e.target.value)} aria-label="Search cases" />
               </div>
               <div className="cb-modal__sort">
                 <select value={modalSort} onChange={(e) => setModalSort(e.target.value as typeof modalSort)} aria-label="Sort cases">

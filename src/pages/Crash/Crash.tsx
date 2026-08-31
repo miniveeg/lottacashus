@@ -19,6 +19,7 @@ import {
   truncateCrashMultiplier,
 } from "../../lib/games/crash";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
+import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
 import { isSupabaseConfigured, supabase } from "../../lib/supabase";
 import "../../styles/game-controls.css";
 import "./Crash.css";
@@ -299,9 +300,7 @@ export function Crash() {
       if (k === "]") {
         if (phaseRef.current === "running" || phaseRef.current === "placing") return;
         e.preventDefault();
-        const bal = coinTypeRef.current === "sweeps_coins"
-          ? (profileRef.current?.sweepsCoins ?? 0)
-          : (profileRef.current?.balance ?? 0);
+        const bal = getActiveBalance(profileRef.current);
         applyWager(Math.min(wagerRef.current * 2, bal));
         return;
       }
@@ -322,7 +321,7 @@ export function Crash() {
   }, []);
 
   const applyWager = (value: number) => {
-    const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+    const maxBet = SC_MAX_WAGER;
     const v = Math.max(CRASH_MIN_WAGER, Math.min(maxBet, value));
     setWager(v);
     setWagerInput(v.toFixed(2));
@@ -804,7 +803,7 @@ export function Crash() {
       setError(authErr);
       return;
     }
-    const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+    const activeBalance = getActiveBalance(profile);
     if (activeBalance < wager) {
       setError("Insufficient balance.");
       return;
@@ -1086,7 +1085,7 @@ export function Crash() {
                 type="button"
                 className="game-controls__wager-adj"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
+                  const activeBalance = getActiveBalance(profile);
                   applyWager(Math.min(wager * 2, activeBalance));
                 }}
                 disabled={phase === "running" || phase === "placing"}
@@ -1098,8 +1097,8 @@ export function Crash() {
                 type="button"
                 className="game-controls__wager-adj game-controls__wager-adj--max"
                 onClick={() => {
-                  const activeBalance = coinType === "sweeps_coins" ? (profile?.sweepsCoins ?? 0) : (profile?.balance ?? 0);
-                  const maxBet = coinType === "sweeps_coins" ? 100_000 : 10_000_000;
+                  const activeBalance = getActiveBalance(profile);
+                  const maxBet = SC_MAX_WAGER;
                   applyWager(Math.min(maxBet, activeBalance));
                 }}
                 disabled={phase === "running" || phase === "placing"}

@@ -90,7 +90,7 @@ function NavLink({ item }: { item: NavItem }) {
 export function SidebarNav() {
   const { profile } = useProfile();
   const { collapsed } = useSidebar();
-  const [legalOpen, setLegalOpen] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(true);
 
   const legalItems: NavItem[] = profile?.isAdmin
     ? [...legalNav, { icon: "admin", label: "Admin", href: "/admin" }]
@@ -118,26 +118,18 @@ export function SidebarNav() {
 
       <nav className="sidebar__section sidebar__section--legal" aria-label="Legal">
         {!collapsed ? (
-          <p
-            className="sidebar__label"
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
+            className="sidebar__label sidebar__label--toggle"
             aria-expanded={legalOpen}
             onClick={() => setLegalOpen((open) => !open)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setLegalOpen((open) => !open);
-              }
-            }}
           >
             Legal
-          </p>
+          </button>
         ) : null}
         <ul className="sidebar__nav">
-          {legalItems.map((item) => (
-            <NavLink key={item.label} item={item} />
-          ))}
+          {(collapsed || legalOpen) &&
+            legalItems.map((item) => <NavLink key={item.label} item={item} />)}
         </ul>
       </nav>
     </>

@@ -26,7 +26,7 @@
     90deg,
     transparent,
     var(--lc-crimson-glow) 25%,
-    rgba(139, 92, 246, 0.1) 75%,
+    var(--lc-violet-glow) 75%,
     transparent
   );
   pointer-events: none;
@@ -314,7 +314,7 @@ a.topbar__balance:hover {
 
 .topbar__btn--primary {
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
-  color: #fff;
+  color: var(--lc-text-on-primary);
   box-shadow: 0 2px 16px var(--lc-crimson-glow);
 }
 
@@ -358,7 +358,7 @@ a.topbar__balance:hover {
   padding: 0 4px;
   border-radius: 999px;
   background: var(--lc-crimson);
-  color: #fff;
+  color: var(--lc-text-on-primary);
   font-size: 0.6rem;
   font-weight: 800;
   line-height: 16px;
@@ -409,6 +409,10 @@ a.topbar__balance:hover {
 
 /* Touch devices: kill framer-motion scale transforms that feel jittery.
    !important is required to override framer-motion's inline styles. */
+@media (prefers-reduced-motion: reduce) {
+  .topbar__btn--primary:hover { transform: none; }
+}
+
 @media (hover: none) and (pointer: coarse) {
   .topbar__menu-btn,
   .topbar__icon-btn,

@@ -4,12 +4,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0.72rem 1.35rem;
+  gap: var(--lc-spacing-2);
+  min-height: var(--lc-target-min-desktop);
+  padding: var(--lc-spacing-3) var(--lc-spacing-5);
   border-radius: var(--lc-radius-md);
   font-family: var(--lc-font-display);
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: var(--lc-text-sm);
   letter-spacing: 0.03em;
   line-height: 1.2;
   border: 1px solid transparent;
@@ -44,7 +45,7 @@
 
 .lc-motion-btn--primary {
   background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
-  color: #fff;
+  color: var(--lc-text-on-primary);
   box-shadow: 0 2px 20px var(--lc-crimson-glow), var(--lc-shadow-inset);
 }
 
@@ -84,4 +85,9 @@
 @media (prefers-reduced-motion: reduce) {
   .lc-motion-btn--glow { animation: none; }
   .lc-motion-btn__shine { display: none; }
+}
+
+.lc-motion-btn:focus-visible {
+  outline: var(--lc-focus-outline);
+  outline-offset: 2px;
 }

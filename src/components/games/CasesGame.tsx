@@ -55,14 +55,11 @@ export function CasesGame() {
     () => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.from(".case-card", {
-          opacity: 0,
-          y: 16,
-          duration: 0.45,
-          stagger: 0.07,
-          ease: "power2.out",
-          clearProps: "transform",
-        });
+        gsap.fromTo(
+          ".case-card",
+          { opacity: 0, y: 16 },
+          { opacity: 1, y: 0, duration: 0.45, stagger: 0.07, ease: "power2.out", clearProps: "all" },
+        );
       });
       return () => mm.revert();
     },

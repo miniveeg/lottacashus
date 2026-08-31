@@ -3,6 +3,7 @@ import { supabase, isSupabaseConfigured } from "./supabase";
 const DEMO_KEY = "lc_demo_balance";
 const STARTING = 1000;
 const listeners = new Set<() => void>();
+let memoryBalance = STARTING;
 
 export type Json =
   | string
@@ -26,18 +27,35 @@ export function isLiveWallet(): boolean {
 }
 
 export function getBalance(): number {
-  const raw = localStorage.getItem(DEMO_KEY);
-  if (raw === null) {
-    localStorage.setItem(DEMO_KEY, String(STARTING));
-    return STARTING;
+  try {
+    const raw = localStorage.getItem(DEMO_KEY);
+    if (raw === null) {
+      try {
+        localStorage.setItem(DEMO_KEY, String(memoryBalance));
+      } catch {
+        /* storage blocked — keep in-memory */
+      }
+      return memoryBalance;
+    }
+    const n = Number(raw);
+    if (Number.isFinite(n)) {
+      memoryBalance = n;
+      return n;
+    }
+    return memoryBalance;
+  } catch {
+    return memoryBalance;
   }
-  const n = Number(raw);
-  return Number.isFinite(n) ? n : STARTING;
 }
 
 export function setBalance(n: number): void {
   const next = Math.max(0, Math.round(n * 100) / 100);
-  localStorage.setItem(DEMO_KEY, String(next));
+  memoryBalance = next;
+  try {
+    localStorage.setItem(DEMO_KEY, String(next));
+  } catch {
+    /* storage blocked — keep in-memory */
+  }
   notify();
 }
 

@@ -44,14 +44,11 @@ export function TowerGame() {
     () => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.from(".tower-floor-row", {
-          opacity: 0,
-          y: 14,
-          duration: 0.4,
-          stagger: 0.05,
-          ease: "power2.out",
-          clearProps: "opacity,transform",
-        });
+        gsap.fromTo(
+          ".tower-floor-row",
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.4, stagger: 0.05, ease: "power2.out", clearProps: "all" },
+        );
       });
       return () => mm.revert();
     },

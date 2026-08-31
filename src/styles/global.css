@@ -12,6 +12,32 @@ body,
   min-height: 100%;
 }
 
+.boot-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #07070b;
+  color: var(--text);
+  text-align: center;
+  padding: 24px;
+}
+
+.boot-wordmark {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg, var(--gold-2), var(--gold) 55%, var(--gold-dim));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.boot-screen p {
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+
 html {
   background: var(--bg);
   color: var(--text);

@@ -34,14 +34,11 @@ export function Lobby() {
     () => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.from(".game-card", {
-          opacity: 0,
-          y: 20,
-          duration: 0.5,
-          stagger: 0.06,
-          ease: "power2.out",
-          clearProps: "transform",
-        });
+        gsap.fromTo(
+          ".game-card",
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: "power2.out", clearProps: "all" },
+        );
       });
       return () => mm.revert();
     },

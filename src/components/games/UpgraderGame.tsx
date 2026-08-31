@@ -11,11 +11,11 @@ import { gsap, useGSAP } from "../../lib/motion";
 const MULTI_PRESETS = [1.2, 1.5, 2, 3, 5, 10, 20] as const;
 
 function rarityColor(m: number): string {
-  if (m >= 10) return "#e8c36a";
-  if (m >= 5) return "#d59bff";
-  if (m >= 2.5) return "#7aa2ff";
-  if (m >= 1.8) return "#3ee0a0";
-  return "#aeb8c8";
+  if (m >= 10) return "#c9a24a";
+  if (m >= 5) return "#ead28a";
+  if (m >= 2.5) return "#8a2430";
+  if (m >= 1.8) return "#3cbf8a";
+  return "#c4b89a";
 }
 
 export function UpgraderGame() {

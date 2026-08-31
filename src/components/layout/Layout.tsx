@@ -1,29 +1,29 @@
 import { NavLink, Outlet } from "react-router-dom";
 import {
-  Bomb,
-  Building2,
-  CircleDot,
-  Dices,
-  Gem,
-  Layers,
-  Swords,
-  TrendingUp,
-  Wallet,
-  LogIn,
-} from "lucide-react";
+  IconBomb,
+  IconVault,
+  IconChart,
+  IconWheel,
+  IconCards,
+  IconGem,
+  IconCrate,
+  IconSwords,
+  IconWallet,
+  IconLogin,
+} from "../icons/PitIcons";
 import { formatSC } from "../../lib/format";
 import { useWallet } from "../../context/WalletContext";
 import { useAuth } from "../../context/AuthContext";
 
 const GAMES = [
-  { to: "/mines", label: "Mines", icon: Bomb },
-  { to: "/tower", label: "Tower", icon: Building2 },
-  { to: "/limbo", label: "Limbo", icon: TrendingUp },
-  { to: "/roulette", label: "Roulette", icon: CircleDot },
-  { to: "/blackjack", label: "Blackjack", icon: Layers },
-  { to: "/upgrader", label: "Upgrader", icon: Gem },
-  { to: "/cases", label: "Cases", icon: Dices },
-  { to: "/battles", label: "Battles", icon: Swords },
+  { to: "/mines", label: "Mines", Icon: IconBomb },
+  { to: "/tower", label: "Tower", Icon: IconVault },
+  { to: "/limbo", label: "Limbo", Icon: IconChart },
+  { to: "/roulette", label: "Roulette", Icon: IconWheel },
+  { to: "/blackjack", label: "Blackjack", Icon: IconCards },
+  { to: "/upgrader", label: "Upgrader", Icon: IconGem },
+  { to: "/cases", label: "Cases", Icon: IconCrate },
+  { to: "/battles", label: "Battles", Icon: IconSwords },
 ];
 
 export function Layout() {
@@ -37,13 +37,13 @@ export function Layout() {
       </a>
       <header className="topbar">
         <NavLink to="/" className="wordmark">
-          <span className="wordmark-badge">LC</span>
+          <img src="/art/chip.webp" alt="" className="wordmark-chip" />
           LottaCash
         </NavLink>
         <div className="topbar-right">
           <div className="balance-chip">{formatSC(balance)}</div>
           <NavLink to="/wallet" className="btn">
-            <Wallet size={16} aria-hidden="true" /> Wallet
+            <IconWallet width={16} height={16} /> Wallet
           </NavLink>
           {configured && user ? (
             <NavLink to="/login" className="btn btn-ghost">
@@ -51,7 +51,7 @@ export function Layout() {
             </NavLink>
           ) : configured ? (
             <NavLink to="/login" className="btn btn-gold">
-              <LogIn size={16} aria-hidden="true" /> Login
+              <IconLogin width={16} height={16} /> Login
             </NavLink>
           ) : (
             <span className="demo-badge">Demo</span>
@@ -63,13 +63,13 @@ export function Layout() {
         <h3>Games</h3>
         {GAMES.map((g) => (
           <NavLink key={g.to} to={g.to} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
-            <g.icon aria-hidden="true" />
+            <g.Icon width={18} height={18} />
             {g.label}
           </NavLink>
         ))}
-        <h3 style={{ marginTop: 18 }}>House</h3>
+        <h3 style={{ marginTop: 18 }}>Account</h3>
         <NavLink to="/wallet" className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`}>
-          <Wallet aria-hidden="true" />
+          <IconWallet width={18} height={18} />
           Wallet
         </NavLink>
       </nav>

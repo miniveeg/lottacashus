@@ -201,7 +201,7 @@ export function MinesGame() {
                 <motion.div
                   className="mine-face mine-back"
                   aria-hidden="true"
-                  animate={c === "mine" ? { scale: [1, 1.25, 1], boxShadow: ["0 0 0 #ff4d6a", "0 0 40px #ff4d6a", "0 0 0 #ff4d6a"] } : { scale: 1 }}
+                  animate={c === "mine" ? { scale: [1, 1.25, 1], boxShadow: ["0 0 0 #8a2430", "0 0 40px #8a2430", "0 0 0 #8a2430"] } : { scale: 1 }}
                 >
                   {c === "hidden" ? null : c === "gem" ? <span className="gem-icon" /> : <span className="mine-icon" />}
                 </motion.div>

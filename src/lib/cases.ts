@@ -51,7 +51,7 @@ export const CASES: CaseDef[] = [
     name: "Starter Crate",
     tagline: "Dip a toe. Cheap thrills.",
     price: 10,
-    accent: "#7aa2ff",
+    accent: "#3cbf8a",
     prizes: prizesFor(10, "starter"),
   },
   {
@@ -59,7 +59,7 @@ export const CASES: CaseDef[] = [
     name: "Neon Box",
     tagline: "Electric pink nights.",
     price: 25,
-    accent: "#ff4fd8",
+    accent: "#8a2430",
     prizes: prizesFor(25, "neon"),
   },
   {
@@ -67,7 +67,7 @@ export const CASES: CaseDef[] = [
     name: "Gold Vault",
     tagline: "House gold, house rules.",
     price: 50,
-    accent: "#e8c36a",
+    accent: "#c9a24a",
     prizes: prizesFor(50, "gold"),
   },
   {
@@ -75,7 +75,7 @@ export const CASES: CaseDef[] = [
     name: "Obsidian",
     tagline: "Black glass, sharp edges.",
     price: 100,
-    accent: "#9b8cff",
+    accent: "#c9a24a",
     prizes: prizesFor(100, "obsidian"),
   },
   {
@@ -83,7 +83,7 @@ export const CASES: CaseDef[] = [
     name: "Diamond",
     tagline: "Cold, clear, expensive.",
     price: 250,
-    accent: "#7ef0ff",
+    accent: "#ead28a",
     prizes: prizesFor(250, "diamond"),
   },
   {
@@ -91,7 +91,7 @@ export const CASES: CaseDef[] = [
     name: "Jackpot",
     tagline: "The room goes quiet.",
     price: 500,
-    accent: "#ff6b4a",
+    accent: "#8a2430",
     prizes: prizesFor(500, "jackpot"),
   },
 ];

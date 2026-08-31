@@ -1,6 +1,6 @@
 # LottaCash
 
-Premium crypto casino at [lottacash.us](https://lottacash.us). Dark obsidian floor, gold accents, one **SC** (site credit) wallet, eight live games. This tree replaces the old Vite+React LottaCash app — it is a new build, not a clone.
+Late-night casino pit at [lottacash.us](https://lottacash.us). Felt, brass, ivory, oxblood. One **SC** (site credit) wallet, eight live games. This tree replaces the old Vite+React LottaCash app — it is a new build, not a clone.
 
 ## Games
 

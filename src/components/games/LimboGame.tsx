@@ -31,7 +31,7 @@ function LimboCanvas({ display, target, flash }: { display: number; target: numb
   const line = `M ${pts.join(" L ")}`;
   const area = `${line} L ${GRAPH_W},${GRAPH_H} L 0,${GRAPH_H} Z`;
   const ty = yOf(target, maxM);
-  const color = flash === "win" ? "#3ee0a0" : flash === "lose" ? "#ff4d6a" : "#e8c36a";
+  const color = flash === "win" ? "#3cbf8a" : flash === "lose" ? "#8a2430" : "#c9a24a";
 
   return (
     <div className="limbo-stage game-canvas">
@@ -44,7 +44,7 @@ function LimboCanvas({ display, target, flash }: { display: number; target: numb
         </defs>
         <path d={area} fill="url(#limboFill)" />
         <path d={line} fill="none" stroke={color} strokeWidth="3" strokeLinejoin="round" />
-        <line x1="0" y1={ty} x2={GRAPH_W} y2={ty} stroke="#e8c36a" strokeDasharray="6 8" strokeOpacity="0.55" />
+        <line x1="0" y1={ty} x2={GRAPH_W} y2={ty} stroke="#c9a24a" strokeDasharray="6 8" strokeOpacity="0.55" />
       </svg>
       <div className="limbo-readout" style={{ color }}>
         {formatMulti(display)}

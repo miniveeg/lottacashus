@@ -219,7 +219,7 @@ export function TowerGame() {
                     position: "absolute",
                     left: `${6 + i * 5}%`,
                     top: -20,
-                    color: "#e8c36a",
+                    color: "#c9a24a",
                     fontSize: 18,
                   }}
                   animate={{ y: [0, 520], opacity: [1, 0] }}

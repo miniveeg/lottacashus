@@ -1,6 +1,5 @@
 import { useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
 import { GameShell } from "./GameShell";
 import { CrateArt } from "./CrateArt";
 import { useWallet } from "../../context/WalletContext";
@@ -167,7 +166,7 @@ export function CasesGame() {
             <motion.div className="modal gold-edge" initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
                 <div>
-                  <h2 style={{ fontFamily: "Syne, sans-serif", fontSize: 28, textTransform: "none", letterSpacing: "-0.03em", color: "#f4efe4" }}>
+                  <h2 style={{ fontFamily: "var(--font-display)", fontSize: 28, textTransform: "none", letterSpacing: "-0.03em", color: "var(--ivory)" }}>
                     {open.name}
                   </h2>
                   <p className="lede" style={{ marginBottom: 8 }}>
@@ -175,7 +174,7 @@ export function CasesGame() {
                   </p>
                 </div>
                 <button className="btn btn-ghost" type="button" aria-label="Close crate" onClick={() => !busy && setOpen(null)}>
-                  <X size={16} aria-hidden="true" />
+                  <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1 }}>×</span>
                 </button>
               </div>
               {strip.length > 0 ? (
@@ -186,7 +185,7 @@ export function CasesGame() {
                 </div>
               )}
               {landed ? (
-                <p style={{ textAlign: "center", margin: "14px 0", color: "var(--gold-2)", fontFamily: "Syne, sans-serif", fontSize: 24 }}>
+                <p style={{ textAlign: "center", margin: "14px 0", color: "var(--brass-2)", fontFamily: "var(--font-display)", fontSize: 24 }}>
                   {landed.label} · {formatSC(landed.amount)}
                 </p>
               ) : null}

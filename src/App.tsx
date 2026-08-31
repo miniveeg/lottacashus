@@ -26,8 +26,9 @@ function BootFallback() {
   return (
     <div className="boot-screen">
       <div>
+        <img src="/art/chip.webp" alt="" className="boot-chip" width={56} height={56} />
         <div className="boot-wordmark">LottaCash</div>
-        <p>Loading the floor…</p>
+        <p className="boot-lede">Opening tables…</p>
       </div>
     </div>
   );

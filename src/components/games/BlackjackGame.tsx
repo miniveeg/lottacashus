@@ -277,7 +277,7 @@ export function BlackjackGame() {
             </AnimatePresence>
           )}
         </div>
-        <p style={{ textAlign: "center", margin: "28px 0 8px", fontFamily: "Syne, sans-serif", letterSpacing: "0.2em" }}>
+        <p style={{ textAlign: "center", margin: "28px 0 8px", fontFamily: "var(--font-display)", letterSpacing: "0.2em" }}>
           {phase === "player" ? "YOUR PLAY" : phase === "dealer" ? "DEALER" : phase === "idle" ? "DEAL TO START" : "LottaCash"}
         </p>
         <div className="hand">
@@ -291,7 +291,7 @@ export function BlackjackGame() {
             </AnimatePresence>
           )}
         </div>
-        <p style={{ textAlign: "center", color: "#e8c36a", marginTop: 10 }}>
+        <p style={{ textAlign: "center", color: "var(--brass-2)", marginTop: 10 }}>
           {player.length ? `${pv.total}${pv.soft ? " soft" : ""}${pv.blackjack ? " blackjack" : ""}` : "Place a bet, then deal"}
         </p>
       </div>

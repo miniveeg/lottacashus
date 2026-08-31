@@ -32,7 +32,7 @@ export function Wallet() {
       <div className="game-layout">
         <div className="panel">
           <h2>Balance</h2>
-          <p style={{ fontFamily: "Syne, sans-serif", fontSize: 42, color: "var(--gold-2)" }}>{formatSC(balance)}</p>
+          <p style={{ fontFamily: "var(--font-display)", fontSize: 42, color: "var(--brass-2)", fontVariationSettings: "'opsz' 144" }}>{formatSC(balance)}</p>
           <p className="fair-box" style={{ marginTop: 8 }}>
             {live && isSupabaseConfigured
               ? "Supabase is configured. Debits/credits try place_bet / settle_bet RPCs, then fall back to local SC if those RPCs are missing."

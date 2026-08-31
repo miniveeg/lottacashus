@@ -4,28 +4,15 @@ import { GameThumb } from "../components/lobby/GameThumbs";
 import { gsap, useGSAP } from "../lib/motion";
 
 const GAMES = [
-  { to: "/mines", id: "mines", title: "Mines", blurb: "Gems or grief. Cash out climbing.", tag: "Grid" },
-  { to: "/tower", id: "tower", title: "Tower", blurb: "Eight floors. One bomb each.", tag: "Climb" },
-  { to: "/limbo", id: "limbo", title: "Limbo", blurb: "How far does the crash go?", tag: "Crash" },
-  { to: "/roulette", id: "roulette", title: "Roulette", blurb: "European wheel. Gold pointer.", tag: "Wheel" },
-  { to: "/blackjack", id: "blackjack", title: "Blackjack", blurb: "Six-deck shoe. 3:2 blackjack.", tag: "Cards" },
-  { to: "/upgrader", id: "upgrader", title: "Upgrader", blurb: "Spin the hit zone. CS energy.", tag: "Risk" },
-  { to: "/cases", id: "cases", title: "Cases", blurb: "Six crates. Watch the reel kiss.", tag: "Unbox" },
-  { to: "/battles", id: "battles", title: "Battles", blurb: "Same case, winner takes the pot.", tag: "PvP" },
+  { to: "/mines", id: "mines", title: "Mines", blurb: "Pick gems. Cash out before a mine." },
+  { to: "/tower", id: "tower", title: "Tower", blurb: "Eight floors. One bomb each." },
+  { to: "/limbo", id: "limbo", title: "Limbo", blurb: "Set a target. Beat the crash." },
+  { to: "/roulette", id: "roulette", title: "Roulette", blurb: "European wheel, 0–36." },
+  { to: "/blackjack", id: "blackjack", title: "Blackjack", blurb: "Six-deck shoe. 3:2 blackjack." },
+  { to: "/upgrader", id: "upgrader", title: "Upgrader", blurb: "Spin the hit zone." },
+  { to: "/cases", id: "cases", title: "Cases", blurb: "Six crates, weighted reel." },
+  { to: "/battles", id: "battles", title: "Battles", blurb: "Same case. Winner takes the pot." },
 ] as const;
-
-const TICKER = [
-  ["Nova", "Mines", "420.00"],
-  ["Kite", "Limbo", "88.50"],
-  ["Vex", "Gold Vault", "250.00"],
-  ["Nyx", "Roulette", "200.00"],
-  ["Rune", "Blackjack", "62.50"],
-  ["Hex", "Upgrader", "400.00"],
-  ["Ivy", "Tower", "155.00"],
-  ["Sol", "Jackpot", "7,500.00"],
-] as const;
-
-const TICKER_LOOP = [...TICKER, ...TICKER];
 
 export function Lobby() {
   const root = useRef<HTMLDivElement>(null);
@@ -36,8 +23,8 @@ export function Lobby() {
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         gsap.fromTo(
           ".game-card",
-          { opacity: 0, y: 20 },
-          { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: "power2.out", clearProps: "all" },
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.4, stagger: 0.04, ease: "power2.out", clearProps: "all" },
         );
       });
       return () => mm.revert();
@@ -49,48 +36,31 @@ export function Lobby() {
     <div ref={root}>
       <section className="hero">
         <div className="hero-copy">
-          <h1>Neon on obsidian. Cash that hits.</h1>
+          <h1>Eight tables. One stack.</h1>
           <p>
-            LottaCash is a dense, glossy crypto casino — one SC balance, eight live tables, provably fair rolls. Demo starts
-            you at 1,000 SC. No purple dashboard. Just the floor.
+            Mines through Battles on a single SC balance. Demo starts at 1,000. Provably fair. No dashboard chrome — just
+            the pit.
           </p>
           <div className="hero-cta">
             <Link to="/mines" className="btn btn-gold">
-              Open Mines
+              Play Mines
             </Link>
             <Link to="/wallet" className="btn">
-              Open wallet
+              Wallet
             </Link>
           </div>
         </div>
-        <div className="hero-floor" aria-hidden="true">
-          <span className="hero-neon">LIVE</span>
-          <span className="hero-chip hc1" />
-          <span className="hero-chip hc2" />
-          <span className="hero-chip hc3" />
-          <span className="hero-card ha" />
-          <span className="hero-card hb" />
-        </div>
+        <img src="/art/hero.webp" alt="" className="hero-art" aria-hidden="true" />
       </section>
-      <div className="ticker">
-        <div className="ticker-track">
-          {TICKER_LOOP.map((t, i) => (
-            <span key={i}>
-              {t[0]} hit <b>{t[2]} SC</b> on {t[1]}
-            </span>
-          ))}
-        </div>
-      </div>
       <div className="game-grid">
         {GAMES.map((g) => (
           <Link key={g.to} to={g.to}>
             <article className="game-card">
-              <div className="game-card-head">
-                <span className="tag">{g.tag}</span>
-              </div>
               <GameThumb id={g.id} />
-              <h3>{g.title}</h3>
-              <p>{g.blurb}</p>
+              <div className="game-card-body">
+                <h3>{g.title}</h3>
+                <p>{g.blurb}</p>
+              </div>
             </article>
           </Link>
         ))}

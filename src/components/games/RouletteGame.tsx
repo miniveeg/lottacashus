@@ -158,10 +158,10 @@ export function RouletteGame() {
               const tx = Math.cos((a0 + a1) / 2) * 72;
               const ty = Math.sin((a0 + a1) / 2) * 72;
               const col = wheelColor(n);
-              const fill = col === "green" ? "#147a54" : col === "red" ? "#c22744" : "#141418";
+              const fill = col === "green" ? "#164a3c" : col === "red" ? "#8a2430" : "#16110c";
               return (
                 <g key={n}>
-                  <path d={`M 0 0 L ${x0} ${y0} A 100 100 0 0 1 ${x1} ${y1} Z`} fill={fill} stroke="#e8c36a" strokeWidth="0.4" />
+                  <path d={`M 0 0 L ${x0} ${y0} A 100 100 0 0 1 ${x1} ${y1} Z`} fill={fill} stroke="#c9a24a" strokeWidth="0.4" />
                   <text
                     x={tx}
                     y={ty}
@@ -177,8 +177,8 @@ export function RouletteGame() {
                 </g>
               );
             })}
-            <circle r="28" fill="#07070b" stroke="#e8c36a" strokeWidth="2" />
-            <text textAnchor="middle" y="4" fill="#e8c36a" fontSize="10" fontFamily="Syne, sans-serif" fontWeight="800">
+            <circle r="28" fill="#071910" stroke="#c9a24a" strokeWidth="2" />
+            <text textAnchor="middle" y="4" fill="#c9a24a" fontSize="10" fontFamily="Fraunces, serif" fontWeight="700">
               LC
             </text>
           </motion.svg>
@@ -190,7 +190,7 @@ export function RouletteGame() {
               height: 0,
               borderLeft: "8px solid transparent",
               borderRight: "8px solid transparent",
-              borderTop: "14px solid #e8c36a",
+              borderTop: "14px solid #c9a24a",
             }}
           />
         </div>

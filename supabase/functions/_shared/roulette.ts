@@ -105,8 +105,8 @@ export function validateRouletteBet(
   wager: number,
   betType: string
 ): string | null {
-  if (!Number.isFinite(wager) || wager < 1) {
-    return "Minimum bet is 1 SC or GC.";
+  if (!Number.isFinite(wager) || wager < 0.01) {
+    return "Minimum bet is 0.01 SC.";
   }
   if (betType !== "red" && betType !== "black" && betType !== "green") {
     return "Bet on red, black, or green.";

@@ -11,7 +11,7 @@ import {
 } from "../../lib/slots";
 import { useCanPlay } from "../../lib/canPlay";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
-import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
+import { getActiveBalance, clampWager, SC_MAX_WAGER, SC_MIN_WAGER } from "../../lib/gameWallet";
 import { SlotSymbol } from "./SlotSymbols";
 import { Seo } from "../../components/Seo/Seo";
 import { FormAlert } from "../../components/FormAlert/FormAlert";
@@ -145,15 +145,9 @@ export default function Slots() {
 
   const applyWager = useCallback((value: string) => {
     const parsed = parseFloat(value);
-    if (!Number.isFinite(parsed) || parsed <= 0) {
-      setWager(1);
-      setWagerInput("1.00");
-    } else {
-      const maxWager = SC_MAX_WAGER;
-      const clamped = Math.min(Math.max(parsed, 1), maxWager);
-      setWager(clamped);
-      setWagerInput(clamped.toFixed(2));
-    }
+    const v = clampWager(Number.isFinite(parsed) ? parsed : SC_MIN_WAGER);
+    setWager(v);
+    setWagerInput(v.toFixed(2));
   }, []);
 
   function startRollAnimation() {
@@ -317,7 +311,7 @@ export default function Slots() {
       if (k === "[") {
         if (!isRolling) {
           e.preventDefault();
-          const half = Math.max(wagerRef.current / 2, 1);
+          const half = Math.max(wagerRef.current / 2, SC_MIN_WAGER);
           setWager(half);
           setWagerInput(half.toFixed(2));
         }
@@ -330,7 +324,7 @@ export default function Slots() {
           const activeBalance = getActiveBalance(prof);
           const cap = SC_MAX_WAGER;
           const doubled = Math.min(wagerRef.current * 2, activeBalance, cap);
-          applyWager(String(Math.max(doubled, 1)));
+          applyWager(String(Math.max(doubled, SC_MIN_WAGER)));
         }
         return;
       }
@@ -468,7 +462,7 @@ export default function Slots() {
                     disabled={rolling}
                     onClick={() => {
                       const half = wager / 2;
-                      const clamped = Math.max(half, 1);
+                      const clamped = Math.max(half, SC_MIN_WAGER);
                       setWager(clamped);
                       setWagerInput(clamped.toFixed(2));
                     }}

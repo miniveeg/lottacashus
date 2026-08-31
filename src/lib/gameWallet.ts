@@ -4,7 +4,7 @@
  */
 
 export const SC_MAX_WAGER = 100_000;
-export const SC_MIN_WAGER = 1;
+export const SC_MIN_WAGER = 0.01;
 
 export type ProfileBalance = {
   sweepsCoins?: number | null;
@@ -19,8 +19,10 @@ export function getActiveBalance(profile: ProfileBalance): number {
 
 /** Clamp a wager into the legal SC range and optional balance cap. */
 export function clampWager(value: number, balance?: number): number {
-  const cap = balance != null ? Math.min(SC_MAX_WAGER, balance) : SC_MAX_WAGER;
-  return Math.max(SC_MIN_WAGER, Math.min(cap, value));
+  if (!Number.isFinite(value)) return SC_MIN_WAGER;
+  const rounded = Math.round(value * 100) / 100;
+  const cap = balance != null ? Math.min(SC_MAX_WAGER, Math.max(0, balance)) : SC_MAX_WAGER;
+  return Math.max(SC_MIN_WAGER, Math.min(cap, rounded));
 }
 
 /** Always "sweeps_coins" — kept as a function so call sites stay explicit. */

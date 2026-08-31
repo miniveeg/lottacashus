@@ -15,7 +15,7 @@ import {
 import { formatCoins } from "../../lib/format";
 import { fetchKenoPfState, placeKenoBet, setKenoClientSeed } from "../../lib/keno";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
-import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
+import { getActiveBalance, clampWager, SC_MAX_WAGER, SC_MIN_WAGER } from "../../lib/gameWallet";
 import "../../styles/game-controls.css";
 import "./Keno.css";
 
@@ -298,9 +298,7 @@ export function Keno() {
   };
 
   const applyWager = (value: number) => {
-    // Read coin type from ref so this stays correct from the hotkey.
-    const maxBet = SC_MAX_WAGER;
-    const v = Math.max(1, Math.min(maxBet, value));
+    const v = clampWager(value);
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -578,7 +576,7 @@ export function Keno() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 1);
+                  applyWager(Number.isFinite(parsed) ? parsed : SC_MIN_WAGER);
                 }}
                 disabled={drawing}
               />

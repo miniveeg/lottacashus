@@ -190,7 +190,7 @@ function placeLimboBet(body: Record<string, unknown>): Result {
   const wager = Number(body.wager);
   const target = Number(body.target);
   const coinType = "sweeps_coins";
-  if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+  if (!isFinite(wager) || wager < 0.01) return { data: null, error: "Minimum bet is 0.01 SC." };
   if (!isFinite(target) || target < 1.01) return { data: null, error: "Target must be ≥ 1.01." };
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
   const point = crashPoint();
@@ -216,7 +216,7 @@ function placeLimboBet(body: Record<string, unknown>): Result {
 function placeCrashBet(body: Record<string, unknown>): Result {
   const wager = Number(body.wager);
   const coinType = "sweeps_coins";
-  if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+  if (!isFinite(wager) || wager < 0.01) return { data: null, error: "Minimum bet is 0.01 SC." };
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
   const point = crashPoint();
   const betId = uid();
@@ -296,7 +296,7 @@ function minesGame(body: Record<string, unknown>): Result {
   if (action === "start") {
     const wager = Number(body.wager);
     const mineCount = Number(body.mineCount);
-    if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+    if (!isFinite(wager) || wager < 0.01) return { data: null, error: "Minimum bet is 0.01 SC." };
     if (mineCount < 1 || mineCount > 24) return { data: null, error: "Mines must be 1–24." };
     if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
     const gameId = uid();
@@ -386,7 +386,7 @@ function placeKenoBet(body: Record<string, unknown>): Result {
   const wager = Number(body.wager);
   const picks = (body.picks as number[]) ?? [];
   const coinType = "sweeps_coins";
-  if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+  if (!isFinite(wager) || wager < 0.01) return { data: null, error: "Minimum bet is 0.01 SC." };
   if (picks.length < 1 || picks.length > 10) return { data: null, error: "Pick 1–10 numbers." };
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
   const riskRaw = String(body.risk ?? "classic");
@@ -421,7 +421,7 @@ function placeRouletteBet(body: Record<string, unknown>): Result {
   const wager = Number(body.wager);
   const betType = String(body.betType) as "red" | "black" | "green";
   const coinType = "sweeps_coins";
-  if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+  if (!isFinite(wager) || wager < 0.01) return { data: null, error: "Minimum bet is 0.01 SC." };
   if (betType !== "red" && betType !== "black" && betType !== "green") {
     return { data: null, error: "Bet on red, black, or green." };
   }
@@ -472,7 +472,7 @@ function blackjackGame(body: Record<string, unknown>): Result {
   if (action === "active") return { data: { active: false }, error: null };
   if (action === "start") {
     const wager = Number(body.wager);
-    if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+    if (!isFinite(wager) || wager < 0.01) return { data: null, error: "Minimum bet is 0.01 SC." };
     if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
     const shoe = freshShoe();
     const player = [shoe.pop()!, shoe.pop()!];
@@ -653,7 +653,7 @@ const SLOTS_PAYOUTS = [3, 5, 8, 15, 30, 80, 190];
 function placeSlotsBet(body: Record<string, unknown>): Result {
   const wager = Number(body.wager);
   const coinType = "sweeps_coins";
-  if (!isFinite(wager) || wager < 1) return { data: null, error: "Minimum bet is 1." };
+  if (!isFinite(wager) || wager < 0.01) return { data: null, error: "Minimum bet is 0.01 SC." };
   if (!localDebit(coinType, wager)) return { data: null, error: "Insufficient balance." };
   const reels = [randInt(7), randInt(7), randInt(7)];
   const won = reels[0] === reels[1] && reels[1] === reels[2];

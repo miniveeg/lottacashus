@@ -461,7 +461,7 @@ export function CaseBattlesCreateV2() {
                 const current = groups.find((g) => g.id === lootCase.id)?.count ?? 0;
                 const atCap = current >= MAX_COUNT_PER_GROUP || totalRounds >= 50;
                 return (
-                  <div key={lootCase.id} className={"cb-modal__case-card" + (current > 0 ? " cb-modal__case-card--selected" : "")}>
+                  <div key={lootCase.id} className={"cb-modal__case-card" + (current > 0 ? " cb-modal__case-card--selected" : "")} role="button" tabIndex={0} onClick={() => { if (!atCap) incrementGroup(lootCase.id); }} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!atCap) incrementGroup(lootCase.id); } }}>
                     {current > 0 && (
                       <span className="cb-modal__case-count" aria-label={`${current} selected`}>×{current}</span>
                     )}
@@ -471,10 +471,10 @@ export function CaseBattlesCreateV2() {
                     <span className="cb-modal__case-name">{lootCase.name}</span>
                     <span className="cb-modal__case-price">{formatCoins(lootCase.price, coinType)}</span>
                     <div className="cb-modal__case-actions">
-                      <button type="button" className="cb-modal__case-step-btn" onClick={() => decrementGroup(lootCase.id)} aria-label={`Remove one ${lootCase.name}`} disabled={current <= 0}>
+                      <button type="button" className="cb-modal__case-step-btn" onClick={(e) => { e.stopPropagation(); decrementGroup(lootCase.id); }} aria-label={`Remove one ${lootCase.name}`} disabled={current <= 0}>
                         <Minus size={10} aria-hidden />
                       </button>
-                      <button type="button" className="cb-modal__case-step-btn cb-modal__case-step-btn--add" onClick={() => incrementGroup(lootCase.id)} aria-label={`Add one ${lootCase.name}`} disabled={atCap}>
+                      <button type="button" className="cb-modal__case-step-btn cb-modal__case-step-btn--add" onClick={(e) => { e.stopPropagation(); incrementGroup(lootCase.id); }} aria-label={`Add one ${lootCase.name}`} disabled={atCap}>
                         <Plus size={10} aria-hidden />
                       </button>
                     </div>
@@ -491,7 +491,7 @@ export function CaseBattlesCreateV2() {
               </div>
               <div className="cb-modal__footer-actions">
                 <button type="button" className="cb-btn cb-btn--ghost" onClick={() => setShowCaseModal(false)}>Close</button>
-                <button type="button" className="cb-btn cb-btn--primary" onClick={() => setShowCaseModal(false)} disabled={groups.length === 0}>
+                <button type="button" className="cb-btn cb-btn--primary" onClick={() => setShowCaseModal(false)}>
                   Done ({totalRounds} rounds)
                 </button>
               </div>

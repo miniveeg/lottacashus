@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
           "id, wager, total_wager, doubled, player_cards, dealer_cards, dealer_revealed, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, coin_type"
         )
         .eq("user_id", user.id)
-        .eq("status", "player_turn")
+        .not("status", "in", "(settled,cancelled)")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -302,11 +302,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    const handId = String(body?.handId ?? body?.hand_id ?? "");
-    if (!handId) return jsonResponse({ error: "Hand id required." }, 400, req);
-
-    const row = await loadHand(admin, user.id, handId);
+    const requestedId = String(body?.handId ?? body?.hand_id ?? "").trim();
+    const handIdOk = Boolean(requestedId) && requestedId !== "undefined" && requestedId !== "null";
+    let row = handIdOk ? await loadHand(admin, user.id, requestedId) : null;
+    if (!row) {
+      const { data: latest } = await admin
+        .from("blackjack_hands")
+        .select("id, shoe, shoe_index, player_cards, dealer_cards, wager, total_wager, doubled, dealer_revealed, phase, insurance_wager, insurance_taken, insurance_decided, is_split, player_hands, active_hand_index, nonce, status")
+        .eq("user_id", user.id)
+        .not("status", "in", "(settled,cancelled)")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (latest) row = latest as HandRow;
+    }
     if (!row) return jsonResponse({ error: "Active hand not found." }, 400, req);
+    const handId = row.id;
 
     const state = stateFromRow(row);
 

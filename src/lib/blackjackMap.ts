@@ -44,7 +44,10 @@ function firstDefined(data: Record<string, unknown>, ...keys: string[]): unknown
   for (const key of keys) {
     const v = data[key];
     if (v == null) continue;
-    if (typeof v === "string" && v.trim() === "") continue;
+    if (typeof v === "string") {
+      const s = v.trim();
+      if (!s || s === "undefined" || s === "null") continue;
+    }
     return v;
   }
   return undefined;

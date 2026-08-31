@@ -18,7 +18,7 @@ import {
   startMinesGame,
 } from "../../lib/mines";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
-import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
+import { getActiveBalance, clampWager, SC_MAX_WAGER, SC_MIN_WAGER } from "../../lib/gameWallet";
 import "../../styles/game-controls.css";
 import "./Mines.css";
 
@@ -39,6 +39,7 @@ export function Mines() {
   const [wager, setWager] = useState(1);
   const [wagerInput, setWagerInput] = useState("1.00");
   const [busy, setBusy] = useState(false);
+  const [cashingOut, setCashingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [gameId, setGameId] = useState<string | null>(null);
@@ -216,8 +217,7 @@ export function Mines() {
   };
 
   const applyWager = (value: number) => {
-    const maxWager = SC_MAX_WAGER;
-    const v = Math.max(1, Math.min(maxWager, value));
+    const v = clampWager(value);
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -349,12 +349,14 @@ export function Mines() {
         // doesn't freeze.
         busyRef.current = false;
         setBusy(false);
+        setCashingOut(false);
       }
       return;
     }
 
     busyRef.current = true;
     setBusy(true);
+    setCashingOut(true);
     setError(null);
 
     // Always cash out in the coin type locked at start — never the live topbar.
@@ -364,6 +366,7 @@ export function Mines() {
     });
     busyRef.current = false;
     setBusy(false);
+    setCashingOut(false);
 
     if (cashErr || !data) {
       setError(cashErr ?? "Cashout failed.");
@@ -546,7 +549,7 @@ export function Mines() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 1);
+                  applyWager(Number.isFinite(parsed) ? parsed : SC_MIN_WAGER);
                 }}
                 disabled={playing || busy}
               />
@@ -612,7 +615,7 @@ export function Mines() {
               variant="win"
               onClick={() => handleCashout(false)}
               busy={busy}
-              busyLabel="Cashing out…"
+              busyLabel={cashingOut ? "Cashing out…" : "Revealing…"}
               disabled={gemsRevealed < 1}
               label={`Cash out ${multiplier.toFixed(2)}×`}
             />

@@ -18,7 +18,7 @@ import {
   setLimboClientSeed,
 } from "../../lib/limbo";
 import { realMoneyBetError } from "../../lib/assertCanPlay";
-import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
+import { getActiveBalance, clampWager, SC_MAX_WAGER, SC_MIN_WAGER } from "../../lib/gameWallet";
 import "../../styles/game-controls.css";
 import "./Limbo.css";
 
@@ -139,7 +139,7 @@ export function Limbo() {
       if (k === "[") {
         if (!isRolling) {
           e.preventDefault();
-          const half = Math.max(wagerRef.current / 2, 1);
+          const half = Math.max(wagerRef.current / 2, SC_MIN_WAGER);
           setWager(half);
           setWagerInput(half.toFixed(2));
         }
@@ -180,8 +180,7 @@ export function Limbo() {
   }, []);
 
   const applyWager = (value: number) => {
-    const maxBet = SC_MAX_WAGER;
-    const v = Math.max(1, Math.min(maxBet, value));
+    const v = clampWager(value);
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -459,7 +458,7 @@ export function Limbo() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 1);
+                  applyWager(Number.isFinite(parsed) ? parsed : SC_MIN_WAGER);
                 }}
                 disabled={rolling}
               />

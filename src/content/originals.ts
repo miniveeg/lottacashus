@@ -27,7 +27,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
     tag: "New",
     hook: "Beat the bust.",
     difficulty: 2,
-    minBet: 1,
+    minBet: 0.01,
     maxWin: "1,000,000×",
   },
   {
@@ -53,7 +53,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
     tag: "Live",
     hook: "Beat the dealer to 21.",
     difficulty: 4,
-    minBet: 1,
+    minBet: 0.01,
     maxWin: "3:2",
   },
   {
@@ -66,7 +66,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
     tag: "New",
     hook: "Red, black, or zero.",
     difficulty: 1,
-    minBet: 1,
+    minBet: 0.01,
     maxWin: "36×",
   },
   {
@@ -79,7 +79,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
     tag: "Live",
     hook: "Don't hit a mine.",
     difficulty: 3,
-    minBet: 1,
+    minBet: 0.01,
     maxWin: "~24,000×",
   },
   {
@@ -92,7 +92,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
     tag: "Live",
     hook: "Pick your numbers. Pick your risk.",
     difficulty: 2,
-    minBet: 1,
+    minBet: 0.01,
     maxWin: "~10,000×",
   },
   {
@@ -105,7 +105,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
     tag: "Live",
     hook: "Name your multiplier.",
     difficulty: 2,
-    minBet: 1,
+    minBet: 0.01,
     maxWin: "1,000,000×",
   },
   {
@@ -118,7 +118,7 @@ export const ORIGINAL_GAMES: OriginalGame[] = [
     tag: "New",
     hook: "Match three. Crown is king.",
     difficulty: 1,
-    minBet: 1,
+    minBet: 0.01,
     maxWin: "190×",
   },
 ];

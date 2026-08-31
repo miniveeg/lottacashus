@@ -13,7 +13,7 @@ import {
   rouletteWinChance,
 } from "../../lib/games/roulette";
 import { formatCoins } from "../../lib/format";
-import { getActiveBalance, SC_MAX_WAGER } from "../../lib/gameWallet";
+import { getActiveBalance, clampWager, SC_MAX_WAGER, SC_MIN_WAGER } from "../../lib/gameWallet";
 import {
   fetchRoulettePfState,
   placeRouletteBet,
@@ -125,7 +125,7 @@ export function Roulette() {
       if (k === "[") {
         if (!isSpinning) {
           e.preventDefault();
-          const half = Math.max(wagerRef.current / 2, 1);
+          const half = Math.max(wagerRef.current / 2, SC_MIN_WAGER);
           setWager(half);
           setWagerInput(half.toFixed(2));
         }
@@ -184,7 +184,7 @@ export function Roulette() {
   }, []);
 
   const applyWager = (value: number) => {
-    const v = Math.max(1, Math.min(SC_MAX_WAGER, value));
+    const v = clampWager(value);
     setWager(v);
     setWagerInput(v.toFixed(2));
   };
@@ -392,7 +392,7 @@ export function Roulette() {
                 onChange={(e) => setWagerInput(e.target.value)}
                 onBlur={() => {
                   const parsed = parseFloat(wagerInput.replace(/,/g, ""));
-                  applyWager(Number.isFinite(parsed) ? parsed : 1);
+                  applyWager(Number.isFinite(parsed) ? parsed : SC_MIN_WAGER);
                 }}
                 disabled={spinning}
               />

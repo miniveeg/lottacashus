@@ -81,8 +81,8 @@ export function limboWinChance(target: number): number {
 }
 
 export function validateLimboBet(wager: number, target: number): string | null {
-  if (!Number.isFinite(wager) || wager < 1) {
-    return "Minimum bet is 1 SC or GC.";
+  if (!Number.isFinite(wager) || wager < 0.01) {
+    return "Minimum bet is 0.01 SC.";
   }
   if (!Number.isFinite(target) || target < LIMBO_MIN_TARGET) {
     return `Minimum target is ${LIMBO_MIN_TARGET}×.`;

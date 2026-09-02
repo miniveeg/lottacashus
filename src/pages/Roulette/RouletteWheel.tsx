@@ -12,10 +12,13 @@ const R_OUTER = 92;
 const R_INNER = 58;
 const R_TEXT = 76;
 
+type WheelPhase = "idle" | "spinning" | "settling" | "won" | "loss";
+
 type Props = {
-  spinning: boolean;
+  phase: WheelPhase;
   resultPocket: number | null;
   resultColor: RouletteColor | null;
+  reduceMotion?: boolean;
 };
 
 function segmentPath(index: number): string {
@@ -48,11 +51,29 @@ const FILL: Record<RouletteColor, string> = {
   green: "#0f5c3a",
 };
 
-export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
-  // Use proper refs for mutable values (not useState tuples used as refs)
+function targetRotationForPocket(
+  pocket: number,
+  currentAccumulated: number,
+  extraTurns: number
+): number {
+  const index = EUROPEAN_WHEEL_ORDER.indexOf(
+    pocket as (typeof EUROPEAN_WHEEL_ORDER)[number]
+  );
+  const idx = index >= 0 ? index : 0;
+  const segmentCenter = idx * WHEEL_SEGMENT_DEG + WHEEL_SEGMENT_DEG / 2;
+  const landAngle = (360 - segmentCenter) % 360;
+  const currentBase = currentAccumulated % 360;
+  const delta = (((landAngle - currentBase) % 360) + 360) % 360;
+  return currentAccumulated + extraTurns * 360 + (delta === 0 ? 360 : delta);
+}
+
+export function RouletteWheel({
+  phase,
+  resultPocket,
+  resultColor,
+  reduceMotion = false,
+}: Props) {
   const accumulatedRotationRef = useRef(0);
-  // Spin generation counter — increments each time a spin *starts* so two
-  // consecutive landings on the same pocket still trigger a settle animation.
   const spinGenRef = useRef(0);
   const settledGenRef = useRef(0);
   const wasSpinningRef = useRef(false);
@@ -61,10 +82,10 @@ export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
   const [settling, setSettling] = useState(false);
   const [spinFrom, setSpinFrom] = useState(0);
 
+  const spinning = phase === "spinning";
+
   useEffect(() => {
     if (spinning) {
-      // Start spinning from current rotation. Bump generation so the next
-      // settle always runs, even if the pocket number is unchanged.
       if (!wasSpinningRef.current) {
         spinGenRef.current += 1;
         wasSpinningRef.current = true;
@@ -76,44 +97,54 @@ export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
 
     wasSpinningRef.current = false;
 
-    // When spin stops, land on result pocket for this generation only.
     if (
-      resultPocket !== null &&
-      spinGenRef.current > 0 &&
-      settledGenRef.current !== spinGenRef.current
+      resultPocket === null ||
+      spinGenRef.current === 0 ||
+      settledGenRef.current === spinGenRef.current
     ) {
-      settledGenRef.current = spinGenRef.current;
-
-      const index = EUROPEAN_WHEEL_ORDER.indexOf(
-        resultPocket as (typeof EUROPEAN_WHEEL_ORDER)[number]
-      );
-      const idx = index >= 0 ? index : 0;
-      const segmentCenter = idx * WHEEL_SEGMENT_DEG + WHEEL_SEGMENT_DEG / 2;
-      // The "land" angle is where the top of the wheel (pointer) needs to point
-      const landAngle = (360 - segmentCenter) % 360;
-      const currentBase = accumulatedRotationRef.current % 360;
-      const delta = ((landAngle - currentBase) + 360) % 360;
-      const targetRotation = accumulatedRotationRef.current + 5 * 360 + (delta === 0 ? 360 : delta);
-
-      accumulatedRotationRef.current = targetRotation;
-      setSettling(true);
-      setRotation(targetRotation);
+      return;
     }
-  }, [spinning, resultPocket]);
 
-  const hubColor = resultColor ?? "neutral";
-  const hubNumber = spinning ? null : resultPocket;
+    settledGenRef.current = spinGenRef.current;
+    const extraTurns = reduceMotion ? 0 : 4;
+    const target = targetRotationForPocket(
+      resultPocket,
+      accumulatedRotationRef.current,
+      extraTurns
+    );
+    accumulatedRotationRef.current = target;
+
+    if (reduceMotion) {
+      setSettling(false);
+      setRotation(target);
+      return;
+    }
+
+    setSettling(true);
+    setRotation(target);
+  }, [spinning, phase, resultPocket, reduceMotion]);
+
+  const showResult =
+    !spinning && resultPocket !== null && (phase === "settling" || phase === "won" || phase === "loss");
+  const hubColor = showResult && resultColor ? resultColor : "neutral";
+  const hubNumber = showResult ? resultPocket : null;
 
   return (
-    <div className="roulette-wheel">
+    <div className="roulette-wheel" data-phase={phase}>
       <div className="roulette-wheel__rim" aria-hidden="true" />
       <div
-        className={`roulette-wheel__disc-wrap${spinning ? " roulette-wheel__disc-wrap--spinning" : ""}${settling && !spinning ? " roulette-wheel__disc-wrap--settling" : ""}`}
+        className={[
+          "roulette-wheel__disc-wrap",
+          spinning && !reduceMotion && "roulette-wheel__disc-wrap--spinning",
+          settling && !spinning && !reduceMotion && "roulette-wheel__disc-wrap--settling",
+        ]
+          .filter(Boolean)
+          .join(" ")}
       >
         <div
           className="roulette-wheel__disc"
           style={
-            spinning
+            spinning && !reduceMotion
               ? ({ "--spin-from": `${spinFrom}deg` } as CSSProperties)
               : { transform: `rotate(${rotation}deg)` }
           }
@@ -125,7 +156,12 @@ export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
               const pos = labelPosition(i);
               return (
                 <g key={pocket}>
-                  <path d={segmentPath(i)} fill={FILL[color]} stroke="#0d0f14" strokeWidth="0.35" />
+                  <path
+                    d={segmentPath(i)}
+                    fill={FILL[color]}
+                    stroke="#0d0f14"
+                    strokeWidth="0.35"
+                  />
                   <text
                     x={pos.x}
                     y={pos.y}
@@ -142,7 +178,14 @@ export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
                 </g>
               );
             })}
-            <circle cx={CX} cy={CY} r={R_INNER - 1} fill="#141820" stroke="#3d4658" strokeWidth="1" />
+            <circle
+              cx={CX}
+              cy={CY}
+              r={R_INNER - 1}
+              fill="#141820"
+              stroke="#3d4658"
+              strokeWidth="1"
+            />
           </svg>
         </div>
       </div>
@@ -159,15 +202,21 @@ export function RouletteWheel({ spinning, resultPocket, resultColor }: Props) {
         {spinning ? (
           <>
             <span className="roulette-wheel__hub-label">Spinning</span>
-            <span className="roulette-wheel__hub-dots" aria-hidden="true">
-              <span /><span /><span />
-            </span>
+            {!reduceMotion && (
+              <span className="roulette-wheel__hub-dots" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+              </span>
+            )}
           </>
         ) : hubNumber !== null ? (
           <>
             <span className="roulette-wheel__hub-number">{hubNumber}</span>
             <span className="roulette-wheel__hub-color">
-              {resultColor ? resultColor.charAt(0).toUpperCase() + resultColor.slice(1) : ""}
+              {resultColor
+                ? resultColor.charAt(0).toUpperCase() + resultColor.slice(1)
+                : ""}
             </span>
           </>
         ) : (

@@ -1,6 +1,10 @@
+/* Slots table — obsidian / gold felt. Board chrome + reels + fairness.
+   Spin stagger (280ms) must stay in sync with REEL_STOP_STAGGER_MS in Slots.tsx. */
+
 .slots {
   --slot-reel-size: 110px;
   --slot-reel-height: 168px;
+  font-family: var(--lc-font-body);
 }
 
 @media (min-width: 600px) {
@@ -10,40 +14,207 @@
   }
 }
 
-.slots__header {
-  flex-shrink: 0;
+.slots__layout {
+  display: grid;
+  grid-template-columns: 1fr clamp(260px, 22vw, 360px);
+  gap: clamp(0.75rem, 1.5vw, 1.25rem);
+  align-items: stretch;
+  flex: 1;
+  min-height: 0;
 }
 
-.slots__title {
-  font-family: var(--lc-font-display);
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
+@media (max-width: 900px) {
+  .slots__layout {
+    grid-template-columns: 1fr;
+  }
 }
 
-.slots__subtitle {
-  margin: 0;
-  color: var(--lc-text-secondary);
-  font-size: 0.9rem;
-  max-width: 36rem;
-  line-height: 1.5;
-  overflow-wrap: break-word;
-}
-
-.slots__stage {
+.slots .slots__stage {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--lc-spacing-5);
-  min-height: 0;
-  height: 100%;
-  padding: var(--lc-spacing-5) var(--lc-spacing-4);
-  /* felt comes from lc-pages.css unified board chrome */
-  border-radius: var(--lc-radius-lg);
-  flex: 1;
+  overflow: visible;
+  height: auto;
+  min-height: min(22rem, 70dvh);
+  padding-bottom: 1.25rem;
   min-width: 0;
 }
+
+/* ── Board chrome ── */
+
+.slots__board-chrome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--lc-spacing-3);
+  margin-bottom: var(--lc-spacing-3);
+  min-width: 0;
+  width: 100%;
+}
+
+.slots__phase-pill {
+  font-family: var(--lc-font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--lc-radius-pill);
+  border: 1px solid var(--lc-border-strong);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--lc-text-secondary);
+}
+
+.slots__phase-pill[data-phase="spinning"] {
+  color: var(--lc-gold);
+  border-color: rgba(201, 168, 76, 0.45);
+  background: rgba(201, 168, 76, 0.12);
+}
+
+.slots__phase-pill[data-phase="won"] {
+  color: var(--lc-emerald);
+  border-color: var(--lc-emerald-dim);
+  background: var(--lc-emerald-glow);
+}
+
+.slots__phase-pill[data-phase="loss"] {
+  color: var(--lc-ruby);
+  border-color: var(--lc-ruby);
+  background: var(--lc-ruby-glow);
+}
+
+.slots__layout-tag {
+  font-family: var(--lc-font-numeric);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--lc-text-muted);
+  font-variant-numeric: tabular-nums;
+  margin-right: auto;
+}
+
+.slots__history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--lc-spacing-2);
+}
+
+.slots__history-chip {
+  min-width: 2.25rem;
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-1) var(--lc-spacing-2);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-numeric);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--lc-text-primary);
+  animation: slots-chip-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes slots-chip-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.slots__history-chip--win {
+  border-color: rgba(34, 197, 94, 0.45);
+  color: var(--lc-emerald);
+}
+
+.slots__history-chip--loss {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+/* ── Idle hint ── */
+
+.slots__press-hint {
+  margin: 0 0 var(--lc-spacing-2);
+  font-size: 0.9rem;
+  color: var(--lc-text-muted);
+  text-align: center;
+  letter-spacing: 0.02em;
+  animation: slots-hint-pulse 3s ease-in-out infinite;
+}
+
+.slots__press-hint kbd {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  margin: 0 0.15rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+}
+
+.slots__press-hint strong {
+  color: var(--lc-gold);
+  font-weight: 700;
+}
+
+@keyframes slots-hint-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ── Felt stage (reels cradle) ── */
+
+.slots__felt-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 0 1 auto;
+  min-height: 0;
+  border: 1px solid rgba(201, 168, 76, 0.16);
+  border-radius: var(--lc-radius-lg);
+  padding: var(--lc-spacing-4) var(--lc-spacing-3);
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(201, 168, 76, 0.06) 0%, transparent 55%),
+    linear-gradient(180deg, rgba(12, 14, 20, 0.55) 0%, rgba(8, 10, 14, 0.72) 100%);
+}
+
+.slots__felt-stage--spinning {
+  border-color: rgba(201, 168, 76, 0.4);
+  box-shadow: inset 0 0 36px rgba(201, 168, 76, 0.08);
+}
+
+.slots__felt-stage--win {
+  border-color: var(--lc-emerald-dim);
+  box-shadow: inset 0 0 48px rgba(34, 197, 94, 0.1);
+}
+
+.slots__felt-stage--loss {
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: inset 0 0 32px rgba(239, 68, 68, 0.06);
+}
+
+.slots__felt-stage--idle {
+  border-color: rgba(201, 168, 76, 0.12);
+}
+
+/* ── Reels ── */
 
 .slots__reels {
   position: relative;
@@ -58,7 +229,7 @@
   height: var(--slot-reel-height);
   display: grid;
   place-items: center;
-  background: var(--lc-bg-elevated);
+  background: rgba(0, 0, 0, 0.45);
   border: 2px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-lg);
   font-size: 3rem;
@@ -76,7 +247,6 @@
   }
 }
 
-/* Spinning state — real vertical scroll strip animation */
 .slots__reel--rolling {
   border-color: var(--lc-gold);
   box-shadow: 0 0 20px var(--lc-gold-glow);
@@ -84,28 +254,35 @@
 
 .slots__reel--rolling .slots__reel-inner {
   animation: slots-reel-scroll 0.15s linear infinite;
+  filter: blur(1.5px);
 }
 
 @keyframes slots-reel-scroll {
-  0%   { transform: translateY(0); }
-  100% { transform: translateY(-33.333%); }
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-33.333%);
+  }
 }
 
-/* Landed reel — quick settle bounce. */
 .slots__reel--landed .slots__reel-inner {
   animation: slots-reel-land 0.38s cubic-bezier(0.22, 1.4, 0.5, 1) both;
+  filter: none;
 }
 
 @keyframes slots-reel-land {
-  0% { transform: translateY(-12%); }
-  60% { transform: translateY(5%); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(-12%);
+  }
+  60% {
+    transform: translateY(5%);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
-/* Phase polish: win now fires a single celebration burst instead of an
-   infinite glow loop (Keno reviewer flagged the same pattern on the
-   paytable pulse). The reel scales up, an emerald ring expands outward,
-   then it settles into a static emerald glow. */
 .slots__reel--win {
   border-color: var(--lc-emerald);
   transform: scale(1.06);
@@ -120,7 +297,6 @@
   }
   35% {
     transform: scale(1.18);
-    /* Emerald ring expands + bright halo at peak. */
     box-shadow:
       0 0 0 18px rgba(34, 197, 94, 0),
       0 0 36px 8px rgba(34, 197, 94, 0.65);
@@ -134,7 +310,6 @@
 .slots__reel--loss {
   border-color: var(--lc-ruby);
   box-shadow: 0 0 12px var(--lc-ruby-glow);
-  /* Single ruby fade so the player registers the miss; then static. */
   animation: slots-loss-fade 0.9s ease-out 1;
 }
 
@@ -147,40 +322,40 @@
   }
 }
 
-/* Phase polish: idle reel frame. Only applies before the first spin so
-   it doesn't distract after the player has been playing. */
 .slots__reels--idle .slots__reel {
   border-color: var(--lc-border);
   animation: slots-idle-breath 4s ease-in-out infinite;
 }
 
 @keyframes slots-idle-breath {
-  0%, 100% { border-color: var(--lc-border); }
-  50%      { border-color: var(--lc-amber-dim); }
+  0%,
+  100% {
+    border-color: var(--lc-border);
+  }
+  50% {
+    border-color: var(--lc-amber-dim);
+  }
 }
 
-/* Center win-line indicator — only visible during active spinning and win
-   states. Audit issue Agent 3: win-line drew unnecessary attention when idle. */
 .slots__win-line {
   position: absolute;
-  /* AGENT.md §Centering — vertical center via absolute positioning with
-     top:50% + transform:translateY(-50%). Acceptable here because the
-     element only needs to span horizontally, not be nested in a centering
-     layout. */
   left: var(--lc-spacing-3);
   right: var(--lc-spacing-3);
   top: 50%;
   height: 2px;
   transform: translateY(-50%);
-  background: linear-gradient(90deg, transparent, var(--lc-amber-glow-strong), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--lc-amber-glow-strong),
+    transparent
+  );
   pointer-events: none;
   z-index: 1;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 
-/* Show the win-line while reels are spinning */
-.slots__reel--rolling ~ .slots__win-line,
 .slots__reels:has(.slots__reel--rolling) .slots__win-line {
   opacity: 0.4;
 }
@@ -205,8 +380,6 @@
   flex-shrink: 0;
 }
 
-/* 3-symbol strip: top/bottom are dimmed adjacent symbols, center is the win line.
-   Audit issue P2 #5 — makes the reel look like a real slot machine. */
 .slots__symbol--adjacent {
   width: var(--slot-reel-size);
   height: calc(var(--slot-reel-size) * 0.75);
@@ -219,56 +392,152 @@
   z-index: 1;
 }
 
-.slots__outcome {
-  text-align: center;
+/* ── Paytable ── */
+
+.slots__paytable-wrap {
+  margin-top: var(--lc-spacing-4);
 }
 
-.slots__outcome-multiplier {
+.slots__paytable-title {
+  margin: 0 0 var(--lc-spacing-2);
   font-family: var(--lc-font-display);
-  font-size: 1.4rem;
-  font-weight: 800;
-  color: var(--lc-gold);
-}
-
-.slots__outcome-payout {
-  font-family: var(--lc-font-mono);
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: var(--lc-emerald);
-  margin-top: var(--lc-spacing-2);
-  /* Tabular nums so the payout doesn't jitter when the value updates. */
-  font-variant-numeric: tabular-nums;
-}
-
-.slots__outcome-loss {
-  font-family: var(--lc-font-display);
-  font-size: 1.1rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--lc-ruby);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lc-text-muted);
 }
 
-.slots__layout {
+.slots__paytable {
   display: grid;
-  grid-template-columns: 1fr clamp(260px, 22vw, 360px);
-  gap: clamp(0.75rem, 1.5vw, 1.25rem);
-  align-items: stretch;
-  flex: 1;
-  min-height: 0;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: var(--lc-spacing-2);
 }
 
-@media (max-width: 900px) {
-  .slots__layout {
-    grid-template-columns: 1fr;
+.slots__paytable-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lc-spacing-2);
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--lc-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.28);
+  min-height: 2.5rem;
+}
+
+.slots__paytable-cell--top {
+  border-color: rgba(201, 168, 76, 0.28);
+}
+
+.slots__paytable-cell--active {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.12);
+  animation: slots-paytable-pulse 1.5s ease-in-out 3;
+}
+
+@keyframes slots-paytable-pulse {
+  0%,
+  100% {
+    background: rgba(34, 197, 94, 0.08);
+  }
+  50% {
+    background: rgba(34, 197, 94, 0.2);
   }
 }
 
-.slots__stage {
+.slots__paytable-hits {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--lc-text-primary);
   min-width: 0;
 }
 
-.slots__controls {
-  /* unified via lc-pages.css */
+.slots__paytable-mult {
+  font-family: var(--lc-font-numeric);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+  font-variant-numeric: tabular-nums;
 }
+
+.slots__paytable-cell--top .slots__paytable-mult {
+  color: var(--lc-gold);
+}
+
+.slots__paytable-cell--active .slots__paytable-mult {
+  color: var(--lc-emerald);
+}
+
+/* ── Live message ── */
+
+.slots__live-stats {
+  margin-top: var(--lc-spacing-3);
+  min-height: 1.5rem;
+  text-align: center;
+}
+
+.slots__message {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--lc-text-secondary);
+}
+
+.slots__message--win {
+  color: var(--lc-emerald);
+}
+
+.slots__message--loss {
+  color: #fca5a5;
+}
+
+.slots__message strong {
+  font-family: var(--lc-font-numeric);
+  font-variant-numeric: tabular-nums;
+}
+
+.slots__idle-hint {
+  font-size: 0.88rem;
+  color: var(--lc-text-muted);
+}
+
+/* ── Controls extras ── */
+
+.slots__sr-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.slots__hotkey-hint {
+  margin: var(--lc-spacing-2) 0 0;
+  font-size: 0.78rem;
+  color: var(--lc-text-muted);
+  text-align: center;
+}
+
+.slots__hotkey-hint kbd {
+  display: inline-block;
+  padding: 0.1rem 0.4rem;
+  margin: 0 0.1rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+}
+
+/* ── Provably fair ── */
 
 .slots__fairness {
   margin-top: var(--lc-spacing-4);
@@ -276,67 +545,125 @@
   border-top: 1px solid var(--lc-border);
 }
 
+.slots__fairness-toggle {
+  cursor: pointer;
+  font-family: var(--lc-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lc-text-secondary);
+  list-style: none;
+}
+
+.slots__fairness-toggle::-webkit-details-marker {
+  display: none;
+}
+
 .slots__fairness-body {
   display: flex;
   flex-direction: column;
   gap: var(--lc-spacing-2);
-  margin-top: var(--lc-spacing-2);
+  margin-top: var(--lc-spacing-3);
 }
 
-.slots__fairness-label {
+.slots__fairness-body > p {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.slots__fairness-k {
+  font-size: 0.72rem;
+  color: var(--lc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.slots__hash,
+.slots__stat-num {
+  font-family: var(--lc-font-mono);
+  font-size: 0.72rem;
+  word-break: break-all;
+  color: var(--lc-text-secondary);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  padding: 0.35rem 0.5rem;
+}
+
+.slots__seed-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   font-size: 0.78rem;
   color: var(--lc-text-muted);
 }
 
-.slots__fairness-input {
-  font-size: 0.72rem;
-  min-width: 0;
-  field-sizing: content;
-}
-
-.slots__fairness-input--hash {
-  margin-top: var(--lc-spacing-1);
-}
-
-.slots__fairness-row {
-  display: flex;
-  gap: var(--lc-spacing-2);
-  margin-top: var(--lc-spacing-1);
-  min-width: 0;
-}
-
-.slots__fairness-save-btn {
-  /* AGENT.md §Accessibility — interactive save button must hit 44px desktop. */
-  min-height: 2.75rem;
-  font-size: 0.72rem;
-  margin: 0;
-  width: auto;
-  padding: 0 var(--lc-spacing-3);
+.slots__seed-input {
+  font-family: var(--lc-font-mono);
+  font-size: 0.8rem;
+  padding: 0.5rem 0.65rem;
   border-radius: var(--lc-radius-sm);
-  font-weight: 600;
+  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--lc-text-primary);
+  min-height: 2.75rem;
 }
 
-/* Reduced-motion: suppress decorative reel shake / land bounce / win pulse.
-   The rAF spin animation is also skipped in JS (see Slots.tsx). The reels
-   still snap to their final landed position and the outcome text is still
-   announced — only the motion is suppressed. */
+.slots__tool-btn {
+  min-height: 2.75rem;
+  padding: 0 var(--lc-spacing-4);
+  border-radius: var(--lc-radius-sm);
+  border: 1px solid var(--lc-border-strong);
+  background: rgba(201, 168, 76, 0.12);
+  color: var(--lc-gold);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.slots__tool-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.slots__fairness-note {
+  margin: 0;
+  color: var(--lc-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.slots__fairness-note--disclosure {
+  border-top: 1px solid var(--lc-border);
+  padding-top: var(--lc-spacing-2);
+}
+
+/* ── Reduced motion ── */
+
 @media (prefers-reduced-motion: reduce) {
   .slots__reel {
     transition: border-color 0s, box-shadow 0s, transform 0s;
   }
 
-  .slots__reel--rolling .slots__reel-inner {
-    animation: none;
-    filter: none;
+  .slots__reel--rolling .slots__reel-inner,
+  .slots__reel--landed .slots__reel-inner,
+  .slots__reel--win,
+  .slots__reel--loss,
+  .slots__reels--idle .slots__reel,
+  .slots__paytable-cell--active,
+  .slots__press-hint,
+  .slots__history-chip {
+    animation: none !important;
+    filter: none !important;
   }
 
-  .slots__reel--landed .slots__reel-inner {
-    animation: none;
-  }
-
-  .slots__reel--win {
-    transform: none;
-    animation: none;
+  .slots__reel--win,
+  .slots__reel--loss {
+    transform: none !important;
   }
 
   .slots__reels--win .slots__win-line {
@@ -344,187 +671,8 @@
   }
 }
 
-/* ── Paytable display (audit R4) ── */
-.slots__paytable {
-  margin-bottom: var(--lc-spacing-4);
-  padding: var(--lc-spacing-3) var(--lc-spacing-4);
-  background: var(--lc-bg-base);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-md);
-}
+/* ── Mobile sticky controls ── */
 
-.slots__paytable-title {
-  margin: 0 0 var(--lc-spacing-3);
-  font-family: var(--lc-font-display);
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--lc-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.slots__paytable-grid {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: var(--lc-spacing-1) var(--lc-spacing-4);
-  align-items: center;
-}
-
-.slots__paytable-row {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--lc-spacing-2);
-  font-size: 0.82rem;
-  color: var(--lc-text-primary);
-  min-width: 0;
-}
-
-.slots__paytable-row--cherry {
-  color: var(--lc-text-secondary);
-  font-size: 0.78rem;
-  padding-left: var(--lc-spacing-1);
-}
-
-.slots__paytable-mult {
-  font-family: var(--lc-font-mono);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--lc-amber);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.slots__paytable-mult--top {
-  color: var(--lc-crimson-soft);
-}
-
-/* Phase polish: highlight the winning row + multiplier after a winning
-   round. 3-iteration pulse (matches Keno paytable-pulse pattern). */
-.slots__paytable-row--active {
-  animation: slots-paytable-row-pulse 1.5s ease-in-out 3;
-  border-radius: var(--lc-radius-sm);
-  background: rgba(34, 197, 94, 0.1);
-  padding: 2px var(--lc-spacing-2);
-}
-
-@keyframes slots-paytable-row-pulse {
-  0%, 100% {
-    background: rgba(34, 197, 94, 0.06);
-  }
-  50% {
-    background: rgba(34, 197, 94, 0.18);
-  }
-}
-
-.slots__paytable-mult--active {
-  color: var(--lc-emerald);
-  animation: slots-paytable-mult-pulse 1.2s ease-in-out 3;
-}
-
-@keyframes slots-paytable-mult-pulse {
-  0%, 100% {
-    text-shadow: 0 0 0 transparent;
-  }
-  50% {
-    text-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
-  }
-}
-
-.slots__paytable-rtp {
-  margin: var(--lc-spacing-3) 0 0;
-  font-family: var(--lc-font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--lc-emerald);
-  letter-spacing: 0.02em;
-}
-
-/* Fairness notes (shared disclosure style from game-controls.css) */
-.slots__fairness-note {
-  margin-top: var(--lc-spacing-2);
-  color: var(--lc-text-muted);
-  font-size: 0.78rem;
-  line-height: 1.4;
-}
-
-/* H9 (UI/UX audit): inline "Need funds? Deposit" link, mirroring the
-   pattern used by Keno, Mines, Limbo, Crash, and Blackjack. */
-.slots__hint {
-  font-size: 0.85rem;
-  color: var(--lc-text-muted);
-  text-align: center;
-  margin: 0;
-}
-
-.slots__hint a {
-  color: var(--lc-crimson);
-  font-weight: 600;
-}
-
-/* Phase polish: pre-spin call-to-action under the reels. Visible only
-   while all 3 reels show the placeholder dash — i.e. before the first
-   spin. Styled to match the page's tone (sub-amber kbd). */
-.slots__press-to-spin {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--lc-text-muted);
-  text-align: center;
-  letter-spacing: 0.02em;
-  animation: slots-hint-pulse 3s ease-in-out infinite;
-}
-
-.slots__press-to-spin kbd {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  margin: 0 0.15rem;
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-sm);
-  font-family: var(--lc-font-mono);
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--lc-amber);
-  box-shadow: 0 1px 0 var(--lc-bg-hover);
-}
-
-.slots__press-to-spin strong {
-  color: var(--lc-gold);
-  font-weight: 700;
-}
-
-@keyframes slots-hint-pulse {
-  0%, 100% { opacity: 0.7; }
-  50%      { opacity: 1; }
-}
-
-/* The .slots__sr-status utility was added during the initial polish pass
-   to support a duplicate SR-only live announcer (now removed). No JSX
-   element renders this selector anymore, so the rule itself is dead code
-   and has been deleted per the codebase's no-orphan-CSS rule. The
-   outcome <div className="slots__outcome"> remains the sole live region
-   for round results. */
-
-/* ── Reduced motion (prefers-reduced-motion: reduce) ──
-   Suppresses every animation + transform added during polish (burst,
-   loss-fade, paytable row pulse, idle breath, hint pulse, win pulse
-   already suppressed in the existing block above). */
-@media (prefers-reduced-motion: reduce) {
-  .slots__reel--win,
-  .slots__reel--loss,
-  .slots__reels--idle .slots__reel,
-  .slots__paytable-row--active,
-  .slots__paytable-mult--active,
-  .slots__press-to-spin {
-    animation: none !important;
-  }
-  .slots__reel--win,
-  .slots__reel--loss {
-    transform: none !important;
-  }
-}
-
-/* ── Mobile (≤ 480px): pin controls + paytable at bottom so the reels
-   remain visible at the top while wager stays thumb-reachable. ── */
 @media (max-width: 480px) {
   .slots__controls {
     position: sticky;
@@ -539,12 +687,23 @@
     padding-top: var(--lc-spacing-3);
     padding-bottom: max(var(--lc-spacing-3), env(safe-area-inset-bottom));
   }
+
   .slots__reel {
-    /* Keep the reels readable on a 360px viewport. */
     width: calc(var(--slot-reel-size) - 12px);
     height: calc(var(--slot-reel-height) - 16px);
   }
-  .slots__paytable-grid {
-    gap: var(--lc-spacing-1) var(--lc-spacing-2);
+
+  .slots__history-chip {
+    min-height: 2.25rem;
+    min-width: 1.8rem;
+    font-size: 0.62rem;
+  }
+
+  .slots__hotkey-hint {
+    display: none;
+  }
+
+  .slots__paytable {
+    grid-template-columns: 1fr 1fr;
   }
 }

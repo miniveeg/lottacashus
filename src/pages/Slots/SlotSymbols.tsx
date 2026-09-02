@@ -79,8 +79,8 @@ export function SevenSymbol({ size = DEFAULT_SIZE, className }: SymbolProps) {
   );
 }
 
-/** 3 — Dollar bag */
-export function DollarSymbol({ size = DEFAULT_SIZE, className }: SymbolProps) {
+/** 3 — Bar (cash bag glyph; server label is Bar) */
+export function BarSymbol({ size = DEFAULT_SIZE, className }: SymbolProps) {
   return (
     <svg {...svgProps(size, className)}>
       <path d="M22 26 L42 26 L46 50 L18 50 Z" fill="#2d7a2d" stroke="#0a3a0a" strokeWidth="2" />
@@ -102,6 +102,9 @@ export function DollarSymbol({ size = DEFAULT_SIZE, className }: SymbolProps) {
     </svg>
   );
 }
+
+/** @deprecated Prefer BarSymbol — server / paytable label is Bar. */
+export const DollarSymbol = BarSymbol;
 
 /** 4 — Watermelon */
 export function MelonSymbol({ size = DEFAULT_SIZE, className }: SymbolProps) {
@@ -161,7 +164,7 @@ const SYMBOL_COMPONENTS: Record<number, (props: SymbolProps) => React.ReactEleme
   0: CherrySymbol,
   1: BellSymbol,
   2: SevenSymbol,
-  3: DollarSymbol,
+  3: BarSymbol,
   4: MelonSymbol,
   5: StarSymbol,
   6: CrownSymbol,

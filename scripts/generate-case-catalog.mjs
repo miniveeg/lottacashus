@@ -92,7 +92,7 @@ function accentForPrice(price) {
   return "#94a3b8";
 }
 
-function main() {
+async function main() {
   const raw = JSON.parse(fs.readFileSync(SOURCE, "utf8"));
   const sourceCases = raw
     .map((e) => e.nextData?.props?.pageProps?.case)
@@ -149,11 +149,31 @@ ${items}
   const body = `${header}${chunks.join(",\n")}\n];\n`;
   fs.writeFileSync(OUT_CLIENT, body);
 
-  const serverHeader = `/** AUTO-GENERATED — keep in sync with src/lib/games/case-battles/caseCatalog.generated.ts */\nimport type { LootCase } from "./caseBattlesTypes.ts";\n\nexport const GENERATED_CASE_CATALOG: LootCase[] = [\n`;
-  fs.writeFileSync(OUT_SERVER, serverHeader + chunks.join(",\n") + "\n];\n");
+  // Edge catalog: gzip+base64 loader (keeps MCP deploy payloads small).
+  const { gzipSync } = await import("node:zlib");
+  const compactJson = JSON.stringify(catalog);
+  const b64 = gzipSync(Buffer.from(compactJson, "utf8"), { level: 9 }).toString("base64");
+  const serverBody = `/** AUTO-GENERATED compressed catalog for Edge deploy size limits.
+ * Readable twin: src/lib/games/case-battles/caseCatalog.generated.ts
+ * Regenerate: node scripts/generate-case-catalog.mjs
+ */
+import type { LootCase } from "./caseBattlesTypes.ts";
+
+const _GZ_B64 = ${JSON.stringify(b64)};
+
+async function _loadCatalog(): Promise<LootCase[]> {
+  const bin = Uint8Array.from(atob(_GZ_B64), (c) => c.charCodeAt(0));
+  const stream = new Blob([bin]).stream().pipeThrough(new DecompressionStream("gzip"));
+  const text = await new Response(stream).text();
+  return JSON.parse(text) as LootCase[];
+}
+
+export const GENERATED_CASE_CATALOG: LootCase[] = await _loadCatalog();
+`;
+  fs.writeFileSync(OUT_SERVER, serverBody);
 
   console.log(`Wrote ${catalog.length} cases to ${OUT_CLIENT}`);
-  console.log(`Wrote ${catalog.length} cases to ${OUT_SERVER}`);
+  console.log(`Wrote compressed Edge catalog (${b64.length} b64 chars) to ${OUT_SERVER}`);
   console.log(`Price range: $${catalog[0].price} – $${catalog[catalog.length - 1].price}`);
 }
-main();
+await main();

@@ -183,6 +183,8 @@ case-battle-v2
 - Apply **migration 016** (`016_supabase_cleanup_missing_rpcs`) via MCP `apply_migration` (or SQL Editor). Do **not** re-`db push` 001–015 on live.
 - **Required** edge: `crash-settle-loop` (verify_jwt=false; auth via `CRON_SECRET`). Schedule external invoke ~every 60s.
 - **Never deploy** legacy `case-battle` (V1). Quarantine/delete it; product path is **`case-battle-v2` only** with `verify_jwt=true`.
+- **`case-battle-v2` catalog**: Edge uses gzip+base64 `caseCatalog.generated.ts` (small MCP/API payloads). Readable catalog lives under `src/lib/games/case-battles/`. Regenerate both via `node scripts/generate-case-catalog.mjs`.
+- Partial CLI deploy: `bash scripts/deploy-edge-functions.sh case-battle-v2`
 - Games + other product functions are listed above / in `scripts/deploy-edge-functions.*`.
 
 

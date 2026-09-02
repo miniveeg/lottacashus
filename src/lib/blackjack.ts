@@ -90,8 +90,17 @@ export async function blackjackAction(
   if (error) return { data: null, error };
   if (!data) return { data: null, error: "No response from server." };
   if (data.active === false) return { data: null, error: null, active: false };
+  const mapped = mapBlackjackHand(data, { assumeInProgress: data.active === true });
+  // start / hit / stand all need a real hand id; empty id previously looked
+  // like a successful deal with no cards (silent idle return).
+  if (!mapped.handId && data.active !== true) {
+    const action = String(body.action ?? "");
+    if (action === "start" || action === "hit" || action === "stand" || action === "double" || action === "split" || action === "insurance") {
+      return { data: null, error: "Server response missing hand id." };
+    }
+  }
   return {
-    data: mapBlackjackHand(data, { assumeInProgress: data.active === true }),
+    data: mapped,
     error: null,
     active: data.active === true ? true : undefined,
   };

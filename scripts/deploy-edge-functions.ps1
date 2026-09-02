@@ -23,6 +23,7 @@ $functions = @(
   "place-crash-bet",
   "cash-out-crash",
   "crash-settle-expired",
+  "crash-settle-loop",
   "blackjack-game",
   "case-battle-v2"
 )
@@ -38,5 +39,5 @@ foreach ($fn in $functions) {
 }
 
 Write-Host ""
-Write-Host "Done. Do NOT deploy legacy case-battle (V1) — use case-battle-v2 only." -ForegroundColor Green
+Write-Host "Done. Do NOT deploy legacy case-battle (V1) — quarantine/delete V1; UI uses case-battle-v2 only (verify_jwt=true). Require crash-settle-loop + migration 016." -ForegroundColor Green
 Write-Host "Set secrets: ALLOWED_ORIGINS, CRON_SECRET, CRYPTO_MASTER_MNEMONIC, SMTP_*, wallets." -ForegroundColor Green

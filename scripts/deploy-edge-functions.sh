@@ -24,6 +24,7 @@ FUNCTIONS=(
   place-crash-bet
   cash-out-crash
   crash-settle-expired
+  crash-settle-loop
   blackjack-game
   case-battle-v2
 )
@@ -35,5 +36,5 @@ for fn in "${FUNCTIONS[@]}"; do
 done
 
 echo ""
-echo "Done. Do NOT deploy legacy case-battle (V1) — use case-battle-v2 only."
+echo "Done. Do NOT deploy legacy case-battle (V1) — quarantine/delete V1; UI uses case-battle-v2 only (verify_jwt=true). Require crash-settle-loop + migration 016."
 echo "Set secrets: ALLOWED_ORIGINS, CRON_SECRET, CRYPTO_MASTER_MNEMONIC, SMTP_*, wallets."

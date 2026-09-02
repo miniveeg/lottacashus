@@ -61,6 +61,8 @@ supabase/migrations/001_audit_fixes.sql
 supabase/migrations/002_case_battles_audit_fixes.sql
 supabase/migrations/003_mines_deposit_security.sql
 supabase/migrations/004_case_battle_payouts_and_blackjack_coin.sql
+… through …
+supabase/migrations/016_supabase_cleanup_missing_rpcs.sql
 ```
 
 Or with CLI after `supabase link`:
@@ -168,11 +170,21 @@ place-slots-bet
 place-crash-bet
 cash-out-crash
 crash-settle-expired
+crash-settle-loop
 blackjack-game
 case-battle-v2
 ```
 
 `verify_jwt` is controlled by `supabase/config.toml`.
+
+
+### Canonical deploy notes (2026-09)
+
+- Apply **migration 016** (`016_supabase_cleanup_missing_rpcs`) via MCP `apply_migration` (or SQL Editor). Do **not** re-`db push` 001–015 on live.
+- **Required** edge: `crash-settle-loop` (verify_jwt=false; auth via `CRON_SECRET`). Schedule external invoke ~every 60s.
+- **Never deploy** legacy `case-battle` (V1). Quarantine/delete it; product path is **`case-battle-v2` only** with `verify_jwt=true`.
+- Games + other product functions are listed above / in `scripts/deploy-edge-functions.*`.
+
 
 ### 2.4 Cron schedules (Dashboard → Edge Functions → Schedules, or external cron)
 
@@ -183,6 +195,7 @@ Call with header `x-cron-secret: <CRON_SECRET>` (or your project’s auth patter
 | `poll-deposits` | every 1–2 min | Detect + credit on-chain deposits |
 | `sweep-deposits` | every 5–15 min | Sweep user deposits to main wallets |
 | `crash-settle-expired` | every 1 min | Auto-settle abandoned Crash bets |
+| `crash-settle-loop` | every 60s | Sub-second settle via `crash_settle_due_bets` |
 
 Example (curl):
 

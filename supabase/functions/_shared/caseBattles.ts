@@ -291,7 +291,7 @@ export function applyBorrowToPayouts(
  * `domain` namespaces the tie domain so a slot or team tie can never collide
  * with the other's hash input. Keep these strings in sync with SQL.
  */
-async function coinflipWinningSlot(
+export async function coinflipWinningSlot(
   tiedSlots: number[],
   battleSeed: string | null,
   domain: 'tie' | 'team-tie'
@@ -824,75 +824,4 @@ export async function resolveBattle(params: {
     jackpotWeights: outcome.jackpotWeights,
     jackpotReelSlot: outcome.jackpotReelSlot,
   };
-}/**
- * Cryptographic tie-break (audit #002).
- *
- * Previously, ties were broken by lowest slot index — whoever joined first
- * always won. We replace this with a deterministic SHA-256-based coinflip
- * derived from the battleSeed: SHA-256(`${battleSeed}:tie:${slot}`) acts as
- * each slot's "vote". The tied slots are sorted by the hex output and the
- * lowest hex digest wins. The SQL mirror in supabase/migrations/002_ uses
- * the same domain separator so server- and client-side resolutions agree.
- *
- * Falls back to lowest-slot order when `battleSeed` is unknown (pre-commit UI
- * previews only — the server is authoritative so client previews never affect
- * the actual payout).
- *
- * `domain` namespaces the tie domain so a slot or team tie can never collide
- * with the other's hash input. Keep these strings in sync with SQL.
- */
-async function coinflipWinningSlot(
-  tiedSlots: number[],
-  battleSeed: string | null,
-  domain: 'tie' | 'team-tie'
-): Promise<number> {
-  if (tiedSlots.length <= 1) return tiedSlots[0] ?? -1;
-  if (!battleSeed) {
-    return tiedSlots.reduce((a, b) => (a < b ? a : b));
-  }
-  const enc = new TextEncoder();
-  const ranked = await Promise.all(
-    tiedSlots.map(async (slot) => {
-      const buf = await crypto.subtle.digest(
-        'SHA-256',
-        enc.encode(`${battleSeed}:${domain}:${slot}`),
-      );
-      return {
-        slot,
-        hash: Array.from(new Uint8Array(buf))
-          .map((b) => b.toString(16).padStart(2, '0'))
-          .join(''),
-      };
-    }),
-  );
-  ranked.sort((a, b) =>
-    a.hash < b.hash ? -1 : a.hash > b.hash ? 1 : a.slot - b.slot
-  );
-  return ranked[0]!.slot;
 }
-
-/**
- * Async extreme-picker used by the resolveXxx functions. Returns the slot
- * index whose `score(players[i])` is best (max or min per `pickMax`), with
- * ties broken by `coinflipWinningSlot`. Replaces the slot-index-biased
- * `pickExtremeIndex` legacy helper (audit #002).
- */
-async function pickExtremeByScore(
-  players: BattlePlayerResult[],
-  score: (p: BattlePlayerResult) => number,
-  pickMax: boolean,
-  battleSeed: string | null,
-): Promise<number> {
-  if (players.length === 0) return -1;
-  // Bucket slots by score so ties are easy to detect.
-  const scored = players.map((p) => ({ slot: p.slot, v: score(p) }));
-  let bestV = scored[0]!.v;
-  for (let i = 1; i < scored.length; i++) {
-    const s = scored[i]!;
-    if (pickMax ? s.v > bestV : s.v < bestV) bestV = s.v;
-  }
-  const tied = scored.filter((s) => s.v === bestV).map((s) => s.slot);
-  return coinflipWinningSlot(tied, battleSeed, 'tie');
-}
-
-

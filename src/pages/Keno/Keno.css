@@ -1,25 +1,9 @@
+/* Keno table — obsidian / gold felt. Board chrome lives in lc-pages.css
+   (.keno__board-panel); this file owns grid, paytable, fairness, motion.
+   Paytable sits OUTSIDE .keno__felt-stage so overflow:hidden never clips it. */
+
 .keno {
-  /* layout via .lc-game-page */
-}
-
-.keno__header {
-  flex-shrink: 0;
-}
-
-.keno__title {
-  font-family: var(--lc-font-display);
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
-}
-
-.keno__subtitle {
-  margin: 0;
-  color: var(--lc-text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  max-width: 36rem;
-  overflow-wrap: break-word;
+  font-family: var(--lc-font-body);
 }
 
 .keno__layout {
@@ -29,8 +13,6 @@
   align-items: stretch;
   flex: 1;
   min-height: 0;
-  /* Size to content like Mines — height:0 was stretching the board and
-     leaving an empty stage around the packed 40-cell grid. */
 }
 
 @media (max-width: 900px) {
@@ -39,49 +21,99 @@
   }
 }
 
-.keno__board-panel {
-  /* unified via lc-pages.css */
+/* Board panel must not clip the paytable strip — felt stage owns overflow. */
+.keno .keno__board-panel {
+  overflow: visible;
+  height: auto;
+  min-height: min(24rem, 70dvh);
+  padding-bottom: 1.25rem;
 }
 
-.keno__board-toolbar {
+/* ── Board chrome (phase + tools) ── */
+
+.keno__board-chrome {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--lc-spacing-3);
-  margin-bottom: var(--lc-spacing-4);
+  margin-bottom: var(--lc-spacing-3);
   min-width: 0;
+  width: 100%;
+}
+
+.keno__phase-pill {
+  font-family: var(--lc-font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--lc-radius-pill);
+  border: 1px solid var(--lc-border-strong);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--lc-text-secondary);
+}
+
+.keno__phase-pill[data-phase="drawing"] {
+  color: var(--lc-gold);
+  border-color: rgba(201, 168, 76, 0.45);
+  background: rgba(201, 168, 76, 0.12);
+}
+
+.keno__phase-pill[data-phase="won"] {
+  color: var(--lc-emerald);
+  border-color: var(--lc-emerald-dim);
+  background: var(--lc-emerald-glow);
+}
+
+.keno__phase-pill[data-phase="loss"] {
+  color: var(--lc-ruby);
+  border-color: var(--lc-ruby);
+  background: var(--lc-ruby-glow);
 }
 
 .keno__pick-count {
+  font-family: var(--lc-font-numeric);
   font-size: 0.8rem;
+  font-weight: 600;
   color: var(--lc-text-muted);
+  font-variant-numeric: tabular-nums;
   margin-right: auto;
 }
 
+.keno__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--lc-spacing-2);
+}
+
 .keno__tool-btn {
-  background: var(--lc-bg-hover);
-  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(201, 168, 76, 0.28);
   color: var(--lc-text-primary);
   border-radius: var(--lc-radius-sm);
-  /* AGENT.md §Accessibility must-haves — 44px desktop hit area. Was 36px. */
   min-height: 2.75rem;
   padding: var(--lc-spacing-2) var(--lc-spacing-4);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-family: var(--lc-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background var(--lc-transition), color var(--lc-transition);
-  /* AGENT.md §Single-row discipline — prevent text from blowing out. */
+  transition:
+    background var(--lc-transition),
+    border-color var(--lc-transition),
+    color var(--lc-transition);
   min-width: 0;
 }
 
 .keno__tool-btn:hover:not(:disabled) {
-  background: var(--lc-bg-active);
+  border-color: var(--lc-gold-dim);
+  background: rgba(201, 168, 76, 0.12);
 }
 
-/* Phase polish: visible focus indicator on toolbar buttons so keyboard
-   navigation paths are unambiguous (matches Mines/Games polish). */
 .keno__tool-btn:focus-visible {
-  outline: 2px solid var(--lc-gold);
+  outline: 2px solid var(--lc-crimson-soft);
   outline-offset: 2px;
 }
 
@@ -90,8 +122,6 @@
   cursor: not-allowed;
 }
 
-/* Phase polish: Auto Pick dice-roll — same pattern as Mines.
-   `key={randomPickKey}` forces React remount so the @keyframes replays. */
 .keno__tool-btn--auto {
   display: inline-flex;
   align-items: center;
@@ -100,21 +130,18 @@
 
 .keno__tool-btn--auto > span[aria-hidden="true"] {
   display: inline-block;
-  transform-origin: center;
   animation: keno-dice-roll 0.45s ease-out;
+  transform-origin: center;
 }
 
 @keyframes keno-dice-roll {
-  0%   { transform: rotate(0deg) scale(1); }
-  25%  { transform: rotate(140deg) scale(1.18); }
-  50%  { transform: rotate(260deg) scale(0.9); }
-  75%  { transform: rotate(330deg) scale(1.08); }
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(140deg) scale(1.18); }
+  50% { transform: rotate(260deg) scale(0.9); }
+  75% { transform: rotate(330deg) scale(1.08); }
   100% { transform: rotate(360deg) scale(1); }
 }
 
-/* M7: Skip-animation button — distinct amber accent so it stands out from
-   the neutral Auto Pick / Clear tool buttons. Pulses subtly while visible
-   to draw the user's eye (they have ~1.1s to notice and click it). */
 .keno__tool-btn--skip {
   background: rgba(245, 185, 66, 0.12);
   border-color: var(--lc-amber);
@@ -124,7 +151,6 @@
 
 .keno__tool-btn--skip:hover:not(:disabled) {
   background: rgba(245, 185, 66, 0.2);
-  transform: translateY(-1px);
 }
 
 @keyframes keno-skip-pulse {
@@ -132,22 +158,83 @@
   50% { box-shadow: 0 0 12px 2px rgba(245, 185, 66, 0.3); }
 }
 
-.keno__grid {
-  display: grid;
-  /* auto-fill 8 columns; cells shrink as small as needed to fit the panel */
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 0.4rem;
-  row-gap: 0.4rem;
-  /* Pack rows at the start so leftover panel height does not open gaps
-     between cells (stretch) or an empty stage (center). */
-  flex: 0 1 auto;
-  min-height: 0;
-  align-content: start;
-  align-items: stretch;
-  justify-items: stretch;
+/* ── Idle hint ── */
+
+.keno__press-hint {
+  margin: 0 0 var(--lc-spacing-2);
+  font-size: 0.9rem;
+  color: var(--lc-text-muted);
+  text-align: center;
+  letter-spacing: 0.02em;
+  animation: keno-hint-pulse 3s ease-in-out infinite;
 }
 
-/* On very small screens, drop to 5 columns only if the viewport is tiny */
+.keno__press-hint kbd {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  margin: 0 0.15rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+}
+
+@keyframes keno-hint-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* ── Felt stage (overflow:hidden — grid only) ── */
+
+.keno__felt-stage {
+  position: relative;
+  width: 100%;
+  flex: 0 1 auto;
+  min-height: 0;
+  border: 1px solid rgba(201, 168, 76, 0.16);
+  border-radius: var(--lc-radius-lg);
+  padding: var(--lc-spacing-2);
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.keno__felt-stage--idle {
+  animation: keno-stage-idle-breath 5s ease-in-out infinite;
+}
+
+@keyframes keno-stage-idle-breath {
+  0%, 100% { border-color: rgba(201, 168, 76, 0.16); }
+  50% { border-color: var(--lc-amber-dim); }
+}
+
+.keno__felt-stage--drawing {
+  border-color: rgba(201, 168, 76, 0.4);
+}
+
+.keno__felt-stage--win {
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 28px rgba(34, 197, 94, 0.35);
+}
+
+.keno__felt-stage--loss {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.3);
+}
+
+/* ── Grid ── */
+
+.keno__grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 0.4rem;
+  align-content: start;
+  min-height: 0;
+  width: 100%;
+}
+
 @media (max-width: 420px) {
   .keno__grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -156,43 +243,41 @@
 
 .keno__cell {
   position: relative;
-  /* aspect-ratio keeps cells square; width is dictated by the grid column */
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at 35% 35%, var(--lc-bg-hover) 0%, var(--lc-bg-elevated) 100%);
-  border: 1px solid var(--lc-border-strong);
-  border-radius: 10px;
+  border-radius: var(--lc-radius-sm);
+  border: 1px solid rgba(201, 168, 76, 0.22);
+  background:
+    linear-gradient(155deg, rgba(18, 42, 32, 0.95) 0%, rgba(8, 20, 16, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 2px 8px rgba(0, 0, 0, 0.35);
   color: var(--lc-text-secondary);
   font-family: var(--lc-font-display);
   font-weight: 700;
-  /* font-size scales with the cell width via cqi (container query inline) fallback to vw */
   font-size: clamp(0.55rem, 1.1vw, 0.9rem);
   cursor: pointer;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.06),
-    0 2px 6px rgba(0,0,0,0.3);
+  overflow: hidden;
+  white-space: nowrap;
+  min-width: 0;
+  min-height: 0;
   transition:
     border-color var(--lc-transition),
     background var(--lc-transition),
     color var(--lc-transition),
     transform 0.12s ease,
     box-shadow var(--lc-transition);
-  /* Prevent text from ever wrapping or overflowing the cell */
-  overflow: hidden;
-  white-space: nowrap;
-  min-width: 0;
-  min-height: 0;
 }
 
 .keno__cell:hover:not(:disabled) {
   border-color: var(--lc-amber-dim);
   color: var(--lc-text-primary);
-  transform: translateY(-2px) scale(1.06);
+  transform: translateY(-2px) scale(1.04);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.08),
-    0 4px 12px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.4),
     0 0 12px var(--lc-amber-glow);
 }
 
@@ -201,34 +286,48 @@
   outline-offset: 2px;
 }
 
-.keno__cell--selected {
-  border-color: var(--lc-amber);
-  background: radial-gradient(ellipse at 35% 35%, rgba(245,185,66,0.25) 0%, rgba(245,185,66,0.08) 100%);
-  color: var(--lc-amber);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.1),
-    0 0 14px var(--lc-amber-glow),
-    0 2px 8px rgba(0,0,0,0.3);
+.keno__cell:disabled {
+  cursor: default;
 }
 
+/* Amber picks */
+.keno__cell--selected {
+  border-color: var(--lc-amber);
+  background: radial-gradient(
+    ellipse at 35% 35%,
+    rgba(245, 185, 66, 0.28) 0%,
+    rgba(245, 185, 66, 0.08) 100%
+  );
+  color: var(--lc-amber);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 14px var(--lc-amber-glow),
+    0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Drawn miss — ghosted */
 .keno__cell--drawn:not(.keno__cell--hit) {
-  /* Drawn but not selected — ghosted circle with a subtle crimson ring */
   opacity: 0.55;
   border-color: var(--lc-border-accent);
   background: rgba(220, 20, 60, 0.04);
-  animation: keno-cell-drawn 0.25s ease-out;
+  animation: keno-cell-drawn 0.25s ease-out both;
   animation-delay: calc(var(--draw-index, 0) * 0.1s);
 }
 
+/* Emerald hits */
 .keno__cell--hit {
   border-color: var(--lc-emerald);
-  background: radial-gradient(ellipse at 35% 35%, rgba(34,197,94,0.3) 0%, rgba(34,197,94,0.1) 100%);
+  background: radial-gradient(
+    ellipse at 35% 35%,
+    rgba(34, 197, 94, 0.32) 0%,
+    rgba(34, 197, 94, 0.1) 100%
+  );
   color: var(--lc-emerald);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 0 18px var(--lc-emerald-glow),
-    0 2px 8px rgba(0,0,0,0.3);
-  animation: keno-cell-hit 0.4s cubic-bezier(0.34, 1.45, 0.64, 1);
+    0 2px 8px rgba(0, 0, 0, 0.3);
+  animation: keno-cell-hit 0.4s cubic-bezier(0.34, 1.45, 0.64, 1) both;
   animation-delay: calc(var(--draw-index, 0) * 0.1s);
 }
 
@@ -236,19 +335,10 @@
   0% {
     transform: scale(0.7);
     opacity: 0;
-    box-shadow: inset 0 0 0 0 rgba(220, 20, 60, 0);
-  }
-  60% {
-    transform: scale(0.98);
-    opacity: 0.6;
-    /* Transient inner ring so *all* draws (not just hits) get a
-       satisfying pop — 60% of the way through the animation. */
-    box-shadow: inset 0 0 0 2px rgba(220, 20, 60, 0.5);
   }
   100% {
     transform: scale(1);
-    opacity: 0.45;
-    box-shadow: inset 0 0 0 0 rgba(220, 20, 60, 0);
+    opacity: 0.55;
   }
 }
 
@@ -256,23 +346,27 @@
   0% {
     transform: scale(0.6);
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.1),
-      0 2px 8px rgba(0,0,0,0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 2px 8px rgba(0, 0, 0, 0.3),
       0 0 0 0 rgba(34, 197, 94, 0);
   }
   50% {
-    transform: scale(1.22);
-    /* Tighter spring + emerald glow burst at peak. */
+    transform: scale(1.18);
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
       0 0 22px 4px rgba(34, 197, 94, 0.65);
   }
   100% {
     transform: scale(1);
     box-shadow:
-      inset 0 1px 0 rgba(255,255,255,0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
       0 0 18px 0 rgba(34, 197, 94, 0.45);
   }
+}
+
+.keno__cell-num {
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 .keno__cell-gem {
@@ -286,18 +380,12 @@
   box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
 }
 
-.keno .keno__board-panel {
-  overflow: visible;
-  height: auto;
-  min-height: min(24rem, 70dvh);
-  padding-bottom: 1.75rem;
-}
+/* ── Paytable (outside overflow:hidden felt) ── */
 
 .keno__paytable-wrap {
   margin-top: var(--lc-spacing-3);
   padding-top: var(--lc-spacing-3);
-  padding-bottom: 0.75rem;
-  border-top: 1px solid var(--lc-border);
+  border-top: 1px solid rgba(201, 168, 76, 0.18);
   flex-shrink: 0;
   overflow: visible;
   min-height: 4.5rem;
@@ -305,16 +393,19 @@
 
 .keno__paytable-title {
   margin: 0 0 0.5rem;
-  font-size: 0.8rem;
+  font-family: var(--lc-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
   color: var(--lc-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 .keno__paytable {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+  overflow: visible;
 }
 
 .keno__paytable-cell {
@@ -322,7 +413,7 @@
   min-width: 3.25rem;
   text-align: center;
   padding: var(--lc-spacing-1) var(--lc-spacing-2);
-  background: var(--lc-bg-elevated);
+  background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--lc-border);
   border-radius: var(--lc-radius-sm);
   opacity: 0.55;
@@ -330,12 +421,9 @@
 
 .keno__paytable-cell--pays {
   opacity: 1;
+  border-color: rgba(201, 168, 76, 0.28);
 }
 
-/* Phase polish: risk-tinted pulse on the active paytable row so the
-   player's spot in the table is easy to track visually. Runs for 3
-   iterations then settles into static so the player can leave the
-   page open without a perpetual glow. */
 .keno__paytable-cell--active {
   border-color: var(--lc-gold);
   animation: keno-paytable-pulse 1.6s ease-in-out 3;
@@ -356,35 +444,44 @@
 
 .keno__paytable-hits {
   display: block;
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   color: var(--lc-text-muted);
+  font-family: var(--lc-font-display);
+  letter-spacing: 0.04em;
 }
 
 .keno__paytable-mult {
   display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--lc-text-primary);
-  /* Tabular nums so revealed multiplier doesn't jitter between
-     successive values (e.g. "12.5×" vs "13×" mid-reveal). */
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: var(--lc-font-numeric);
+  color: var(--lc-gold);
   font-variant-numeric: tabular-nums;
 }
 
-.keno__controls {
-  /* unified via lc-pages.css */
-}
+/* ── Live stats / messages ── */
 
-.keno__error {
-  margin: 0;
-  color: var(--lc-ruby);
-  font-size: 0.8rem;
-}
-
-.keno__result {
-  padding: var(--lc-spacing-3);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-sm);
+.keno__live-stats {
+  margin-top: var(--lc-spacing-3);
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   font-size: 0.9rem;
+  color: var(--lc-text-secondary);
+}
+
+.keno__idle-hint {
+  color: var(--lc-text-muted);
+}
+
+.keno__message {
+  margin: 0;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
+  border-radius: var(--lc-radius-sm);
+  border: 1px solid var(--lc-border);
+  font-variant-numeric: tabular-nums;
   animation: keno-result-in 0.3s ease-out;
 }
 
@@ -399,185 +496,27 @@
   }
 }
 
-.keno__result--win {
-  background: rgba(34, 197, 94, 0.08);
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-.keno__result--loss {
-  background: rgba(239, 68, 68, 0.06);
-  border-color: rgba(239, 68, 68, 0.25);
-}
-
-.keno__result p {
-  margin: 0;
-  /* Tabular nums for hits / multiplier / payout so the dynamic values
-     stay pixel-stable as numbers change during the reveal stagger. */
-  font-variant-numeric: tabular-nums;
-}
-
-.keno__result-payout {
-  margin: 0.25rem 0 0;
-  font-weight: 600;
-}
-
-.keno__result--win .keno__result-payout {
+.keno__message--win {
   color: var(--lc-emerald);
+  background: var(--lc-emerald-glow);
+  border-color: var(--lc-emerald-dim);
 }
 
-.keno__result--loss .keno__result-payout {
-  color: #fca5a5;
+.keno__message--loss {
+  color: var(--lc-ruby);
+  background: var(--lc-ruby-glow);
+  border-color: var(--lc-ruby);
 }
 
-.keno__bet-btn {
-  width: 100%;
-  /* AGENT.md §Accessibility must-haves — 44px hit area via rem so
-     font-scaling keeps the touch target valid long-term. */
-  min-height: 2.75rem;
-  padding: var(--lc-spacing-3) var(--lc-spacing-4);
-  font-family: var(--lc-font-display);
-  font-size: 1.05rem;
+.keno__stat-num {
+  font-family: var(--lc-font-numeric);
   font-weight: 700;
-  color: #fff;
-  background: linear-gradient(135deg, var(--lc-crimson-soft) 0%, var(--lc-crimson-dim) 100%);
-  border: none;
-  border-radius: var(--lc-radius-lg);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--lc-spacing-3);
-  box-shadow: 0 2px 16px var(--lc-crimson-glow), var(--lc-shadow-inset);
-  transition:
-    filter var(--lc-transition),
-    transform var(--lc-transition),
-    box-shadow var(--lc-transition);
-}
-
-.keno__bet-btn:hover:not(:disabled) {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 28px var(--lc-crimson-glow-strong), var(--lc-shadow-inset);
-}
-
-.keno__bet-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.keno__bet-btn:focus-visible {
-  outline: 2px solid var(--lc-crimson-soft);
-  outline-offset: 2px;
-}
-
-.keno__bet-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.keno__spinner {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  border: 2px solid rgba(10, 10, 10, 0.25);
-  border-top-color: #0a0a0a;
-  animation: keno-spinner 0.7s linear infinite;
-}
-
-@keyframes keno-spinner {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.keno__hint {
-  margin: 0;
-  font-size: 0.8rem;
-  color: var(--lc-text-muted);
-  text-align: center;
-}
-
-.keno__hint a {
   color: var(--lc-gold);
+  letter-spacing: 0.02em;
 }
 
-.keno__fairness-toggle {
-  width: 100%;
-  background: transparent;
-  border: none;
-  color: var(--lc-text-muted);
-  font-size: 0.8rem;
-  cursor: pointer;
-  text-decoration: underline;
-  /* AGENT.md §Accessibility — 44px hit area even for "show fairness" link. */
-  min-height: 2.75rem;
-  padding: var(--lc-spacing-2) var(--lc-spacing-2);
-  border-radius: var(--lc-radius-sm);
-}
+/* ── SR-only live region ── */
 
-.keno__fairness-body {
-  margin-top: var(--lc-spacing-3);
-  font-size: 0.75rem;
-  color: var(--lc-text-secondary);
-}
-
-.keno__fairness-body p {
-  margin: 0 0 0.5rem;
-}
-
-.keno__fairness-k {
-  display: block;
-  color: var(--lc-text-muted);
-  margin-bottom: 0.15rem;
-}
-
-.keno__hash {
-  display: block;
-  word-break: break-all;
-  font-size: 0.65rem;
-  color: var(--lc-text-primary);
-}
-
-.keno__seed-label {
-  display: flex;
-  flex-direction: column;
-  gap: var(--lc-spacing-2);
-  margin: var(--lc-spacing-2) 0;
-}
-
-.keno__seed-input {
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-sm);
-  color: var(--lc-text-primary);
-  padding: var(--lc-spacing-2) var(--lc-spacing-2);
-  font-size: 0.8rem;
-  min-width: 0;
-  /* field-sizing lets the input grow to its content on focus. */
-  field-sizing: content;
-}
-
-.keno__fairness-note {
-  margin-top: 0.5rem !important;
-  color: var(--lc-text-muted);
-  line-height: 1.4;
-}
-
-/* ── Phase polish: idle board warm-up ──
-   Gentle breath opacity pulse on the grid when no numbers are picked.
-   Steers the user's eye toward the cells without distracting. Range
-   bumped from 0.96↔1 to 0.88↔1 so the nudge is actually perceptible
-   (reviewer flagged the original range as too subtle to notice). */
-.keno__grid--idle {
-  animation: keno-grid-breath 4.5s ease-in-out infinite;
-}
-
-@keyframes keno-grid-breath {
-  0%, 100% { opacity: 0.88; }
-  50%      { opacity: 1; }
-}
-
-/* Phase polish: SR-only live announcer region for screen readers. */
 .keno__sr-status {
   position: absolute;
   width: 1px;
@@ -590,30 +529,130 @@
   border: 0;
 }
 
-/* ── Reduced motion (prefers-reduced-motion: reduce) ──
-   Disable every animation + transform added during polish. The existing
-   M7 reduced-motion JS already collapses the stagger to 0; this CSS layer
-   ensures the in-flight @keyframes don't run for users who asked for less
-   motion in their OS settings (covering dice-roll, draft pulse, etc.). */
+/* ── Provably fair accordion ── */
+
+.keno__fairness {
+  margin-top: var(--lc-spacing-2);
+  padding-top: var(--lc-spacing-3);
+  border-top: 1px solid var(--lc-border);
+}
+
+.keno__fairness-toggle {
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--lc-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--lc-gold);
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  padding: var(--lc-spacing-2) 0;
+  border-radius: var(--lc-radius-sm);
+  user-select: none;
+}
+
+.keno__fairness-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.keno__fairness-toggle::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-right: 0.55rem;
+  border-right: 2px solid var(--lc-gold);
+  border-bottom: 2px solid var(--lc-gold);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+
+.keno__fairness[open] > .keno__fairness-toggle::before {
+  transform: rotate(45deg);
+}
+
+.keno__fairness-body {
+  margin-top: var(--lc-spacing-2);
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.keno__fairness-k {
+  display: block;
+  color: var(--lc-text-muted);
+  margin-bottom: 0.2rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--lc-font-display);
+  font-weight: 700;
+}
+
+.keno__hash {
+  display: block;
+  word-break: break-all;
+  font-size: 0.72rem;
+  color: var(--lc-text-secondary);
+  font-family: var(--lc-font-mono);
+}
+
+.keno__seed-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--lc-text-secondary);
+}
+
+.keno__seed-input {
+  display: block;
+  width: 100%;
+  margin-top: var(--lc-spacing-2);
+  background: var(--lc-bg-elevated);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  color: var(--lc-text-primary);
+  padding: var(--lc-spacing-2);
+  font-size: 0.8rem;
+  min-width: 0;
+  font-family: var(--lc-font-mono);
+}
+
+.keno__fairness-note {
+  margin: 0;
+  color: var(--lc-text-muted);
+  line-height: 1.45;
+  font-size: 0.75rem;
+}
+
+.keno__fairness-note--disclosure {
+  opacity: 0.9;
+}
+
+/* ── Reduced motion ── */
+
 @media (prefers-reduced-motion: reduce) {
   .keno__cell--hit,
   .keno__cell--drawn,
   .keno__tool-btn--auto > span[aria-hidden="true"],
   .keno__tool-btn--skip,
   .keno__paytable-cell--active,
-  .keno__grid--idle,
-  .keno__result {
+  .keno__felt-stage--idle,
+  .keno__press-hint,
+  .keno__message {
     animation: none !important;
   }
+
   .keno__cell--hit,
-  .keno__cell--drawn {
-    /* Skip the spring scale too — just swap colors. */
+  .keno__cell--drawn,
+  .keno__cell:hover:not(:disabled) {
     transform: none !important;
   }
 }
 
-/* ── Mobile (≤ 480px): pin controls at bottom so the 40-cell grid stays
-   usable while the wager stays thumb-reachable. ── */
+/* ── Mobile ── */
+
 @media (max-width: 480px) {
   .keno__controls {
     position: sticky;
@@ -628,13 +667,16 @@
     padding-top: var(--lc-spacing-3);
     padding-bottom: max(var(--lc-spacing-3), env(safe-area-inset-bottom));
   }
+
   .keno__paytable {
     gap: 0.25rem;
   }
+
   .keno__paytable-cell {
     flex: 1 1 3rem;
     min-width: 2.75rem;
   }
+
   .keno__grid {
     gap: 0.25rem;
   }

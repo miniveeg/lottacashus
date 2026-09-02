@@ -1,23 +1,8 @@
+/* Limbo table — obsidian / gold felt. Stage chrome lives in lc-pages.css
+   (.limbo__stage-panel); this file owns rocket, display, fairness, motion. */
+
 .limbo {
-  /* layout via .lc-game-page */
-}
-
-.limbo__header {
-  flex-shrink: 0;
-}
-
-.limbo__title {
-  font-family: var(--lc-font-display);
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
-}
-
-.limbo__subtitle {
-  margin: 0;
-  color: var(--lc-text-secondary);
-  font-size: 0.9rem;
-  max-width: 36rem;
+  font-family: var(--lc-font-body);
 }
 
 .limbo__layout {
@@ -35,117 +20,338 @@
   }
 }
 
-.limbo__rocket-stage {
+/* ── Board chrome (phase + history) ── */
+
+.limbo__board-chrome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--lc-spacing-3);
+  margin-bottom: var(--lc-spacing-2);
   width: 100%;
-  max-width: none;
+  min-width: 0;
+}
+
+.limbo__phase-pill {
+  font-family: var(--lc-font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--lc-radius-pill);
+  border: 1px solid var(--lc-border-strong);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--lc-text-secondary);
+}
+
+.limbo__phase-pill[data-phase="rolling"] {
+  color: var(--lc-gold);
+  border-color: rgba(201, 168, 76, 0.45);
+  background: rgba(201, 168, 76, 0.12);
+}
+
+.limbo__phase-pill[data-phase="won"] {
+  color: var(--lc-emerald);
+  border-color: var(--lc-emerald-dim);
+  background: var(--lc-emerald-glow);
+}
+
+.limbo__phase-pill[data-phase="loss"] {
+  color: var(--lc-ruby);
+  border-color: var(--lc-ruby);
+  background: var(--lc-ruby-glow);
+}
+
+.limbo__history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
+  max-width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+}
+
+.limbo__history-chip {
+  min-height: 2.75rem;
+  padding: var(--lc-spacing-1) var(--lc-spacing-3);
+  border-radius: var(--lc-radius-sm);
+  font-size: 0.72rem;
+  font-weight: 700;
+  font-family: var(--lc-font-numeric);
+  text-align: center;
+  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--lc-text-secondary);
+  font-variant-numeric: tabular-nums;
+  min-width: 3.5rem;
+  animation: limbo-chip-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes limbo-chip-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.7) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.limbo__history-chip--win {
+  border-color: rgba(34, 197, 94, 0.4);
+  color: var(--lc-emerald);
+}
+
+.limbo__history-chip--loss {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+/* ── Idle hint ── */
+
+.limbo__press-to-spin {
+  margin: 0 0 var(--lc-spacing-2);
+  font-size: 0.9rem;
+  color: var(--lc-text-muted);
+  text-align: center;
+  letter-spacing: 0.02em;
+  animation: limbo-hint-pulse 3s ease-in-out infinite;
+}
+
+.limbo__press-to-spin kbd {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  margin: 0 0.15rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--lc-border);
+  border-radius: var(--lc-radius-sm);
+  font-family: var(--lc-font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--lc-amber);
+}
+
+.limbo__press-to-spin strong {
+  color: var(--lc-gold);
+  font-weight: 700;
+}
+
+@keyframes limbo-hint-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ── Rocket stage ── */
+
+.limbo__rocket-stage {
+  position: relative;
+  width: 100%;
   flex: 1 1 auto;
-  min-height: min(42vh, 420px);
-  height: 100%;
-  background: transparent;
+  min-height: min(36vh, 360px);
   border: 1px solid rgba(201, 168, 76, 0.16);
   border-radius: var(--lc-radius-lg);
   padding: var(--lc-spacing-2);
   overflow: hidden;
   display: flex;
   align-items: stretch;
+  background: rgba(0, 0, 0, 0.22);
 }
 
-.limbo__rocket-svg {
-  width: 100%;
-  height: 100%;
-  min-height: min(42vh, 420px);
-  display: block;
-}
-
-/* Rocket idle */
-.limbo__rocket {
-  transform-origin: 160px 120px;
-  transition: transform 0.4s ease;
-}
-
-/* Rocket flies up and left while rolling */
-.limbo__rocket--flying {
-  animation: limbo-rocket-fly 1.4s ease-in-out infinite;
-}
-
-@keyframes limbo-rocket-fly {
-  0%   { transform: translateY(0) translateX(0) rotate(0deg); }
-  25%  { transform: translateY(-18px) translateX(-10px) rotate(-8deg); }
-  50%  { transform: translateY(-28px) translateX(0px) rotate(0deg); }
-  75%  { transform: translateY(-18px) translateX(10px) rotate(8deg); }
-  100% { transform: translateY(0) translateX(0) rotate(0deg); }
-}
-
-/* Win: rocket shoots off to the top right */
-.limbo__rocket--win {
-  animation: limbo-rocket-win 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
-}
-
-@keyframes limbo-rocket-win {
-  0%   { transform: translateY(0) translateX(0) rotate(0deg); }
-  40%  { transform: translateY(-20px) translateX(10px) rotate(-15deg); }
-  100% { transform: translateY(-70px) translateX(80px) rotate(-30deg); opacity: 0; }
-}
-
-/* Phase polish: win now also lights up the surrounding stage to match
-   the explosion. Stage retains the static emerald border from the win
-   rule; this just adds a brief expand-and-fade ring that punctuates the
-   moment. */
-.limbo__rocket-stage--win {
-  border-color: rgba(34, 197, 94, 0.55);
-  box-shadow: 0 0 32px rgba(34, 197, 94, 0.45);
-}
-
-/* Loss: rocket drops */
-.limbo__rocket--loss {
-  animation: limbo-rocket-loss 0.7s ease-in forwards;
-}
-
-@keyframes limbo-rocket-loss {
-  0%   { transform: translateY(0) rotate(0deg); }
-  30%  { transform: translateY(5px) rotate(10deg); }
-  100% { transform: translateY(40px) rotate(45deg); opacity: 0.2; }
-}
-
-/* Phase polish: loss gets a red stage border + ruby ring during the
-   drop animation then settles static. Same pattern as Slots ruby-fade.
-*/
-.limbo__rocket-stage--loss {
-  border-color: rgba(239, 68, 68, 0.45);
-  box-shadow: 0 0 18px rgba(239, 68, 68, 0.4);
-}
-
-/* Idle (pre-first-bet) — subtle border breath to invite attention to the
-   rocket stage. Mirrors Slots reels--idle pattern. */
 .limbo__rocket-stage--idle {
   animation: limbo-stage-idle-breath 5s ease-in-out infinite;
 }
 
 @keyframes limbo-stage-idle-breath {
-  0%, 100% { border-color: var(--lc-border); }
-  50%      { border-color: var(--lc-amber-dim); }
+  0%,
+  100% {
+    border-color: rgba(201, 168, 76, 0.16);
+  }
+  50% {
+    border-color: var(--lc-amber-dim);
+  }
 }
 
-/* Phase polish: ripple overlay expanding outward from the center of the
-   rocket stage on settlement. Win = emerald ring; loss = ruby ring.
-   Runs ONCE then removed via React conditional rendering. */
+.limbo__rocket-stage--win {
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 32px rgba(34, 197, 94, 0.45);
+}
+
+.limbo__rocket-stage--loss {
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.4);
+}
+
+.limbo__rocket-svg {
+  width: 100%;
+  height: 100%;
+  min-height: min(36vh, 360px);
+  display: block;
+}
+
+.limbo__rocket {
+  transform-origin: 160px 120px;
+  transition: transform 0.4s ease;
+}
+
+.limbo__rocket--flying {
+  animation: limbo-rocket-fly 1.4s ease-in-out infinite;
+}
+
+@keyframes limbo-rocket-fly {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-18px) translateX(-10px) rotate(-8deg);
+  }
+  50% {
+    transform: translateY(-28px) translateX(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-18px) translateX(10px) rotate(8deg);
+  }
+  100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+}
+
+.limbo__rocket--win {
+  animation: limbo-rocket-win 0.9s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes limbo-rocket-win {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  40% {
+    transform: translateY(-20px) translateX(10px) rotate(-15deg);
+  }
+  100% {
+    transform: translateY(-70px) translateX(80px) rotate(-30deg);
+    opacity: 0;
+  }
+}
+
+.limbo__rocket--loss {
+  animation: limbo-rocket-loss 0.7s ease-in forwards;
+}
+
+@keyframes limbo-rocket-loss {
+  0% {
+    transform: translateY(0) rotate(0deg);
+  }
+  30% {
+    transform: translateY(5px) rotate(10deg);
+  }
+  100% {
+    transform: translateY(40px) rotate(45deg);
+    opacity: 0.2;
+  }
+}
+
+.limbo__flame {
+  animation: limbo-flame 0.18s ease-in-out infinite alternate;
+}
+
+.limbo__flame-inner {
+  animation: limbo-flame-inner 0.22s ease-in-out infinite alternate;
+}
+
+@keyframes limbo-flame {
+  from {
+    transform: scaleY(1);
+    opacity: 0.8;
+  }
+  to {
+    transform: scaleY(1.3) scaleX(0.85);
+    opacity: 1;
+  }
+}
+
+@keyframes limbo-flame-inner {
+  from {
+    transform: scaleY(1);
+  }
+  to {
+    transform: scaleY(1.4) scaleX(0.9);
+  }
+}
+
+.limbo__rocket-stage--rolling .limbo__target-bar {
+  animation: limbo-bar-pulse 1s ease-in-out infinite;
+}
+
+@keyframes limbo-bar-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.limbo__target-line {
+  stroke: var(--lc-gold);
+}
+
+.limbo__target-label {
+  fill: var(--lc-gold);
+  font-variant-numeric: tabular-nums;
+  paint-order: stroke fill;
+}
+
+.limbo__rocket-stage--win .limbo__target-line {
+  stroke: var(--lc-emerald);
+}
+
+.limbo__rocket-stage--win .limbo__target-label {
+  fill: var(--lc-emerald);
+}
+
+.limbo__rocket-stage--loss .limbo__target-line {
+  stroke: var(--lc-ruby);
+}
+
+.limbo__rocket-stage--loss .limbo__target-label {
+  fill: var(--lc-ruby);
+}
+
 .limbo__ripple {
   position: absolute;
   inset: 0;
   border-radius: var(--lc-radius-lg);
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
   opacity: 0;
-  animation: limbo-ripple-expand 0.85s cubic-bezier(0.22, 0.61, 0.36, 1) 1 forwards;
+  animation: limbo-ripple-expand 0.85s cubic-bezier(0.22, 0.61, 0.36, 1) 1
+    forwards;
 }
 
 .limbo__ripple--win {
-  background: radial-gradient(circle at center, rgba(34, 197, 94, 0.55) 0%, rgba(34, 197, 94, 0) 65%);
+  background: radial-gradient(
+    circle at center,
+    rgba(34, 197, 94, 0.55) 0%,
+    rgba(34, 197, 94, 0) 65%
+  );
   box-shadow: inset 0 0 0 2px rgba(34, 197, 94, 0.7);
 }
 
 .limbo__ripple--loss {
-  background: radial-gradient(circle at center, rgba(239, 68, 68, 0.5) 0%, rgba(239, 68, 68, 0) 65%);
+  background: radial-gradient(
+    circle at center,
+    rgba(239, 68, 68, 0.5) 0%,
+    rgba(239, 68, 68, 0) 65%
+  );
   box-shadow: inset 0 0 0 2px rgba(239, 68, 68, 0.7);
 }
 
@@ -160,79 +366,27 @@
   }
 }
 
-/* Flame flicker */
-.limbo__flame {
-  animation: limbo-flame 0.18s ease-in-out infinite alternate;
-}
-.limbo__flame-inner {
-  animation: limbo-flame-inner 0.22s ease-in-out infinite alternate;
-}
-
-@keyframes limbo-flame {
-  from { transform: scaleY(1); opacity: 0.8; }
-  to   { transform: scaleY(1.3) scaleX(0.85); opacity: 1; }
-}
-@keyframes limbo-flame-inner {
-  from { transform: scaleY(1); }
-  to   { transform: scaleY(1.4) scaleX(0.9); }
-}
-
-/* Target bar pulse when rolling */
-.limbo__rocket-stage--rolling .limbo__target-bar {
-  animation: limbo-bar-pulse 1s ease-in-out infinite;
-}
-
-/* The ripple overlay sits ABOVE the target bar so the ring is visible
-   during stretching. Position the SVG relative so the absolute ripple
-   can cover it. */
-.limbo__rocket-stage {
-  position: relative;
-}
-
-.limbo__ripple {
-  /* Render above the SVG so the emerald/ruby ring lights up over the
-     rocket silhouette during the win burst. */
-  z-index: 1;
-}
-
-.limbo__display {
-  position: relative;
-}
-
-@keyframes limbo-bar-pulse {
-  0%, 100% { opacity: 0.7; }
-  50%       { opacity: 1; }
-}
-
-.limbo__stage-panel {
-  /* unified via lc-pages.css — keep the inner stack tight so the rocket
-     stage fills the panel instead of sitting in an empty well. */
-  padding: var(--lc-spacing-4);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--lc-spacing-4);
-  min-height: 0;
-  height: 100%;
-  justify-content: stretch;
-  flex: 1;
-}
+/* ── Result display ── */
 
 .limbo__display {
   text-align: center;
-  padding: var(--lc-spacing-6) var(--lc-spacing-8);
+  margin-top: var(--lc-spacing-4);
+  padding: var(--lc-spacing-5) var(--lc-spacing-6);
   border-radius: var(--lc-radius-xl);
   border: 2px solid var(--lc-border-strong);
-  background: radial-gradient(ellipse at center, var(--lc-bg-elevated) 0%, var(--lc-bg-panel) 70%);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.35) 0%,
+    rgba(0, 0, 0, 0.15) 70%
+  );
+  width: 100%;
+  max-width: 28rem;
   transition:
     border-color 0.25s ease,
     box-shadow 0.25s ease;
 }
 
 .limbo__display--rolling {
-  /* Color shift during rolling — transitions from the default obsidian
-     background toward a deep amber glow as the rolling state progresses.
-     Audit issue P3 extra (Agent 3 Limbo improvement). */
   border-color: var(--lc-amber-dim);
   box-shadow: 0 0 24px var(--lc-amber-glow);
   animation: limbo-wait-pulse 1.2s ease-in-out infinite;
@@ -280,27 +434,25 @@
 
 .limbo__display-label {
   display: block;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-family: var(--lc-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--lc-text-muted);
   margin-bottom: 0.5rem;
 }
 
 .limbo__display-value {
   display: block;
-  font-family: var(--lc-font-display);
+  font-family: var(--lc-font-numeric);
   font-size: clamp(2.5rem, 8vw, 4rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
-  color: var(--lc-text-primary);
+  color: var(--lc-gold);
   transform-origin: center center;
-  /* Phase polish: tabular nums so the multiplier doesn't jitter width
-     between round resolves (e.g. "12.34×" → "100×") — important for
-     high-target outcomes where the number changes from a 5-char
-     display to a 4-char display rapidly. */
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 
 .limbo__display-value--waiting {
@@ -355,27 +507,40 @@
   margin-top: 0.65rem;
   font-size: 0.9rem;
   color: var(--lc-text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
-.limbo .limbo__stage-panel {
-  overflow: visible;
-  height: auto;
-  min-height: min(28rem, 70dvh);
-  padding-bottom: 2rem;
-}
+/* ── Live stats / outcome ── */
 
-.limbo__outcome {
-  text-align: center;
-  font-size: 0.95rem;
-  padding: var(--lc-spacing-3) var(--lc-spacing-4);
-  border-radius: var(--lc-radius-sm);
+.limbo__live-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: var(--lc-spacing-3);
+  min-height: 1.75rem;
   width: 100%;
-  max-width: 24rem;
-  flex-shrink: 0;
-  animation: limbo-outcome-in 0.3s ease-out;
+  max-width: 28rem;
 }
 
-@keyframes limbo-outcome-in {
+.limbo__idle-hint {
+  font-size: 0.85rem;
+  color: var(--lc-text-muted);
+  text-align: center;
+}
+
+.limbo__message {
+  font-size: 0.88rem;
+  margin: 0;
+  padding: var(--lc-spacing-2) var(--lc-spacing-3);
+  border-radius: var(--lc-radius-sm);
+  border: 1px solid transparent;
+  width: 100%;
+  text-align: center;
+  animation: limbo-msg-in 0.3s ease-out;
+}
+
+@keyframes limbo-msg-in {
   from {
     opacity: 0;
     transform: translateY(4px);
@@ -386,107 +551,79 @@
   }
 }
 
-.limbo__history {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  justify-content: center;
-  max-width: 24rem;
-  flex-shrink: 0;
-  padding-bottom: 0.5rem;
-  min-height: 2.75rem;
+.limbo__message--win {
+  color: var(--lc-emerald);
+  background: var(--lc-emerald-glow);
+  border-color: var(--lc-emerald-dim);
 }
 
-.limbo__history-chip {
-  min-height: 2.75rem;
-  padding: var(--lc-spacing-1) var(--lc-spacing-3);
-  border-radius: var(--lc-radius-sm);
-  font-size: 0.72rem;
+.limbo__message--loss {
+  color: var(--lc-ruby);
+  background: var(--lc-ruby-glow);
+  border-color: var(--lc-ruby);
+}
+
+.limbo__stat-num {
+  font-family: var(--lc-font-numeric);
   font-weight: 700;
-  font-family: var(--lc-font-mono);
-  text-align: center;
-  border: 1px solid var(--lc-border);
-  background: var(--lc-bg-elevated);
-  color: var(--lc-text-secondary);
-  /* Entrance animation — matches Roulette's chip-enter for cross-game
-     consistency. The newest chip (first in the array) pops in. */
-  animation: limbo-chip-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  /* Phase polish: tabular nums + min-width so chips don't reflow width
-     when the rounded multiplier changes (e.g. "1.10×" vs "10.0×"). */
-  font-variant-numeric: tabular-nums;
-  min-width: 3.5rem;
+  color: var(--lc-gold);
+  letter-spacing: 0.02em;
 }
 
-@keyframes limbo-chip-enter {
-  from { opacity: 0; transform: scale(0.7) translateY(-4px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-.limbo__history-chip--win {
-  border-color: rgba(34, 197, 94, 0.4);
-  color: var(--lc-emerald);
-}
-
-.limbo__history-chip--loss {
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #fca5a5;
-}
-
-.limbo__outcome--win {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: var(--lc-emerald);
-}
-
-.limbo__outcome--loss {
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  color: #fca5a5;
-}
-
-.limbo__outcome p {
-  margin: 0;
-}
-
-.limbo__controls {
-  /* unified via lc-pages.css */
-}
+/* ── Target slider + paytable ── */
 
 .limbo__target-presets {
   margin-top: var(--lc-spacing-3);
 }
 
-/* Phase polish: dedicated slider override for Limbo's target slider.
-   Uses emerald gradient that warms toward amber as the target
-   increases (mirror of the win-color gain). Log scale so the thumb
-   position maps logarithmically to target.
-
-   Note: an earlier draft referenced a custom `--limbo-thumb` /
-   `--limbo-target-risk` color-mix variable for dynamic thumb tint,
-   but the uniform emerald accent reads more consistently across
-   target ranges (matches Mines' slider). The dead CSS was removed in
-   this polish revision; the accent-color below is the sole source of
-   thumb color. */
 .limbo__target-slider {
   width: 100%;
   margin-top: var(--lc-spacing-3);
-  accent-color: var(--lc-emerald);
+  --limbo-risk: 0;
 }
 
-.limbo__target-slider::-webkit-slider-runnable-track {
-  background: linear-gradient(to right, var(--lc-emerald) 0%, var(--lc-amber-dim) 100%);
+.limbo__controls .limbo__target-slider::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--lc-emerald) 0%,
+    var(--lc-amber-dim) 55%,
+    var(--lc-crimson-soft) 100%
+  );
   height: 6px;
   border-radius: var(--lc-radius-pill);
 }
 
-.limbo__target-slider::-moz-range-track {
-  background: linear-gradient(to right, var(--lc-emerald) 0%, var(--lc-amber-dim) 100%);
+.limbo__controls .limbo__target-slider::-moz-range-track {
+  background: linear-gradient(
+    to right,
+    var(--lc-emerald) 0%,
+    var(--lc-amber-dim) 55%,
+    var(--lc-crimson-soft) 100%
+  );
   height: 6px;
   border-radius: var(--lc-radius-pill);
 }
 
-/* Paytable pill — win chance + potential payout as a single split cell.
-   Replaces the previous drop-shadow-y text under the option. */
+.limbo__controls .limbo__target-slider::-webkit-slider-thumb {
+  background: color-mix(
+    in srgb,
+    var(--lc-emerald),
+    var(--lc-crimson-soft) calc(var(--limbo-risk, 0) * 100%)
+  );
+  border: 2px solid var(--lc-bg);
+  box-shadow: 0 0 0 1px var(--lc-border-strong);
+}
+
+.limbo__controls .limbo__target-slider::-moz-range-thumb {
+  background: color-mix(
+    in srgb,
+    var(--lc-emerald),
+    var(--lc-crimson-soft) calc(var(--limbo-risk, 0) * 100%)
+  );
+  border: 2px solid var(--lc-bg);
+  box-shadow: 0 0 0 1px var(--lc-border-strong);
+}
+
 .limbo__paytable-pill {
   margin-top: var(--lc-spacing-3);
   padding: var(--lc-spacing-2) var(--lc-spacing-3);
@@ -517,7 +654,7 @@
 }
 
 .limbo__paytable-pill-v {
-  font-family: var(--lc-font-mono);
+  font-family: var(--lc-font-numeric);
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--lc-gold);
@@ -531,106 +668,7 @@
   background: var(--lc-border);
 }
 
-/* Phase polish: pre-bet idle hint under the rocket stage. */
-.limbo__press-to-spin {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--lc-text-muted);
-  text-align: center;
-  letter-spacing: 0.02em;
-  animation: limbo-hint-pulse 3s ease-in-out infinite;
-}
-
-.limbo__press-to-spin kbd {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
-  margin: 0 0.15rem;
-  background: var(--lc-bg-elevated);
-  border: 1px solid var(--lc-border);
-  border-radius: var(--lc-radius-sm);
-  font-family: var(--lc-font-mono);
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--lc-amber);
-  box-shadow: 0 1px 0 var(--lc-bg-hover);
-}
-
-.limbo__press-to-spin strong {
-  color: var(--lc-gold);
-  font-weight: 700;
-}
-
-@keyframes limbo-hint-pulse {
-  0%, 100% { opacity: 0.7; }
-  50%      { opacity: 1; }
-}
-
-.limbo__error {
-  margin: 0;
-  color: var(--lc-ruby);
-  font-size: 0.8rem;
-}
-
-.limbo__bet-btn {
-  width: 100%;
-  min-height: 2.75rem;
-  font-family: var(--lc-font-display);
-  font-weight: 700;
-  font-size: 1rem;
-  border: none;
-  border-radius: var(--lc-radius-md);
-  background: linear-gradient(135deg, var(--lc-crimson-soft), var(--lc-crimson-dim));
-  color: #fff;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  transition:
-    filter var(--lc-transition),
-    transform var(--lc-transition);
-}
-
-.limbo__bet-btn:hover:not(:disabled) {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-}
-
-.limbo__bet-btn:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
-}
-
-.limbo__bet-btn:focus-visible {
-  outline: 2px solid var(--lc-crimson-soft);
-  outline-offset: 2px;
-}
-
-.limbo__bet-btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.limbo__spinner {
-  width: 1rem;
-  height: 1rem;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.25);
-  border-top-color: #fff;
-  animation: limbo-spinner 0.7s linear infinite;
-}
-
-@keyframes limbo-spinner {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.limbo__hint {
-  font-size: 0.8rem;
-  color: var(--lc-text-muted);
-  margin: 0;
-}
+/* ── Provably fair accordion ── */
 
 .limbo__fairness {
   margin-top: var(--lc-spacing-2);
@@ -639,27 +677,57 @@
 }
 
 .limbo__fairness-toggle {
-  background: none;
-  border: none;
-  color: var(--lc-gold);
-  font-size: 0.8rem;
-  font-weight: 600;
+  list-style: none;
   cursor: pointer;
-  /* AGENT.md §Accessibility — 44px hit area for the toggle. */
+  font-family: var(--lc-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--lc-gold);
   min-height: 2.75rem;
-  padding: var(--lc-spacing-2) var(--lc-spacing-2);
+  display: flex;
+  align-items: center;
+  padding: var(--lc-spacing-2) 0;
   border-radius: var(--lc-radius-sm);
+  user-select: none;
+}
+
+.limbo__fairness-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.limbo__fairness-toggle::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  margin-right: 0.55rem;
+  border-right: 2px solid var(--lc-gold);
+  border-bottom: 2px solid var(--lc-gold);
+  transform: rotate(-45deg);
+  transition: transform 0.15s ease;
+}
+
+.limbo__fairness[open] > .limbo__fairness-toggle::before {
+  transform: rotate(45deg);
 }
 
 .limbo__fairness-body {
-  margin-top: var(--lc-spacing-3);
+  margin-top: var(--lc-spacing-2);
   font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .limbo__fairness-k {
   display: block;
   color: var(--lc-text-muted);
   margin-bottom: 0.2rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--lc-font-display);
+  font-weight: 700;
 }
 
 .limbo__hash {
@@ -667,78 +735,120 @@
   word-break: break-all;
   font-size: 0.72rem;
   color: var(--lc-text-secondary);
+  font-family: var(--lc-font-mono);
 }
 
 .limbo__seed-label {
   display: block;
-  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--lc-text-secondary);
 }
 
 .limbo__seed-input {
   display: block;
   width: 100%;
   margin-top: var(--lc-spacing-2);
-  padding: var(--lc-spacing-2) var(--lc-spacing-2);
+  padding: var(--lc-spacing-2);
   font-size: 0.8rem;
+  font-family: var(--lc-font-mono);
   background: var(--lc-bg-elevated);
   border: 1px solid var(--lc-border-strong);
   border-radius: var(--lc-radius-sm);
   color: var(--lc-text-primary);
   min-width: 0;
-  field-sizing: content;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+}
+
+.limbo__seed-input:focus-visible {
+  outline: none;
+  border-color: var(--lc-border-accent);
+  box-shadow: var(--lc-focus-ring);
 }
 
 .limbo__tool-btn {
-  margin-top: var(--lc-spacing-2);
-  background: var(--lc-bg-hover);
-  border: 1px solid var(--lc-border);
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(201, 168, 76, 0.28);
   color: var(--lc-text-primary);
   border-radius: var(--lc-radius-sm);
-  /* AGENT.md §Accessibility — 44px hit area. */
   min-height: 2.75rem;
   padding: var(--lc-spacing-2) var(--lc-spacing-4);
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-family: var(--lc-font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: background var(--lc-transition);
+  transition:
+    background var(--lc-transition),
+    border-color var(--lc-transition);
+}
+
+.limbo__tool-btn:hover:not(:disabled) {
+  border-color: var(--lc-gold-dim);
+  background: rgba(201, 168, 76, 0.12);
+}
+
+.limbo__tool-btn:focus-visible {
+  outline: 2px solid var(--lc-crimson-soft);
+  outline-offset: 2px;
+}
+
+.limbo__tool-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .limbo__fairness-note {
-  margin-top: var(--lc-spacing-2);
+  margin: 0;
   color: var(--lc-text-muted);
   font-size: 0.75rem;
+  line-height: 1.45;
 }
 
-/* Reduced-motion: disable decorative animations (pulse/pop/spinner/dots).
-   The bet result text is still shown — only the motion is suppressed. */
+/* ── Stage panel inner stack ── */
+
+.limbo .limbo__stage-panel {
+  align-items: center;
+  gap: var(--lc-spacing-2);
+  overflow: visible;
+  height: auto;
+  min-height: min(28rem, 70dvh);
+  padding-bottom: 1.5rem;
+}
+
+/* ── Reduced motion ── */
+
 @media (prefers-reduced-motion: reduce) {
   .limbo__display--rolling,
   .limbo__display--win,
   .limbo__display--loss,
   .limbo__display-value--waiting,
   .limbo__display-value--pop,
-  .limbo__outcome,
-  .limbo__spinner,
+  .limbo__message,
   .limbo__ripple,
   .limbo__rocket-stage--idle,
   .limbo__rocket-stage--rolling .limbo__target-bar,
   .limbo__rocket--flying,
   .limbo__press-to-spin,
   .limbo__flame,
-  .limbo__flame-inner {
+  .limbo__flame-inner,
+  .limbo__history-chip {
     animation: none !important;
   }
+
   .limbo__rocket--win,
   .limbo__rocket--loss {
     transform: none !important;
+    opacity: 1 !important;
   }
+
   .limbo__display-value--waiting {
     opacity: 0.6;
   }
 }
 
-/* Phase polish: mobile sticky controls (≤ 480px) — same pattern as
-   Crash / Mines / Keno / Slots. */
+/* ── Mobile sticky controls ── */
+
 @media (max-width: 480px) {
   .limbo__controls {
     position: sticky;
@@ -753,26 +863,15 @@
     padding-top: var(--lc-spacing-3);
     padding-bottom: max(var(--lc-spacing-3), env(safe-area-inset-bottom));
   }
-  .limbo__history {
-    gap: 0.25rem;
-  }
+
   .limbo__history-chip {
     min-height: 2.25rem;
     font-size: 0.68rem;
     min-width: 3rem;
   }
-}
 
-
-/* Target line uses pit tokens, not Tailwind green/red */
-.limbo__target-line {
-  stroke: var(--lc-gold);
+  .limbo__rocket-stage,
+  .limbo__rocket-svg {
+    min-height: min(28vh, 240px);
+  }
 }
-.limbo__target-label {
-  fill: var(--lc-gold);
-  font-variant-numeric: tabular-nums;
-}
-.limbo__rocket-stage--win .limbo__target-line { stroke: var(--lc-emerald); }
-.limbo__rocket-stage--win .limbo__target-label { fill: var(--lc-emerald); }
-.limbo__rocket-stage--loss .limbo__target-line { stroke: var(--lc-ruby); }
-.limbo__rocket-stage--loss .limbo__target-label { fill: var(--lc-ruby); }

@@ -47,7 +47,8 @@ function parseBattle(row: Record<string, unknown>): CaseBattleView {
 
 function parsePlayer(row: Record<string, unknown>): BattlePlayer {
   return {
-    slot: Number(row.slot),
+    // Live schema may expose slot and/or slot_index — prefer slot, fall back.
+    slot: Number(row.slot ?? row.slot_index ?? 0),
     userId: (row.user_id as string) ?? null,
     isBot: Boolean(row.is_bot),
     username: String(row.username ?? "Player"),

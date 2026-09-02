@@ -20,6 +20,8 @@ type ArenaProps = {
   battle: CaseBattleView;
   userId: string | undefined;
   isCreator?: boolean;
+  /** Explicit refetch after seat mutations — realtime alone is not enough. */
+  refetchBattle?: () => void | Promise<void>;
 };
 
 type ArenaSession = {
@@ -28,7 +30,7 @@ type ArenaSession = {
   battleId: string;
 };
 
-export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaProps) {
+export function CaseBattleArenaV2({ battle, userId, isCreator = false, refetchBattle }: ArenaProps) {
   const canPlay = useCanPlay();
   const [currentRound, setCurrentRound] = useState(0);
   const [landedSlots, setLandedSlots] = useState<Set<number>>(new Set());
@@ -113,10 +115,18 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
     setBotError(null);
     setBotBusySlot(slotIndex);
     session.current.botBusySlot = slotIndex;
-    const { error } = await addBotToBattle(session.current.battleId, slotIndex);
-    setBotBusySlot(null);
-    session.current.botBusySlot = null;
-    if (error) setBotError(`Seat ${slotIndex + 1}: ${error}`);
+    try {
+      const { error } = await addBotToBattle(session.current.battleId, slotIndex);
+      if (error) {
+        setBotError(`Seat ${slotIndex + 1}: ${error}`);
+        return;
+      }
+      // Required: room UI must not rely solely on case_battle_players realtime.
+      if (refetchBattle) await refetchBattle();
+    } finally {
+      setBotBusySlot(null);
+      session.current.botBusySlot = null;
+    }
   }
 
   const keepPot = expectedKeepPot(battle);

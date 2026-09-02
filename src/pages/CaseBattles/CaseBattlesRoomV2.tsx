@@ -62,7 +62,7 @@ export function CaseBattlesRoomV2() {
   const { user } = useAuth();
   const canPlay = useCanPlay();
   const { refreshProfile } = useProfile();
-  const { battle, loading, error } = useBattleSubscription(battleId);
+  const { battle, loading, error, refetch } = useBattleSubscription(battleId);
 
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -254,7 +254,12 @@ export function CaseBattlesRoomV2() {
     if (!session.current.canPlay) return;
     await runBusy(async () => {
       const { error: err } = await joinCaseBattle(battleId!);
-      if (err) setActionError(err);
+      if (err) {
+        setActionError(err);
+        return;
+      }
+      // Don't wait on realtime — seats/auto-start need fresh players now.
+      await refetch();
     });
   }
 
@@ -421,7 +426,7 @@ export function CaseBattlesRoomV2() {
         </p>
       )}
 
-      <CaseBattleArenaV2 battle={battle} userId={user?.id} isCreator={isCreator} />
+      <CaseBattleArenaV2 battle={battle} userId={user?.id} isCreator={isCreator} refetchBattle={refetch} />
 
       <details className="cb-fairness" data-testid="cb-fairness">
         <summary>Provably fair</summary>

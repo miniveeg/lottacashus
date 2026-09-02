@@ -46,34 +46,48 @@ export function useBattleSubscription(battleId: string | undefined): {
     setLoading(true);
     setBattle(null);
     setError(null);
-    fetchBattle();
+    void fetchBattle();
 
-    if (!isSupabaseConfigured || !battleId) return;
+    if (!isSupabaseConfigured || !battleId) {
+      return () => {
+        cancelledRef.current = true;
+      };
+    }
 
     // Subscribe to all three tables for this battle. Any change triggers a
-    // single re-fetch (the fetch is debounced by React's state batching).
+    // re-fetch. Filters on non-PK columns (battle_id) need REPLICA IDENTITY
+    // FULL on those tables — see migration 018. Still refetch after mutations
+    // in the room UI so seats never wait on realtime alone.
     const channel = supabase
       .channel(`battle-${battleId}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "case_battles", filter: `id=eq.${battleId}` },
-        () => fetchBattle(),
+        () => {
+          void fetchBattle();
+        },
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "case_battle_players", filter: `battle_id=eq.${battleId}` },
-        () => fetchBattle(),
+        () => {
+          void fetchBattle();
+        },
       )
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "case_battle_drops", filter: `battle_id=eq.${battleId}` },
-        () => fetchBattle(),
+        () => {
+          void fetchBattle();
+        },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") void fetchBattle();
+      });
 
     return () => {
       cancelledRef.current = true;
-      supabase.removeChannel(channel);
+      void supabase.removeChannel(channel);
     };
   }, [battleId, fetchBattle]);
 

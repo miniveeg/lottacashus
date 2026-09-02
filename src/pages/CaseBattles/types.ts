@@ -111,6 +111,7 @@ export const GROUP_MODES: PlayerModeOption[] = [
   { id: "2p", label: "2p", maxPlayers: 2 },
   { id: "3p", label: "3p", maxPlayers: 3 },
   { id: "4p", label: "4p", maxPlayers: 4 },
+  { id: "6p", label: "6p", maxPlayers: 6 },
 ];
 
 export function isTeamMode(mode: string): boolean {

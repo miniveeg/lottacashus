@@ -2,70 +2,19 @@
  * Case Battles v2 — client-side API.
  * All functions call Supabase RPCs or the case-battle-v2 edge function.
  * Realtime is handled by the hooks in useBattleSubscription.ts.
+ *
+ * Local dual-settlement quarantined under src/lib/_quarantine/.
+ * Product path: RPCs + case-battle-v2 only. Never invent client settlement.
  */
 
 import { supabase, isSupabaseConfigured } from "../../lib/supabase";
 import { invokeEdgeFunction } from "../../lib/edgeFunctions";
 import type { CaseBattleView, BattlePlayer, BattleDrop, BattleGamemode } from "./types";
-import {
-  localListOpenBattles, localViewCaseBattle, localCreateBattle, localAddBot,
-  localLeaveBattle, localStartBattle, localCheckEos, localClaimPayout,
-  type LocalBattle,
-} from "../../lib/local-case-battles";
 
 function normalizeGamemode(raw: unknown): BattleGamemode {
   const s = String(raw ?? "standard");
   if (s === "normal") return "standard";
   return s as BattleGamemode;
-}
-
-function localToView(b: LocalBattle): CaseBattleView {
-  const clamped = Math.max(0, Math.min(80, b.borrowPercent));
-  const keepMult = (100 - clamped) / 100;
-  return {
-    battleId: b.id,
-    creatorId: b.creatorId,
-    gamemode: normalizeGamemode(b.gamemode),
-    crazy: b.crazy,
-    playerMode: b.playerMode,
-    maxPlayers: b.maxPlayers,
-    caseIds: b.caseIds,
-    rounds: b.rounds,
-    entryCost: b.entryCost,
-    coinType: b.coinType,
-    borrowPercent: b.borrowPercent,
-    potTotal: b.potTotal,
-    status: b.status as CaseBattleView["status"],
-    seedHash: b.seedHash,
-    eosBlockTarget: b.eosBlockTarget,
-    eosBlockId: b.eosBlockId,
-    battleSeed: b.battleSeed,
-    createdAt: b.createdAt,
-    startedAt: b.startedAt,
-    completedAt: b.completedAt,
-    winningSlots: [...b.winningSlots].sort((a, c) => a - c),
-    players: b.players.map((p) => {
-      const gross = b.payoutBySlot.get(p.slot) ?? 0;
-      const payoutAmount =
-        b.winningSlots.includes(p.slot) && !p.isBot
-          ? Math.round(gross * keepMult * 100) / 100
-          : 0;
-      return {
-        slot: p.slot,
-        userId: p.userId,
-        isBot: p.isBot,
-        username: p.username,
-        avatarSeed: p.avatarSeed,
-        payoutAmount,
-        claimedAt: b.claimed.has(p.slot) ? new Date().toISOString() : null,
-      };
-    }),
-    drops: b.drops.map((d) => ({
-      slot: d.slot, round: d.round, caseId: d.caseId, itemId: d.itemId,
-      itemName: d.itemName, itemValue: d.itemValue, itemRarity: d.itemRarity,
-    })),
-    playerCount: b.players.length,
-  };
 }
 
 function parseBattle(row: Record<string, unknown>): CaseBattleView {
@@ -155,16 +104,18 @@ async function supabasePlayerCounts(battleIds: string[]): Promise<PlayerCountMap
   return map;
 }
 
+function requireSupabase(): string | null {
+  if (!isSupabaseConfigured) {
+    return "Case Battles requires a live connection. Supabase is not configured.";
+  }
+  return null;
+}
+
 export async function listOpenBattles(options?: {
   coinType?: "balance" | "sweeps_coins";
 }): Promise<{ data: CaseBattleView[] | null; error: string | null }> {
-  if (!isSupabaseConfigured) {
-    const all = localListOpenBattles().map(localToView);
-    const filtered = options?.coinType
-      ? all.filter((b) => b.coinType === options.coinType)
-      : all;
-    return { data: filtered, error: null };
-  }
+  const cfgErr = requireSupabase();
+  if (cfgErr) return { data: null, error: cfgErr };
 
   let query = supabase
     .from("case_battles_safe")
@@ -192,9 +143,8 @@ export async function viewCaseBattle(battleId: string): Promise<{
   data: CaseBattleView | null;
   error: string | null;
 }> {
-  const local = localViewCaseBattle(battleId);
-  if (local) return { data: localToView(local), error: null };
-  if (!isSupabaseConfigured) return { data: null, error: "Battle not found." };
+  const cfgErr = requireSupabase();
+  if (cfgErr) return { data: null, error: cfgErr };
 
   const [{ data: battleRow, error: battleErr }, { data: playerRows }, { data: dropRows }] =
     await Promise.all([
@@ -245,10 +195,9 @@ export async function createCaseBattle(params: {
   coinType: "balance" | "sweeps_coins";
   borrowPercent: number;
 }): Promise<{ data: string | null; error: string | null }> {
-  if (!isSupabaseConfigured) {
-    const local = localCreateBattle(params);
-    return { data: local.battleId, error: local.error };
-  }
+  const cfgErr = requireSupabase();
+  if (cfgErr) return { data: null, error: cfgErr };
+
   const { data, error } = await supabase.rpc("cb_create_battle", {
     p_gamemode: params.gamemode,
     p_crazy: params.crazy,
@@ -256,7 +205,6 @@ export async function createCaseBattle(params: {
     p_case_ids: params.caseIds,
     p_entry_cost: params.entryCost,
     p_coin_type: params.coinType,
-    // PostgREST matches this 7-arg signature (p_borrow_percent int).
     p_borrow_percent: Math.max(0, Math.min(80, Math.round(Number(params.borrowPercent) || 0))),
   });
   if (error) {
@@ -267,9 +215,9 @@ export async function createCaseBattle(params: {
 }
 
 export async function joinCaseBattle(battleId: string): Promise<{ error: string | null }> {
-  const local = localViewCaseBattle(battleId);
-  if (local) return { error: null };
-  if (!isSupabaseConfigured) return { error: null };
+  const cfgErr = requireSupabase();
+  if (cfgErr) return { error: cfgErr };
+
   const { error } = await supabase.rpc("cb_join_battle", { p_battle_id: battleId });
   return { error: error?.message ?? null };
 }
@@ -278,8 +226,9 @@ export async function addBotToBattle(
   battleId: string,
   slotIndex?: number,
 ): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured) return localAddBot(battleId, slotIndex);
-  if (localViewCaseBattle(battleId)) return localAddBot(battleId, slotIndex);
+  const cfgErr = requireSupabase();
+  if (cfgErr) return { error: cfgErr };
+
   const slot = Number.isInteger(slotIndex) ? Number(slotIndex) : 0;
   const { error } = await supabase.rpc("cb_add_bot", {
     p_battle_id: battleId,
@@ -290,8 +239,9 @@ export async function addBotToBattle(
 }
 
 export async function leaveBattle(battleId: string): Promise<{ error: string | null }> {
-  if (!isSupabaseConfigured) return localLeaveBattle(battleId);
-  if (localViewCaseBattle(battleId)) return localLeaveBattle(battleId);
+  const cfgErr = requireSupabase();
+  if (cfgErr) return { error: cfgErr };
+
   const { error } = await supabase.rpc("cb_leave_battle", { p_battle_id: battleId });
   return { error: error?.message ?? null };
 }
@@ -300,8 +250,9 @@ export async function startCaseBattle(battleId: string): Promise<{
   data: { seedHash: string; eosBlockTarget: number } | null;
   error: string | null;
 }> {
-  if (localViewCaseBattle(battleId)) return localStartBattle(battleId);
-  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
+  const cfgErr = requireSupabase();
+  if (cfgErr) return { data: null, error: cfgErr };
+
   const { data, error } = await invokeEdgeFunction<{
     seedHash: string;
     eosBlockTarget: number;
@@ -313,8 +264,9 @@ export async function checkEosBlock(battleId: string): Promise<{
   data: { ready: boolean; status?: string } | null;
   error: string | null;
 }> {
-  if (localViewCaseBattle(battleId)) return localCheckEos(battleId);
-  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
+  const cfgErr = requireSupabase();
+  if (cfgErr) return { data: null, error: cfgErr };
+
   const { data, error } = await invokeEdgeFunction<{ ready: boolean; status?: string }>(
     "case-battle-v2",
     { action: "check_eos", battleId },
@@ -326,14 +278,21 @@ export async function claimPayout(
   battleId: string,
   slot: number,
 ): Promise<{ data: { balance: number } | null; error: string | null }> {
-  if (localViewCaseBattle(battleId)) return localClaimPayout(battleId, slot);
-  if (!isSupabaseConfigured) return { data: null, error: "Supabase is not configured." };
+  const cfgErr = requireSupabase();
+  if (cfgErr) return { data: null, error: cfgErr };
+
   const { data, error } = await invokeEdgeFunction<{ balance: number }>("case-battle-v2", {
     action: "claim",
     battleId,
     slot,
   });
   return { data, error };
+}
+
+/** Display-only: pot after borrow keep. Does not settle money. */
+export function expectedKeepPot(battle: Pick<CaseBattleView, "potTotal" | "borrowPercent">): number {
+  const keepMult = (100 - Math.max(0, Math.min(80, battle.borrowPercent))) / 100;
+  return Math.round(battle.potTotal * keepMult * 100) / 100;
 }
 
 export function playerTotalValue(drops: BattleDrop[], slot: number): number {
@@ -356,6 +315,10 @@ export function calculatePayoutForSlot(
   if (battle.status !== "completed") return 0;
 
   const player = battle.players.find((p) => p.slot === slot);
+  // Prefer edge-written payout_amount (settlement truth) whenever the battle is complete.
+  if (player && Number.isFinite(player.payoutAmount) && battle.completedAt) {
+    return Math.max(0, player.payoutAmount);
+  }
   if (player && player.payoutAmount > 0) {
     return player.payoutAmount;
   }

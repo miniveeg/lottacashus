@@ -1,10 +1,15 @@
 /**
- * Case Battles v2 — Arena
+ * Case Battles — Arena
+ * Felt seats, lockstep reels, live totals. Phases: wait / committing / opening / result.
  */
-
 import { useEffect, useState, useRef, useCallback } from "react";
 import type { CaseBattleView } from "./types";
-import { calculatePayoutForSlot, playerTotalValue, addBotToBattle } from "./caseBattlesApi";
+import {
+  calculatePayoutForSlot,
+  playerTotalValue,
+  addBotToBattle,
+  expectedKeepPot,
+} from "./caseBattlesApi";
 import { PlayerColumn } from "./PlayerColumn";
 import { JackpotWheel } from "./JackpotReel";
 import { formatCoins } from "../../lib/format";
@@ -17,16 +22,33 @@ type ArenaProps = {
   isCreator?: boolean;
 };
 
+type ArenaSession = {
+  botBusySlot: number | null;
+  canPlay: boolean;
+  battleId: string;
+};
+
 export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaProps) {
   const canPlay = useCanPlay();
   const [currentRound, setCurrentRound] = useState(0);
   const [landedSlots, setLandedSlots] = useState<Set<number>>(new Set());
   const [animationReady, setAnimationReady] = useState(false);
   const pauseTimerRef = useRef<number>(0);
-
   const [syncedLandingStartTime, setSyncedLandingStartTime] = useState<number | null>(null);
-
   const wasCommittedRef = useRef(false);
+
+  const [botBusySlot, setBotBusySlot] = useState<number | null>(null);
+  const [botError, setBotError] = useState<string | null>(null);
+
+  const session = useRef<ArenaSession>({
+    botBusySlot: null,
+    canPlay,
+    battleId: battle.battleId,
+  });
+  session.current.botBusySlot = botBusySlot;
+  session.current.canPlay = canPlay;
+  session.current.battleId = battle.battleId;
+
   useEffect(() => {
     if (battle.status === "committing") {
       wasCommittedRef.current = true;
@@ -85,28 +107,32 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
     });
   }, []);
 
-  const [botBusySlot, setBotBusySlot] = useState<number | null>(null);
-  const [botError, setBotError] = useState<string | null>(null);
   async function handleAddBotToSlot(slotIndex: number) {
-    if (!canPlay) return;
-    if (botBusySlot != null) return;
+    if (!session.current.canPlay) return;
+    if (session.current.botBusySlot != null) return;
     setBotError(null);
     setBotBusySlot(slotIndex);
-    const { error } = await addBotToBattle(battle.battleId, slotIndex);
+    session.current.botBusySlot = slotIndex;
+    const { error } = await addBotToBattle(session.current.battleId, slotIndex);
     setBotBusySlot(null);
-    if (error) setBotError(`Slot ${slotIndex + 1}: ${error}`);
+    session.current.botBusySlot = null;
+    if (error) setBotError(`Seat ${slotIndex + 1}: ${error}`);
   }
 
-  const isWaitingArena = battle.status === "waiting";
-  if (isWaitingArena) {
+  const keepPot = expectedKeepPot(battle);
+
+  if (battle.status === "waiting") {
     return (
       <div className="cb-arena cb-arena--waiting">
-        <div className="cb-arena__waiting-info">
+        <div className="cb-arena__felt-banner">
           <p className="cb-arena__pot">
-            Pot: <strong>{formatCoins(battle.potTotal, battle.coinType)}</strong>
+            Keep pot <strong>{formatCoins(keepPot, battle.coinType)}</strong>
+            {battle.borrowPercent > 0 ? (
+              <span className="cb-arena__borrow-tag"> · {battle.borrowPercent}% borrow</span>
+            ) : null}
           </p>
           <p className="cb-arena__players">
-            {battle.players.length} / {battle.maxPlayers} players joined
+            {battle.players.length} / {battle.maxPlayers} seats filled
           </p>
         </div>
         <div
@@ -116,7 +142,10 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
           {Array.from({ length: battle.maxPlayers }, (_, slot) => {
             const player = battle.players.find((p) => p.slot === slot);
             return (
-              <div key={slot} className={"cb-slot" + (player ? " cb-slot--filled" : " cb-slot--empty")}>
+              <div
+                key={slot}
+                className={"cb-slot" + (player ? " cb-slot--filled" : " cb-slot--empty")}
+              >
                 {player ? (
                   <>
                     <div className="cb-slot__avatar">{player.username.charAt(0).toUpperCase()}</div>
@@ -129,15 +158,15 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
                     className="cb-slot__add-bot"
                     onClick={() => handleAddBotToSlot(slot)}
                     disabled={botBusySlot != null}
-                    aria-label={`Add a bot to slot ${slot + 1}`}
+                    aria-label={`Add a bot to seat ${slot + 1}`}
                   >
                     {botBusySlot === slot ? "Adding…" : "+ Add bot"}
                   </button>
                 ) : (
                   <span className="cb-slot__empty">
-                    <span className="cb-slot__empty-label">Empty slot</span>
+                    <span className="cb-slot__empty-label">Empty seat</span>
                     <span className="cb-slot__empty-hint">
-                      {isCreator && !canPlay ? "log in to add bot" : "pending user"}
+                      {isCreator && !canPlay ? "log in to add bot" : "waiting"}
                     </span>
                   </span>
                 )}
@@ -172,11 +201,10 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
             Target block: <strong>#{battle.eosBlockTarget?.toLocaleString()}</strong>
           </p>
           <p className="cb-eos-wait__hint">
-            The battle seed is committed to a future EOS block for provably-fair verification.
-            This usually takes 30–60 seconds.
+            Seed committed to a future EOS block. Usually 30–60 seconds.
           </p>
           <div className="cb-eos-wait__seed">
-            <span>Seed hash:</span>
+            <span>Seed hash</span>
             <code>{battle.seedHash?.slice(0, 24)}…</code>
           </div>
         </div>
@@ -189,8 +217,8 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
     const visibleAllDrops = battle.drops.filter((d) => d.round <= currentRound);
 
     return (
-      <div className="cb-arena">
-        <div className="cb-arena__rounds">
+      <div className="cb-arena cb-arena--opening">
+        <div className="cb-arena__rounds" aria-label="Rounds">
           {Array.from({ length: battle.rounds }, (_, i) => (
             <div
               key={i}
@@ -284,7 +312,7 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
                 }
                 const names = humanWinners.map((p) => p.username).join(" & ");
                 const isMe = humanWinners.some(
-                  (p) => p.userId === userId || p.username === "You"
+                  (p) => p.userId === userId || p.username === "You",
                 );
                 return isMe
                   ? `You tie! ${names} split the pot`
@@ -297,14 +325,16 @@ export function CaseBattleArenaV2({ battle, userId, isCreator = false }: ArenaPr
             ? battle.players.find((p) => p.userId === userId)?.slot
             : undefined;
           const myPayout =
-            myPlayerSlot !== undefined ? calculatePayoutForSlot(battle, myPlayerSlot) : 0;
+            myPlayerSlot !== undefined
+              ? calculatePayoutForSlot(battle, myPlayerSlot)
+              : 0;
           const myTotalValue =
             myPlayerSlot !== undefined ? playerTotalValue(battle.drops, myPlayerSlot) : 0;
           if (myPayout > 0 && myTotalValue > 0) {
             return (
               <p className="cb-arena__payout">
                 You won <strong>{formatCoins(myPayout, battle.coinType)}</strong>
-                {" · Total: "}
+                {" · Unboxed "}
                 <strong>{formatCoins(myTotalValue, battle.coinType)}</strong>
               </p>
             );

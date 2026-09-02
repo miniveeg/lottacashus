@@ -1,4 +1,131 @@
 /* ════════════════════════════════════════════════════════════════════════════
+   Case Battles — felt chrome (Mines/Crash vernacular) + dense cases.gg cadence
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.cb-hub,
+.cb-create,
+.cb-room,
+.cb-arena {
+  --cb-felt-deep: #0a1f18;
+  --cb-felt-mid: #0d3324;
+  --cb-felt-glow: rgba(28, 122, 78, 0.22);
+  --cb-rail: rgba(201, 168, 76, 0.14);
+  --cb-ink: rgba(0, 0, 0, 0.35);
+}
+
+.cb-hub__felt,
+.cb-arena--waiting,
+.cb-arena--committing,
+.cb-arena--opening,
+.cb-arena--completed,
+.cb-create__case-area {
+  background:
+    radial-gradient(ellipse 85% 65% at 50% 28%, var(--cb-felt-glow) 0%, transparent 68%),
+    radial-gradient(ellipse 100% 80% at 50% 110%, rgba(0, 0, 0, 0.35) 0%, transparent 58%),
+    linear-gradient(165deg, var(--cb-felt-mid) 0%, var(--cb-felt-deep) 48%, #071410 100%);
+  border: 1px solid rgba(34, 120, 78, 0.38);
+  box-shadow:
+    inset 0 0 0 1px var(--cb-rail),
+    inset 0 0 64px rgba(0, 0, 0, 0.32),
+    0 8px 28px rgba(0, 0, 0, 0.22);
+  border-radius: var(--lc-radius-lg);
+}
+
+.cb-hub__felt {
+  padding: clamp(0.85rem, 2vw, 1.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cb-hub__eyebrow {
+  margin: 0 0 0.35rem;
+  font-family: var(--lc-font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lc-amber);
+}
+
+.cb-phase-pill {
+  font-family: var(--lc-font-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--lc-radius-pill);
+  border: 1px solid var(--lc-border-strong);
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--lc-text-secondary);
+}
+.cb-phase-pill[data-phase="wait"] {
+  color: var(--lc-emerald);
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.12);
+}
+.cb-phase-pill[data-phase="committing"] {
+  color: var(--lc-amber);
+  border-color: rgba(201, 168, 76, 0.45);
+  background: rgba(201, 168, 76, 0.12);
+}
+.cb-phase-pill[data-phase="opening"] {
+  color: var(--lc-crimson-soft);
+  border-color: rgba(232, 37, 76, 0.35);
+  background: rgba(232, 37, 76, 0.12);
+}
+.cb-phase-pill[data-phase="result"] {
+  color: var(--lc-emerald);
+  border-color: var(--lc-emerald-dim);
+  background: var(--lc-emerald-glow);
+}
+.cb-phase-pill[data-phase="cancelled"] {
+  color: var(--lc-ruby);
+  border-color: var(--lc-ruby);
+  background: var(--lc-ruby-glow);
+}
+
+.cb-room__leave {
+  margin-left: auto;
+  min-height: 2.25rem;
+  padding-inline: 0.85rem;
+  font-size: 0.78rem;
+}
+
+.cb-room__cancelled {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.85rem;
+  border-radius: var(--lc-radius-md);
+  border: 1px solid rgba(212, 93, 106, 0.35);
+  background: rgba(212, 93, 106, 0.1);
+}
+
+.cb-arena__felt-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.cb-arena__borrow-tag {
+  color: var(--lc-text-muted);
+  font-weight: 500;
+  font-size: 0.85em;
+}
+
+.cb-create--felt .cb-create__case-area {
+  padding: clamp(0.85rem, 2vw, 1.25rem);
+  min-height: 12rem;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
    Case Battles v2 — all styles
    Clean, performant, Diceblox-inspired. Dark theme with rarity accents.
    ════════════════════════════════════════════════════════════════════════════ */
@@ -83,15 +210,15 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
 }
 .cb-hub__mode-chip {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.65rem 0.85rem;
-  background: var(--lc-bg-glass);
-  border: 1px solid var(--lc-border);
+  padding: 0.55rem 0.75rem;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(34, 120, 78, 0.28);
   border-radius: var(--lc-radius-md);
 }
 .cb-hub__mode-icon { font-size: 1.2rem; }
@@ -105,20 +232,19 @@
 
 .cb-hub__row {
   display: grid;
-  grid-template-columns: 1fr auto auto auto;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: var(--lc-spacing-4);
-  padding: var(--lc-spacing-3) var(--lc-spacing-4);
-  background: var(--lc-bg-glass);
-  border: 1px solid var(--lc-border);
+  gap: var(--lc-spacing-3);
+  padding: 0.65rem 0.85rem;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(34, 120, 78, 0.28);
   border-radius: var(--lc-radius-md);
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s, transform 0.15s;
-  /* AGENT.md §Single-row discipline — text children shouldn't blow out. */
+  transition: border-color 0.15s, transform 0.15s, background 0.15s;
   min-width: 0;
 }
-.cb-hub__row:hover { border-color: var(--lc-border-accent); transform: translateY(-1px); }
+.cb-hub__row:hover { border-color: rgba(201, 168, 76, 0.45); background: rgba(0, 0, 0, 0.4); transform: translateY(-1px); }
 .cb-hub__row-info { display: flex; flex-direction: column; gap: 0.15rem; }
 .cb-hub__row-mode { font-weight: 700; font-size: 0.85rem; }
 .cb-hub__row-players { font-size: 0.75rem; color: var(--lc-text-muted); }
@@ -433,7 +559,8 @@
 
 /* ─── Waiting state ──────────────────────────────────────────────────────── */
 
-.cb-arena--waiting { text-align: center; padding: 1rem; }
+.cb-arena--waiting {
+  padding: clamp(0.85rem, 2vw, 1.35rem); text-align: center; padding: 1rem; }
 .cb-arena__waiting-info { margin-bottom: 1rem; }
 .cb-arena__pot { font-size: 1.1rem; }
 .cb-arena__pot strong { color: var(--lc-amber); font-family: var(--lc-font-mono); }

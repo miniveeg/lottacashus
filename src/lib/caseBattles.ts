@@ -1,3 +1,8 @@
+/**
+ * @deprecated V1 Case Battles client. Do NOT use for product routes.
+ * Happy path is `src/pages/CaseBattles/caseBattlesApi.ts` + edge `case-battle-v2`.
+ * This file still talks to the legacy `case-battle` edge — keep for audit only.
+ */
 import { invokeEdgeFunction } from "./edgeFunctions";
 import { supabase, isSupabaseConfigured } from "./supabase";
 import { CASE_CATALOG, type LootCase } from "./games/case-battles";

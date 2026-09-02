@@ -1,5 +1,6 @@
 /**
- * Case Battles v2 — Create battle
+ * Case Battles — Create battle
+ * Felt chrome + SessionRefs busy guard. Add Cases modal with Done(N rounds).
  */
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +39,27 @@ export function CaseBattlesCreateV2() {
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
+
+  type CreateSession = {
+    busy: boolean;
+    canCreate: boolean;
+    gamemode: BattleGamemode;
+    crazy: boolean;
+    playerMode: string;
+    borrowPercent: number;
+    entryCost: number;
+    coinType: string;
+  };
+  const session = useRef<CreateSession>({
+    busy: false,
+    canCreate: false,
+    gamemode: "standard",
+    crazy: false,
+    playerMode: "1v1",
+    borrowPercent: 0,
+    entryCost: 0,
+    coinType,
+  });
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [sortMode, setSortMode] = useState<SortMode>("custom");
   const [search, setSearch] = useState("");
@@ -52,6 +74,15 @@ export function CaseBattlesCreateV2() {
   const totalRounds = useMemo(() => groups.reduce((s, g) => s + g.count, 0), [groups]);
   const canCreate =
     canPlay && totalRounds >= 1 && totalRounds <= 50 && actualEntry <= balance && !busy;
+
+  session.current.busy = busy;
+  session.current.canCreate = canCreate;
+  session.current.gamemode = gamemode;
+  session.current.crazy = crazy;
+  session.current.playerMode = playerMode;
+  session.current.borrowPercent = borrowPercent;
+  session.current.entryCost = entryCost;
+  session.current.coinType = coinType;
 
   const pModes = playerModeOptions(gamemode);
   const canBeCrazy = GAMEMODES.find((g) => g.id === gamemode)?.canBeCrazy ?? false;
@@ -196,7 +227,7 @@ export function CaseBattlesCreateV2() {
       }
       if ((e.ctrlKey || e.metaKey) && k === "enter") {
         e.preventDefault();
-        if (!busyRefRead.current && canCreate) {
+        if (!busyRefRead.current && session.current.canCreate) {
           void handleCreate();
         }
         return;
@@ -207,7 +238,7 @@ export function CaseBattlesCreateV2() {
   }, [showCaseModal, canCreate]);
 
   return (
-    <div className="cb-create lc-page">
+    <div className="cb-create lc-page cb-create--felt">
       <Seo title="Create Case Battle" path="/case-battles/create" noindex />
 
       <div className="cb-create__topbar">

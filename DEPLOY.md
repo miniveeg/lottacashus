@@ -185,6 +185,8 @@ case-battle-v2
 - **Never deploy** legacy `case-battle` (V1). Quarantine/delete it; product path is **`case-battle-v2` only** with `verify_jwt=true`.
 - **`case-battle-v2` catalog**: Edge uses gzip+base64 `caseCatalog.generated.ts` (small MCP/API payloads). Readable catalog lives under `src/lib/games/case-battles/`. Regenerate both via `node scripts/generate-case-catalog.mjs`.
 - Partial CLI deploy: `bash scripts/deploy-edge-functions.sh case-battle-v2`
+- **Legacy `case-battle` (V1)** may still exist ACTIVE on the project with `verify_jwt=true`. Delete when CLI is authed: `npx supabase functions delete case-battle --project-ref <ref>`. UI must not call V1.
+- **MCP large-payload workaround**: if `deploy_edge_function` fails on `case-battle-v2` (~300KB with expanded catalog), deploy a one-line entrypoint that re-exports the repo function from jsDelivr at a pinned commit (`import "https://cdn.jsdelivr.net/gh/miniveeg/lottacashus@<sha>/supabase/functions/case-battle-v2/index.ts"`). Prefer CLI `functions deploy` when `SUPABASE_ACCESS_TOKEN` is available.
 - Games + other product functions are listed above / in `scripts/deploy-edge-functions.*`.
 
 
